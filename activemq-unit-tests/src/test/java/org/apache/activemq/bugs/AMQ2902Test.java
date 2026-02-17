@@ -33,7 +33,10 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.core.Appender;
 import org.apache.logging.log4j.core.LogEvent;
 import org.slf4j.LoggerFactory;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
+@Category(ParallelTest.class)
 public class AMQ2902Test extends TestCase {
     private static final org.slf4j.Logger LOG = LoggerFactory.getLogger(AMQ2580Test.class);
 

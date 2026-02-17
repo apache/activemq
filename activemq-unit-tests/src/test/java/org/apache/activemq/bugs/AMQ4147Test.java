@@ -29,12 +29,15 @@ import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.network.DemandForwardingBridgeSupport;
 import org.apache.activemq.util.MessageIdList;
 import org.apache.activemq.util.Wait;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * This test demonstrates a bug in {@link DemandForwardingBridgeSupport} when
  * bridges are VM-to-VM. Specifically, memory usage from the local broker is
  * manipulated by the remote broker.
  */
+@Category(ParallelTest.class)
 public class AMQ4147Test extends JmsMultipleBrokersTestSupport {
 
     /**

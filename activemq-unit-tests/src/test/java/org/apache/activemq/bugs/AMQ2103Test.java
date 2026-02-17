@@ -35,6 +35,8 @@ import org.apache.activemq.usecases.MyObject;
 import org.junit.Ignore;
 
 import junit.framework.Test;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 
 /**
@@ -42,6 +44,7 @@ import junit.framework.Test;
  * so this test no longer works
  */
 @Ignore
+@Category(ParallelTest.class)
 public class AMQ2103Test extends BrokerTestSupport {
     static PolicyEntry reduceMemoryFootprint = new PolicyEntry();
     static {

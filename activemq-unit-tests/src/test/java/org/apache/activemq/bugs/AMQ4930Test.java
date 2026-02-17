@@ -33,7 +33,10 @@ import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
+@Category(ParallelTest.class)
 public class AMQ4930Test extends TestCase {
     private static final Logger LOG = LoggerFactory.getLogger(AMQ4930Test.class);
     final int messageCount = 150;

@@ -50,10 +50,13 @@ import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * Once the wire format is completed we can test against real persistence storage.
  */
+@Category(ParallelTest.class)
 public class AMQ6059Test {
 
     private static final Logger LOG = LoggerFactory.getLogger(AMQ6059Test.class);

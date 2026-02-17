@@ -51,7 +51,10 @@ import org.junit.After;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
+@Category(ParallelTest.class)
 public class AMQ2832Test {
 
     private static final Logger LOG = LoggerFactory.getLogger(AMQ2832Test.class);

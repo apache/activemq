@@ -29,7 +29,10 @@ import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTextMessage;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.spring.ConsumerBean;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
+@Category(ParallelTest.class)
 public class AMQ2585Test extends EmbeddedBrokerAndConnectionTestSupport {
     private final Destination destination = new ActiveMQQueue("MyQueue");
     final static String LENGTH10STRING = "1234567890";
