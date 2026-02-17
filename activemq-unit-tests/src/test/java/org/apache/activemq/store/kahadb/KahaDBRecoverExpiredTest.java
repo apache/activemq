@@ -51,10 +51,13 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.junit.rules.Timeout;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * Test for {@link TopicMessageStore#recoverExpired(Set, int, org.apache.activemq.store.MessageRecoveryListener)}
  */
+@Category(ParallelTest.class)
 public class KahaDBRecoverExpiredTest {
 
   @Rule

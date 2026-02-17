@@ -22,6 +22,8 @@ import java.util.List;
 
 import org.apache.activemq.store.MessageStore;
 import org.apache.commons.io.FileUtils;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * This test is for AMQ-5748 to verify that {@link MessageStore} implements correctly
@@ -29,6 +31,7 @@ import org.apache.commons.io.FileUtils;
  *
  *
  */
+@Category(ParallelTest.class)
 public class MultiKahaDBMessageStoreSizeTest extends AbstractKahaDBMessageStoreSizeTest {
 
 
