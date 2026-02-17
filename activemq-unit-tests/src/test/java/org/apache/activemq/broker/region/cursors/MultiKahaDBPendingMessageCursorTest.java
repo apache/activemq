@@ -24,6 +24,8 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.store.kahadb.FilteredKahaDBPersistenceAdapter;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
 import org.apache.activemq.store.kahadb.MultiKahaDBPersistenceAdapter;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * This test checks that pending message metrics work properly with MultiKahaDB
@@ -31,6 +33,7 @@ import org.apache.activemq.store.kahadb.MultiKahaDBPersistenceAdapter;
  * AMQ-5923
  *
  */
+@Category(ParallelTest.class)
 public class MultiKahaDBPendingMessageCursorTest extends
     KahaDBPendingMessageCursorTest {
 
