@@ -25,7 +25,10 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.FutureTask;
 
 import static org.junit.Assert.assertFalse;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
+@Category(ParallelTest.class)
 public class AbstractStoreCursorTest {
 
     @Test

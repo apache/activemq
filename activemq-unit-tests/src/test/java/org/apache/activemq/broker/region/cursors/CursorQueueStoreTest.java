@@ -29,10 +29,13 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.broker.region.policy.StorePendingQueueMessageStoragePolicy;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * 
  */
+@Category(ParallelTest.class)
 public class CursorQueueStoreTest extends CursorSupport {
 
     protected Destination getDestination(Session session) throws JMSException {
