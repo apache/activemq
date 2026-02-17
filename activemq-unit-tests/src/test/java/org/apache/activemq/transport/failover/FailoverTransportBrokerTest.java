@@ -40,7 +40,10 @@ import org.apache.activemq.transport.TransportFactory;
 import org.apache.activemq.transport.TransportListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
+@Category(ParallelTest.class)
 public class FailoverTransportBrokerTest extends NetworkTestSupport {
 
     private static final Logger LOG = LoggerFactory.getLogger(FailoverTransportBrokerTest.class);
