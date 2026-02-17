@@ -58,8 +58,6 @@ public class WSTransportTest extends WSTransportTestSupport {
     private String stompUri;
     private StompConnection stompConnection = new StompConnection();
 
-    protected final int port = 61623;
-
     @Override
     protected void addAdditionalConnectors(BrokerService service) throws Exception {
         stompUri = service.addConnector("stomp://localhost:0").getPublishableConnectString();
@@ -67,7 +65,7 @@ public class WSTransportTest extends WSTransportTestSupport {
 
     @Override
     protected String getWSConnectorURI() {
-        return "ws://127.0.0.1:" + port + "?websocket.maxTextMessageSize=99999&transport.maxIdleTime=1001";
+        return "ws://127.0.0.1:0?websocket.maxTextMessageSize=99999&transport.maxIdleTime=1001";
     }
 
     protected Server createWebServer() throws Exception {
@@ -138,7 +136,7 @@ public class WSTransportTest extends WSTransportTestSupport {
 
     @Test(timeout=10000)
     public void testGet() throws Exception {
-        testGet("http://127.0.0.1:" + port, null);
+        testGet("http://127.0.0.1:" + wsConnectUri.getPort(), null);
     }
 
 

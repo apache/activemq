@@ -27,13 +27,13 @@ import org.apache.activemq.transport.TransportBrokerTestSupport;
 public class HttpTransportBrokerTest extends TransportBrokerTestSupport {
 
     protected String getBindLocation() {
-        return "http://localhost:8081";
+        return "http://localhost:0";
     }
 
     protected void setUp() throws Exception {
         maxWait = 2000;
         super.setUp();
-        WaitForJettyListener.waitForJettySocketToAccept(getBindLocation());
+        WaitForJettyListener.waitForJettySocketToAccept(connector.getPublishableConnectURI().toString());
     }
 
     protected BrokerService createBroker() throws Exception {

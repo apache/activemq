@@ -30,10 +30,12 @@ public abstract class TransportBrokerTestSupport extends BrokerTest {
 
     protected TransportConnector connector;
     private ArrayList<StubConnection> connections = new ArrayList<StubConnection>();
+    private URI bindURI;
 
     @Override
     protected void setUp() throws Exception {
         super.setUp();
+        bindURI = connector.getPublishableConnectURI();
     }
 
     @Override
@@ -68,7 +70,7 @@ public abstract class TransportBrokerTestSupport extends BrokerTest {
     }
 
     protected URI getBindURI() throws URISyntaxException {
-        return new URI(getBindLocation());
+        return bindURI;
     }
 
     @Override

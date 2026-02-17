@@ -20,6 +20,7 @@ package org.apache.activemq.transport.ws;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import java.io.IOException;
 import java.net.URI;
 
 import org.apache.activemq.broker.BrokerFactory;
@@ -37,7 +38,6 @@ public class WSTransportLinkStealingTest {
     private static final Logger LOG = LoggerFactory.getLogger(WSTransportLinkStealingTest.class);
 
     private BrokerService broker;
-
     protected BrokerService createBroker(boolean deleteMessages) throws Exception {
         BrokerService broker = BrokerFactory.createBroker(
                 new URI("broker:()/localhost?persistent=false&useJmx=false"));
@@ -59,7 +59,8 @@ public class WSTransportLinkStealingTest {
     }
 
     protected String getWSConnectorURI() {
-        return "ws://127.0.0.1:61623?allowLinkStealing=true&websocket.maxTextMessageSize=99999&transport.maxIdleTime=1001";
+        return "ws://127.0.0.1:0" +
+               "?allowLinkStealing=true&websocket.maxTextMessageSize=99999&transport.maxIdleTime=1001";
     }
 
     protected void stopBroker() {

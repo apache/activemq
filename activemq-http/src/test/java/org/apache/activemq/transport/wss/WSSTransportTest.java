@@ -41,7 +41,7 @@ public class WSSTransportTest extends WSTransportTest {
 
     @Override
     protected String getWSConnectorURI() {
-        return "wss://localhost:" + port;
+        return "wss://localhost:0";
     }
 
     @Ignore
@@ -52,12 +52,12 @@ public class WSSTransportTest extends WSTransportTest {
         factory.setEndpointIdentificationAlgorithm(null);       // service cert does not contain a SAN
         factory.setSslContext(broker.getSslContext().getSSLContext());
 
-        testGet("https://127.0.0.1:" + port, factory);
+        testGet("https://127.0.0.1:" + wsConnectUri.getPort(), factory);
     }
 
     @Override
     protected String getTestURI() {
         int proxyPort = getProxyPort();
-        return "https://localhost:" + proxyPort + "/websocket.html#wss://localhost:" + port;
+        return "https://localhost:" + proxyPort + "/websocket.html#" + wsConnectUri;
     }
 }

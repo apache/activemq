@@ -40,7 +40,7 @@ public class MQTTWSSTransportTest extends MQTTWSTransportTest {
 
     @Override
     protected String getWSConnectorURI() {
-        return "wss://localhost:61623";
+        return "wss://localhost:0";
     }
 
 }

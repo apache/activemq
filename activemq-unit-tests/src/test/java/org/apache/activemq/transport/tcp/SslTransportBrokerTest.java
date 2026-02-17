@@ -35,7 +35,7 @@ public class SslTransportBrokerTest extends TransportBrokerTestSupport {
 
     @Override
     protected URI getBindURI() throws URISyntaxException {
-        return new URI("ssl://localhost:0?soWriteTimeout=20000");
+        return new URI(super.getBindURI().toString() + "?soWriteTimeout=20000");
     }
 
     protected void setUp() throws Exception {
