@@ -34,8 +34,11 @@ import java.util.Random;
 import java.util.concurrent.ThreadPoolExecutor;
 
 import static junit.framework.TestCase.assertTrue;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 //Test for AMQ-8183
+@Category(ParallelTest.class)
 public class NIOMaxFrameSizeCleanupTest {
 
     public static final String KEYSTORE_TYPE = "jks";
