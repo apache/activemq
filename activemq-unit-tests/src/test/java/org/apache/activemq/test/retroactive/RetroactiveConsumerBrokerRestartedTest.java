@@ -29,7 +29,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import jakarta.jms.*;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
+@Category(ParallelTest.class)
 public class RetroactiveConsumerBrokerRestartedTest extends TestCase {
 
     private static final Logger log = LoggerFactory.getLogger(RetroactiveConsumerBrokerRestartedTest.class);

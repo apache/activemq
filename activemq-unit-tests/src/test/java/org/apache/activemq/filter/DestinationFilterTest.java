@@ -20,7 +20,10 @@ import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 
 import junit.framework.TestCase;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
+@Category(ParallelTest.class)
 public class DestinationFilterTest extends TestCase {
 
 	public void testPrefixFilter() throws Exception {
