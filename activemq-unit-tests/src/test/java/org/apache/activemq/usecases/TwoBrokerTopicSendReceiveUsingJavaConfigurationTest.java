@@ -20,6 +20,7 @@ import jakarta.jms.JMSException;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.network.NetworkConnector;
 
 /**
  *
@@ -41,9 +42,11 @@ public class TwoBrokerTopicSendReceiveUsingJavaConfigurationTest extends TwoBrok
 
             receivePort = receiveBroker.getTransportConnectors().get(0).getConnectUri().getPort();
 
-            // Add network connectors now that both ports are known
-            sendBroker.addNetworkConnector("static:failover:tcp://localhost:" + receivePort);
-            receiveBroker.addNetworkConnector("static:failover:tcp://localhost:" + sendPort);
+            // Add and start network connectors now that both ports are known
+            final NetworkConnector sendNc = sendBroker.addNetworkConnector("static:failover:tcp://localhost:" + receivePort);
+            sendBroker.startNetworkConnector(sendNc, null);
+            final NetworkConnector receiveNc = receiveBroker.addNetworkConnector("static:failover:tcp://localhost:" + sendPort);
+            receiveBroker.startNetworkConnector(receiveNc, null);
 
             return new ActiveMQConnectionFactory("tcp://localhost:" + receivePort);
         } catch (Exception e) {

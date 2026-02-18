@@ -17,9 +17,12 @@
 package org.apache.activemq.transport.failover;
 
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 import jakarta.jms.Connection;
+
+import static org.junit.Assert.assertTrue;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
@@ -91,26 +94,25 @@ public class ConnectionHangOnStartupTest {
 
     @Test(timeout=60000)
     public void testInitialWireFormatNegotiationTimeout() throws Exception {
-        final AtomicReference<Connection> conn = new AtomicReference<Connection>();
+        final AtomicReference<Connection> conn = new AtomicReference<>();
         final CountDownLatch connStarted = new CountDownLatch(1);
 
-        Thread t = new Thread() {
-            @Override
-            public void run() {
-                try {
-                    conn.set(createConnectionFactory().createConnection());
-                    conn.get().start();
-                } catch (Exception ex) {
-                    LOG.error("could not create or start connection", ex);
-                }
-                connStarted.countDown();
-            }
-        };
-        t.start();
+        // Must create master first to get the ephemeral port and build uriString
         createMaster();
-        // slave will never start unless the master dies!
-        //createSlave();
 
+        final Thread t = new Thread(() -> {
+            try {
+                conn.set(createConnectionFactory().createConnection());
+                conn.get().start();
+            } catch (Exception ex) {
+                LOG.error("could not create or start connection", ex);
+            }
+            connStarted.countDown();
+        });
+        t.start();
+
+        // Wait for connection to be established
+        assertTrue("connection started", connStarted.await(30, TimeUnit.SECONDS));
         conn.get().stop();
     }
 
