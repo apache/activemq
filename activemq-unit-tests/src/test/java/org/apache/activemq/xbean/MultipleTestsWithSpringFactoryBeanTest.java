@@ -25,12 +25,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * 
  * @author Neil Clayton
  * 
  */
+@Category(ParallelTest.class)
 public class MultipleTestsWithSpringFactoryBeanTest extends TestCase {
     
     private static final Logger LOG = LoggerFactory.getLogger(MultipleTestsWithSpringFactoryBeanTest.class);
