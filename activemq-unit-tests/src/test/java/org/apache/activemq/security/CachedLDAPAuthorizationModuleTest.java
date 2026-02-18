@@ -26,6 +26,8 @@ import org.apache.directory.server.core.integ.FrameworkRunner;
 import org.junit.runner.RunWith;
 
 import java.io.InputStream;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 
 @RunWith( FrameworkRunner.class )
@@ -33,6 +35,7 @@ import java.io.InputStream;
 @ApplyLdifFiles(
         "org/apache/activemq/security/activemq-apacheds.ldif"
 )
+@Category(ParallelTest.class)
 public class CachedLDAPAuthorizationModuleTest extends AbstractCachedLDAPAuthorizationModuleTest {
 
     @Override

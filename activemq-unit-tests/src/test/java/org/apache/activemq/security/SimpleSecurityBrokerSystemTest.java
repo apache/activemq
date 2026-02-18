@@ -42,6 +42,8 @@ import javax.management.MBeanServer;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 import javax.management.openmbean.CompositeData;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * Tests that the broker allows/fails access to destinations based on the
@@ -49,6 +51,7 @@ import javax.management.openmbean.CompositeData;
  *
  *
  */
+@Category(ParallelTest.class)
 public class SimpleSecurityBrokerSystemTest extends SecurityTestSupport {
     private static final Logger LOG = LoggerFactory.getLogger(SimpleSecurityBrokerSystemTest.class);
 

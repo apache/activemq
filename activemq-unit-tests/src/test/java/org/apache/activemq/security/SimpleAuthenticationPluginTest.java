@@ -43,7 +43,10 @@ import java.net.URI;
 import java.util.Arrays;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
+@Category(ParallelTest.class)
 public class SimpleAuthenticationPluginTest extends SecurityTestSupport {
 
     private static final Logger LOG = LoggerFactory.getLogger(SimpleAuthenticationPluginTest.class);

@@ -24,11 +24,14 @@ import junit.framework.TestCase;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.filter.DestinationMapEntry;
 import org.apache.activemq.jaas.GroupPrincipal;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  *
  *
  */
+@Category(ParallelTest.class)
 public class AuthorizationMapTest extends TestCase {
     static final GroupPrincipal USERS = new GroupPrincipal("users");
     static final GroupPrincipal ADMINS = new GroupPrincipal("admins");
