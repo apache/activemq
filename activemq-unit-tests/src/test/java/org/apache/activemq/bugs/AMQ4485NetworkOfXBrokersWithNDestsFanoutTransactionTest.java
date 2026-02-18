@@ -133,7 +133,7 @@ public class AMQ4485NetworkOfXBrokersWithNDestsFanoutTransactionTest extends Jms
             nc.setDynamicallyIncludedDestinations(
                     Arrays.asList(new ActiveMQDestination[]{new ActiveMQQueue("GW.*")}));
             broker.addNetworkConnector(nc);
-            nc.start();
+            broker.startNetworkConnector(nc, null);
         }
     }
 
