@@ -43,8 +43,11 @@ import jakarta.jms.Session;
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 // https://issues.apache.org/jira/browse/AMQ-6643
+@Category(ParallelTest.class)
 public class VirtualTopicWildcardTest {
     
     private static final Logger LOG = LoggerFactory.getLogger(VirtualTopicWildcardTest.class);

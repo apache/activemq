@@ -43,8 +43,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 @RunWith(BlockJUnit4ClassRunner.class)
+@Category(ParallelTest.class)
 public class NioQueueSubscriptionTest extends QueueSubscriptionTest {
 
     protected static final Logger LOG = LoggerFactory.getLogger(NioQueueSubscriptionTest.class);

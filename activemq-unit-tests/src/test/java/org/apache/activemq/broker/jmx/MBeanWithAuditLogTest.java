@@ -16,10 +16,14 @@
  */
 package org.apache.activemq.broker.jmx;
 
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
+
 
 /**
  * A test case of the various MBeans in ActiveMQ with audit log turned on.
  */
+@Category(ParallelTest.class)
 public class MBeanWithAuditLogTest extends MBeanTest {
 
     static final String requiredAuditValue = "all";

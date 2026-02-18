@@ -19,8 +19,11 @@ package org.apache.activemq.broker;
 import java.net.URI;
 import org.apache.activemq.xbean.XBeanBrokerFactory;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 // https://issues.apache.org/activemq/browse/AMQ-2939
+@Category(ParallelTest.class)
 public class OutOfOrderXMLTest {
 
     @Test

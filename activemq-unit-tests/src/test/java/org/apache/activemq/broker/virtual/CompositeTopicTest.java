@@ -20,11 +20,14 @@ import jakarta.jms.Destination;
 
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  *
  * 
  */
+@Category(ParallelTest.class)
 public class CompositeTopicTest extends CompositeQueueTest {
     
     protected Destination getConsumer1Dsetination() {

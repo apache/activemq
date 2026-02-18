@@ -55,7 +55,10 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
+@Category(ParallelTest.class)
 public class AbortSlowConsumer0Test extends AbortSlowConsumerBase {
 
     private static final Logger LOG = LoggerFactory.getLogger(AbortSlowConsumer0Test.class);

@@ -24,8 +24,11 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.BlockJUnit4ClassRunner;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 @RunWith(BlockJUnit4ClassRunner.class)
+@Category(ParallelTest.class)
 public class QueueSubscriptionTest extends JmsMultipleClientsTestSupport {
     protected int messageCount = 1000; // 1000 Messages per producer
     protected int prefetchCount = 10;

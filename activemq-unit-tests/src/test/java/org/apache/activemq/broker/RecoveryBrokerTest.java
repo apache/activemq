@@ -34,12 +34,15 @@ import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.command.SessionInfo;
 import org.apache.activemq.command.XATransactionId;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * Used to simulate the recovery that occurs when a broker shuts down.
  * 
  * 
  */
+@Category(ParallelTest.class)
 public class RecoveryBrokerTest extends BrokerRestartTestSupport {
 
     /**

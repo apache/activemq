@@ -38,7 +38,10 @@ import org.slf4j.LoggerFactory;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
+@Category(ParallelTest.class)
 public class RedeliveryRecoveryTest {
 
     static final Logger LOG = LoggerFactory.getLogger(RedeliveryRecoveryTest.class);
