@@ -54,6 +54,7 @@ jobs:
         run: mvn apache-rat:check
 
   test:
+    name: test
 
     permissions:
       contents: read
@@ -76,7 +77,7 @@ jobs:
           java-version: ${{ matrix.java-version }}
           distribution: temurin
       - name: Test
-        run: mvn -B -e -fae verify -Pactivemq.tests-quick -Dsurefire.rerunFailingTestsCount=3
+        run: mvn -B -e -fae verify -Dactivemq.tests=quick -Dsurefire.rerunFailingTestsCount=3
       - name: Upload Test Results
         if: (!cancelled())
         uses: actions/upload-artifact@v4
