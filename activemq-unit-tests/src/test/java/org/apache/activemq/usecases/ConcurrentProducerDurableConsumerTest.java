@@ -62,8 +62,11 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 @RunWith(value = Parameterized.class)
+@Category(ParallelTest.class)
 public class ConcurrentProducerDurableConsumerTest extends TestSupport {
     private static final Logger LOG = LoggerFactory.getLogger(ConcurrentProducerDurableConsumerTest.class);
     private final int consumerCount = 5;

@@ -27,10 +27,13 @@ import jakarta.jms.ObjectMessage;
 import jakarta.jms.Session;
 
 import org.apache.activemq.test.TestSupport;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  *
  */
+@Category(ParallelTest.class)
 public class ChangeSentMessageTest extends TestSupport {
 
     static {
