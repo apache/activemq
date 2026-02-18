@@ -18,10 +18,13 @@ package org.apache.activemq.xbean;
 
 import org.apache.activemq.broker.BrokerService;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * 
  */
+@Category(ParallelTest.class)
 public class MultipleTestsWithSpringXBeanFactoryBeanTest extends MultipleTestsWithEmbeddedBrokerTest {
 
     private ClassPathXmlApplicationContext context;

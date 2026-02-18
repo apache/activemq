@@ -24,10 +24,13 @@ import org.apache.activemq.transport.StubTransport;
 import org.apache.activemq.transport.StubTransportListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * 
  */
+@Category(ParallelTest.class)
 public class ReliableTransportTest extends TestCase {
 
     private static final Logger LOG = LoggerFactory.getLogger(ReliableTransportTest.class);
