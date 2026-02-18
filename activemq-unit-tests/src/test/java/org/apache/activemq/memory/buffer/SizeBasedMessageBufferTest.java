@@ -18,12 +18,15 @@ package org.apache.activemq.memory.buffer;
 
 import org.apache.activemq.memory.buffer.MessageBuffer;
 import org.apache.activemq.memory.buffer.SizeBasedMessageBuffer;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 
 /**
  *
  * 
  */
+@Category(ParallelTest.class)
 public class SizeBasedMessageBufferTest extends MemoryBufferTestSupport {
 
     public void testSizeWorks() throws Exception {
