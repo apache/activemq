@@ -36,11 +36,14 @@ import org.apache.activemq.network.NetworkConnector;
 import org.apache.activemq.util.IOHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * Show that both directions of a duplex bridge will properly restart the
  * network durable consumers if dynamicOnly is false.
  */
+@Category(ParallelTest.class)
 public class AMQ6366Test extends JmsMultipleBrokersTestSupport {
     protected static final Logger LOG = LoggerFactory.getLogger(AMQ6366Test.class);
     final ActiveMQTopic dest = new ActiveMQTopic("TEST.FOO");

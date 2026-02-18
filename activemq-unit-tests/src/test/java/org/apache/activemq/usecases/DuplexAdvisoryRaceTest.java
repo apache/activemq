@@ -56,8 +56,11 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static org.junit.Assert.assertTrue;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 // https://issues.apache.org/jira/browse/AMQ-6640
+@Category(ParallelTest.class)
 public class DuplexAdvisoryRaceTest {
     private static final Logger LOG = LoggerFactory.getLogger(DuplexAdvisoryRaceTest.class);
     private static String hostName;

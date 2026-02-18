@@ -38,6 +38,8 @@ import org.slf4j.LoggerFactory;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 
 /**
@@ -47,6 +49,7 @@ import static org.junit.Assert.fail;
  * for dispatch again.
  */
 
+@Category(ParallelTest.class)
 public class PriorityRedeliveryOrderTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(PriorityRedeliveryOrderTest.class);

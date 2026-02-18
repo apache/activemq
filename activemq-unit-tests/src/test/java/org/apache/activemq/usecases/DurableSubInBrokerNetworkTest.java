@@ -32,6 +32,8 @@ import org.apache.activemq.network.NetworkConnector;
 import org.apache.activemq.network.NetworkTestSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * Tests durable topic subscriptions inside a network of brokers.
@@ -39,6 +41,7 @@ import org.slf4j.LoggerFactory;
  * @author tmielke
  *
  */
+@Category(ParallelTest.class)
 public class DurableSubInBrokerNetworkTest extends NetworkTestSupport {
 
     private static final Logger LOG = LoggerFactory.getLogger(DurableSubInBrokerNetworkTest.class);

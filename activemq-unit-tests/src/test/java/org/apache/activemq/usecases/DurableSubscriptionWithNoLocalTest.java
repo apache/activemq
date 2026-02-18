@@ -50,11 +50,14 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * Test for spec compliance for durable subscriptions that change the noLocal flag.
  */
 @RunWith(Parameterized.class)
+@Category(ParallelTest.class)
 public class DurableSubscriptionWithNoLocalTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(DurableSubscriptionWithNoLocalTest.class);

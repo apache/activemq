@@ -31,10 +31,13 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * @author Rajani Chennamaneni
  */
+@Category(ParallelTest.class)
 public class DispatchMultipleConsumersTest extends TestCase {
     private final static Logger logger = LoggerFactory.getLogger(DispatchMultipleConsumersTest.class);
     BrokerService broker;

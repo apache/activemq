@@ -36,9 +36,12 @@ import java.util.Collection;
 import java.util.List;
 
 import static org.junit.Assert.*;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 
 @RunWith(value = Parameterized.class)
+@Category(ParallelTest.class)
 public class DurableSubscriptionOffline2Test extends DurableSubscriptionOfflineTestBase {
 
     private static final Logger LOG = LoggerFactory.getLogger(DurableSubscriptionOffline2Test.class);

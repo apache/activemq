@@ -33,7 +33,10 @@ import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.broker.region.policy.VMPendingQueueMessageStoragePolicy;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.usage.SystemUsage;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
+@Category(ParallelTest.class)
 public class QueueMemoryFullMultiBrokersTest extends JmsMultipleBrokersTestSupport {
     public static final int BROKER_COUNT = 2;
     public static final int MESSAGE_COUNT = 2000;

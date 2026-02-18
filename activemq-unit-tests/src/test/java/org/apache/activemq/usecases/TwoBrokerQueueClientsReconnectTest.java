@@ -46,10 +46,13 @@ import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
 import org.apache.activemq.util.Wait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  *
  */
+@Category(ParallelTest.class)
 public class TwoBrokerQueueClientsReconnectTest extends JmsMultipleBrokersTestSupport {
     protected static final int MESSAGE_COUNT = 100; // Best if a factor of 100
     protected static final int PREFETCH_COUNT = 1;

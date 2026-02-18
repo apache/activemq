@@ -16,10 +16,14 @@
  */
 package org.apache.activemq.usecases;
 
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
+
 
 /**
  * 
  */
+@Category(ParallelTest.class)
 public class TwoBrokerTopicSendReceiveLotsOfMessagesUsingTcpTest extends TwoBrokerTopicSendReceiveUsingTcpTest {
 
     protected void setUp() throws Exception {

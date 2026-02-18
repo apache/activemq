@@ -48,9 +48,12 @@ import org.slf4j.LoggerFactory;
 
 
 import static org.junit.Assert.*;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 
 @RunWith(value = Parameterized.class)
+@Category(ParallelTest.class)
 public class DurableSubscriptionOfflineBrowseRemoveTest extends DurableSubscriptionOfflineTestBase {
 
     private static final Logger LOG = LoggerFactory.getLogger(DurableSubscriptionOfflineBrowseRemoveTest.class);
