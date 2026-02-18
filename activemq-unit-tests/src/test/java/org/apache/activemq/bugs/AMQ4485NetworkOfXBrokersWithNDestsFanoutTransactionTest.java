@@ -55,10 +55,7 @@ import org.apache.activemq.util.TimeUtils;
 import org.apache.activemq.util.Wait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.junit.experimental.categories.Category;
-import org.apache.activemq.test.annotations.ParallelTest;
 
-@Category(ParallelTest.class)
 public class AMQ4485NetworkOfXBrokersWithNDestsFanoutTransactionTest extends JmsMultipleBrokersTestSupport {
     static final String payload = new String(new byte[10 * 1024]);
     private static final Logger LOG = LoggerFactory.getLogger(AMQ4485NetworkOfXBrokersWithNDestsFanoutTransactionTest.class);
@@ -94,7 +91,6 @@ public class AMQ4485NetworkOfXBrokersWithNDestsFanoutTransactionTest extends Jms
         broker.setDeleteAllMessagesOnStartup(true);
         broker.getManagementContext().setCreateConnector(false);
 
-
         broker.setUseJmx(true);
         broker.setBrokerName("B" + brokerid);
         broker.addConnector(new URI("tcp://localhost:0"));
@@ -102,7 +98,6 @@ public class AMQ4485NetworkOfXBrokersWithNDestsFanoutTransactionTest extends Jms
         broker.setSchedulePeriodForDestinationPurge(0);
         broker.getSystemUsage().setSendFailIfNoSpace(true);
         broker.getSystemUsage().getMemoryUsage().setLimit(512 * 1024 * 1024);
-
 
         PolicyMap policyMap = new PolicyMap();
         PolicyEntry policyEntry = new PolicyEntry();
@@ -158,7 +153,6 @@ public class AMQ4485NetworkOfXBrokersWithNDestsFanoutTransactionTest extends Jms
         waitForBridgeFormation(numBrokers - 1);
 
         verifyPeerBrokerInfos(numBrokers - 1);
-
 
         final List<ConsumerState> consumerStates = startAllGWConsumers(numBrokers);
 

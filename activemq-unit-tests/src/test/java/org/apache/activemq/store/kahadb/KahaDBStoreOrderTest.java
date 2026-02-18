@@ -20,11 +20,8 @@ import java.io.File;
 
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.store.StoreOrderTest;
-import org.junit.experimental.categories.Category;
-import org.apache.activemq.test.annotations.ParallelTest;
 
 //  https://issues.apache.org/activemq/browse/AMQ-2594
-@Category(ParallelTest.class)
 public class KahaDBStoreOrderTest extends StoreOrderTest {
     
     @Override

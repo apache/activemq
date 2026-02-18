@@ -24,10 +24,7 @@ import org.apache.activemq.store.jdbc.LeaseDatabaseLocker;
 import org.apache.activemq.util.LeaseLockerIOExceptionHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.junit.experimental.categories.Category;
-import org.apache.activemq.test.annotations.ParallelTest;
 
-@Category(ParallelTest.class)
 public class DbRestartJDBCQueueMasterSlaveLeaseTest extends DbRestartJDBCQueueMasterSlaveTest {
     private static final transient Logger LOG = LoggerFactory.getLogger(DbRestartJDBCQueueMasterSlaveLeaseTest.class);
 
