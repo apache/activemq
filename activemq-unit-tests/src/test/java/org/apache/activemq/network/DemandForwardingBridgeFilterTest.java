@@ -27,8 +27,11 @@ import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.command.SessionInfo;
 
 import java.util.Arrays;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 
+@Category(ParallelTest.class)
 public class DemandForwardingBridgeFilterTest extends NetworkTestSupport {
 
     private DemandForwardingBridge bridge;
