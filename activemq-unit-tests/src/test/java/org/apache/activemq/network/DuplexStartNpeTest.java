@@ -44,7 +44,10 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import static junit.framework.TestCase.assertNotNull;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
+@Category(ParallelTest.class)
 public class DuplexStartNpeTest {
     private static final Logger LOG = LoggerFactory.getLogger(DuplexStartNpeTest.class);
     final ActiveMQQueue dest = new ActiveMQQueue("QQ");
