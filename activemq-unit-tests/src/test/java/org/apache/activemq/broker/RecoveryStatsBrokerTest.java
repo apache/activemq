@@ -39,8 +39,11 @@ import org.junit.runners.Parameterized;
 import java.io.File;
 import java.util.*;
 import java.util.stream.Collectors;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 @RunWith(value = Parameterized.class)
+@Category(ParallelTest.class)
 public class RecoveryStatsBrokerTest extends BrokerRestartTestSupport {
 
     private RestartType restartType;

@@ -44,10 +44,13 @@ import org.apache.activemq.command.ActiveMQQueue;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  *  https://issues.apache.org/jira/browse/AMQ-5898
  */
+@Category(ParallelTest.class)
 public class MultipleCompositeToPhysicalQueueTest {
 
     private final ActiveMQQueue SUB1 = new ActiveMQQueue("SUB1");
