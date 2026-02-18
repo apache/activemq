@@ -17,6 +17,7 @@
 package org.apache.activemq.broker.jmx;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.lang.management.ManagementFactory;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -27,14 +28,19 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
+import java.rmi.server.RMIClientSocketFactory;
+import java.rmi.server.RMIServerSocketFactory;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.net.ServerSocket;
+import java.security.GeneralSecurityException;
 
 import javax.management.Attribute;
 import javax.management.InstanceNotFoundException;
@@ -50,8 +56,12 @@ import javax.management.remote.JMXConnectorServer;
 import javax.management.remote.JMXServiceURL;
 import javax.management.remote.rmi.RMIConnectorServer;
 import javax.management.remote.rmi.RMIJRMPServerImpl;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLServerSocketFactory;
+import javax.rmi.ssl.SslRMIClientSocketFactory;
 
 import org.apache.activemq.Service;
+import org.apache.activemq.broker.SslContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -115,6 +125,7 @@ public class ManagementContext implements Service {
     private List<ObjectName> suppressMBeanList;
     private Remote serverStub;
     private RMIJRMPServerImpl server;
+    private SslContext sslContext;
 
     public ManagementContext() {
         this(null);
@@ -281,6 +292,15 @@ public class ManagementContext implements Service {
     public void setBrokerName(String brokerName) {
         this.brokerName = brokerName;
     }
+
+    public SslContext getSslContext() {
+        return sslContext;
+    }
+    
+    public void setSslContext(SslContext sslContext) {
+        this.sslContext = sslContext;
+    }
+
 
     /**
      * @return Returns the jmxDomainName.
@@ -578,13 +598,35 @@ public class ManagementContext implements Service {
             // This is handy to use if you have a firewall and need to force JMX to use fixed ports.
             rmiServer = ""+getConnectorHost()+":" + rmiServerPort;
         }
+        
+        Map<String, Object> connectorEnvironment = new HashMap<>();
+        if (environment != null) {
+            connectorEnvironment.putAll(environment);
+        }
 
-        server = new RMIJRMPServerImpl(connectorPort, null, null, environment);
+        RMIClientSocketFactory clientSocketFactory = null;
+        RMIServerSocketFactory serverSocketFactory = null;
 
-        final String serviceURL = "service:jmx:rmi://" + rmiServer + "/jndi/rmi://" +getConnectorHost()+":" + connectorPort + connectorPath;
+        if (sslContext != null) {
+                try {
+                    SSLContext context = sslContext.getSSLContext();
+                    clientSocketFactory = new SslRMIClientSocketFactory();
+                    serverSocketFactory = new SslContextServerSocketFactory(context);
+
+                    connectorEnvironment.put(RMIConnectorServer.RMI_CLIENT_SOCKET_FACTORY_ATTRIBUTE, clientSocketFactory);
+                    connectorEnvironment.put(RMIConnectorServer.RMI_SERVER_SOCKET_FACTORY_ATTRIBUTE, serverSocketFactory);
+                } catch (GeneralSecurityException e) {
+                    throw new IOException("Failed to initialize JMX SSLContext", e);
+                }
+            }
+
+        server = new RMIJRMPServerImpl(connectorPort, clientSocketFactory, serverSocketFactory, connectorEnvironment);
+
+        final String serviceURL =
+                "service:jmx:rmi://" + rmiServer + "/jndi/rmi://" + getConnectorHost() + ":" + connectorPort + connectorPath;
         final JMXServiceURL url = new JMXServiceURL(serviceURL);
 
-        connectorServer = new RMIConnectorServer(url, environment, server, ManagementFactory.getPlatformMBeanServer());
+        connectorServer = new RMIConnectorServer(url, connectorEnvironment, server, mbeanServer);
         LOG.debug("Created JMXConnectorServer {}", connectorServer);
     }
 
@@ -709,5 +751,29 @@ public class ManagementContext implements Service {
                         throw ite.getTargetException();
                     }
                 }));
+    }
+
+    private static final class SslContextServerSocketFactory implements RMIServerSocketFactory, Serializable {
+        private static final long serialVersionUID = 1L;
+        private final SSLServerSocketFactory delegate;
+
+        private SslContextServerSocketFactory(SSLContext context) {
+            this.delegate = context.getServerSocketFactory();
+        }
+
+        @Override
+        public ServerSocket createServerSocket(int port) throws IOException {
+            return delegate.createServerSocket(port);
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            return obj != null && obj.getClass() == SslContextServerSocketFactory.class;
+        }
+
+        @Override
+        public int hashCode() {
+            return SslContextServerSocketFactory.class.hashCode();
+        }
     }
 }

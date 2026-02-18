@@ -16,6 +16,8 @@
  */
 package org.apache.activemq.xbean;
 
+import java.io.IOException;
+import java.net.ServerSocket;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -45,6 +47,11 @@ public class ManagementContextXBeanConfigTest extends TestCase {
     private static final String MANAGEMENT_CONTEXT_TEST_XML = "org/apache/activemq/xbean/management-context-test.xml";
     private static final String MANAGEMENT_CONTEXT_TEST_XML_CONNECTOR_PATH =
             "org/apache/activemq/xbean/management-context-test-connector-path.xml";
+    private static final String MANAGEMENT_CONTEXT_TEST_XML_SSL_CONTEXT =
+            "org/apache/activemq/xbean/management-context-test-ssl-context.xml";
+    private static final String MANAGEMENT_CONTEXT_TEST_XML_SSL_CONTEXT_EXPLICIT =
+            "org/apache/activemq/xbean/management-context-test-ssl-context-explicit.xml";
+    private static final String TEST_MANAGEMENT_CONNECTOR_PORT_PROPERTY = "test.management.connector.port";
 
     private static final transient Logger LOG = LoggerFactory.getLogger(ManagementContextXBeanConfigTest.class);
 
@@ -101,19 +108,72 @@ public class ManagementContextXBeanConfigTest extends TestCase {
         fail("Should have thrown an exception");
     }
 
+    private int findOpenPort() throws IOException {
+        ServerSocket socket = new ServerSocket(0);
+        try {
+            return socket.getLocalPort();
+        } finally {
+            socket.close();
+        }
+    }
+
+    public void testManagementContextUsesBrokerSslContextByDefault() throws Exception {
+        int port = findOpenPort();
+        System.setProperty(TEST_MANAGEMENT_CONNECTOR_PORT_PROPERTY, Integer.toString(port));
+        brokerService = getBrokerService(MANAGEMENT_CONTEXT_TEST_XML_SSL_CONTEXT);
+        brokerService.start();
+
+        assertNotNull("ManagementContext SSL context should be inherited from BrokerService",
+                brokerService.getManagementContext().getSslContext());
+        assertTrue("JMX connector should be started when broker SSL context is configured",
+                brokerService.getManagementContext().isConnectorStarted());
+
+        assertNotNull("ManagementContext should retain SSL context after start",
+                brokerService.getManagementContext().getSslContext());
+    }
+
+    public void testManagementContextUsesExplicitSslContext() throws Exception {
+        int port = findOpenPort();
+        System.setProperty(TEST_MANAGEMENT_CONNECTOR_PORT_PROPERTY, Integer.toString(port));
+        brokerService = getBrokerService(MANAGEMENT_CONTEXT_TEST_XML_SSL_CONTEXT_EXPLICIT);
+        brokerService.start();
+
+        assertNotNull("BrokerService SSL context should be configured",
+                brokerService.getSslContext());
+        assertNotNull("ManagementContext explicit SSL context should be configured",
+                brokerService.getManagementContext().getSslContext());
+        assertNotSame("ManagementContext should use explicit SSL context instead of broker fallback",
+                brokerService.getSslContext(), brokerService.getManagementContext().getSslContext());
+        assertTrue("JMX connector should be started when explicit management SSL context is configured",
+                brokerService.getManagementContext().isConnectorStarted());
+
+        assertNotNull("ManagementContext should retain SSL context after start",
+                brokerService.getManagementContext().getSslContext());
+    }
+
     public void assertAuthentication(JMXConnector connector) throws Exception {
-        connector.connect();
-        MBeanServerConnection connection = connector.getMBeanServerConnection();
-        ObjectName name = new ObjectName("test.domain:type=Broker,brokerName=localhost");
-        BrokerViewMBean mbean = MBeanServerInvocationHandler
-                .newProxyInstance(connection, name, BrokerViewMBean.class, true);
-        LOG.info("Broker " + mbean.getBrokerId() + " - " + mbean.getBrokerName());
+        try {
+            connector.connect();
+            MBeanServerConnection connection = connector.getMBeanServerConnection();
+            ObjectName name = new ObjectName("test.domain:type=Broker,brokerName=localhost");
+            BrokerViewMBean mbean = MBeanServerInvocationHandler
+                    .newProxyInstance(connection, name, BrokerViewMBean.class, true);
+            LOG.info("Broker " + mbean.getBrokerId() + " - " + mbean.getBrokerName());
+        } finally {
+            connector.close();
+        }
     }
 
     @Override
     protected void tearDown() throws Exception {
-        if (brokerService != null) {
-            brokerService.stop();
+        try {
+            if (brokerService != null) {
+                brokerService.stop();
+                brokerService.waitUntilStopped();
+                brokerService = null;
+            }
+        } finally {
+            System.clearProperty(TEST_MANAGEMENT_CONNECTOR_PORT_PROPERTY);
         }
     }
 
@@ -122,3 +182,4 @@ public class ManagementContextXBeanConfigTest extends TestCase {
     }
 
 }
+
