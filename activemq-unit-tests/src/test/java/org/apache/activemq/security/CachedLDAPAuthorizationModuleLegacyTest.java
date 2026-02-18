@@ -28,6 +28,8 @@ import org.junit.runner.RunWith;
 
 import java.io.IOException;
 import java.io.InputStream;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 
 @RunWith( FrameworkRunner.class )
@@ -35,6 +37,7 @@ import java.io.InputStream;
 @ApplyLdifFiles(
         "org/apache/activemq/security/activemq-apacheds-legacy.ldif"
 )
+@Category(ParallelTest.class)
 public class CachedLDAPAuthorizationModuleLegacyTest extends AbstractCachedLDAPAuthorizationMapLegacyTest {
 
     @Override
