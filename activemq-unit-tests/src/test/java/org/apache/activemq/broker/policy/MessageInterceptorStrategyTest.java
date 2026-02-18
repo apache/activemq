@@ -41,12 +41,15 @@ import org.apache.activemq.test.TestSupport;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 
 /**
  * This unit test is to test that MessageInterceptorStrategy features
  *
  */
+@Category(ParallelTest.class)
 public class MessageInterceptorStrategyTest extends TestSupport {
 
     BrokerService broker;

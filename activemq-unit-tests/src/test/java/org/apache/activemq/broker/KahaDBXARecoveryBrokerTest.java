@@ -29,7 +29,10 @@ import org.apache.activemq.command.SessionInfo;
 import org.apache.activemq.command.TransactionInfo;
 import org.apache.activemq.command.XATransactionId;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
+@Category(ParallelTest.class)
 public class KahaDBXARecoveryBrokerTest  extends XARecoveryBrokerTest {
 
     @Override

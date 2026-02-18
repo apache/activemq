@@ -43,11 +43,14 @@ import jakarta.jms.Session;
 import javax.management.ObjectName;
 import java.util.ArrayList;
 import java.util.Collection;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * Test to ensure the CompositeTopic Memory Usage returns to zero after messages forwarded to underlying queues
  */
 
+@Category(ParallelTest.class)
 public class CompositeTopicMemoryUsageTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(CompositeTopicMemoryUsageTest.class);
