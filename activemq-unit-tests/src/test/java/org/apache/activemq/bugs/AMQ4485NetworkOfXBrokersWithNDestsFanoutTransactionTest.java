@@ -59,22 +59,30 @@ import org.slf4j.LoggerFactory;
 public class AMQ4485NetworkOfXBrokersWithNDestsFanoutTransactionTest extends JmsMultipleBrokersTestSupport {
     static final String payload = new String(new byte[10 * 1024]);
     private static final Logger LOG = LoggerFactory.getLogger(AMQ4485NetworkOfXBrokersWithNDestsFanoutTransactionTest.class);
-    final int portBase = 61600;
     final int numBrokers = 4;
+    final int[] brokerPorts = new int[numBrokers];
     final int numProducers = 10;
     final int numMessages = 800;
     final int consumerSleepTime = 20;
-    StringBuilder brokersUrl = new StringBuilder();
     HashMap<ActiveMQQueue, AtomicInteger> accumulators = new HashMap<ActiveMQQueue, AtomicInteger>();
     private ArrayList<Throwable> exceptions = new ArrayList<Throwable>();
 
-    protected void buildUrlList() throws Exception {
+    protected void collectBrokerPorts() throws Exception {
         for (int i = 0; i < numBrokers; i++) {
-            brokersUrl.append("tcp://localhost:" + (portBase + i));
+            final BrokerService broker = brokers.get("B" + i).broker;
+            brokerPorts[i] = broker.getTransportConnectors().get(0).getConnectUri().getPort();
+        }
+    }
+
+    protected String buildBrokersUrl() {
+        final StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < numBrokers; i++) {
+            sb.append("tcp://localhost:").append(brokerPorts[i]);
             if (i != numBrokers - 1) {
-                brokersUrl.append(',');
+                sb.append(',');
             }
         }
+        return sb.toString();
     }
 
     protected BrokerService createBroker(int brokerid) throws Exception {
@@ -86,9 +94,8 @@ public class AMQ4485NetworkOfXBrokersWithNDestsFanoutTransactionTest extends Jms
 
         broker.setUseJmx(true);
         broker.setBrokerName("B" + brokerid);
-        broker.addConnector(new URI("tcp://localhost:" + (portBase + brokerid)));
+        broker.addConnector(new URI("tcp://localhost:0"));
 
-        addNetworkConnector(broker);
         broker.setSchedulePeriodForDestinationPurge(0);
         broker.getSystemUsage().setSendFailIfNoSpace(true);
         broker.getSystemUsage().getMemoryUsage().setLimit(512 * 1024 * 1024);
@@ -113,12 +120,11 @@ public class AMQ4485NetworkOfXBrokersWithNDestsFanoutTransactionTest extends Jms
         return broker;
     }
 
-    private void addNetworkConnector(BrokerService broker) throws Exception {
-        StringBuilder networkConnectorUrl = new StringBuilder("static:(").append(brokersUrl.toString());
-        networkConnectorUrl.append(')');
+    private void addNetworkConnector(BrokerService broker, String brokersUrl) throws Exception {
+        final String networkConnectorUrl = "static:(" + brokersUrl + ")";
 
         for (int i = 0; i < 2; i++) {
-            NetworkConnector nc = new DiscoveryNetworkConnector(new URI(networkConnectorUrl.toString()));
+            final NetworkConnector nc = new DiscoveryNetworkConnector(new URI(networkConnectorUrl));
             nc.setName("Bridge-" + i);
             nc.setNetworkTTL(1);
             nc.setDecreaseNetworkConsumerPriority(true);
@@ -127,18 +133,25 @@ public class AMQ4485NetworkOfXBrokersWithNDestsFanoutTransactionTest extends Jms
             nc.setDynamicallyIncludedDestinations(
                     Arrays.asList(new ActiveMQDestination[]{new ActiveMQQueue("GW.*")}));
             broker.addNetworkConnector(nc);
+            nc.start();
         }
     }
 
     public void testBrokers() throws Exception {
-
-        buildUrlList();
 
         for (int i = 0; i < numBrokers; i++) {
             createBroker(i);
         }
 
         startAllBrokers();
+
+        // Get actual ports after brokers start and add network connectors
+        collectBrokerPorts();
+        final String brokersUrl = buildBrokersUrl();
+        for (int i = 0; i < numBrokers; i++) {
+            addNetworkConnector(brokers.get("B" + i).broker, brokersUrl);
+        }
+
         waitForBridgeFormation(numBrokers - 1);
 
         verifyPeerBrokerInfos(numBrokers - 1);
@@ -192,7 +205,7 @@ public class AMQ4485NetworkOfXBrokersWithNDestsFanoutTransactionTest extends Jms
         ActiveMQQueue compositeQ = new ActiveMQQueue(compositeDest.toString());
 
         for (int id = 0; id < nBrokers; id++) {
-            ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory("failover:(tcp://localhost:" + (portBase + id) + ")");
+            ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory("failover:(tcp://localhost:" + brokerPorts[id] + ")");
             connectionFactory.setWatchTopicAdvisories(false);
 
             QueueConnection queueConnection = connectionFactory.createQueueConnection();
@@ -219,7 +232,7 @@ public class AMQ4485NetworkOfXBrokersWithNDestsFanoutTransactionTest extends Jms
     private List<ConsumerState> startAllGWConsumers(int nBrokers) throws Exception {
         List<ConsumerState> consumerStates = new LinkedList<ConsumerState>();
         for (int id = 0; id < nBrokers; id++) {
-            ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory("failover:(tcp://localhost:" + (portBase + id) + ")");
+            ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory("failover:(tcp://localhost:" + brokerPorts[id] + ")");
             connectionFactory.setWatchTopicAdvisories(false);
 
             QueueConnection queueConnection = connectionFactory.createQueueConnection();
@@ -281,7 +294,7 @@ public class AMQ4485NetworkOfXBrokersWithNDestsFanoutTransactionTest extends Jms
                 @Override
                 public void run() {
                     try {
-                        ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory("failover:(tcp://localhost:" + (portBase + id) + ")");
+                        ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory("failover:(tcp://localhost:" + brokerPorts[id] + ")");
                         connectionFactory.setWatchTopicAdvisories(false);
                         QueueConnection queueConnection = connectionFactory.createQueueConnection();
                         queueConnection.start();

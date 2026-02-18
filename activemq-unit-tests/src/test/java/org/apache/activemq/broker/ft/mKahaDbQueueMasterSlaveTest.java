@@ -26,13 +26,11 @@ import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
 import org.apache.activemq.store.kahadb.MultiKahaDBPersistenceAdapter;
 
 public class mKahaDbQueueMasterSlaveTest extends QueueMasterSlaveTestSupport {
-    protected String MASTER_URL = "tcp://localhost:62001";
-    protected String SLAVE_URL  = "tcp://localhost:62002";
 
     protected void createMaster() throws Exception {
         master = new BrokerService();
         master.setBrokerName("master");
-        master.addConnector(MASTER_URL);
+        master.addConnector("tcp://localhost:0");
         master.setUseJmx(false);
         master.setPersistent(true);
         master.setDeleteAllMessagesOnStartup(true);
@@ -59,7 +57,7 @@ public class mKahaDbQueueMasterSlaveTest extends QueueMasterSlaveTestSupport {
                     BrokerService broker = new BrokerService();
                     broker.setBrokerName("slave");
                     TransportConnector connector = new TransportConnector();
-                    connector.setUri(new URI(SLAVE_URL));
+                    connector.setUri(new URI("tcp://localhost:" + masterPort));
                     broker.addConnector(connector);
                     // no need for broker.setMasterConnectorURI(masterConnectorURI)
                     // as the db lock provides the slave/master initialisation

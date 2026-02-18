@@ -33,7 +33,7 @@
 
     <!-- The transport connectors ActiveMQ will listen to -->
     <transportConnectors>
-       <transportConnector uri="tcp://localhost:62002"/>
+       <transportConnector uri="tcp://localhost:0"/>
     </transportConnectors>
 
     

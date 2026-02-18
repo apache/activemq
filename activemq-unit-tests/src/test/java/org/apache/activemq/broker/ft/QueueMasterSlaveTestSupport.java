@@ -48,10 +48,14 @@ abstract public class QueueMasterSlaveTestSupport extends JmsTopicSendReceiveWit
     protected CountDownLatch slaveStarted;
     protected int inflightMessageCount;
     protected int failureCount = 50;
-    protected String uriString = "failover://(tcp://localhost:62001,tcp://localhost:62002)?randomize=false&useExponentialBackOff=false";
+    protected int masterPort;
+    protected String uriString;
 
     @Override
     protected void setUp() throws Exception {
+        // Use ephemeral port for XML-based broker configs
+        System.setProperty("masterPort", "0");
+
         slaveStarted = new CountDownLatch(1);
         slave.set(null);
         setMaxTestTime(TimeUnit.MINUTES.toMillis(10));
@@ -64,6 +68,15 @@ abstract public class QueueMasterSlaveTestSupport extends JmsTopicSendReceiveWit
         failureCount = super.messageCount / 2;
         super.topic = isTopic();
         createMaster();
+
+        // Get the actual port assigned by the OS after master starts
+        masterPort = master.getTransportConnectors().get(0).getConnectUri().getPort();
+        uriString = "failover://(tcp://localhost:" + masterPort
+                + ")?randomize=false&useExponentialBackOff=false";
+
+        // Slave reuses the same port so failover reconnects to the same address
+        System.setProperty("slavePort", String.valueOf(masterPort));
+
         createSlave();
         // wait for thing to connect
         Thread.sleep(1000);

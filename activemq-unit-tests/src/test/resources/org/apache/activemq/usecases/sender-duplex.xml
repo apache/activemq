@@ -30,7 +30,7 @@
     <!-- The store and forward broker networks ActiveMQ will listen to -->
     <networkConnectors>
       <!-- by default just auto discover the other brokers -->
-      <networkConnector name="monitoring" uri="static:(tcp://localhost:62002)" duplex="true" >
+      <networkConnector name="monitoring" uri="static:(tcp://localhost:${receiverPort})" duplex="true" >
       	<dynamicallyIncludedDestinations>
       		<queue physicalName="include.test.foo"/>
       		<topic physicalName="include.test.bar"/>
@@ -51,7 +51,7 @@
 
     <!-- The transport connectors ActiveMQ will listen to -->
     <transportConnectors>
-       <transportConnector uri="tcp://localhost:62001"/>
+       <transportConnector uri="tcp://localhost:0"/>
     </transportConnectors>
   
       
