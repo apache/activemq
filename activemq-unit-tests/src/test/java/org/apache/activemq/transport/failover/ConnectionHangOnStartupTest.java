@@ -37,10 +37,7 @@ public class ConnectionHangOnStartupTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(ConnectionHangOnStartupTest.class);
 
-    // short maxInactivityDurationInitalDelay to trigger the bug, short
-    // maxReconnectDelay so that the test runs faster (because it will retry
-    // connection sooner)
-    protected String uriString = "failover://(tcp://localhost:62001?wireFormat.maxInactivityDurationInitalDelay=1,tcp://localhost:62002?wireFormat.maxInactivityDurationInitalDelay=1)?randomize=false&maxReconnectDelay=200";
+    protected String uriString;
     protected BrokerService master = null;
     protected AtomicReference<BrokerService> slave = new AtomicReference<BrokerService>();
 
@@ -60,10 +57,20 @@ public class ConnectionHangOnStartupTest {
     }
 
     protected void createMaster() throws Exception {
+        // Use ephemeral port for XML-based broker config
+        System.setProperty("masterPort", "0");
+
         BrokerFactoryBean brokerFactory = new BrokerFactoryBean(new ClassPathResource(getMasterXml()));
         brokerFactory.afterPropertiesSet();
         master = brokerFactory.getBroker();
         master.start();
+
+        // Get actual port and build failover URI with short maxInactivityDurationInitalDelay
+        // to trigger the bug, and short maxReconnectDelay so the test runs faster
+        final int masterPort = master.getTransportConnectors().get(0).getConnectUri().getPort();
+        System.setProperty("slavePort", String.valueOf(masterPort));
+        uriString = "failover://(tcp://localhost:" + masterPort
+                + "?wireFormat.maxInactivityDurationInitalDelay=1)?randomize=false&maxReconnectDelay=200";
     }
 
     protected void createSlave() throws Exception {
