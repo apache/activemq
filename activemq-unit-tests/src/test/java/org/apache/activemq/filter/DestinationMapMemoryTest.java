@@ -19,7 +19,10 @@ package org.apache.activemq.filter;
 import junit.framework.TestCase;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQTopic;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
+@Category(ParallelTest.class)
 public class DestinationMapMemoryTest extends TestCase {
 
     public void testLongDestinationPath() throws Exception {

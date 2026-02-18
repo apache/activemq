@@ -27,11 +27,14 @@ import jakarta.jms.Message;
 import org.apache.activemq.test.JmsTopicSendReceiveWithTwoConnectionsAndEmbeddedBrokerTest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * Tests that a Message can have nested Map and List properties attached.
  *
  */
+@Category(ParallelTest.class)
 public class NestedMapAndListPropertyTest extends JmsTopicSendReceiveWithTwoConnectionsAndEmbeddedBrokerTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(NestedMapAndListPropertyTest.class);
