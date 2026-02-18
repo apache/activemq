@@ -575,30 +575,6 @@
   </build>
   <profiles>
     <profile>
-      <id>activemq.tests-all</id>
-      <activation>
-        <property>
-          <name>activemq.tests</name>
-          <value>all</value>
-        </property>
-      </activation>
-      <build>
-        <plugins>
-          <plugin>
-            <artifactId>maven-surefire-plugin</artifactId>
-            <configuration>
-              <excludes combine.children="append">
-                <!-- These are performance tests and take too long to run -->
-                <exclude>**/perf/*</exclude>
-                <!-- These are load tests and take too long to run -->
-                <exclude>**/load/*</exclude>
-              </excludes>
-            </configuration>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-    <profile>
       <id>activemq.tests-sanity</id>
       <activation>
         <property>

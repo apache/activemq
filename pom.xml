@@ -979,6 +979,12 @@
                 <org.apache.activemq.kahaDB.files.skipMetadataUpdate>true</org.apache.activemq.kahaDB.files.skipMetadataUpdate>
             </systemPropertyVariables>
             <argLine>-enableassertions ${surefire.argLine} ${maven.surefire.allow.securitymanager}</argLine>
+
+            <!-- These are performance/load tests and take too long to run -->
+            <excludes combine.children="append">
+              <exclude>**/perf/*</exclude>
+              <exclude>**/load/*</exclude>
+            </excludes>
           </configuration>
         </plugin>
         <plugin>
