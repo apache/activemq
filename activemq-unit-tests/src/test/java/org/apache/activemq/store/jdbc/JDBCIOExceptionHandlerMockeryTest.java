@@ -35,7 +35,10 @@ import org.apache.activemq.util.ServiceStopper;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
+@Category(ParallelTest.class)
 public class JDBCIOExceptionHandlerMockeryTest {
     private static final Logger LOG = LoggerFactory.getLogger(JDBCIOExceptionHandlerMockeryTest.class);
     private final HashMap<Thread, Throwable> exceptions = new HashMap<Thread, Throwable>();

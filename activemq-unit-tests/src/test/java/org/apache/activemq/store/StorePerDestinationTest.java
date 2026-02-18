@@ -47,7 +47,10 @@ import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
+@Category(ParallelTest.class)
 public class StorePerDestinationTest  {
     static final Logger LOG = LoggerFactory.getLogger(StorePerDestinationTest.class);
     final static int maxFileLength = 1024*100;

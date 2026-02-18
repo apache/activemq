@@ -44,7 +44,10 @@ import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.util.Wait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
+@Category(ParallelTest.class)
 public class JDBCMessagePriorityTest extends MessagePriorityTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(JDBCMessagePriorityTest.class);

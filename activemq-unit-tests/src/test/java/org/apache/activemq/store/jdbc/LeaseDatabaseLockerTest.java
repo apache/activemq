@@ -46,8 +46,11 @@ import org.slf4j.LoggerFactory;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 @Ignore // AMQ-9239 FIXME: mock / byte-buddy opens
+@Category(ParallelTest.class)
 public class LeaseDatabaseLockerTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(LeaseDatabaseLockerTest.class);

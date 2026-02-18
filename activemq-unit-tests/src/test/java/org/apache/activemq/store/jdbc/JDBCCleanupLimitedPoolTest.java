@@ -41,8 +41,11 @@ import java.util.concurrent.TimeUnit;
 
 import static junit.framework.TestCase.assertTrue;
 import static org.apache.activemq.util.TestUtils.createXid;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 
+@Category(ParallelTest.class)
 public class JDBCCleanupLimitedPoolTest {
 
     BrokerService broker;
