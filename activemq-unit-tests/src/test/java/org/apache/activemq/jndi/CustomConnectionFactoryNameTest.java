@@ -19,12 +19,15 @@ package org.apache.activemq.jndi;
 import javax.naming.NamingException;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * Test case for AMQ-141
  *
  *
  */
+@Category(ParallelTest.class)
 public class CustomConnectionFactoryNameTest extends ActiveMQInitialContextFactoryTest {
 
     @Override

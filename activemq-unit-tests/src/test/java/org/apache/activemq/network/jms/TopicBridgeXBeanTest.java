@@ -18,11 +18,14 @@ package org.apache.activemq.network.jms;
 
 import org.apache.xbean.spring.context.ClassPathXmlApplicationContext;
 import org.springframework.context.support.AbstractApplicationContext;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * 
  * 
  */
+@Category(ParallelTest.class)
 public class TopicBridgeXBeanTest extends TopicBridgeSpringTest {
 
     protected AbstractApplicationContext createApplicationContext() {

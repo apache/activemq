@@ -28,7 +28,10 @@ import org.apache.activemq.filter.BooleanExpression;
 import org.apache.activemq.filter.NonCachedMessageEvaluationContext;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
+@Category(ParallelTest.class)
 public class UnknownHandlingSelectorTest {
 
     private Message message;

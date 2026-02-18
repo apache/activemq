@@ -21,7 +21,10 @@ import org.apache.activemq.ActiveMQXAConnectionFactory;
 import jakarta.jms.XAConnectionFactory;
 import javax.naming.Context;
 import javax.naming.NamingException;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
+@Category(ParallelTest.class)
 public class XAConnectionFactoryTest extends ActiveMQInitialContextFactoryTest {
     
     public void testConnectionFactoriesIsXA() throws NamingException {
