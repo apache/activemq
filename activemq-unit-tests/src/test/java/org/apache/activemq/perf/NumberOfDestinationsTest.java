@@ -34,12 +34,9 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.activemq.test.annotations.ParallelTest;
-import org.junit.experimental.categories.Category;
 /**
  * 
  */
-@Category(ParallelTest.class)
 public class NumberOfDestinationsTest extends TestCase {
     protected static final int MESSAGE_COUNT = 1;
     protected static final int NUMBER_OF_DESTINATIONS = 100000;
