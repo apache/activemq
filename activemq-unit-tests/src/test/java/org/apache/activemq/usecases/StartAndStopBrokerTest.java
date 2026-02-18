@@ -24,11 +24,14 @@ import junit.framework.TestCase;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * @author Oliver Belikan
  * 
  */
+@Category(ParallelTest.class)
 public class StartAndStopBrokerTest extends TestCase {
     public void testStartupShutdown() throws Exception {
         // This systemproperty is used if we dont want to

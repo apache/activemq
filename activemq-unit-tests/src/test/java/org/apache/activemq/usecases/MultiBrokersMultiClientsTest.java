@@ -31,10 +31,13 @@ import org.apache.activemq.JmsMultipleBrokersTestSupport;
 import org.apache.activemq.util.MessageIdList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * 
  */
+@Category(ParallelTest.class)
 public class MultiBrokersMultiClientsTest extends JmsMultipleBrokersTestSupport implements UncaughtExceptionHandler {
     public static final int BROKER_COUNT = 6; // number of brokers to network
     public static final int CONSUMER_COUNT = 25; // consumers per broker

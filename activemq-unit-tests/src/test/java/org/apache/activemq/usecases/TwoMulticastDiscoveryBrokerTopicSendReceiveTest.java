@@ -19,10 +19,13 @@ package org.apache.activemq.usecases;
 import jakarta.jms.JMSException;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  *  reproduced: https://issues.apache.org/jira/browse/AMQ-4107
  */
+@Category(ParallelTest.class)
 public class TwoMulticastDiscoveryBrokerTopicSendReceiveTest extends TwoBrokerTopicSendReceiveTest {
 
     protected ActiveMQConnectionFactory createReceiverConnectionFactory() throws JMSException {

@@ -25,7 +25,10 @@ import org.apache.activemq.network.NetworkConnector;
 import org.apache.activemq.util.MessageIdList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
+@Category(ParallelTest.class)
 public class BacklogNetworkCrossTalkTest extends JmsMultipleBrokersTestSupport {
     private static final Logger LOG = LoggerFactory.getLogger(BacklogNetworkCrossTalkTest.class);
 

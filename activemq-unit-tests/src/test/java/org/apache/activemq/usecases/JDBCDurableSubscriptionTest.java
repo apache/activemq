@@ -37,10 +37,13 @@ import jakarta.jms.Session;
 import jakarta.jms.TextMessage;
 import jakarta.jms.Topic;
 import jakarta.jms.TopicSubscriber;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * 
  */
+@Category(ParallelTest.class)
 public class JDBCDurableSubscriptionTest extends DurableSubscriptionTestSupport {
 
     protected PersistenceAdapter createPersistenceAdapter() throws IOException {

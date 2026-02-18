@@ -25,10 +25,13 @@ import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.network.DemandForwardingBridge;
 import org.apache.activemq.network.NetworkBridgeConfiguration;
 import org.apache.activemq.transport.TransportFactory;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  *
  */
+@Category(ParallelTest.class)
 public class ThreeBrokerQueueNetworkUsingTcpTest extends ThreeBrokerQueueNetworkTest {
     protected List<DemandForwardingBridge> bridges;
 
