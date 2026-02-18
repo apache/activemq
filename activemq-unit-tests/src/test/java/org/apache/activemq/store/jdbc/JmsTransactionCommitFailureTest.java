@@ -39,7 +39,10 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
 import java.util.Properties;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
+@Category(ParallelTest.class)
 public class JmsTransactionCommitFailureTest {
     private static final Log LOGGER = LogFactory.getLog(JmsTransactionCommitFailureTest.class);
     private static final String OUTPUT_DIR = "target/" + JmsTransactionCommitFailureTest.class.getSimpleName();

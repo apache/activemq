@@ -64,6 +64,8 @@ import org.slf4j.LoggerFactory;
 
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * Test to see if the JDBCExceptionIOHandler will restart the transport connectors correctly after
@@ -71,6 +73,7 @@ import static org.junit.Assert.fail;
  *
  * see AMQ-4575
  */
+@Category(ParallelTest.class)
 public class JDBCIOExceptionHandlerTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(JDBCIOExceptionHandlerTest.class);

@@ -23,7 +23,10 @@ import org.apache.activemq.broker.BrokerTest;
 import org.apache.derby.jdbc.EmbeddedDataSource;
 
 import javax.sql.DataSource;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
+@Category(ParallelTest.class)
 public class JDBCStoreBrokerTest extends BrokerTest {
 
     protected void configureJDBCPersistenceAdapter(JDBCPersistenceAdapter jdbc, final String name) throws Exception {

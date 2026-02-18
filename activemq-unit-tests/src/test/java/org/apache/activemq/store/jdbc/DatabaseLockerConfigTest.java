@@ -20,7 +20,10 @@ import static org.junit.Assert.assertEquals;
 
 import org.apache.activemq.broker.AbstractLocker;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
+@Category(ParallelTest.class)
 public class DatabaseLockerConfigTest {
 
     @Test
