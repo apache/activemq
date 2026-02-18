@@ -23,12 +23,15 @@ import org.apache.directory.server.core.annotations.ApplyLdifFiles;
 import org.apache.directory.server.core.integ.FrameworkRunner;
 import org.junit.Before;
 import org.junit.runner.RunWith;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 @RunWith( FrameworkRunner.class )
 @CreateLdapServer(transports = {@CreateTransport(protocol = "LDAP")})
 @ApplyLdifFiles(
         "org/apache/activemq/security/activemq-apacheds.ldif"
 )
+@Category(ParallelTest.class)
 public class CachedLDAPSecurityTest extends CachedLDAPSecurityLegacyTest {
 
     @Before
