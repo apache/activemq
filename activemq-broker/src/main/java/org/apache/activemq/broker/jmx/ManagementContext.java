@@ -18,6 +18,7 @@ package org.apache.activemq.broker.jmx;
 
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
+import java.net.ServerSocket;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -29,6 +30,7 @@ import java.rmi.registry.Registry;
 import java.rmi.server.RMIClientSocketFactory;
 import java.rmi.server.RMIServerSocketFactory;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -555,6 +557,14 @@ public class ManagementContext implements Service {
     }
 
     private void createConnector(MBeanServer mbeanServer) throws IOException {
+        // Resolve ephemeral port (0) to an actual free port, similar to tcp://localhost:0
+        if (connectorPort == 0) {
+            try (final ServerSocket ss = new ServerSocket(0)) {
+                connectorPort = ss.getLocalPort();
+            }
+            LOG.debug("Resolved ephemeral JMX connector port to {}", connectorPort);
+        }
+
         // Resolve SSL socket factories first, so they can be shared by registry and connector
         final RMIClientSocketFactory csf;
         final RMIServerSocketFactory ssf;
@@ -607,7 +617,20 @@ public class ManagementContext implements Service {
         final String serviceURL = "service:jmx:rmi://" + rmiServer + "/jndi/rmi://" +getConnectorHost()+":" + connectorPort + connectorPath;
         final JMXServiceURL url = new JMXServiceURL(serviceURL);
 
-        connectorServer = new RMIConnectorServer(url, environment, server, ManagementFactory.getPlatformMBeanServer());
+        // When SSL is enabled, the RMIConnectorServer needs the SSL socket factory
+        // in its environment to connect to the SSL-enabled RMI registry for JNDI binding
+        final Map<String, Object> connectorEnv;
+        if (csf != null) {
+            connectorEnv = new HashMap<>();
+            if (environment != null) {
+                connectorEnv.putAll(environment);
+            }
+            connectorEnv.put("com.sun.jndi.rmi.factory.socket", csf);
+        } else {
+            connectorEnv = environment != null ? new HashMap<>(environment) : null;
+        }
+
+        connectorServer = new RMIConnectorServer(url, connectorEnv, server, ManagementFactory.getPlatformMBeanServer());
         LOG.debug("Created JMXConnectorServer {}", connectorServer);
     }
 
