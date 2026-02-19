@@ -77,7 +77,8 @@ jobs:
           java-version: ${{ matrix.java-version }}
           distribution: temurin
       - name: Test
-        run: mvn -B -e -fae verify -Dactivemq.tests=quick -Dsurefire.rerunFailingTestsCount=3
+        shell: bash
+        run: mvn -B -e -fae verify -Pactivemq.tests-quick -Dsurefire.rerunFailingTestsCount=3
       - name: Upload Test Results
         if: (!cancelled())
         uses: actions/upload-artifact@v4
