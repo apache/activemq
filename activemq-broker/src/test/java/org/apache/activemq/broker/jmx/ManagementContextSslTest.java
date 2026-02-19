@@ -42,6 +42,7 @@ import org.apache.activemq.broker.SslContext;
 import org.apache.activemq.util.Wait;
 import org.junit.After;
 import org.junit.AfterClass;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -54,7 +55,11 @@ public class ManagementContextSslTest {
 
     private static Path tempDir;
     private static Path keystoreFile;
+    private static SSLContext testSslContext;
     private ManagementContext context;
+    private SSLContext savedDefaultSslContext;
+    private String savedTrustStore;
+    private String savedTrustStorePassword;
 
     @BeforeClass
     public static void createKeyStore() throws Exception {
@@ -73,6 +78,18 @@ public class ManagementContextSslTest {
                 "-validity", "1"
         ).inheritIO().start();
         assertEquals("keytool should succeed", 0, p.waitFor());
+
+        // Build a reusable SSLContext from the generated keystore
+        final KeyStore ks = KeyStore.getInstance("PKCS12");
+        try (final InputStream fis = Files.newInputStream(keystoreFile)) {
+            ks.load(fis, KEYSTORE_PASSWORD.toCharArray());
+        }
+        final KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+        kmf.init(ks, KEYSTORE_PASSWORD.toCharArray());
+        final TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+        tmf.init(ks);
+        testSslContext = SSLContext.getInstance("TLS");
+        testSslContext.init(kmf.getKeyManagers(), tmf.getTrustManagers(), null);
     }
 
     @AfterClass
@@ -85,11 +102,21 @@ public class ManagementContextSslTest {
         }
     }
 
+    @Before
+    public void setUp() throws Exception {
+        savedDefaultSslContext = SSLContext.getDefault();
+        savedTrustStore = System.getProperty("javax.net.ssl.trustStore");
+        savedTrustStorePassword = System.getProperty("javax.net.ssl.trustStorePassword");
+    }
+
     @After
     public void tearDown() throws Exception {
         if (context != null) {
             context.stop();
         }
+        SSLContext.setDefault(savedDefaultSslContext);
+        restoreSystemProperty("javax.net.ssl.trustStore", savedTrustStore);
+        restoreSystemProperty("javax.net.ssl.trustStorePassword", savedTrustStorePassword);
     }
 
     @Test
@@ -157,65 +184,56 @@ public class ManagementContextSslTest {
 
     @Test
     public void testConnectorStartsWithSsl() throws Exception {
-        // SslRMIClientSocketFactory (used internally for JNDI binding) reads the JVM default
-        // trust store, so system properties must be set BEFORE starting the connector
-        final String savedTrustStore = System.getProperty("javax.net.ssl.trustStore");
-        final String savedTrustStorePassword = System.getProperty("javax.net.ssl.trustStorePassword");
-        try {
-            System.setProperty("javax.net.ssl.trustStore", keystoreFile.toString());
-            System.setProperty("javax.net.ssl.trustStorePassword", KEYSTORE_PASSWORD);
+        // SslRMIClientSocketFactory uses SSLSocketFactory.getDefault() which relies on
+        // SSLContext.getDefault(). Setting system properties alone is insufficient if the
+        // default SSLContext was already cached by a previous test in the same JVM.
+        SSLContext.setDefault(testSslContext);
+        System.setProperty("javax.net.ssl.trustStore", keystoreFile.toString());
+        System.setProperty("javax.net.ssl.trustStorePassword", KEYSTORE_PASSWORD);
 
-            context = createSslManagementContext();
-            context.start();
+        context = createSslManagementContext();
+        context.start();
 
-            assertTrue("Connector should be started",
-                    Wait.waitFor(context::isConnectorStarted, 10_000, 100));
-            assertTrue("SSL connector port should be resolved", context.getConnectorPort() > 0);
-        } finally {
-            restoreSystemProperty("javax.net.ssl.trustStore", savedTrustStore);
-            restoreSystemProperty("javax.net.ssl.trustStorePassword", savedTrustStorePassword);
-        }
+        assertTrue("Connector should be started",
+                Wait.waitFor(context::isConnectorStarted, 10_000, 100));
+        assertTrue("SSL connector port should be resolved", context.getConnectorPort() > 0);
     }
 
     @Test
     public void testSslJmxConnectionSucceeds() throws Exception {
-        // SslRMIClientSocketFactory (used both for JNDI binding on the server side and for
-        // client connections) reads the JVM default trust store via system properties.
-        // These must be set BEFORE context.start() so the daemon thread sees them.
-        final String savedTrustStore = System.getProperty("javax.net.ssl.trustStore");
-        final String savedTrustStorePassword = System.getProperty("javax.net.ssl.trustStorePassword");
-        try {
-            System.setProperty("javax.net.ssl.trustStore", keystoreFile.toString());
-            System.setProperty("javax.net.ssl.trustStorePassword", KEYSTORE_PASSWORD);
+        // SslRMIClientSocketFactory uses SSLSocketFactory.getDefault() which relies on
+        // SSLContext.getDefault(). We must set our test SSLContext as the JVM default so
+        // both the server-side JNDI binding (daemon thread) and client connections trust
+        // our self-signed certificate. System properties alone are insufficient if the
+        // default SSLContext was already cached by a previous test in the same JVM.
+        SSLContext.setDefault(testSslContext);
+        System.setProperty("javax.net.ssl.trustStore", keystoreFile.toString());
+        System.setProperty("javax.net.ssl.trustStorePassword", KEYSTORE_PASSWORD);
 
-            context = createSslManagementContext();
-            context.start();
+        context = createSslManagementContext();
+        context.start();
 
-            final int port = context.getConnectorPort();
-            assertTrue("SSL connector port should be resolved", port > 0);
+        final int port = context.getConnectorPort();
+        assertTrue("SSL connector port should be resolved", port > 0);
 
-            final JMXServiceURL url = new JMXServiceURL(
-                    "service:jmx:rmi:///jndi/rmi://localhost:" + port + "/jmxrmi");
-            final Map<String, Object> env = new HashMap<>();
-            env.put("com.sun.jndi.rmi.factory.socket", new SslRMIClientSocketFactory());
+        final JMXServiceURL url = new JMXServiceURL(
+                "service:jmx:rmi:///jndi/rmi://localhost:" + port + "/jmxrmi");
+        final Map<String, Object> env = new HashMap<>();
+        env.put("com.sun.jndi.rmi.factory.socket", new SslRMIClientSocketFactory());
 
-            // Retry connection: isConnectorStarted() can return true (via isActive()) before
-            // the RMI server stub is fully registered in the registry
-            assertTrue("Should connect to SSL JMX", Wait.waitFor(() -> {
-                try (final JMXConnector connector = JMXConnectorFactory.connect(url, env)) {
-                    final MBeanServerConnection connection = connector.getMBeanServerConnection();
-                    LOG.info("Successfully connected to SSL JMX on port {}, found {} MBeans",
-                            port, connection.getMBeanCount());
-                    return connection.getMBeanCount() > 0;
-                } catch (final Exception e) {
-                    LOG.debug("JMX SSL connection attempt failed: {}", e.getMessage());
-                    return false;
-                }
-            }, 10_000, 500));
-        } finally {
-            restoreSystemProperty("javax.net.ssl.trustStore", savedTrustStore);
-            restoreSystemProperty("javax.net.ssl.trustStorePassword", savedTrustStorePassword);
-        }
+        // Retry connection: isConnectorStarted() can return true (via isActive()) before
+        // the RMI server stub is fully registered in the registry
+        assertTrue("Should connect to SSL JMX", Wait.waitFor(() -> {
+            try (final JMXConnector connector = JMXConnectorFactory.connect(url, env)) {
+                final MBeanServerConnection connection = connector.getMBeanServerConnection();
+                LOG.info("Successfully connected to SSL JMX on port {}, found {} MBeans",
+                        port, connection.getMBeanCount());
+                return connection.getMBeanCount() > 0;
+            } catch (final Exception e) {
+                LOG.debug("JMX SSL connection attempt failed: {}", e.getMessage());
+                return false;
+            }
+        }, 10_000, 500));
     }
 
     @Test
@@ -246,25 +264,9 @@ public class ManagementContextSslTest {
         }, 10_000, 500));
     }
 
-    private ManagementContext createSslManagementContext() throws Exception {
-        final KeyStore ks = KeyStore.getInstance("PKCS12");
-        try (final InputStream fis = Files.newInputStream(keystoreFile)) {
-            ks.load(fis, KEYSTORE_PASSWORD.toCharArray());
-        }
-
-        final KeyManagerFactory kmf = KeyManagerFactory.getInstance(
-                KeyManagerFactory.getDefaultAlgorithm());
-        kmf.init(ks, KEYSTORE_PASSWORD.toCharArray());
-
-        final TrustManagerFactory tmf = TrustManagerFactory.getInstance(
-                TrustManagerFactory.getDefaultAlgorithm());
-        tmf.init(ks);
-
-        final SSLContext sslCtx = SSLContext.getInstance("TLS");
-        sslCtx.init(kmf.getKeyManagers(), tmf.getTrustManagers(), null);
-
+    private ManagementContext createSslManagementContext() {
         final SslContext sslContext = new SslContext();
-        sslContext.setSSLContext(sslCtx);
+        sslContext.setSSLContext(testSslContext);
 
         final ManagementContext ctx = new ManagementContext();
         ctx.setCreateConnector(true);
