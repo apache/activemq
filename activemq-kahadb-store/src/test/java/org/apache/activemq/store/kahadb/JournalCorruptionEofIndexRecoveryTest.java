@@ -100,9 +100,9 @@ public class JournalCorruptionEofIndexRecoveryTest {
         }
 
         if (whackIndex) {
-            File indexToDelete = new File(brokerDataDir, "db.data");
+            final File indexToDelete = new File(brokerDataDir, "db.data");
             LOG.info("Whacking index: " + indexToDelete);
-            indexToDelete.delete();
+            IOHelper.deleteFileNonBlocking(indexToDelete);
         }
 
         doStartBroker(false, forceRecoverIndex);
@@ -219,14 +219,15 @@ public class JournalCorruptionEofIndexRecoveryTest {
         broker.getPersistenceAdapter().checkpoint(true);
         Location location = ((KahaDBPersistenceAdapter) broker.getPersistenceAdapter()).getStore().getMetadata().producerSequenceIdTrackerLocation;
 
-        DataFile dataFile = ((KahaDBPersistenceAdapter) broker.getPersistenceAdapter()).getStore().getJournal().getFileMap().get(Integer.valueOf(location.getDataFileId()));
-        RecoverableRandomAccessFile randomAccessFile = dataFile.openRandomAccessFile();
+        final DataFile dataFile = ((KahaDBPersistenceAdapter) broker.getPersistenceAdapter()).getStore().getJournal().getFileMap().get(Integer.valueOf(location.getDataFileId()));
+        final RecoverableRandomAccessFile randomAccessFile = dataFile.openRandomAccessFile();
         randomAccessFile.seek(location.getOffset());
         // Use an invalid size well past the end of the data file to trigger corruption handling without large allocation.
-        int bogusSize = ((KahaDBPersistenceAdapter) broker.getPersistenceAdapter()).getStore().getJournal()
+        final int bogusSize = ((KahaDBPersistenceAdapter) broker.getPersistenceAdapter()).getStore().getJournal()
                .getFileMap().get(location.getDataFileId()).getLength() * 10;
         randomAccessFile.writeInt(bogusSize);
         randomAccessFile.getChannel().force(true);
+        dataFile.closeRandomAccessFile(randomAccessFile);
 
         ((KahaDBPersistenceAdapter) broker.getPersistenceAdapter()).getStore().getJournal().close();
         try {
@@ -437,6 +438,7 @@ public class JournalCorruptionEofIndexRecoveryTest {
         randomAccessFile.writeInt(4 * 1024 * 1024);
         randomAccessFile.writeLong(0l);
         randomAccessFile.getChannel().force(true);
+        dataFile.closeRandomAccessFile(randomAccessFile);
     }
 
     private void corruptOrderIndex(final int num, final int size) throws Exception {
