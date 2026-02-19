@@ -116,8 +116,12 @@ public class ConnectionFailureEvictsFromPoolTest extends TestSupport {
                 TestCase.fail("Expected Error");
             } catch (JMSException e) {
             }
+            // Wait for async exception event BEFORE the try-with-resources closes the connection.
+            // ActiveMQConnection.onException() fires TransportListener callbacks via executeAsync(),
+            // so the callback runs in a separate thread. If we wait after connection.close(), the
+            // async executor may already be shut down and the callback never fires.
+            TestCase.assertTrue("exception event propagated ok", gotExceptionEvent.await(15, TimeUnit.SECONDS));
         }
-        TestCase.assertTrue("exception event propagated ok", gotExceptionEvent.await(15, TimeUnit.SECONDS));
         // If we get another connection now it should be a new connection that
         // works.
         LOG.info("expect new connection after failure");
