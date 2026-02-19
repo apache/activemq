@@ -80,13 +80,13 @@ jobs:
         shell: bash
         run: mvn -B -e -fae verify -Pactivemq.tests-quick -Dsurefire.rerunFailingTestsCount=3
       - name: Upload Test Results
-        if: (!cancelled())
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: test-results-${{ matrix.os }}-java${{ matrix.java-version }}
           path: '**/target/surefire-reports/*.xml'
       - name: Publish Test Results
-        if: (!cancelled()) && runner.os == 'Linux'
+        if: runner.os == 'Linux'
         uses: EnricoMi/publish-unit-test-result-action@v2
         with:
           large_files: true
