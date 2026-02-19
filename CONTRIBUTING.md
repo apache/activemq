@@ -30,11 +30,17 @@ Review our Apache [Security Policy](https://www.apache.org/security/). **Do not*
 
 ## Feature Requests
 
+1. Minor feature requests, such as adding a metric or configuration flag should be opened as an Issue.
+
+2. Major feature requests, such as replication, modernizing the boot process should be opened as an Issue tagged with 'propsoal'.
+
 ## Triaging Issues
 
 ## Code Contributions
 
 ### Submitting Pull Requests
+
+1. Pull Requests that need review or discussion should be created as a 'Draft' with the 'WIP:' prefix in the title.
 
 ### Writing Commit Messages
 
