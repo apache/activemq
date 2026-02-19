@@ -17,6 +17,7 @@
 package org.apache.activemq.network;
 
 import java.io.IOException;
+import java.net.URI;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import jakarta.jms.Connection;
@@ -25,7 +26,6 @@ import jakarta.jms.Destination;
 import jakarta.jms.JMSException;
 import jakarta.jms.Message;
 import jakarta.jms.MessageConsumer;
-import jakarta.jms.MessageListener;
 import jakarta.jms.MessageProducer;
 import jakarta.jms.Queue;
 import jakarta.jms.Session;
@@ -39,6 +39,7 @@ import org.apache.activemq.DestinationDoesNotExistException;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.policy.SharedDeadLetterStrategy;
 import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.transport.TransportFilter;
 import org.apache.activemq.transport.failover.FailoverTransport;
 import org.apache.activemq.xbean.BrokerFactoryBean;
@@ -68,32 +69,28 @@ public class NetworkFailoverTest extends TestCase {
     public void testRequestReply() throws Exception {
         final MessageProducer remoteProducer = remoteSession.createProducer(null);
         MessageConsumer remoteConsumer = remoteSession.createConsumer(included);
-        remoteConsumer.setMessageListener(new MessageListener() {
-            @Override
-            public void onMessage(Message msg) {
-                final TextMessage textMsg = (TextMessage)msg;
-                try {
-                    String payload = "REPLY: " + textMsg.getText() + ", " + textMsg.getJMSMessageID();
-                    Destination replyTo;
-                    replyTo = msg.getJMSReplyTo();
-                    textMsg.clearBody();
-                    textMsg.setText(payload);
-                    LOG.info("*** Sending response: {}", textMsg.getText());
-                    remoteProducer.send(replyTo, textMsg);
-                    LOG.info("replied with: " + textMsg.getJMSMessageID());
+        remoteConsumer.setMessageListener(msg -> {
+            final TextMessage textMsg = (TextMessage) msg;
+            try {
+                final String payload = "REPLY: " + textMsg.getText() + ", " + textMsg.getJMSMessageID();
+                final Destination replyTo = msg.getJMSReplyTo();
+                textMsg.clearBody();
+                textMsg.setText(payload);
+                LOG.info("*** Sending response: {}", textMsg.getText());
+                remoteProducer.send(replyTo, textMsg);
+                LOG.info("replied with: " + textMsg.getJMSMessageID());
 
-                } catch (DestinationDoesNotExistException expected) {
-                    // been removed but not yet recreated
-                    replyToNonExistDest.incrementAndGet();
-                    try {
-                        LOG.info("NED: " + textMsg.getJMSMessageID());
-                    } catch (JMSException e) {
-                        e.printStackTrace();
-                    };
-                } catch (Exception e) {
-                    LOG.warn("*** Responder listener caught exception: ", e);
+            } catch (DestinationDoesNotExistException expected) {
+                // been removed but not yet recreated
+                replyToNonExistDest.incrementAndGet();
+                try {
+                    LOG.info("NED: " + textMsg.getJMSMessageID());
+                } catch (JMSException e) {
                     e.printStackTrace();
                 }
+            } catch (Exception e) {
+                LOG.warn("*** Responder listener caught exception: ", e);
+                e.printStackTrace();
             }
         });
 
@@ -104,16 +101,13 @@ public class NetworkFailoverTest extends TestCase {
 
         // track remote dlq for forward failures
         MessageConsumer dlqconsumer = remoteSession.createConsumer(new ActiveMQQueue(SharedDeadLetterStrategy.DEFAULT_DEAD_LETTER_QUEUE_NAME));
-        dlqconsumer.setMessageListener(new MessageListener() {
-            @Override
-            public void onMessage(Message message) {
-                try {
-                    LOG.info("dlq " + message.getJMSMessageID());
-                } catch (JMSException e) {
-                    e.printStackTrace();
-                }
-                remoteDLQCount.incrementAndGet();
+        dlqconsumer.setMessageListener(message -> {
+            try {
+                LOG.info("dlq " + message.getJMSMessageID());
+            } catch (JMSException e) {
+                e.printStackTrace();
             }
+            remoteDLQCount.incrementAndGet();
         });
 
         // allow for consumer infos to perculate arround
@@ -176,25 +170,51 @@ public class NetworkFailoverTest extends TestCase {
         } catch(Exception ex) {}
     }
 
-    protected void doSetUp(boolean deleteAllMessages) throws Exception {
+    protected void doSetUp(final boolean deleteAllMessages) throws Exception {
 
         remoteBroker = createRemoteBroker();
         remoteBroker.setDeleteAllMessagesOnStartup(deleteAllMessages);
         remoteBroker.setCacheTempDestinations(true);
         remoteBroker.start();
+        remoteBroker.waitUntilStarted();
 
         localBroker = createLocalBroker();
         localBroker.setDeleteAllMessagesOnStartup(deleteAllMessages);
         localBroker.setCacheTempDestinations(true);
         localBroker.start();
+        localBroker.waitUntilStarted();
 
-        String localURI = "tcp://localhost:61616";
-        String remoteURI = "tcp://localhost:61617";
-        ActiveMQConnectionFactory fac = new ActiveMQConnectionFactory("failover:("+localURI+","+remoteURI+")?randomize=false&backup=false&trackMessages=true");
+        // Get actual assigned ephemeral ports
+        final URI localConnectURI = localBroker.getTransportConnectors().get(0).getConnectUri();
+        final URI remoteConnectURI = remoteBroker.getTransportConnectors().get(0).getConnectUri();
+        final String localURI = localConnectURI.toString();
+        final String remoteURI = remoteConnectURI.toString();
+
+        // Add network connectors programmatically using actual ports
+        final DiscoveryNetworkConnector localToRemote = new DiscoveryNetworkConnector(
+                new URI("static://(" + remoteURI + ")"));
+        localToRemote.setName("networkConnector");
+        localToRemote.setDynamicOnly(false);
+        localToRemote.setConduitSubscriptions(true);
+        localToRemote.setDecreaseNetworkConsumerPriority(false);
+        localToRemote.setDynamicallyIncludedDestinations(
+                java.util.List.of(new ActiveMQQueue("include.test.foo"), new ActiveMQTopic("include.test.bar")));
+        localToRemote.setExcludedDestinations(
+                java.util.List.of(new ActiveMQQueue("exclude.test.foo"), new ActiveMQTopic("exclude.test.bar")));
+        localBroker.addNetworkConnector(localToRemote);
+        localBroker.startNetworkConnector(localToRemote, null);
+
+        final DiscoveryNetworkConnector remoteToLocal = new DiscoveryNetworkConnector(
+                new URI("static://(" + localURI + ")"));
+        remoteToLocal.setName("networkConnector");
+        remoteBroker.addNetworkConnector(remoteToLocal);
+        remoteBroker.startNetworkConnector(remoteToLocal, null);
+
+        ActiveMQConnectionFactory fac = new ActiveMQConnectionFactory("failover:(" + localURI + "," + remoteURI + ")?randomize=false&backup=false&trackMessages=true");
         localConnection = fac.createConnection();
         localConnection.setClientID("local");
         localConnection.start();
-        fac = new ActiveMQConnectionFactory("failover:("+remoteURI + ","+localURI+")?randomize=false&backup=false&trackMessages=true");
+        fac = new ActiveMQConnectionFactory("failover:(" + remoteURI + "," + localURI + ")?randomize=false&backup=false&trackMessages=true");
         fac.setWatchTopicAdvisories(false);
         remoteConnection = fac.createConnection();
         remoteConnection.setClientID("remote");
@@ -205,11 +225,11 @@ public class NetworkFailoverTest extends TestCase {
     }
 
     protected String getRemoteBrokerURI() {
-        return "org/apache/activemq/network/remoteBroker.xml";
+        return "org/apache/activemq/network/remoteBroker-ephemeral.xml";
     }
 
     protected String getLocalBrokerURI() {
-        return "org/apache/activemq/network/localBroker.xml";
+        return "org/apache/activemq/network/localBroker-ephemeral.xml";
     }
 
     protected BrokerService createBroker(String uri) throws Exception {

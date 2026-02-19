@@ -21,6 +21,11 @@ package org.apache.activemq.network;
  */
 public class MulticastNetworkTest extends SimpleNetworkTest {
 
+    @Override
+    protected void addNetworkConnectors() throws Exception {
+        // No-op: multicast network connectors are already defined in the XML configs
+    }
+
     protected String getRemoteBrokerURI() {
         return "org/apache/activemq/network/multicast/remoteBroker.xml";
     }
