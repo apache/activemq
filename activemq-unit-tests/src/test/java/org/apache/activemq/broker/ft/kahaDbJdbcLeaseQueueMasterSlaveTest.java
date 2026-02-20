@@ -32,8 +32,6 @@ import org.apache.derby.jdbc.EmbeddedDataSource;
 
 public class kahaDbJdbcLeaseQueueMasterSlaveTest extends QueueMasterSlaveTestSupport {
     protected DataSource sharedDs;
-    protected String MASTER_URL = "tcp://localhost:62001";
-    protected String SLAVE_URL  = "tcp://localhost:62002";
     File sharedDbDirFile;
 
     @Override
@@ -54,7 +52,7 @@ public class kahaDbJdbcLeaseQueueMasterSlaveTest extends QueueMasterSlaveTestSup
     protected void createMaster() throws Exception {
         master = new BrokerService();
         master.setBrokerName("master");
-        master.addConnector(MASTER_URL);
+        master.addConnector("tcp://localhost:0");
         master.setUseJmx(false);
         master.setPersistent(true);
         master.setDeleteAllMessagesOnStartup(true);
@@ -87,7 +85,7 @@ public class kahaDbJdbcLeaseQueueMasterSlaveTest extends QueueMasterSlaveTestSup
                     BrokerService broker = new BrokerService();
                     broker.setBrokerName("slave");
                     TransportConnector connector = new TransportConnector();
-                    connector.setUri(new URI(SLAVE_URL));
+                    connector.setUri(new URI("tcp://localhost:" + masterPort));
                     broker.addConnector(connector);
                     broker.setUseJmx(false);
                     broker.setPersistent(true);
