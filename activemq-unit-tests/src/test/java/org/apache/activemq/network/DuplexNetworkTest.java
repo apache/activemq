@@ -34,11 +34,6 @@ public class DuplexNetworkTest extends SimpleNetworkTest {
     private static final Logger LOG = LoggerFactory.getLogger(DuplexNetworkTest.class);
 
     @Override
-    protected void addNetworkConnectors() throws Exception {
-        // No-op: duplex network connector is already defined in duplexLocalBroker.xml
-    }
-
-    @Override
     protected String getLocalBrokerURI() {
         return "org/apache/activemq/network/duplexLocalBroker.xml";
     }
