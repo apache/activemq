@@ -235,15 +235,8 @@ public class BrokerNetworkWithStuckMessagesTest {
         // Ensure that there are zero messages on the local broker. This tells
         // us that those messages have been prefetched to the remote broker
         // where the demand exists.
-        Wait.waitFor(new Wait.Condition() {
-            @Override
-            public boolean isSatisified() throws Exception {
-                Object[] result = browseQueueWithJmx(localBroker);
-               return 0 == result.length;
-            }
-        });
-        messages = browseQueueWithJmx(localBroker);
-        assertEquals(0, messages.length);
+        assertTrue("local broker drained", Wait.waitFor(() ->
+                browseQueueWithJmx(localBroker).length == 0));
 
         // try and pull the messages from remote, should be denied b/c on networkTtl
         LOG.info("creating demand on second remote...");
@@ -270,15 +263,9 @@ public class BrokerNetworkWithStuckMessagesTest {
         connection2.send(connectionInfo2.createRemoveCommand());
 
         // There should now be 5 messages stuck on the remote broker
-        assertTrue("correct stuck message count", Wait.waitFor(new Wait.Condition() {
-            @Override
-            public boolean isSatisified() throws Exception {
-                Object[] result = browseQueueWithJmx(remoteBroker);
-                return 5 == result.length;
-            }
-        }));
+        assertTrue("correct stuck message count", Wait.waitFor(() ->
+                browseQueueWithJmx(remoteBroker).length == 5));
         messages = browseQueueWithJmx(remoteBroker);
-        assertEquals(5, messages.length);
 
         assertTrue("can see broker path property",
                 ((String)((CompositeData)messages[1]).get("BrokerPath")).contains(localBroker.getBroker().getBrokerId().toString()));
@@ -295,15 +282,15 @@ public class BrokerNetworkWithStuckMessagesTest {
         connection1.send(createAck(consumerInfo1, message1, 1, MessageAck.INDIVIDUAL_ACK_TYPE));
         LOG.info("acked one message on origin, waiting for all messages to percolate back");
 
-        Wait.waitFor(new Wait.Condition() {
-            @Override
-            public boolean isSatisified() throws Exception {
-                Object[] result = browseQueueWithJmx(localBroker);
-               return 4 == result.length;
-            }
-        });
-        messages = browseQueueWithJmx(localBroker);
-        assertEquals(4, messages.length);
+        // Wait for ALL stuck messages to replay from remote back to local.
+        // Must check both brokers: local == 4 (5 replayed - 1 acked) AND remote == 0
+        // (replay complete). Without the remote check, the Wait can return when only
+        // 4 of 5 messages have arrived on local (transient match), then the 5th arrives.
+        assertTrue("messages percolated back", Wait.waitFor(() -> {
+            final Object[] localResult = browseQueueWithJmx(localBroker);
+            final Object[] remoteResult = browseQueueWithJmx(remoteBroker);
+            return localResult.length == 4 && remoteResult.length == 0;
+        }, TimeUnit.SECONDS.toMillis(30), 100));
 
         LOG.info("checking for messages on remote again");
         // messages won't migrate back again till consumer closes
@@ -329,25 +316,10 @@ public class BrokerNetworkWithStuckMessagesTest {
         assertEquals(receiveNumMessages, counter);
 
         // verify all messages consumed
-        Wait.waitFor(new Wait.Condition() {
-            @Override
-            public boolean isSatisified() throws Exception {
-                Object[] result = browseQueueWithJmx(remoteBroker);
-               return 0 == result.length;
-            }
-        });
-        messages = browseQueueWithJmx(remoteBroker);
-        assertEquals(0, messages.length);
-
-        Wait.waitFor(new Wait.Condition() {
-            @Override
-            public boolean isSatisified() throws Exception {
-                Object[] result = browseQueueWithJmx(localBroker);
-               return 0 == result.length;
-            }
-        });
-        messages = browseQueueWithJmx(localBroker);
-        assertEquals(0, messages.length);
+        assertTrue("remote drained", Wait.waitFor(() ->
+                browseQueueWithJmx(remoteBroker).length == 0));
+        assertTrue("local drained", Wait.waitFor(() ->
+                browseQueueWithJmx(localBroker).length == 0));
 
         // Close the consumer on the remote broker
         connection2.send(consumerInfo3.createRemoveCommand());

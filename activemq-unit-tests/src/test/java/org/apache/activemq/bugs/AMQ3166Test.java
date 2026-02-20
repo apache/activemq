@@ -191,18 +191,25 @@ public class AMQ3166Test {
         ActiveMQMessageProducer producer = (ActiveMQMessageProducer) session.createProducer(session.createQueue("QAT"));
 
         for (int i=0; i<batchSize; i++) {
-            producer.send(session.createTextMessage("Hello A"), new AsyncCallback() {
-                @Override
-                public void onSuccess() {
-                    batchSent.countDown();
-                }
+            try {
+                producer.send(session.createTextMessage("Hello A"), new AsyncCallback() {
+                    @Override
+                    public void onSuccess() {
+                        batchSent.countDown();
+                    }
 
-                @Override
-                public void onException(JMSException e) {
-                    session.getTransactionContext().setRollbackOnly(true);
-                    batchSent.countDown();
-                }
-            });
+                    @Override
+                    public void onException(JMSException e) {
+                        session.getTransactionContext().setRollbackOnly(true);
+                        batchSent.countDown();
+                    }
+                });
+            } catch (jakarta.jms.IllegalStateException alreadyRolledBack) {
+                // Async error from an earlier send may have already marked the transaction
+                // rollback-only. Count down the latch so beforeEnd doesn't hang.
+                batchSent.countDown();
+                continue;
+            }
 
             if (i==0) {
                 // transaction context begun on first send
@@ -211,9 +218,9 @@ public class AMQ3166Test {
                     public void beforeEnd() throws Exception {
                         // await response to all sends in the batch
                         if (!batchSent.await(10, TimeUnit.SECONDS)) {
-                            LOG.error("TimedOut waiting for aync send requests!");
+                            LOG.error("TimedOut waiting for async send requests!");
                             session.getTransactionContext().setRollbackOnly(true);
-                        };
+                        }
                         super.beforeEnd();
                     }
                 });

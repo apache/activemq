@@ -74,6 +74,7 @@ public class QueueZeroPrefetchLazyDispatchPriorityTest {
 
     @Test(timeout=120000)
     public void testPriorityMessages() throws Exception {
+        final ActiveMQQueue destination = new ActiveMQQueue("TestQ");
 
         for (int i = 0; i < ITERATIONS; i++) {
 
@@ -85,11 +86,15 @@ public class QueueZeroPrefetchLazyDispatchPriorityTest {
 
             LOG.info("On iteration {}", i);
 
-            Thread.sleep(1000);
+            // Wait for all messages to be enqueued before consuming
+            assertTrue("Messages enqueued", Wait.waitFor(() -> {
+                final Queue queue = (Queue) broker.getDestination(destination);
+                return queue != null && queue.getDestinationStatistics().getMessages().getCount() == 5;
+            }, 5000, 100));
 
             // consume messages
-            ArrayList<Message> consumeList = consumeMessages("TestQ", 5, TimeUnit.SECONDS.toMillis(30));
-            LOG.info("Consumed list " + consumeList.size());
+            final ArrayList<Message> consumeList = consumeMessages("TestQ", 5, TimeUnit.SECONDS.toMillis(30));
+            LOG.info("Consumed list {}", consumeList.size());
 
             // compare lists
             assertEquals("message 1 should be priority high", 5, consumeList.get(0).getJMSPriority());
@@ -170,27 +175,32 @@ public class QueueZeroPrefetchLazyDispatchPriorityTest {
     public void testPriorityMessagesWithJmsBrowser() throws Exception {
 
         final int numToSend = 5;
+        final ActiveMQQueue destination = new ActiveMQQueue("TestQ");
 
         for (int i = 0; i < ITERATIONS; i++) {
             produceMessages(numToSend - 1, 4, "TestQ");
 
-            ArrayList<Message> browsed = browseMessages("TestQ");
+            final ArrayList<Message> browsed = browseMessages("TestQ");
 
             LOG.info("Browsed: {}", browsed.size());
 
             // send 1 message priority HIGH
             produceMessages(1, 5, "TestQ");
 
-            Thread.sleep(1000);
+            // Wait for all messages to be enqueued
+            assertTrue("Messages enqueued", Wait.waitFor(() -> {
+                final Queue queue = (Queue) broker.getDestination(destination);
+                return queue != null && queue.getDestinationStatistics().getMessages().getCount() == numToSend;
+            }, 5000, 100));
 
             LOG.info("On iteration {}", i);
 
-            Message message = consumeOneMessage("TestQ");
+            final Message message = consumeOneMessage("TestQ");
             assertNotNull(message);
             assertEquals(5, message.getJMSPriority());
 
             // consume messages
-            ArrayList<Message> consumeList = consumeMessages("TestQ");
+            final ArrayList<Message> consumeList = consumeMessages("TestQ");
             LOG.info("Consumed list {}", consumeList.size());
 
             // compare lists
@@ -217,30 +227,37 @@ public class QueueZeroPrefetchLazyDispatchPriorityTest {
                 return queue != null && queue.getDestinationStatistics().getMessages().getCount() == numToSend;
             }, 5000, 100));
 
-            ArrayList<Message> browsed = browseMessages("TestQ");
+            final ArrayList<Message> browsed = browseMessages("TestQ");
 
             LOG.info("Browsed: {}", browsed.size());
 
             assertEquals(0, browsed.size());
 
-            Message message = consumeOneMessage("TestQ", Session.CLIENT_ACKNOWLEDGE);
+            final Message message = consumeOneMessage("TestQ", Session.CLIENT_ACKNOWLEDGE);
             assertNotNull(message);
 
-            browsed = browseMessages("TestQ");
+            final ArrayList<Message> browsedAfterPull = browseMessages("TestQ");
 
-            LOG.info("Browsed: {}", browsed.size());
+            LOG.info("Browsed: {}", browsedAfterPull.size());
 
-            assertEquals("see only the paged in for pull", 1, browsed.size());
+            assertEquals("see only the paged in for pull", 1, browsedAfterPull.size());
 
-            // Wait for all messages to be available (including redelivery of unacked message)
+            // Wait for the unacked message to be fully redelivered after connection close.
+            // messages.getCount() includes in-flight messages so it's already == numToSend;
+            // we must also check inflight == 0 to ensure the redelivery processing is complete
+            // and all messages are truly available for dispatch to a new consumer.
             assertTrue("All messages available for consumption", Wait.waitFor(() -> {
                 final Queue queue = (Queue) broker.getDestination(destination);
-                return queue != null && queue.getDestinationStatistics().getMessages().getCount() == numToSend;
+                return queue != null
+                    && queue.getDestinationStatistics().getMessages().getCount() == numToSend
+                    && queue.getDestinationStatistics().getInflight().getCount() == 0;
             }, 5000, 100));
 
-            // consume messages
-            ArrayList<Message> consumeList = consumeMessages("TestQ");
-            LOG.info("Consumed list " + consumeList.size());
+            // Use the retry-based consume to handle zero-prefetch dispatch timing:
+            // with prioritized messages + lazy dispatch + redelivered messages in the
+            // dispatch pending list, the pull mechanism may need multiple attempts on slow CI.
+            final ArrayList<Message> consumeList = consumeMessages("TestQ", numToSend, TimeUnit.SECONDS.toMillis(30));
+            LOG.info("Consumed list {}", consumeList.size());
             assertEquals(numToSend, consumeList.size());
         }
     }

@@ -47,6 +47,7 @@ import org.apache.activemq.store.TransactionStore;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
 import org.apache.activemq.transport.tcp.TcpTransport;
 import org.apache.activemq.usage.SystemUsage;
+import org.apache.activemq.util.Wait;
 import org.junit.After;
 import org.junit.Before;
 import org.slf4j.Logger;
@@ -240,6 +241,16 @@ public class RedeliveryRestartWithExceptionTest extends TestSupport {
         }
 
         connection.getTransport().narrow(TcpTransport.class).getTransportListener().onException(new IOException("Die"));
+
+        // Wait for the broker to fully process the connection drop and return
+        // unacked messages to the queue. The onException triggers async cleanup
+        // via executeAsync(), so without this wait the new consumer may receive
+        // fresh messages (6-10) instead of the redelivered ones (1-5).
+        final ActiveMQQueue dest = new ActiveMQQueue(queueName);
+        assertTrue("unacked messages returned to queue", Wait.waitFor(() -> {
+            final org.apache.activemq.broker.region.Destination d = broker.getDestination(dest);
+            return d != null && d.getDestinationStatistics().getInflight().getCount() == 0;
+        }, 10000, 100));
 
         connection = (ActiveMQConnection) connectionFactory.createConnection();
         connection.start();
