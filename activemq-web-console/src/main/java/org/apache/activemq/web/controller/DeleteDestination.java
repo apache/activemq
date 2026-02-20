@@ -21,23 +21,19 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import org.apache.activemq.web.BrokerFacade;
 import org.apache.activemq.web.DestinationFacade;
-import org.springframework.web.servlet.ModelAndView;
-import org.springframework.web.servlet.mvc.Controller;
+import org.springframework.stereotype.Component;
+import org.springframework.web.context.annotation.RequestScope;
 
-/**
- * 
- * 
- */
+@Component
+@RequestScope
 public class DeleteDestination extends DestinationFacade implements Controller {
 
-    public DeleteDestination(BrokerFacade brokerFacade) {
+    public DeleteDestination(final BrokerFacade brokerFacade) {
         super(brokerFacade);
     }
 
-    public ModelAndView handleRequest(HttpServletRequest request, HttpServletResponse response) throws Exception {
+    public void handleRequest(final HttpServletRequest request, final HttpServletResponse response) throws Exception {
         removeDestination();
-        return redirectToBrowseView();
+        response.sendRedirect(isQueue() ? "queues.jsp" : "topics.jsp");
     }
-
-    
 }
