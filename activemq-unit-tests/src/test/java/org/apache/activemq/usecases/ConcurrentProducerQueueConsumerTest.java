@@ -54,7 +54,10 @@ import org.apache.activemq.util.MessageIdList;
 import org.apache.activemq.util.Wait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
+@Category(ParallelTest.class)
 public class ConcurrentProducerQueueConsumerTest extends TestSupport
 {
     private static final Logger LOG = LoggerFactory.getLogger(ConcurrentProducerQueueConsumerTest.class);

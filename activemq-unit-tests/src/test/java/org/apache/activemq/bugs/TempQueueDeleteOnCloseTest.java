@@ -24,10 +24,13 @@ import jakarta.jms.Session;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * Demonstrates how unmarshalled VM advisory messages for temporary queues prevent other connections from being closed.
  */
+@Category(ParallelTest.class)
 public class TempQueueDeleteOnCloseTest {
 
     @Test

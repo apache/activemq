@@ -30,7 +30,10 @@ import jakarta.jms.TextMessage;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
+@Category(ParallelTest.class)
 public class AMQ2383Test {
 
     @Test

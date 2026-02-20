@@ -45,7 +45,10 @@ import java.util.LinkedList;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
+@Category(ParallelTest.class)
 public class KahaDBOffsetRecoveryListenerTest {
 
     private static final Logger logger = LoggerFactory.getLogger(KahaDBOffsetRecoveryListenerTest.class);

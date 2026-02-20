@@ -24,12 +24,15 @@ import org.apache.activemq.command.Command;
 import org.apache.activemq.command.Response;
 import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.wireformat.WireFormat;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * Runs against the broker but marshals all request and response commands.
  * 
  * 
  */
+@Category(ParallelTest.class)
 public class MarshallingBrokerTest extends BrokerTest {
 
     public WireFormat wireFormat = new OpenWireFormat();

@@ -46,7 +46,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.fail;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
+@Category(ParallelTest.class)
 public class DurableSubCacheTest {
     private static final Logger LOG = LoggerFactory.getLogger(DurableSubCacheTest.class);
 

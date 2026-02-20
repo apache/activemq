@@ -29,7 +29,10 @@ import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.StubBroker;
 import org.apache.activemq.command.ConnectionInfo;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
+@Category(ParallelTest.class)
 public class JaasAuthenticationBrokerTest extends TestCase {
     StubBroker receiveBroker;
 

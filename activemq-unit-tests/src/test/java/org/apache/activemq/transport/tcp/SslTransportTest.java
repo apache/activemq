@@ -27,10 +27,13 @@ import junit.framework.TestCase;
 import org.apache.activemq.command.ConnectionInfo;
 import org.apache.activemq.transport.StubTransportListener;
 import org.apache.activemq.wireformat.ObjectStreamWireFormat;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * Unit tests for the SslTransport class.
  */
+@Category(ParallelTest.class)
 public class SslTransportTest extends TestCase {
 
     SSLSocket sslSocket;

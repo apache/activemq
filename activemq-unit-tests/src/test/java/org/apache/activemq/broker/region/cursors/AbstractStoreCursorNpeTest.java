@@ -29,6 +29,8 @@ import jakarta.jms.Topic;
 
 import org.apache.activemq.command.ActiveMQTextMessage;
 import org.apache.activemq.test.TestSupport;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * This test shows that a null pointer exception will not occur when unsubscribing from a
@@ -38,6 +40,7 @@ import org.apache.activemq.test.TestSupport;
  * on AbstractStoreCusor, it will consistently fail with a NPE.
  *
  */
+@Category(ParallelTest.class)
 public class AbstractStoreCursorNpeTest extends TestSupport {
 
     protected Connection connection;

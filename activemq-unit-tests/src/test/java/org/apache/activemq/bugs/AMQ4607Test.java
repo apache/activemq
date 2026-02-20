@@ -37,7 +37,10 @@ import org.apache.activemq.network.NetworkConnector;
 import org.apache.activemq.util.Wait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
+@Category(ParallelTest.class)
 public class AMQ4607Test extends JmsMultipleBrokersTestSupport implements UncaughtExceptionHandler {
     private static final Logger LOG = LoggerFactory.getLogger(AMQ4607Test.class);
 

@@ -53,6 +53,8 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.derby.jdbc.EmbeddedDataSource;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * to be compliant with JDBC spec; officially commit is not supposed to be
@@ -64,6 +66,7 @@ import org.junit.Test;
  * autocommit, wrapper throws a SQLException.
  */
 
+@Category(ParallelTest.class)
 public class JDBCStoreAutoCommitTest {
 
     private static final String BROKER_NAME = "AutoCommitTest";

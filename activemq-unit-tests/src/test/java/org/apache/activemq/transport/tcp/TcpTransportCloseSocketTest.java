@@ -33,12 +33,15 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * Test for https://issues.apache.org/jira/browse/AMQ-6561 to make sure sockets
  * are closed on all connection attempt errors
  */
 @RunWith(Parameterized.class)
+@Category(ParallelTest.class)
 public class TcpTransportCloseSocketTest {
 
     public static final String KEYSTORE_TYPE = "jks";

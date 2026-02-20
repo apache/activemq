@@ -49,8 +49,11 @@ import jakarta.jms.MessageProducer;
 import jakarta.jms.Queue;
 import jakarta.jms.ResourceAllocationException;
 import jakarta.jms.Session;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 @RunWith(value = Parameterized.class)
+@Category(ParallelTest.class)
 public class MaxUncommittedCountExceededTest {
 
     public static final String DEFAULT_JMX_DOMAIN_NAME = "org.apache.activemq";

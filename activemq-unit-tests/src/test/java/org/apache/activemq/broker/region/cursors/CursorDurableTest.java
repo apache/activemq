@@ -24,10 +24,13 @@ import jakarta.jms.MessageConsumer;
 import jakarta.jms.Session;
 import jakarta.jms.Topic;
 import org.apache.activemq.broker.BrokerService;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * 
  */
+@Category(ParallelTest.class)
 public class CursorDurableTest extends CursorSupport {
 
     protected Destination getDestination(Session session) throws JMSException {

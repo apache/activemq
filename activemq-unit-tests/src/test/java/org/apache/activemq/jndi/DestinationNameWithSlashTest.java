@@ -16,12 +16,16 @@
  */
 package org.apache.activemq.jndi;
 
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
+
 
 /**
  * Test case for AMQ-140
  *
  *
  */
+@Category(ParallelTest.class)
 public class DestinationNameWithSlashTest extends JNDITestSupport {
     public void testNameWithSlash() throws Exception {
         assertDestinationExists("jms/Queue");

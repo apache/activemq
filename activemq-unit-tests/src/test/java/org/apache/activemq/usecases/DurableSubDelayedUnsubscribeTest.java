@@ -49,10 +49,13 @@ import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /*
  * A cut down version of DurableSubProcessWithRestartTest that focuses on kahaDB file retention
  */
+@Category(ParallelTest.class)
 public class DurableSubDelayedUnsubscribeTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(DurableSubDelayedUnsubscribeTest.class);

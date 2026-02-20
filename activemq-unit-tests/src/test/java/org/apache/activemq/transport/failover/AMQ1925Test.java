@@ -45,12 +45,15 @@ import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.util.ServiceStopper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * TestCase showing the message-destroying described in AMQ-1925
  * 
  * 
  */
+@Category(ParallelTest.class)
 public class AMQ1925Test extends TestCase implements ExceptionListener {
 	private static final Logger log = LoggerFactory.getLogger(AMQ1925Test.class);
 

@@ -25,7 +25,10 @@ import jakarta.jms.Session;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
+@Category(ParallelTest.class)
 public class JmsTopicSendReceiveWithTwoConnectionsTest extends JmsSendReceiveTestSupport {
 
     private static final Logger LOG = LoggerFactory.getLogger(JmsTopicSendReceiveWithTwoConnectionsTest.class);

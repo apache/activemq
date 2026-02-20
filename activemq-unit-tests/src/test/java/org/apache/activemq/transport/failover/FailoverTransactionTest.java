@@ -40,6 +40,7 @@ import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
 import org.apache.activemq.transport.TransportListener;
 import org.apache.activemq.util.SocketProxy;
+import org.apache.activemq.test.annotations.ParallelTest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -67,10 +68,12 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import org.junit.experimental.categories.Category;
 
 // see https://issues.apache.org/activemq/browse/AMQ-2473
 
 // https://issues.apache.org/activemq/browse/AMQ-2590
+@Category(ParallelTest.class)
 public class FailoverTransactionTest extends TestSupport {
 
     private static final Logger LOG = LoggerFactory.getLogger(FailoverTransactionTest.class);

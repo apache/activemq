@@ -38,7 +38,10 @@ import org.slf4j.LoggerFactory;
 
 
 import static org.junit.Assert.assertEquals;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
+@Category(ParallelTest.class)
 public class QueueBrowsingLimitTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(QueueBrowsingLimitTest.class);

@@ -37,8 +37,11 @@ import org.apache.activemq.wireformat.WireFormat;
 import org.apache.derby.jdbc.EmbeddedDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 // https://issues.apache.org/activemq/browse/AMQ-2880
+@Category(ParallelTest.class)
 public class JDBCCommitExceptionTest extends TestCase {
 
     private static final Logger LOG = LoggerFactory.getLogger(JDBCCommitExceptionTest.class);

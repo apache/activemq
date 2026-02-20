@@ -38,10 +38,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.junit.*;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * Confirm that the broker does not resend unacknowledged messages during a broker shutdown.
  */
+@Category(ParallelTest.class)
 public class QueueResendDuringShutdownTest {
     private static final Logger         LOG = LoggerFactory.getLogger(QueueResendDuringShutdownTest.class);
     public static final int             NUM_CONNECTION_TO_TEST = 8;

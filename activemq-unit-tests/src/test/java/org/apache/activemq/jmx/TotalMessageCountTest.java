@@ -38,10 +38,13 @@ import org.slf4j.LoggerFactory;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertTrue;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * @author <a href="http://tmielke.blogspot.com">Torsten Mielke</a>
  */
+@Category(ParallelTest.class)
 public class TotalMessageCountTest {
     private static final Logger LOG = LoggerFactory.getLogger(TotalMessageCountTest.class);
 

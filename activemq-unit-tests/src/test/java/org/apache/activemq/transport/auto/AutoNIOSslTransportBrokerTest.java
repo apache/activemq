@@ -23,7 +23,10 @@ import junit.framework.Test;
 import junit.textui.TestRunner;
 
 import org.apache.activemq.transport.TransportBrokerTestSupport;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
+@Category(ParallelTest.class)
 public class AutoNIOSslTransportBrokerTest extends TransportBrokerTestSupport {
 
     public static final String KEYSTORE_TYPE = "jks";

@@ -53,6 +53,7 @@ import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.plugin.java.JavaRuntimeConfigurationBroker;
 import org.apache.activemq.plugin.java.JavaRuntimeConfigurationPlugin;
 import org.apache.activemq.util.Wait;
+import org.apache.activemq.test.annotations.ParallelTest;
 import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
@@ -60,6 +61,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,6 +71,7 @@ import org.slf4j.LoggerFactory;
  * as demand.
  */
 @RunWith(Parameterized.class)
+@Category(ParallelTest.class)
 public class VirtualConsumerDemandTest extends DynamicNetworkTestSupport {
 
     protected static final int MESSAGE_COUNT = 10;

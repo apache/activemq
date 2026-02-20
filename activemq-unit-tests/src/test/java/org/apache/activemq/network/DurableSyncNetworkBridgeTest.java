@@ -50,6 +50,7 @@ import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
 import org.apache.activemq.store.kahadb.disk.journal.Journal.JournalDiskSyncStrategy;
 import org.apache.activemq.util.Wait;
 import org.apache.activemq.util.Wait.Condition;
+import org.apache.activemq.test.annotations.ParallelTest;
 import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
@@ -59,10 +60,12 @@ import org.junit.rules.Timeout;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @RunWith(Parameterized.class)
+@Category(ParallelTest.class)
 public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
 
     protected static final Logger LOG = LoggerFactory.getLogger(DurableSyncNetworkBridgeTest.class);

@@ -46,7 +46,10 @@ import org.apache.activemq.transaction.Synchronization;
 import org.apache.activemq.util.Wait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
+@Category(ParallelTest.class)
 public class AMQ4485Test extends TestCase {
     private static final Logger LOG = LoggerFactory.getLogger(AMQ4485Test.class);
     BrokerService broker;

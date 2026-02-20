@@ -25,8 +25,11 @@ import org.apache.activemq.util.MessageIdList;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 @RunWith(value = Parameterized.class)
+@Category(ParallelTest.class)
 public class AbortSlowConsumer2Test extends AbortSlowConsumerBase {
 
     @Parameterized.Parameters(name = "isTopic({0})")

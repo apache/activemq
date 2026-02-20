@@ -27,6 +27,7 @@ import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.usage.SystemUsage;
 import org.apache.activemq.util.DefaultTestAppender;
 import org.apache.activemq.util.Wait;
+import org.apache.activemq.test.annotations.ParallelTest;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.core.LogEvent;
@@ -39,7 +40,9 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
+import org.junit.experimental.categories.Category;
 
+@Category(ParallelTest.class)
 public class UsageBlockedDispatchTest extends TestSupport {
 
     private static final int MESSAGES_COUNT = 100;
