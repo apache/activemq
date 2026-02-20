@@ -170,7 +170,23 @@ public class ManagementContext implements Service {
                                 try {
                                     // need to remove MDC as we must not inherit MDC in child threads causing leaks
                                     MDC.remove("activemq.broker");
-                                    connectorServer.start();
+                                    // When SSL is enabled, temporarily set java.rmi.server.hostname
+                                    // to connectorHost so RMI stubs embed the configured host rather
+                                    // than the machine's auto-detected IP. Without this, SSL hostname
+                                    // verification fails on multi-homed hosts because the stub carries
+                                    // an IP that is not covered by the certificate's SAN entries.
+                                    // Pre-existing user-defined values are respected and not overwritten.
+                                    final String prevRmiHostname = System.getProperty("java.rmi.server.hostname");
+                                    if (sslContext != null && prevRmiHostname == null) {
+                                        System.setProperty("java.rmi.server.hostname", connectorHost);
+                                    }
+                                    try {
+                                        connectorServer.start();
+                                    } finally {
+                                        if (sslContext != null && prevRmiHostname == null) {
+                                            System.clearProperty("java.rmi.server.hostname");
+                                        }
+                                    }
                                     serverStub = server.toStub();
                                 } finally {
                                     if (brokerName != null) {

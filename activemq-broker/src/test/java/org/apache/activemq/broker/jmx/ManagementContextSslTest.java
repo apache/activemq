@@ -61,7 +61,6 @@ public class ManagementContextSslTest {
     private SSLContext savedDefaultSslContext;
     private String savedTrustStore;
     private String savedTrustStorePassword;
-    private String savedRmiHostname;
 
     @BeforeClass
     public static void createKeyStore() throws Exception {
@@ -110,7 +109,6 @@ public class ManagementContextSslTest {
         savedDefaultSslContext = SSLContext.getDefault();
         savedTrustStore = System.getProperty("javax.net.ssl.trustStore");
         savedTrustStorePassword = System.getProperty("javax.net.ssl.trustStorePassword");
-        savedRmiHostname = System.getProperty("java.rmi.server.hostname");
     }
 
     @After
@@ -121,7 +119,6 @@ public class ManagementContextSslTest {
         SSLContext.setDefault(savedDefaultSslContext);
         restoreSystemProperty("javax.net.ssl.trustStore", savedTrustStore);
         restoreSystemProperty("javax.net.ssl.trustStorePassword", savedTrustStorePassword);
-        restoreSystemProperty("java.rmi.server.hostname", savedRmiHostname);
     }
 
     @Test
@@ -195,9 +192,6 @@ public class ManagementContextSslTest {
         SSLContext.setDefault(testSslContext);
         System.setProperty("javax.net.ssl.trustStore", keystoreFile.toString());
         System.setProperty("javax.net.ssl.trustStorePassword", KEYSTORE_PASSWORD);
-        // Force RMI stubs to advertise "localhost" so SSL hostname verification
-        // matches the certificate SAN (dns:localhost) instead of the machine's IP.
-        System.setProperty("java.rmi.server.hostname", "localhost");
 
         context = createSslManagementContext();
         context.start();
@@ -217,11 +211,6 @@ public class ManagementContextSslTest {
         SSLContext.setDefault(testSslContext);
         System.setProperty("javax.net.ssl.trustStore", keystoreFile.toString());
         System.setProperty("javax.net.ssl.trustStorePassword", KEYSTORE_PASSWORD);
-        // Force RMI stubs to advertise "localhost" so SSL hostname verification
-        // matches the certificate SAN (dns:localhost) instead of the machine's actual IP.
-        // RMI normally embeds InetAddress.getLocalHost() in stubs; on a multi-homed
-        // machine this can be an IP not covered by the test certificate.
-        System.setProperty("java.rmi.server.hostname", "localhost");
 
         context = createSslManagementContext();
         context.start();
