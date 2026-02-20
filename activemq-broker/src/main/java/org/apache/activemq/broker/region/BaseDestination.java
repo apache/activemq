@@ -644,6 +644,7 @@ public abstract class BaseDestination implements Destination {
      * some way - such as to send to a dead letter queue or something..
      */
     protected void onMessageWithNoConsumers(ConnectionContext context, Message msg) throws Exception {
+        System.out.println("[PUB_PATH] onMessageWithNoConsumers");
         if (!msg.isPersistent()) {
             if (isSendAdvisoryIfNoConsumers()) {
                 // allow messages with no consumers to be dispatched to a dead
