@@ -76,6 +76,7 @@ public class ManagementContextSslTest {
                 "-keyalg", "RSA",
                 "-keysize", "2048",
                 "-dname", "CN=localhost,O=Test",
+                "-ext", "SAN=dns:localhost,ip:127.0.0.1",
                 "-validity", "1"
         ).inheritIO().start();
         assertEquals("keytool should succeed", 0, p.waitFor());
