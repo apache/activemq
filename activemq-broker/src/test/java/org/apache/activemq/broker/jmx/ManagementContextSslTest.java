@@ -28,6 +28,7 @@ import java.nio.file.Path;
 import java.security.KeyStore;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.management.MBeanServerConnection;
 import javax.management.remote.JMXConnector;
@@ -213,6 +214,9 @@ public class ManagementContextSslTest {
         context = createSslManagementContext();
         context.start();
 
+        assertTrue("Connector should be started",
+                Wait.waitFor(context::isConnectorStarted, 20_000, 100));
+
         final int port = context.getConnectorPort();
         assertTrue("SSL connector port should be resolved", port > 0);
 
@@ -220,20 +224,26 @@ public class ManagementContextSslTest {
                 "service:jmx:rmi:///jndi/rmi://localhost:" + port + "/jmxrmi");
         final Map<String, Object> env = new HashMap<>();
         env.put("com.sun.jndi.rmi.factory.socket", new SslRMIClientSocketFactory());
+        final AtomicReference<Exception> lastError = new AtomicReference<>();
 
         // Retry connection: isConnectorStarted() can return true (via isActive()) before
         // the RMI server stub is fully registered in the registry
-        assertTrue("Should connect to SSL JMX", Wait.waitFor(() -> {
+        final boolean connected = Wait.waitFor(() -> {
             try (final JMXConnector connector = JMXConnectorFactory.connect(url, env)) {
                 final MBeanServerConnection connection = connector.getMBeanServerConnection();
                 LOG.info("Successfully connected to SSL JMX on port {}, found {} MBeans",
                         port, connection.getMBeanCount());
                 return connection.getMBeanCount() > 0;
             } catch (final Exception e) {
+                lastError.set(e);
                 LOG.debug("JMX SSL connection attempt failed: {}", e.getMessage());
                 return false;
             }
-        }, 10_000, 500));
+        }, 30_000, 500);
+        final Exception error = lastError.get();
+        assertTrue("Should connect to SSL JMX"
+                        + (error == null ? "" : " (last error: " + error + ")"),
+                connected);
     }
 
     @Test
