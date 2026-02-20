@@ -89,15 +89,9 @@ public class TwoBrokerVirtualTopicSelectorAwareForwardingTest extends
                 "ceposta = 'redhat'");
 
 
-        Wait.waitFor(new Wait.Condition() {
-
-            Destination dest = brokerA.getDestination(new ActiveMQQueue("Consumer.B.VirtualTopic.tempTopic"));
-
-            @Override
-            public boolean isSatisified() throws Exception {
-                return dest.getConsumers().size() == 2;
-            }
-        }, 500);
+        final Destination destA0 = brokerA.getDestination(new ActiveMQQueue("Consumer.B.VirtualTopic.tempTopic"));
+        assertTrue("advisories should propagate: 2 consumers on BrokerA",
+                Wait.waitFor(() -> destA0.getConsumers().size() == 2, 5000, 100));
 
         selectors = cache.selectorsForDestination(testQueue);
         assertEquals(1, selectors.size());
@@ -289,14 +283,9 @@ public class TwoBrokerVirtualTopicSelectorAwareForwardingTest extends
         MessageConsumer nonSelectingConsumer = createConsumer("BrokerB", consumerBQueue);
 
         // let advisories propogate
-        Wait.waitFor(new Wait.Condition() {
-            Destination dest = brokerA.getDestination(new ActiveMQQueue("Consumer.B.VirtualTopic.tempTopic"));
-
-            @Override
-            public boolean isSatisified() throws Exception {
-                return dest.getConsumers().size() == 2;
-            }
-        }, 500);
+        final Destination destA1 = brokerA.getDestination(new ActiveMQQueue("Consumer.B.VirtualTopic.tempTopic"));
+        assertTrue("advisories should propagate: 2 consumers on BrokerA",
+                Wait.waitFor(() -> destA1.getConsumers().size() == 2, 5000, 100));
 
 
         Destination destination = getDestination(brokerB, consumerBQueue);
@@ -344,14 +333,9 @@ public class TwoBrokerVirtualTopicSelectorAwareForwardingTest extends
 
 
         // let advisories propogate
-        Wait.waitFor(new Wait.Condition() {
-            Destination dest = brokerA.getDestination(new ActiveMQQueue("Consumer.B.VirtualTopic.tempTopic"));
-
-            @Override
-            public boolean isSatisified() throws Exception {
-                return dest.getConsumers().size() == 1;
-            }
-        }, 500);
+        final Destination destA2 = brokerA.getDestination(new ActiveMQQueue("Consumer.B.VirtualTopic.tempTopic"));
+        assertTrue("advisories should propagate: 1 consumer on BrokerA",
+                Wait.waitFor(() -> destA2.getConsumers().size() == 1, 5000, 100));
 
         // and let's send messages with a selector that doesnt' match
         selectingConsumerMessages.flushMessages();
@@ -384,14 +368,9 @@ public class TwoBrokerVirtualTopicSelectorAwareForwardingTest extends
         selectingConsumer.close();
 
         // let advisories propogate
-        Wait.waitFor(new Wait.Condition() {
-            Destination dest = brokerA.getDestination(new ActiveMQQueue("Consumer.B.VirtualTopic.tempTopic"));
-
-            @Override
-            public boolean isSatisified() throws Exception {
-                return dest.getConsumers().size() == 0;
-            }
-        }, 500);
+        final Destination destA3 = brokerA.getDestination(new ActiveMQQueue("Consumer.B.VirtualTopic.tempTopic"));
+        assertTrue("advisories should propagate: 0 consumers on BrokerA",
+                Wait.waitFor(() -> destA3.getConsumers().isEmpty(), 5000, 100));
 
         selectingConsumerMessages.flushMessages();
 
@@ -399,7 +378,7 @@ public class TwoBrokerVirtualTopicSelectorAwareForwardingTest extends
 
 
         // assert broker A stats
-        waitForMessagesToBeConsumed(brokerA, "Consumer.B.VirtualTopic.tempTopic", false, 20, 20, 5000);
+        waitForMessagesToBeConsumed(brokerA, "Consumer.B.VirtualTopic.tempTopic", false, 30, 20, 5000);
         assertEquals(30, brokerA.getDestination(new ActiveMQQueue("Consumer.B.VirtualTopic.tempTopic"))
                 .getDestinationStatistics().getEnqueues().getCount());
         assertEquals(20, brokerA.getDestination(new ActiveMQQueue("Consumer.B.VirtualTopic.tempTopic"))
@@ -422,14 +401,9 @@ public class TwoBrokerVirtualTopicSelectorAwareForwardingTest extends
         assertEquals(10, selectingConsumerMessages.getMessageCount());
 
         // let advisories propogate
-        Wait.waitFor(new Wait.Condition() {
-            Destination dest = brokerA.getDestination(new ActiveMQQueue("Consumer.B.VirtualTopic.tempTopic"));
-
-            @Override
-            public boolean isSatisified() throws Exception {
-                return dest.getConsumers().size() == 1;
-            }
-        }, 500);
+        final Destination destA4 = brokerA.getDestination(new ActiveMQQueue("Consumer.B.VirtualTopic.tempTopic"));
+        assertTrue("advisories should propagate: 1 consumer on BrokerA",
+                Wait.waitFor(() -> destA4.getConsumers().size() == 1, 5000, 100));
 
         // assert broker A stats
         waitForMessagesToBeConsumed(brokerA, "Consumer.B.VirtualTopic.tempTopic", false, 30, 30, 5000);
@@ -684,23 +658,11 @@ public class TwoBrokerVirtualTopicSelectorAwareForwardingTest extends
             destination = new ActiveMQQueue(destinationName);
         }
 
-        Wait.waitFor(new Wait.Condition() {
-            @Override
-            public boolean isSatisified() throws Exception {
+        Wait.waitFor(() -> broker.getDestination(destination)
+                .getDestinationStatistics().getEnqueues().getCount() >= numEnqueueMsgs, waitTime);
 
-                return broker.getDestination(destination)
-                        .getDestinationStatistics().getEnqueues().getCount() == numEnqueueMsgs;
-            }
-        }, waitTime);
-
-        Wait.waitFor(new Wait.Condition() {
-            @Override
-            public boolean isSatisified() throws Exception {
-
-                return broker.getDestination(destination)
-                        .getDestinationStatistics().getDequeues().getCount() == numDequeueMsgs;
-            }
-        }, waitTime);
+        Wait.waitFor(() -> broker.getDestination(destination)
+                .getDestinationStatistics().getDequeues().getCount() >= numDequeueMsgs, waitTime);
     }
 
 
