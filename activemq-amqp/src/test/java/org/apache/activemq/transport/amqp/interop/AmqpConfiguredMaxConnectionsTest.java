@@ -48,7 +48,9 @@ public class AmqpConfiguredMaxConnectionsTest extends AmqpClientTestSupport {
     public static Collection<Object[]> data() {
         return Arrays.asList(new Object[][] {
                 {"amqp", false},
+                {"amqp+ws", false},
                 {"amqp+nio", false},
+                {"amqp+wss", true}
             });
     }
 
