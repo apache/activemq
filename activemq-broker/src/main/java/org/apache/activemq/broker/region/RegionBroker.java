@@ -790,7 +790,7 @@ public class RegionBroker extends EmptyBroker {
                                 stampAsExpired(message);
                             }
                             message.setExpiration(dlqExpiration);
-                            if (!message.isPersistent()) {
+                            if (!message.isPersistent() && !deadLetterStrategy.isPreserveDeliveryMode()) {
                                 message.setPersistent(true);
                                 message.setProperty("originalDeliveryMode", "NON_PERSISTENT");
                             }
@@ -798,6 +798,7 @@ public class RegionBroker extends EmptyBroker {
                                 message.setProperty(ActiveMQMessage.DLQ_DELIVERY_FAILURE_CAUSE_PROPERTY,
                                         poisonCause.toString());
                             }
+
                             // The original destination and transaction id do
                             // not get filled when the message is first sent,
                             // it is only populated if the message is routed to
