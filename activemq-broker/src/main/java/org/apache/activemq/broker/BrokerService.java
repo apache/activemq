@@ -788,7 +788,7 @@ public class BrokerService implements Service {
         try {
             stop();
         } catch (Exception ex) {
-            throw new RuntimeException();
+            throw new RuntimeException("Exception during broker preDestroy cleanup: " + getBrokerName(), ex);
         }
     }
 
