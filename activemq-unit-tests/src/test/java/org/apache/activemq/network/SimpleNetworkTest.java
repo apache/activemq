@@ -16,20 +16,15 @@
  */
 package org.apache.activemq.network;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-
-import java.util.Arrays;
-import java.util.concurrent.ConcurrentMap;
 
 import jakarta.jms.DeliveryMode;
 import jakarta.jms.Destination;
 import jakarta.jms.JMSException;
 import jakarta.jms.Message;
 import jakarta.jms.MessageConsumer;
-import jakarta.jms.MessageListener;
 import jakarta.jms.MessageProducer;
 import jakarta.jms.TextMessage;
 import jakarta.jms.TopicRequestor;
@@ -41,12 +36,12 @@ import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
-import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.util.Wait;
-import org.apache.activemq.util.Wait.Condition;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.context.support.AbstractApplicationContext;
+
+import java.util.concurrent.TimeUnit;
 
 public class SimpleNetworkTest extends BaseNetworkTest {
 
@@ -70,21 +65,21 @@ public class SimpleNetworkTest extends BaseNetworkTest {
     @Test(timeout = 60 * 1000)
     public void testMessageCompression() throws Exception {
 
-        ActiveMQConnection localAmqConnection = (ActiveMQConnection) localConnection;
+        final ActiveMQConnection localAmqConnection = (ActiveMQConnection) localConnection;
         localAmqConnection.setUseCompression(true);
 
-        MessageConsumer consumer1 = remoteSession.createConsumer(included);
-        MessageProducer producer = localSession.createProducer(included);
+        final MessageConsumer consumer1 = remoteSession.createConsumer(included);
+        final MessageProducer producer = localSession.createProducer(included);
         producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
 
         waitForConsumerRegistration(localBroker, 1, included);
 
         for (int i = 0; i < MESSAGE_COUNT; i++) {
-            Message test = localSession.createTextMessage("test-" + i);
+            final Message test = localSession.createTextMessage("test-" + i);
             producer.send(test);
-            Message msg = consumer1.receive(3000);
+            final Message msg = consumer1.receive(3000);
             assertNotNull("not null? message: " + i, msg);
-            ActiveMQMessage amqMessage = (ActiveMQMessage) msg;
+            final ActiveMQMessage amqMessage = (ActiveMQMessage) msg;
             assertTrue(amqMessage.isCompressed());
         }
         // ensure no more messages received
@@ -96,30 +91,27 @@ public class SimpleNetworkTest extends BaseNetworkTest {
     @Test(timeout = 60 * 1000)
     public void testRequestReply() throws Exception {
         final MessageProducer remoteProducer = remoteSession.createProducer(null);
-        MessageConsumer remoteConsumer = remoteSession.createConsumer(included);
-        remoteConsumer.setMessageListener(new MessageListener() {
-            @Override
-            public void onMessage(Message msg) {
-                try {
-                    TextMessage textMsg = (TextMessage)msg;
-                    String payload = "REPLY: " + textMsg.getText();
-                    Destination replyTo;
-                    replyTo = msg.getJMSReplyTo();
-                    textMsg.clearBody();
-                    textMsg.setText(payload);
-                    remoteProducer.send(replyTo, textMsg);
-                } catch (JMSException e) {
-                    e.printStackTrace();
-                }
+        final MessageConsumer remoteConsumer = remoteSession.createConsumer(included);
+        remoteConsumer.setMessageListener(msg -> {
+            try {
+                final TextMessage textMsg = (TextMessage) msg;
+                final String payload = "REPLY: " + textMsg.getText();
+                final Destination replyTo = msg.getJMSReplyTo();
+                textMsg.clearBody();
+                textMsg.setText(payload);
+                remoteProducer.send(replyTo, textMsg);
+            } catch (JMSException e) {
+                e.printStackTrace();
             }
         });
 
-        TopicRequestor requestor = new TopicRequestor((TopicSession)localSession, included);
-        // allow for consumer infos to perculate arround
-        Thread.sleep(5000);
+        final TopicRequestor requestor = new TopicRequestor((TopicSession) localSession, included);
+        // Wait for consumer demand to propagate across the network bridge
+        waitForConsumerRegistration(localBroker, 1, included);
+
         for (int i = 0; i < MESSAGE_COUNT; i++) {
-            TextMessage msg = localSession.createTextMessage("test msg: " + i);
-            TextMessage result = (TextMessage)requestor.request(msg);
+            final TextMessage msg = localSession.createTextMessage("test msg: " + i);
+            final TextMessage result = (TextMessage) requestor.request(msg);
             assertNotNull(result);
             LOG.info(result.getText());
         }
@@ -129,13 +121,14 @@ public class SimpleNetworkTest extends BaseNetworkTest {
 
     @Test(timeout = 60 * 1000)
     public void testFiltering() throws Exception {
-        MessageConsumer includedConsumer = remoteSession.createConsumer(included);
-        MessageConsumer excludedConsumer = remoteSession.createConsumer(excluded);
-        MessageProducer includedProducer = localSession.createProducer(included);
-        MessageProducer excludedProducer = localSession.createProducer(excluded);
-        // allow for consumer infos to perculate around
-        Thread.sleep(2000);
-        Message test = localSession.createTextMessage("test");
+        final MessageConsumer includedConsumer = remoteSession.createConsumer(included);
+        final MessageConsumer excludedConsumer = remoteSession.createConsumer(excluded);
+        final MessageProducer includedProducer = localSession.createProducer(included);
+        final MessageProducer excludedProducer = localSession.createProducer(excluded);
+        // Wait for consumer demand to propagate across the network bridge
+        waitForConsumerRegistration(localBroker, 1, included);
+
+        final Message test = localSession.createTextMessage("test");
         includedProducer.send(test);
         excludedProducer.send(test);
         assertNull(excludedConsumer.receive(1000));
@@ -146,15 +139,15 @@ public class SimpleNetworkTest extends BaseNetworkTest {
 
     @Test(timeout = 60 * 1000)
     public void testConduitBridge() throws Exception {
-        MessageConsumer consumer1 = remoteSession.createConsumer(included);
-        MessageConsumer consumer2 = remoteSession.createConsumer(included);
-        MessageProducer producer = localSession.createProducer(included);
+        final MessageConsumer consumer1 = remoteSession.createConsumer(included);
+        final MessageConsumer consumer2 = remoteSession.createConsumer(included);
+        final MessageProducer producer = localSession.createProducer(included);
         producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
 
         waitForConsumerRegistration(localBroker, 2, included);
 
         for (int i = 0; i < MESSAGE_COUNT; i++) {
-            Message test = localSession.createTextMessage("test-" + i);
+            final Message test = localSession.createTextMessage("test-" + i);
             producer.send(test);
             assertNotNull(consumer1.receive(1000));
             assertNotNull(consumer2.receive(1000));
@@ -170,27 +163,31 @@ public class SimpleNetworkTest extends BaseNetworkTest {
     }
 
     private void waitForConsumerRegistration(final BrokerService brokerService, final int min, final ActiveMQDestination destination) throws Exception {
-        assertTrue("Internal bridge consumers registered in time", Wait.waitFor(new Wait.Condition() {
-            @Override
-            public boolean isSatisified() throws Exception {
-                Object[] bridges = brokerService.getNetworkConnectors().get(0).bridges.values().toArray();
-                if (bridges.length > 0) {
-                    LOG.info(brokerService + " bridges "  + Arrays.toString(bridges));
-                    DemandForwardingBridgeSupport demandForwardingBridgeSupport = (DemandForwardingBridgeSupport) bridges[0];
-                    ConcurrentMap<ConsumerId, DemandSubscription> forwardingBridges = demandForwardingBridgeSupport.getLocalSubscriptionMap();
-                    LOG.info(brokerService + " bridge "  + demandForwardingBridgeSupport + ", localSubs: " + forwardingBridges);
-                    if (!forwardingBridges.isEmpty()) {
-                        for (DemandSubscription demandSubscription : forwardingBridges.values()) {
-                            if (demandSubscription.getLocalInfo().getDestination().equals(destination)) {
-                                LOG.info(brokerService + " DemandSubscription "  + demandSubscription + ", size: " + demandSubscription.size());
-                                return demandSubscription.size() >= min;
-                            }
+        // Wait for the bridge demand subscriptions to register the expected number of
+        // remote consumers. With conduit subscriptions, multiple remote consumers map
+        // to a single local subscription, so we check DemandSubscription.size().
+        assertTrue("Bridge demand subscription registered for " + destination, Wait.waitFor(() -> {
+            if (brokerService.getNetworkConnectors().isEmpty()) {
+                return false;
+            }
+            for (final NetworkBridge bridge : brokerService.getNetworkConnectors().get(0).activeBridges()) {
+                if (bridge instanceof DemandForwardingBridgeSupport) {
+                    final DemandForwardingBridgeSupport dfBridge = (DemandForwardingBridgeSupport) bridge;
+                    for (final DemandSubscription ds : dfBridge.getLocalSubscriptionMap().values()) {
+                        if (ds.getLocalInfo().getDestination().equals(destination)) {
+                            return ds.size() >= min;
                         }
                     }
                 }
-                return false;
             }
-        }));
+            return false;
+        }, TimeUnit.SECONDS.toMillis(30), 100));
+
+        // Also verify the consumer is actually dispatching on the broker's destination.
+        // The DemandSubscription may exist before the local consumer is fully registered.
+        assertTrue("Consumer dispatching on " + destination, Wait.waitFor(
+            () -> brokerService.getDestination(destination).getDestinationStatistics().getConsumers().getCount() >= 1,
+            TimeUnit.SECONDS.toMillis(10), 100));
     }
 
     //Added for AMQ-6465 to make sure memory usage decreased back to 0 after messages are forwarded
@@ -198,27 +195,28 @@ public class SimpleNetworkTest extends BaseNetworkTest {
     @Test(timeout = 60 * 1000)
     public void testDurableTopicSubForwardMemoryUsage() throws Exception {
         // create a remote durable consumer to create demand
-        MessageConsumer remoteConsumer = remoteSession.createDurableSubscriber(included, consumerName);
-        Thread.sleep(1000);
+        final MessageConsumer remoteConsumer = remoteSession.createDurableSubscriber(included, consumerName);
+        // Wait for consumer demand to propagate across the network bridge
+        waitForConsumerRegistration(localBroker, 1, included);
 
-        MessageProducer producer = localSession.createProducer(included);
+        final MessageProducer producer = localSession.createProducer(included);
         for (int i = 0; i < MESSAGE_COUNT; i++) {
-            Message test = localSession.createTextMessage("test-" + i);
+            final Message test = localSession.createTextMessage("test-" + i);
             producer.send(test);
         }
-        Thread.sleep(1000);
 
-        //Make sure stats are set
-        assertEquals(MESSAGE_COUNT,
-                localBroker.getDestination(included).getDestinationStatistics().getForwards().getCount());
+        //Make sure stats are set - wait for forwards to complete
+        assertTrue("Forwards count did not reach expected value", Wait.waitFor(
+                () -> {
+                    final long count = localBroker.getDestination(included).getDestinationStatistics().getForwards().getCount();
+                    LOG.info("testDurableTopicSubForwardMemoryUsage: forwards count = " + count + " (expected " + MESSAGE_COUNT + ")");
+                    return count == MESSAGE_COUNT;
+                },
+                TimeUnit.SECONDS.toMillis(30), 100));
 
-        assertTrue(Wait.waitFor(new Condition() {
-
-            @Override
-            public boolean isSatisified() throws Exception {
-                return localBroker.getSystemUsage().getMemoryUsage().getUsage() == 0;
-            }
-        }, 10000, 500));
+        assertTrue("Memory usage did not return to 0", Wait.waitFor(
+                () -> localBroker.getSystemUsage().getMemoryUsage().getUsage() == 0,
+                TimeUnit.SECONDS.toMillis(10), 500));
         remoteConsumer.close();
     }
 
@@ -226,28 +224,25 @@ public class SimpleNetworkTest extends BaseNetworkTest {
     //to the other broker
     @Test(timeout = 60 * 1000)
     public void testTopicSubForwardMemoryUsage() throws Exception {
-        // create a remote durable consumer to create demand
-        MessageConsumer remoteConsumer = remoteSession.createConsumer(included);
-        Thread.sleep(1000);
+        // create a remote consumer to create demand
+        final MessageConsumer remoteConsumer = remoteSession.createConsumer(included);
+        // Wait for consumer demand to propagate across the network bridge
+        waitForConsumerRegistration(localBroker, 1, included);
 
-        MessageProducer producer = localSession.createProducer(included);
+        final MessageProducer producer = localSession.createProducer(included);
         for (int i = 0; i < MESSAGE_COUNT; i++) {
-            Message test = localSession.createTextMessage("test-" + i);
+            final Message test = localSession.createTextMessage("test-" + i);
             producer.send(test);
         }
-        Thread.sleep(1000);
 
-        //Make sure stats are set
-        assertEquals(MESSAGE_COUNT,
-                localBroker.getDestination(included).getDestinationStatistics().getForwards().getCount());
+        //Make sure stats are set - wait for forwards to complete
+        assertTrue("Forwards count did not reach expected value", Wait.waitFor(
+                () -> localBroker.getDestination(included).getDestinationStatistics().getForwards().getCount() == MESSAGE_COUNT,
+                TimeUnit.SECONDS.toMillis(30), 100));
 
-        assertTrue(Wait.waitFor(new Condition() {
-
-            @Override
-            public boolean isSatisified() throws Exception {
-                return localBroker.getSystemUsage().getMemoryUsage().getUsage() == 0;
-            }
-        }, 10000, 500));
+        assertTrue("Memory usage did not return to 0", Wait.waitFor(
+                () -> localBroker.getSystemUsage().getMemoryUsage().getUsage() == 0,
+                TimeUnit.SECONDS.toMillis(10), 500));
 
         for (int i = 0; i < MESSAGE_COUNT; i++) {
             assertNotNull("message count: " + i, remoteConsumer.receive(2500));
@@ -259,28 +254,25 @@ public class SimpleNetworkTest extends BaseNetworkTest {
     //to the other broker
     @Test(timeout = 60 * 1000)
     public void testQueueSubForwardMemoryUsage() throws Exception {
-        ActiveMQQueue queue = new ActiveMQQueue("include.test.foo");
-        MessageConsumer remoteConsumer = remoteSession.createConsumer(queue);
-        Thread.sleep(1000);
+        final ActiveMQQueue queue = new ActiveMQQueue("include.test.foo");
+        final MessageConsumer remoteConsumer = remoteSession.createConsumer(queue);
+        // Wait for consumer demand to propagate across the network bridge
+        waitForConsumerRegistration(localBroker, 1, queue);
 
-        MessageProducer producer = localSession.createProducer(queue);
+        final MessageProducer producer = localSession.createProducer(queue);
         for (int i = 0; i < MESSAGE_COUNT; i++) {
-            Message test = localSession.createTextMessage("test-" + i);
+            final Message test = localSession.createTextMessage("test-" + i);
             producer.send(test);
         }
-        Thread.sleep(1000);
 
-        //Make sure stats are set
-        assertEquals(MESSAGE_COUNT,
-                localBroker.getDestination(queue).getDestinationStatistics().getForwards().getCount());
+        //Make sure stats are set - wait for forwards to complete
+        assertTrue("Forwards count did not reach expected value", Wait.waitFor(
+                () -> localBroker.getDestination(queue).getDestinationStatistics().getForwards().getCount() == MESSAGE_COUNT,
+                TimeUnit.SECONDS.toMillis(30), 100));
 
-        assertTrue(Wait.waitFor(new Condition() {
-
-            @Override
-            public boolean isSatisified() throws Exception {
-                return localBroker.getSystemUsage().getMemoryUsage().getUsage() == 0;
-            }
-        }, 10000, 500));
+        assertTrue("Memory usage did not return to 0", Wait.waitFor(
+                () -> localBroker.getSystemUsage().getMemoryUsage().getUsage() == 0,
+                TimeUnit.SECONDS.toMillis(10), 500));
 
         for (int i = 0; i < MESSAGE_COUNT; i++) {
             assertNotNull("message count: " + i, remoteConsumer.receive(2500));
@@ -291,28 +283,30 @@ public class SimpleNetworkTest extends BaseNetworkTest {
     @Test(timeout = 60 * 1000)
     public void testDurableStoreAndForward() throws Exception {
         // create a remote durable consumer
-        MessageConsumer remoteConsumer = remoteSession.createDurableSubscriber(included, consumerName);
-        Thread.sleep(1000);
+        final MessageConsumer remoteConsumer = remoteSession.createDurableSubscriber(included, consumerName);
+        // Wait for consumer demand to propagate across the network bridge
+        waitForConsumerRegistration(localBroker, 1, included);
+
         // now close everything down and restart
         doTearDown();
         doSetUp(false);
-        MessageProducer producer = localSession.createProducer(included);
+        final MessageProducer producer = localSession.createProducer(included);
         for (int i = 0; i < MESSAGE_COUNT; i++) {
-            Message test = localSession.createTextMessage("test-" + i);
+            final Message test = localSession.createTextMessage("test-" + i);
             producer.send(test);
         }
-        Thread.sleep(1000);
 
-        //Make sure stats are set
-        assertEquals(MESSAGE_COUNT,
-                localBroker.getDestination(included).getDestinationStatistics().getForwards().getCount());
+        //Make sure stats are set - wait for forwards to complete
+        assertTrue("Forwards count did not reach expected value", Wait.waitFor(
+                () -> localBroker.getDestination(included).getDestinationStatistics().getForwards().getCount() == MESSAGE_COUNT,
+                TimeUnit.SECONDS.toMillis(30), 100));
 
         // close everything down and restart
         doTearDown();
         doSetUp(false);
-        remoteConsumer = remoteSession.createDurableSubscriber(included, consumerName);
+        final MessageConsumer remoteConsumer2 = remoteSession.createDurableSubscriber(included, consumerName);
         for (int i = 0; i < MESSAGE_COUNT; i++) {
-            assertNotNull("message count: " + i, remoteConsumer.receive(2500));
+            assertNotNull("message count: " + i, remoteConsumer2.receive(2500));
         }
     }
 
@@ -320,35 +314,55 @@ public class SimpleNetworkTest extends BaseNetworkTest {
             "it requires a connection per durable to match that connectionId")
     public void testDurableStoreAndForwardReconnect() throws Exception {
         // create a local durable consumer
-        MessageConsumer localConsumer = localSession.createDurableSubscriber(included, consumerName);
-        Thread.sleep(5000);
+        final MessageConsumer localConsumer = localSession.createDurableSubscriber(included, consumerName);
+        // Wait for consumer demand to propagate across the network bridge
+        waitForConsumerRegistration(localBroker, 1, included);
+
         // now close everything down and restart
         doTearDown();
         doSetUp(false);
         // send messages
-        MessageProducer producer = localSession.createProducer(included);
+        final MessageProducer producer = localSession.createProducer(included);
         for (int i = 0; i < MESSAGE_COUNT; i++) {
-            Message test = localSession.createTextMessage("test-" + i);
+            final Message test = localSession.createTextMessage("test-" + i);
             producer.send(test);
         }
-        Thread.sleep(5000);
+
+        //Make sure stats are set - wait for forwards to complete
+        assertTrue("Forwards count did not reach expected value", Wait.waitFor(
+                () -> localBroker.getDestination(included).getDestinationStatistics().getForwards().getCount() == MESSAGE_COUNT,
+                TimeUnit.SECONDS.toMillis(30), 100));
+
         // consume some messages locally
-        localConsumer = localSession.createDurableSubscriber(included, consumerName);
-        LOG.info("Consume from local consumer: " + localConsumer);
+        final MessageConsumer localConsumer2 = localSession.createDurableSubscriber(included, consumerName);
+        LOG.info("Consume from local consumer: " + localConsumer2);
         for (int i = 0; i < MESSAGE_COUNT / 2; i++) {
-            assertNotNull("message count: " + i, localConsumer.receive(2500));
+            assertNotNull("message count: " + i, localConsumer2.receive(2500));
         }
-        Thread.sleep(5000);
+
+        // Wait for local messages to be consumed
+        assertTrue("Local messages consumed", Wait.waitFor(
+                () -> localBroker.getDestination(included).getDestinationStatistics().getDequeues().getCount() >= MESSAGE_COUNT / 2,
+                TimeUnit.SECONDS.toMillis(10), 100));
+
         // close everything down and restart
         doTearDown();
         doSetUp(false);
-        Thread.sleep(5000);
+
+        // Wait for network bridge to re-form
+        assertTrue("Network bridge re-formed", Wait.waitFor(
+                () -> !localBroker.getNetworkConnectors().isEmpty()
+                    && !localBroker.getNetworkConnectors().get(0).activeBridges().isEmpty(),
+                TimeUnit.SECONDS.toMillis(10), 100));
 
         LOG.info("Consume from remote");
         // consume the rest remotely
-        MessageConsumer remoteConsumer = remoteSession.createDurableSubscriber(included, consumerName);
+        final MessageConsumer remoteConsumer = remoteSession.createDurableSubscriber(included, consumerName);
         LOG.info("Remote consumer: " + remoteConsumer);
-        Thread.sleep(5000);
+
+        // Wait for consumer demand to propagate
+        waitForConsumerRegistration(localBroker, 1, included);
+
         for (int i = 0; i < MESSAGE_COUNT / 2; i++) {
             assertNotNull("message count: " + i, remoteConsumer.receive(10000));
         }
@@ -359,14 +373,11 @@ public class SimpleNetworkTest extends BaseNetworkTest {
         final NetworkBridge localBridge = localBroker.getNetworkConnectors().get(0).activeBridges().iterator().next();
         final NetworkBridge remoteBridge = remoteBroker.getNetworkConnectors().get(0).activeBridges().iterator().next();
 
-        assertTrue(Wait.waitFor(new Wait.Condition() {
-            @Override
-            public boolean isSatisified() throws Exception {
-                return expectedLocalSent == localBridge.getNetworkBridgeStatistics().getDequeues().getCount() &&
-                       0 == localBridge.getNetworkBridgeStatistics().getReceivedCount().getCount() &&
-                       expectedRemoteSent == remoteBridge.getNetworkBridgeStatistics().getDequeues().getCount() &&
-                       0 == remoteBridge.getNetworkBridgeStatistics().getReceivedCount().getCount();
-            }
-        }));
+        assertTrue(Wait.waitFor(() ->
+                expectedLocalSent == localBridge.getNetworkBridgeStatistics().getDequeues().getCount() &&
+                0 == localBridge.getNetworkBridgeStatistics().getReceivedCount().getCount() &&
+                expectedRemoteSent == remoteBridge.getNetworkBridgeStatistics().getDequeues().getCount() &&
+                0 == remoteBridge.getNetworkBridgeStatistics().getReceivedCount().getCount()
+        , TimeUnit.SECONDS.toMillis(30), 100));
     }
 }

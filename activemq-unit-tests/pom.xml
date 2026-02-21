@@ -953,7 +953,6 @@
                 <exclude>org/apache/activemq/transport/SoWriteTimeoutTest.*</exclude>
                 <exclude>org/apache/activemq/transport/TopicClusterTest.*</exclude>
                 <exclude>org/apache/activemq/transport/discovery/DiscoveryNetworkReconnectTest.*</exclude>
-                <exclude>org/apache/activemq/transport/discovery/DiscoveryTransportBrokerTest.*</exclude>
                 <exclude>org/apache/activemq/transport/discovery/DiscoveryTransportNoBrokerTest.*</exclude>
                 <exclude>org/apache/activemq/transport/discovery/DiscoveryUriTest.*</exclude>
                 <exclude>org/apache/activemq/transport/discovery/MasterSlaveDiscoveryTest.*</exclude>
@@ -1143,6 +1142,29 @@
                   </plugin>
               </plugins>
           </build>
+      </profile>
+      <profile>
+        <id>activemq.tests.mac.excludes</id>
+        <activation>
+          <os>
+            <family>mac</family>
+          </os>
+        </activation>
+        <build>
+          <plugins>
+            <plugin>
+              <artifactId>maven-surefire-plugin</artifactId>
+              <configuration>
+                <excludes combine.children="append">
+                  <!-- Multicast and UDP based tests are unreliable on macOS CI (no proper multicast interfaces) -->
+                  <exclude>org/apache/activemq/transport/peer/PeerTransportTest.*</exclude>
+                  <exclude>org/apache/activemq/transport/multicast/MulticastTransportTest.*</exclude>
+                  <exclude>org/apache/activemq/network/MulticastNetworkTest.*</exclude>
+                </excludes>
+              </configuration>
+            </plugin>
+          </plugins>
+        </build>
       </profile>
       <profile>
           <id>activemq.tests.aix.excludes</id>

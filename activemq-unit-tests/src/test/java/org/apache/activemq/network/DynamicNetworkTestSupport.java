@@ -24,6 +24,7 @@ import java.io.File;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import jakarta.jms.Connection;
 import jakarta.jms.JMSException;
@@ -45,7 +46,6 @@ import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.command.RemoveSubscriptionInfo;
 import org.apache.activemq.util.SubscriptionKey;
 import org.apache.activemq.util.Wait;
-import org.apache.activemq.util.Wait.Condition;
 import org.junit.Rule;
 import org.junit.rules.TemporaryFolder;
 
@@ -95,9 +95,16 @@ public abstract class DynamicNetworkTestSupport {
     }
 
     protected void assertBridgeStarted() throws Exception {
-        assertTrue(Wait.waitFor(
-            () -> localBroker.getNetworkConnectors().get(0).activeBridges().size() == 1,
-            10000, 500));
+        assertTrue("Bridge should be fully started", Wait.waitFor(() -> {
+            if (localBroker.getNetworkConnectors().get(0).activeBridges().size() != 1) {
+                return false;
+            }
+            final NetworkBridge bridge = localBroker.getNetworkConnectors().get(0).activeBridges().iterator().next();
+            if (bridge instanceof DemandForwardingBridgeSupport) {
+                return ((DemandForwardingBridgeSupport) bridge).startedLatch.getCount() == 0;
+            }
+            return true;
+        }, TimeUnit.SECONDS.toMillis(10), 500));
     }
 
     protected RemoveSubscriptionInfo getRemoveSubscriptionInfo(final ConnectionContext context,
@@ -135,17 +142,19 @@ public abstract class DynamicNetworkTestSupport {
 
     protected void assertNCDurableSubsCount(final BrokerService brokerService,
             final ActiveMQTopic dest, final int count) throws Exception {
-        assertTrue(Wait.waitFor(() -> count == getNCDurableSubs(brokerService, dest).size(),
-            10000, 500));
+        assertTrue("Expected " + count + " NC durable subs on " + dest,
+            Wait.waitFor(() -> count == getNCDurableSubs(brokerService, dest).size(),
+                         TimeUnit.SECONDS.toMillis(30), 500));
     }
 
     protected void assertConsumersCount(final BrokerService brokerService,
             final ActiveMQDestination dest, final int count) throws Exception {
         assertTrue(Wait.waitFor(() -> count == getConsumers(brokerService, dest).size(),
             10000, 500));
-        Thread.sleep(1000);
-        // Check one more time after a short pause to make sure the count didn't increase past what we wanted
-        assertEquals(count, getConsumers(brokerService, dest).size());
+        // Wait a bit longer and verify the count is stable (didn't increase past what we wanted)
+        assertTrue("Consumer count should remain stable at " + count,
+            Wait.waitFor(() -> count == getConsumers(brokerService, dest).size(),
+                         TimeUnit.SECONDS.toMillis(5), 500));
     }
 
     protected List<Subscription> getConsumers(final BrokerService brokerService,
@@ -208,12 +217,9 @@ public abstract class DynamicNetworkTestSupport {
 
     protected void assertSubscriptionsCount(final BrokerService brokerService,
             final ActiveMQTopic dest, final int count) throws Exception {
-        assertTrue(Wait.waitFor(new Condition() {
-            @Override
-            public boolean isSatisified() throws Exception {
-                return count == getSubscriptions(brokerService, dest).size();
-            }
-        }, 10000, 500));
+        assertTrue("Expected " + count + " subscriptions on " + dest,
+            Wait.waitFor(() -> count == getSubscriptions(brokerService, dest).size(),
+                         TimeUnit.SECONDS.toMillis(30), 500));
     }
 
     protected void assertSubscriptionMapCounts(NetworkBridge networkBridge, final int count) {

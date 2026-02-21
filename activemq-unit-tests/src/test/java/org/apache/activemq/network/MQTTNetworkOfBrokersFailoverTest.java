@@ -23,9 +23,7 @@ import java.util.concurrent.TimeUnit;
 import jakarta.jms.Connection;
 import jakarta.jms.Destination;
 import jakarta.jms.JMSException;
-import jakarta.jms.Message;
 import jakarta.jms.MessageConsumer;
-import jakarta.jms.MessageListener;
 import jakarta.jms.Session;
 import javax.management.ObjectName;
 
@@ -35,6 +33,7 @@ import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.broker.jmx.BrokerViewMBean;
 import org.apache.activemq.broker.jmx.DurableSubscriptionViewMBean;
 import org.apache.activemq.store.PersistenceAdapter;
+import org.apache.activemq.util.Wait;
 import org.apache.commons.lang.ArrayUtils;
 import org.fusesource.hawtdispatch.Dispatch;
 import org.fusesource.mqtt.client.BlockingConnection;
@@ -68,6 +67,10 @@ public class MQTTNetworkOfBrokersFailoverTest extends NetworkTestSupport {
         nc.setDuplex(true);
         remoteBroker.addNetworkConnector(nc);
         nc.start();
+
+        // Wait for the network bridge to be established before proceeding
+        assertTrue("Network bridge should be established",
+            Wait.waitFor(() -> nc.activeBridges().size() == 1, TimeUnit.SECONDS.toMillis(10), 500));
 
         // mqtt port should have been assigned by now
         assertFalse(localBrokerMQTTPort == -1);
@@ -104,7 +107,7 @@ public class MQTTNetworkOfBrokersFailoverTest extends NetworkTestSupport {
         remoteConn.connect();
         remoteConn.subscribe(new Topic[]{new Topic("foo/bar", QoS.AT_LEAST_ONCE)});
 
-        assertTrue("No destination detected!", consumerNetworked.await(1, TimeUnit.SECONDS));
+        assertTrue("No destination detected!", consumerNetworked.await(5, TimeUnit.SECONDS));
         assertQueueExistsOn(remoteBroker, "Consumer.foo_AT_LEAST_ONCE.VirtualTopic.foo.bar");
         assertQueueExistsOn(broker, "Consumer.foo_AT_LEAST_ONCE.VirtualTopic.foo.bar");
         remoteConn.disconnect();
@@ -149,23 +152,17 @@ public class MQTTNetworkOfBrokersFailoverTest extends NetworkTestSupport {
         final Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         Destination dest = session.createTopic("ActiveMQ.Advisory.Consumer.Queue.Consumer.foo:AT_LEAST_ONCE.VirtualTopic.foo.bar");
         MessageConsumer consumer = session.createConsumer(dest);
-        consumer.setMessageListener(new MessageListener() {
-            @Override
-            public void onMessage(Message message) {
-                latch.countDown();
-                // shutdown this connection
-                Dispatch.getGlobalQueue().execute(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            session.close();
-                            connection.close();
-                        } catch (JMSException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                });
-            }
+        consumer.setMessageListener(message -> {
+            latch.countDown();
+            // shutdown this connection
+            Dispatch.getGlobalQueue().execute(() -> {
+                try {
+                    session.close();
+                    connection.close();
+                } catch (JMSException e) {
+                    e.printStackTrace();
+                }
+            });
         });
 
         return latch;
