@@ -185,6 +185,7 @@ public class BrokerService implements Service {
     private JmsConnector[] jmsBridgeConnectors; // these are Jms to Jms bridges
     // to other jms messaging systems
     private boolean deleteAllMessagesOnStartup;
+    private boolean deleteAllScheduledMessagesOnStartup = false;
     private boolean advisorySupport = true;
     private boolean anonymousProducerAdvisorySupport = false;
     private URI vmConnectorURI;
@@ -1633,6 +1634,18 @@ public class BrokerService implements Service {
         this.deleteAllMessagesOnStartup = deletePersistentMessagesOnStartup;
     }
 
+    /**
+     * Sets whether all scheduled messages are deleted on startup
+     * @org.apache.xbean.Property propertyEditor="org.apache.activemq.util.BooleanEditor"
+     */
+    public void setDeleteAllScheduledMessagesOnStartup(boolean deleteAllScheduledMessagesOnStartup) {
+        this.deleteAllScheduledMessagesOnStartup = deleteAllScheduledMessagesOnStartup;
+    }
+
+    public boolean isDeleteAllScheduledMessagesOnStartup() {
+        return deleteAllScheduledMessagesOnStartup;
+    }
+
     public URI getVmConnectorURI() {
         if (vmConnectorURI == null) {
             try {
@@ -2452,6 +2465,7 @@ public class BrokerService implements Service {
         if (isSchedulerSupport()) {
             SchedulerBroker sb = new SchedulerBroker(this, broker, getJobSchedulerStore());
             sb.setMaxRepeatAllowed(maxSchedulerRepeatAllowed);
+            sb.setDeleteAllScheduledMessagesOnStartup(deleteAllScheduledMessagesOnStartup);
             if (isUseJmx()) {
                 JobSchedulerViewMBean view = new JobSchedulerView(sb.getJobScheduler());
                 try {
