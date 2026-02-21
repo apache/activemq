@@ -148,12 +148,12 @@ public class InMemoryJobSchedulerTest {
         assertEquals(size, COUNT);
 
         long removeTime = scheduler.getNextScheduleTime();
-        scheduler.remove(removeTime);
+        scheduler.remove(removeTime, null);
 
         // If all jobs are not started within the same second we need to call remove again
         if (size != 0) {
             removeTime = scheduler.getNextScheduleTime();
-            scheduler.remove(removeTime);
+            scheduler.remove(removeTime, null);
         }
 
         size = scheduler.getAllJobs().size();
@@ -176,7 +176,7 @@ public class InMemoryJobSchedulerTest {
 
         int size = scheduler.getAllJobs().size();
         assertEquals(size, COUNT + 1);
-        scheduler.remove(test);
+        scheduler.remove(test, null);
         size = scheduler.getAllJobs().size();
         assertEquals(size, COUNT);
     }
@@ -268,7 +268,7 @@ public class InMemoryJobSchedulerTest {
         }
         start = System.currentTimeMillis();
         long finish = start + 12000 + (COUNT * 1000);
-        scheduler.removeAllJobs(start, finish);
+        scheduler.removeAllJobs(start, finish, null);
 
         assertTrue(scheduler.getAllJobs().isEmpty());
     }
