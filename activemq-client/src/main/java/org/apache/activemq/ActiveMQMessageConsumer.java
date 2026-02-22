@@ -35,6 +35,7 @@ import jakarta.jms.InvalidDestinationException;
 import jakarta.jms.JMSException;
 import jakarta.jms.Message;
 import jakarta.jms.MessageConsumer;
+import jakarta.jms.MessageFormatException;
 import jakarta.jms.MessageListener;
 import jakarta.jms.TransactionRolledBackException;
 
@@ -410,9 +411,13 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
      *                 message due to some internal error.
      */
     @Override
-    public String getMessageSelector() throws JMSException {
-        checkClosed();
-        return selector;
+    public String getMessageSelector() {
+        try {
+            checkClosed();
+            return selector;
+        } catch (JMSException e) {
+            throw JMSExceptionSupport.convertToJMSRuntimeException(e);
+        }
     }
 
     /**
@@ -425,9 +430,13 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
      * @see jakarta.jms.MessageConsumer#setMessageListener(jakarta.jms.MessageListener)
      */
     @Override
-    public MessageListener getMessageListener() throws JMSException {
-        checkClosed();
-        return this.messageListener.get();
+    public MessageListener getMessageListener() {
+        try {
+            checkClosed();
+            return this.messageListener.get();
+        } catch (JMSException e) {
+            throw JMSExceptionSupport.convertToJMSRuntimeException(e);
+        }
     }
 
     /**
@@ -446,25 +455,30 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
      * @see jakarta.jms.MessageConsumer#getMessageListener
      */
     @Override
-    public void setMessageListener(MessageListener listener) throws JMSException {
-        checkClosed();
-        if (info.getPrefetchSize() == 0) {
-            throw new JMSException("Illegal prefetch size of zero. This setting is not supported for asynchronous consumers please set a value of at least 1");
-        }
-        if (listener != null) {
-            boolean wasRunning = session.isRunning();
-            if (wasRunning) {
-                session.stop();
+    public void setMessageListener(MessageListener listener) {
+        try {
+            checkClosed();
+            if (info.getPrefetchSize() == 0) {
+                throw new JMSException(
+                        "Illegal prefetch size of zero. This setting is not supported for asynchronous consumers please set a value of at least 1");
             }
+            if (listener != null) {
+                boolean wasRunning = session.isRunning();
+                if (wasRunning) {
+                    session.stop();
+                }
 
-            this.messageListener.set(listener);
-            session.redispatch(this, unconsumedMessages);
+                this.messageListener.set(listener);
+                session.redispatch(this, unconsumedMessages);
 
-            if (wasRunning) {
-                session.start();
+                if (wasRunning) {
+                    session.start();
+                }
+            } else {
+                this.messageListener.set(null);
             }
-        } else {
-            this.messageListener.set(null);
+        } catch (JMSException e) {
+            throw JMSExceptionSupport.convertToJMSRuntimeException(e);
         }
     }
 
@@ -580,20 +594,93 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
      *         this message consumer is concurrently closed
      */
     @Override
-    public Message receive() throws JMSException {
-        checkClosed();
-        checkMessageListener();
-
-        sendPullCommand(0);
-        MessageDispatch md = dequeue(-1);
-        if (md == null) {
-            return null;
+    public Message receive() {
+        try {
+            checkClosed();
+            checkMessageListener();
+    
+            sendPullCommand(0);
+            MessageDispatch md = dequeue(-1);
+            if (md == null) {
+                return null;
+            }
+    
+            beforeMessageIsConsumed(md);
+            afterMessageIsConsumed(md, false);
+    
+            return createActiveMQMessage(md);
+        } catch (JMSException e) {
+            throw JMSExceptionSupport.convertToJMSRuntimeException(e);
         }
+    }
 
-        beforeMessageIsConsumed(md);
-        afterMessageIsConsumed(md, false);
+    /**
+     * Receives the next message and returns its body converted to the requested type.
+     * <p>
+     * This call follows the same synchronous consume flow as {@link #receive()}:
+     * pull/dequeue, mark delivered, then acknowledge bookkeeping after successful
+     * conversion. Conversion failures are delegated to
+     * {@link #handleReceiveBodyFailure(MessageDispatch, MessageFormatException)}
+     * before rethrowing the {@link MessageFormatException}.
+     *
+     * @param bodyType
+     *      the expected body type.
+     *
+     * @return the converted message body, or {@code null} if no message is available.
+     */
+    @Override
+    public <T> T receiveBody(Class<T> bodyType) {
+        try {
+            checkClosed();
+            checkMessageListener();
 
-        return createActiveMQMessage(md);
+            sendPullCommand(0);
+            MessageDispatch md = dequeue(-1);
+            if (md == null) {
+                return null;
+            }
+
+            beforeMessageIsConsumed(md);
+            try {
+                final ActiveMQMessage m = createActiveMQMessage(md);
+                final T body = m.getBody(bodyType);            
+                afterMessageIsConsumed(md, false);
+                return body;
+            } catch (MessageFormatException e) {
+                handleReceiveBodyFailure(md, e);
+                throw e;
+            }
+        } catch (JMSException e) {
+            throw JMSExceptionSupport.convertToJMSRuntimeException(e);
+        }
+    }
+
+    /**
+     * Handles body-conversion failures from synchronous {@link #receiveBody(Class)} calls.
+     * <p>
+     * Auto and individual acknowledge modes follow listener error semantics by rolling back
+     * to trigger redelivery handling. Transacted and client acknowledge modes keep normal
+     * consumption bookkeeping via {@link #afterMessageIsConsumed(MessageDispatch, boolean)}.
+     *
+     * @param md
+     *      the dispatch currently being consumed.
+     * @param cause
+     *      the conversion failure thrown by {@link Message#getBody(Class)}.
+     */
+    private void handleReceiveBodyFailure(MessageDispatch md, MessageFormatException cause) {
+        try {
+            md.setRollbackCause(cause);
+            if (isAutoAcknowledgeBatch() || isAutoAcknowledgeEach() || session.isIndividualAcknowledge()) {
+                // Match existing listener failure semantics for auto ack and individual ack modes.
+                rollback();
+            } else {
+                // Preserve transacted / client acknowledge tracking for synchronous receive semantics.
+                afterMessageIsConsumed(md, false);
+            }
+        } catch (JMSException jmsException) {
+            cause.setLinkedException(jmsException);
+            cause.addSuppressed(jmsException);
+        }
     }
 
     /**
@@ -654,33 +741,91 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
      *         closed
      */
     @Override
-    public Message receive(long timeout) throws JMSException {
-        checkClosed();
-        checkMessageListener();
-        if (timeout == 0) {
-            return this.receive();
-        }
-
-        sendPullCommand(timeout);
-        while (timeout > 0) {
-
-            MessageDispatch md;
-            if (info.getPrefetchSize() == 0) {
-                md = dequeue(-1); // We let the broker let us know when we timeout.
-            } else {
-                md = dequeue(timeout);
+    public Message receive(long timeout) {
+        try {
+            checkClosed();
+            checkMessageListener();
+            if (timeout == 0) {
+                return this.receive();
             }
 
-            if (md == null) {
-                return null;
-            }
+            sendPullCommand(timeout);
+            while (timeout > 0) {
 
-            beforeMessageIsConsumed(md);
-            afterMessageIsConsumed(md, false);
-            return createActiveMQMessage(md);
+                MessageDispatch md;
+                if (info.getPrefetchSize() == 0) {
+                    md = dequeue(-1); // We let the broker let us know when we timeout.
+                } else {
+                    md = dequeue(timeout);
+                }
+
+                if (md == null) {
+                    return null;
+                }
+
+                beforeMessageIsConsumed(md);
+                afterMessageIsConsumed(md, false);
+                return createActiveMQMessage(md);
+            }
+            return null;
+        } catch (JMSException e) {
+            throw JMSExceptionSupport.convertToJMSRuntimeException(e);
         }
-        return null;
     }
+
+    /**
+     * Receives the next message body converted to the requested type within the
+     * given timeout.
+     * <p>
+     * This is the body-conversion variant of {@link #receive(long)}. The call
+     * blocks until a message arrives, timeout expires, or the consumer closes.
+     * Conversion failures are processed through
+     * {@link #handleReceiveBodyFailure(MessageDispatch, MessageFormatException)}
+     * and then rethrown as {@link MessageFormatException}.
+     *
+     * @param bodyType
+     *      the expected body type.
+     * @param timeout
+     *      timeout in milliseconds; {@code 0} never expires.
+     *
+     * @return the converted body, or {@code null} if timeout expires.
+     */
+    @Override
+    public <T> T receiveBody(Class<T> bodyType, long timeout) {
+        try {
+            checkClosed();
+            checkMessageListener();
+
+            sendPullCommand(timeout);
+            while (timeout > 0) {
+                MessageDispatch md;
+                if (info.getPrefetchSize() == 0) {
+                    md = dequeue(-1); // We let the broker let us know when we timeout.
+                } else {
+                    md = dequeue(timeout);
+                }
+
+                if (md == null) {
+                    return null;
+                }
+
+                beforeMessageIsConsumed(md);
+                try {
+                    final ActiveMQMessage m = createActiveMQMessage(md);
+                    final T body = m.getBody(bodyType);
+                    afterMessageIsConsumed(md, false);
+                    return body;
+                } catch (MessageFormatException e) {
+                    handleReceiveBodyFailure(md, e);
+                    throw e;
+                }
+            }
+            return null;
+        } catch (JMSException e) {
+            throw JMSExceptionSupport.convertToJMSRuntimeException(e);
+        }
+    }
+        
 
     /**
      * Receives the next message if one is immediately available.
@@ -691,26 +836,79 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
      *                 message due to some internal error.
      */
     @Override
-    public Message receiveNoWait() throws JMSException {
-        checkClosed();
-        checkMessageListener();
-        sendPullCommand(-1);
+    public Message receiveNoWait() {
+        try {
+            checkClosed();
+            checkMessageListener();
+            sendPullCommand(-1);
 
-        MessageDispatch md;
-        if (info.getPrefetchSize() == 0) {
-            md = dequeue(-1); // We let the broker let us know when we
-            // timeout.
-        } else {
-            md = dequeue(0);
+            MessageDispatch md;
+            if (info.getPrefetchSize() == 0) {
+                md = dequeue(-1); // We let the broker let us know when we
+                // timeout.
+            } else {
+                md = dequeue(0);
+            }
+
+            if (md == null) {
+                return null;
+            }
+
+            beforeMessageIsConsumed(md);
+            afterMessageIsConsumed(md, false);
+            return createActiveMQMessage(md);
+        } catch (JMSException e) {
+            throw JMSExceptionSupport.convertToJMSRuntimeException(e);
         }
+    }
 
-        if (md == null) {
-            return null;
+    /**
+     * Receives the next message body converted to the requested type if one is
+     * immediately available.
+     * <p>
+     * This is the body-conversion variant of {@link #receiveNoWait()} and returns
+     * {@code null} when no dispatch is available. If body conversion fails, the
+     * failure path is handled via
+     * {@link #handleReceiveBodyFailure(MessageDispatch, MessageFormatException)}
+     * before rethrowing the {@link MessageFormatException}.
+     *
+     * @param bodyType
+     *      the expected body type.
+     *
+     * @return the converted body, or {@code null} if none is available.
+     */
+    @Override
+    public <T> T receiveBodyNoWait(Class<T> bodyType) {
+        try {
+            checkClosed();
+            checkMessageListener();
+
+            sendPullCommand(-1);
+            MessageDispatch md;
+            if (info.getPrefetchSize() == 0) {
+                md = dequeue(-1); // We let the broker let us know when we
+                // timeout.
+            } else {
+                md = dequeue(0);
+            }
+
+            if (md == null) {
+                return null;
+            }
+
+            beforeMessageIsConsumed(md);
+            try {
+                final ActiveMQMessage m = createActiveMQMessage(md);
+                final T body = m.getBody(bodyType);            
+                afterMessageIsConsumed(md, false);
+                return body;
+            } catch (MessageFormatException e) {
+                handleReceiveBodyFailure(md, e);
+                throw e;
+            }
+        } catch (JMSException e) {
+            throw JMSExceptionSupport.convertToJMSRuntimeException(e);
         }
-
-        beforeMessageIsConsumed(md);
-        afterMessageIsConsumed(md, false);
-        return createActiveMQMessage(md);
     }
 
     /**
@@ -730,23 +928,27 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
      *                 to some internal error.
      */
     @Override
-    public void close() throws JMSException {
-        if (!unconsumedMessages.isClosed()) {
-            if (!deliveredMessages.isEmpty() && session.getTransactionContext().isInTransaction()) {
-                session.getTransactionContext().addSynchronization(new Synchronization() {
-                    @Override
-                    public void afterCommit() throws Exception {
-                        doClose();
-                    }
+    public void close() {
+        try {
+            if (!unconsumedMessages.isClosed()) {
+                if (!deliveredMessages.isEmpty() && session.getTransactionContext().isInTransaction()) {
+                    session.getTransactionContext().addSynchronization(new Synchronization() {
+                        @Override
+                        public void afterCommit() throws Exception {
+                            doClose();
+                        }
 
-                    @Override
-                    public void afterRollback() throws Exception {
-                        doClose();
-                    }
-                });
-            } else {
-                doClose();
+                        @Override
+                        public void afterRollback() throws Exception {
+                            doClose();
+                        }
+                    });
+                } else {
+                    doClose();
+                }
             }
+        } catch (JMSException e) {
+            throw JMSExceptionSupport.convertToJMSRuntimeException(e);
         }
     }
 

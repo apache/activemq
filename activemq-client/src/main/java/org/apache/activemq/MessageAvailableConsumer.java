@@ -16,6 +16,7 @@
  */
 package org.apache.activemq;
 
+import jakarta.jms.JMSConsumer;
 import jakarta.jms.MessageConsumer;
 
 /**
@@ -25,7 +26,7 @@ import jakarta.jms.MessageConsumer;
  * 
  * 
  */
-public interface MessageAvailableConsumer extends MessageConsumer {
+public interface MessageAvailableConsumer extends MessageConsumer,JMSConsumer {
 
     /**
      * Sets the listener used to notify synchronous consumers that there is a message
