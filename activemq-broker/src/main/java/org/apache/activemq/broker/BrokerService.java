@@ -2624,6 +2624,12 @@ public class BrokerService implements Service {
 
     protected void startManagementContext() throws Exception {
         getManagementContext().setBrokerName(brokerName);
+        // Reuse the broker-level SSL context for JMX by default
+        // This avoids duplicating SSL config in activemq.xml while still allowing an
+        // explicit managementContext sslContext to override when one is needed
+        if (getManagementContext().getSslContext() == null && getSslContext() != null) {
+            getManagementContext().setSslContext(getSslContext());
+        }
         getManagementContext().start();
         adminView = new BrokerView(this, null);
         ObjectName objectName = getBrokerObjectName();
