@@ -177,6 +177,8 @@
         <artifactId>maven-surefire-plugin</artifactId>
         <configuration>
             <forkCount>1</forkCount>
+            <!-- HTTP/WS/SSL tests are inherently slower: tests have legitimate Thread.sleep() calls up to 35s -->
+            <forkedProcessTimeoutInSeconds>600</forkedProcessTimeoutInSeconds>
         </configuration>
       </plugin>
     </plugins>
