@@ -35,9 +35,12 @@ import jakarta.jms.TextMessage;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerRegistry;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.region.Destination;
+import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.network.NetworkConnector;
 import org.apache.activemq.store.memory.MemoryPersistenceAdapter;
+import org.apache.activemq.util.Wait;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -336,26 +339,27 @@ public class LoadBalanceTest {
         broker.stop();
     }
 
-    // need to ensure broker bridge is alive before starting the consumer
-    // peeking at the internals will give us this info
+    // Wait until both brokers have their local consumer AND the remote demand subscription
+    // from the other broker's bridge (>= 2 consumers per queue). This guarantees:
+    // 1. Both local consumers (container1, container2) are truly subscribed
+    // 2. The network bridges are fully started and have propagated demand subscriptions
     private void waitForBridgeFormation() throws Exception {
-        long done = System.currentTimeMillis() + 30000;
-        while (done > System.currentTimeMillis()) {
-            if (hasBridge("one") && hasBridge("two")) {
-                return;
-            }
-            Thread.sleep(1000);
-        }
+        assertTrue("Both brokers should have local + bridge demand consumers for " + TESTING_QUEUE,
+                Wait.waitFor(() -> getQueueConsumerCount("one") >= 2 && getQueueConsumerCount("two") >= 2,
+                        30000, 100));
     }
 
-    private boolean hasBridge(String name) {
-        boolean result = false;
-        BrokerService broker = BrokerRegistry.getInstance().lookup(name);
-            if (broker != null && !broker.getNetworkConnectors().isEmpty()) {
-                 if (!broker.getNetworkConnectors().get(0).activeBridges().isEmpty()) {
-                    result = true;
-                 }
+    private int getQueueConsumerCount(String brokerName) {
+        try {
+            final BrokerService broker = BrokerRegistry.getInstance().lookup(brokerName);
+            if (broker == null) {
+                return 0;
             }
-        return result;
+            final RegionBroker regionBroker = (RegionBroker) broker.getRegionBroker();
+            final Destination dest = regionBroker.getDestinationMap().get(new ActiveMQQueue(TESTING_QUEUE));
+            return dest != null ? dest.getConsumers().size() : 0;
+        } catch (Exception ignored) {
+            return 0;
+        }
     }
 }
