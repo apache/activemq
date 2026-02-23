@@ -34,6 +34,7 @@ import jakarta.jms.Session;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.util.IOHelper;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.store.kahadb.disk.journal.DataFile;
 import org.apache.activemq.store.kahadb.disk.journal.Journal;
@@ -185,9 +186,9 @@ public class JournalCorruptionIndexRecoveryTest {
     }
 
     private void whackIndex(File dataDir) {
-        File indexToDelete = new File(dataDir, "db.data");
+        final File indexToDelete = new File(dataDir, "db.data");
         LOG.info("Whacking index: " + indexToDelete);
-        indexToDelete.delete();
+        IOHelper.deleteFileNonBlocking(indexToDelete);
     }
 
     private void corruptBatchMiddle(int i) throws IOException {
@@ -228,6 +229,7 @@ public class JournalCorruptionIndexRecoveryTest {
         Arrays.fill(bla, fill);
         randomAccessFile.seek(offset);
         randomAccessFile.write(bla, 0, bla.length);
+        dataFile.closeRandomAccessFile(randomAccessFile);
     }
 
     private int getNumberOfJournalFiles() throws IOException {

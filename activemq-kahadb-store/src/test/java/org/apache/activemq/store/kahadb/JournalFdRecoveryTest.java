@@ -18,6 +18,7 @@ package org.apache.activemq.store.kahadb;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.util.IOHelper;
 import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
@@ -306,9 +307,9 @@ public class JournalFdRecoveryTest {
     }
 
     private void whackFile(File dataDir, String name) throws Exception {
-        File indexToDelete = new File(dataDir, name);
+        final File indexToDelete = new File(dataDir, name);
         LOG.info("Whacking index: " + indexToDelete);
-        indexToDelete.delete();
+        IOHelper.deleteFileNonBlocking(indexToDelete);
     }
 
     private int getNumberOfJournalFiles() throws IOException {

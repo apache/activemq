@@ -168,6 +168,7 @@ public class JournalCorruptionExceptionTest {
         randomAccessFile.seek(offset);
         randomAccessFile.write(bla, 0, bla.length);
         randomAccessFile.getFD().sync();
+        dataFile.closeRandomAccessFile(randomAccessFile);
     }
 
     private int getNumberOfJournalFiles() throws IOException {
