@@ -1207,6 +1207,7 @@
             <exclude>**/webapp/decorators/footer.jsp</exclude>
             <exclude>**/docs/img/*.svg</exclude>
             <exclude>**/testJdbcConfig/**/*</exclude>
+            <exclude>**/jakarta-messaging-tck-*.zip</exclude>
           </excludes>
         </configuration>
       </plugin>
