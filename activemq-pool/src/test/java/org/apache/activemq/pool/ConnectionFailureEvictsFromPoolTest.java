@@ -39,6 +39,7 @@ import org.apache.activemq.jms.pool.PooledConnection;
 import org.apache.activemq.test.TestSupport;
 import org.apache.activemq.transport.TransportListener;
 import org.apache.activemq.transport.mock.MockTransport;
+import org.apache.activemq.util.Wait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -94,17 +95,27 @@ public class ConnectionFailureEvictsFromPoolTest extends TestSupport {
         final CountDownLatch gotExceptionEvent = new CountDownLatch(1);
         try (final PooledConnection connection = (PooledConnection) pooledFactory.createConnection()) {
             final ActiveMQConnection amqC = (ActiveMQConnection) connection.getConnection();
-            amqC.addTransportListener(new TransportListener() {
+            // Intercept exception propagation at the MockTransport level where it fires
+            // synchronously. ActiveMQConnection.addTransportListener() callbacks fire via
+            // executeAsync(), which silently drops the task if the pool's ExceptionListener
+            // closes the connection and shuts down the executor first (race condition that
+            // affects the XA path).
+            final MockTransport mockTransport = (MockTransport) amqC.getTransportChannel().narrow(MockTransport.class);
+            final TransportListener originalListener = mockTransport.getTransportListener();
+            mockTransport.setTransportListener(new TransportListener() {
                 public void onCommand(Object command) {
+                    originalListener.onCommand(command);
                 }
                 public void onException(IOException error) {
-                    // we know connection is dead...
-                    // listeners are fired async
+                    // fires synchronously when MockTransport.onException() is called
                     gotExceptionEvent.countDown();
+                    originalListener.onException(error);
                 }
                 public void transportInterupted() {
+                    originalListener.transportInterupted();
                 }
                 public void transportResumed() {
+                    originalListener.transportResumed();
                 }
             });
 
@@ -116,18 +127,21 @@ public class ConnectionFailureEvictsFromPoolTest extends TestSupport {
                 TestCase.fail("Expected Error");
             } catch (JMSException e) {
             }
-            // Wait for async exception event BEFORE the try-with-resources closes the connection.
-            // ActiveMQConnection.onException() fires TransportListener callbacks via executeAsync(),
-            // so the callback runs in a separate thread. If we wait after connection.close(), the
-            // async executor may already be shut down and the callback never fires.
-            TestCase.assertTrue("exception event propagated ok", gotExceptionEvent.await(15, TimeUnit.SECONDS));
+            TestCase.assertTrue("exception event propagated ok", gotExceptionEvent.await(5, TimeUnit.SECONDS));
         }
-        // If we get another connection now it should be a new connection that
-        // works.
+        // After the failure, a new connection from the pool should work.
+        // The pool eviction is async (ExceptionListener fires via executeAsync),
+        // so retry until the pool returns a working connection.
         LOG.info("expect new connection after failure");
-        try (final Connection connection2 = pooledFactory.createConnection()) {
-            sendMessage(connection2);
-        }
+        assertTrue("pool should provide working connection after eviction",
+            Wait.waitFor(() -> {
+                try (final Connection connection2 = pooledFactory.createConnection()) {
+                    sendMessage(connection2);
+                    return true;
+                } catch (Exception e) {
+                    return false;
+                }
+            }, 5000, 100));
     }
 
     private void createConnectionFailure(Connection connection) throws Exception {
