@@ -35,6 +35,11 @@
 
     <surefire.argLine></surefire.argLine>
     <maven.surefire.allow.securitymanager></maven.surefire.allow.securitymanager>
+    <!-- Per-class JVM timeout (reuseForks=false means one JVM per test class).
+         Kills a forked JVM that has been running longer than this many seconds,
+         preventing CI from hanging indefinitely on Windows file-lock issues or
+         any other test that never terminates. Override per-module if needed. -->
+    <surefire.forkedProcessTimeout>300</surefire.forkedProcessTimeout>
 
     <siteId>activemq-${project.version}</siteId>
     <projectName>Apache ActiveMQ</projectName>
@@ -973,6 +978,7 @@
             <redirectTestOutputToFile>true</redirectTestOutputToFile>
             <forkCount>1</forkCount>
             <reuseForks>false</reuseForks>
+            <forkedProcessTimeoutInSeconds>${surefire.forkedProcessTimeout}</forkedProcessTimeoutInSeconds>
             <failIfNoTests>false</failIfNoTests>
             <systemPropertyVariables>
                 <java.awt.headless>true</java.awt.headless>
