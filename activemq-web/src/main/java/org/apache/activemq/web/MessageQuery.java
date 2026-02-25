@@ -27,12 +27,16 @@ import jakarta.jms.TextMessage;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
+import org.springframework.stereotype.Component;
+import org.springframework.web.context.annotation.RequestScope;
 
 /**
  * Allow the user to browse a message on a queue by its ID
  *
  *
  */
+@Component("messageQuery")
+@RequestScope
 public class MessageQuery extends QueueBrowseQuery {
 
     private String id;

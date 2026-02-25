@@ -21,12 +21,16 @@ import java.util.Collections;
 
 import org.apache.activemq.broker.jmx.ConnectionViewMBean;
 import org.apache.activemq.broker.jmx.SubscriptionViewMBean;
+import org.springframework.stereotype.Component;
+import org.springframework.web.context.annotation.RequestScope;
 
 /**
  * Query for a single connection.
  * 
  * @author ms
  */
+@Component("connectionQuery")
+@RequestScope
 public class ConnectionQuery {
 
 	private final BrokerFacade mBrokerFacade;
