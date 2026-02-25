@@ -411,9 +411,10 @@ public class ActiveMQMessageTest extends TestCase {
             found3 |= element.equals(name3);
         }
         assertTrue("prop name1 found", found1);
-        // spec compliance, only non JMS (and JMSX) props returned
-        assertFalse("prop name2 not found", found2);
-        assertFalse("prop name4 not found", found3);
+        // JMSXDeliveryCount is always present per Jakarta Messaging 3.1 spec
+        assertTrue("prop name2 found", found2);
+        // JMS standard header fields (like JMSRedelivered) are not returned
+        assertFalse("prop name3 not found", found3);
     }
 
     @SuppressWarnings("rawtypes")
