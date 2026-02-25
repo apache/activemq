@@ -33,7 +33,10 @@ import org.apache.activemq.store.jdbc.JDBCPersistenceAdapter;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
+@Category(ParallelTest.class)
 public class AMQ3445Test {
 
     private ConnectionFactory connectionFactory;

@@ -23,7 +23,10 @@ import jakarta.jms.Topic;
 import org.apache.activemq.EmbeddedBrokerAndConnectionTestSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
+@Category(ParallelTest.class)
 public class TemporaryDestinationToFromNameTest extends EmbeddedBrokerAndConnectionTestSupport {
 
     private static final Logger LOG = LoggerFactory.getLogger(TemporaryDestinationToFromNameTest.class);

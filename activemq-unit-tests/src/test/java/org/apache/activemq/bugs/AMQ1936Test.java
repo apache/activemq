@@ -45,11 +45,14 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.util.Wait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * A AMQ1936Test
  *
  */
+@Category(ParallelTest.class)
 public class AMQ1936Test extends TestCase {
     private final static Logger logger = LoggerFactory.getLogger(AMQ1936Test.class);
     private final static String TEST_QUEUE_NAME = "dynamicQueues/duplicate.message.test.queue";

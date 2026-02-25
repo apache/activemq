@@ -55,10 +55,13 @@ import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * Test loss of message on index rebuild when presistJMSRedelivered is on.
  */
+@Category(ParallelTest.class)
 public class AMQ6133PersistJMSRedeliveryTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(AMQ6133PersistJMSRedeliveryTest.class);

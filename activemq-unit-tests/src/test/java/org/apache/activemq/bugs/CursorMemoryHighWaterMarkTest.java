@@ -36,11 +36,14 @@ import jakarta.jms.TextMessage;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * ensure a message will be pages in from the store when another dest has stopped caching
  */
 
+@Category(ParallelTest.class)
 public class CursorMemoryHighWaterMarkTest {
     private static final Logger LOG = LoggerFactory
             .getLogger(CursorMemoryHighWaterMarkTest.class);

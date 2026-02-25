@@ -45,6 +45,8 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import static org.junit.Assert.fail;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * Testing how the broker reacts when a SQL Exception is thrown from
@@ -52,6 +54,7 @@ import static org.junit.Assert.fail;
  * <p/>
  * see https://issues.apache.org/jira/browse/AMQ-4636
  */
+@Category(ParallelTest.class)
 public class AMQ4636Test {
 
     private static final String MY_TEST_TOPIC = "MY_TEST_TOPIC";

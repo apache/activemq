@@ -17,10 +17,13 @@
 package org.apache.activemq.usecases;
 
 import jakarta.jms.DeliveryMode;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * 
  */
+@Category(ParallelTest.class)
 public class PublishOnTemporaryQueueConsumedMessageTest extends PublishOnTopicConsumedMessageTest {
 
     protected void setUp() throws Exception {

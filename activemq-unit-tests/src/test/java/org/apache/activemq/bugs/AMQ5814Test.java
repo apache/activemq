@@ -42,7 +42,10 @@ import org.apache.activemq.security.SimpleAuthenticationPlugin;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
+@Category(ParallelTest.class)
 public class AMQ5814Test {
 
     private BrokerService brokerService;

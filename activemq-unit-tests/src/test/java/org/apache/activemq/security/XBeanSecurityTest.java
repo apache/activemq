@@ -23,11 +23,14 @@ import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * 
  * 
  */
+@Category(ParallelTest.class)
 public class XBeanSecurityTest extends SecurityTestSupport {
 
     private static final Logger LOG = LoggerFactory.getLogger(XBeanSecurityTest.class);

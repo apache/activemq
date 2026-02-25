@@ -32,8 +32,11 @@ import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertTrue;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 @RunWith(value = Parameterized.class)
+@Category(ParallelTest.class)
 public class AbortSlowConsumer1Test extends AbortSlowConsumerBase {
 
     private static final Logger LOG = LoggerFactory.getLogger(AbortSlowConsumer1Test.class);

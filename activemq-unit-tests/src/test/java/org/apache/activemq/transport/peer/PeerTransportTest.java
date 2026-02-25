@@ -39,10 +39,13 @@ import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.util.MessageIdList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  *
  */
+@Category(ParallelTest.class)
 public class PeerTransportTest extends TestCase {
     protected static final int MESSAGE_COUNT = 50;
     protected static final int NUMBER_IN_CLUSTER = 3;

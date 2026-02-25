@@ -23,7 +23,10 @@ import junit.framework.TestCase;
 import org.apache.activemq.command.ActiveMQTempQueue;
 import org.apache.activemq.command.ConnectionId;
 import org.apache.activemq.util.IdGenerator;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
+@Category(ParallelTest.class)
 public class DestinationMapTempDestinationTest extends TestCase {
 
     public void testtestTempDestinations() throws Exception {

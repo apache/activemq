@@ -39,6 +39,8 @@ import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 
 /**
@@ -48,6 +50,7 @@ import org.junit.Test;
  * during calculations.
  *
  */
+@Category(ParallelTest.class)
 public class MaxDestinationsPolicyTest {
     BrokerService broker;
     ConnectionFactory factory;

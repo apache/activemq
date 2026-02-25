@@ -22,11 +22,14 @@ import java.io.File;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.kahadb.KahaDBStore;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * @author gtully
  * @see https://issues.apache.org/activemq/browse/AMQ-2020
  **/
+@Category(ParallelTest.class)
 public class StoreQueueCursorKahaDBNoDuplicateTest extends StoreQueueCursorNoDuplicateTest {
 
     @Override

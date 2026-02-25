@@ -29,12 +29,15 @@ import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.command.SessionInfo;
 import org.apache.activemq.network.NetworkTestSupport;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * Pretend to be an abusive client that sends multiple identical ConsumerInfo
  * commands and make sure the broker doesn't stall because of it.
  */
 
+@Category(ParallelTest.class)
 public class DoubleSubscriptionTest extends NetworkTestSupport {
 
     public ActiveMQDestination destination;

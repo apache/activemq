@@ -33,11 +33,14 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 
 /**
  * Test for AMQ-6798
  */
+@Category(ParallelTest.class)
 public class QueueMemoryAndStoreUsageCleanupTest {
     protected static final Logger LOG = LoggerFactory
             .getLogger(QueueMemoryAndStoreUsageCleanupTest.class);

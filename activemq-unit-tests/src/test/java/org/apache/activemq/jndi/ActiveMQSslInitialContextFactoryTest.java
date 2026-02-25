@@ -37,8 +37,11 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 @RunWith(Parameterized.class)
+@Category(ParallelTest.class)
 public class ActiveMQSslInitialContextFactoryTest {
 
     protected Context context;

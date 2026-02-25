@@ -37,7 +37,10 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.usage.SystemUsage;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
+@Category(ParallelTest.class)
 public class StoreBasedCursorTest extends TestCase {
     protected String bindAddress = "tcp://localhost:60706";
     BrokerService broker;

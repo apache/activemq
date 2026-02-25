@@ -41,12 +41,15 @@ import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * Test for AMQ-7071
  * Test to show prefetched messages will be marked as redelivered if connection terminated improperly
  * and the lastDeliveredSequenceId is unknown
  */
+@Category(ParallelTest.class)
 public class DurableRedeliveryTest {
 
     static final Logger LOG = LoggerFactory.getLogger(DurableRedeliveryTest.class);

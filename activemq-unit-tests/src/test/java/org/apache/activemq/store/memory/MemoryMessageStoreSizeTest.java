@@ -18,7 +18,10 @@ package org.apache.activemq.store.memory;
 
 import org.apache.activemq.store.AbstractMessageStoreSizeTest;
 import org.apache.activemq.store.MessageStore;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
+@Category(ParallelTest.class)
 public class MemoryMessageStoreSizeTest extends AbstractMessageStoreSizeTest {
 
     MemoryMessageStore messageStore;

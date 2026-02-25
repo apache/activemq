@@ -32,6 +32,8 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * AMQ-5875
@@ -43,6 +45,7 @@ import org.slf4j.LoggerFactory;
  *
  * */
 @RunWith(Parameterized.class)
+@Category(ParallelTest.class)
 public class MultiKahaDBQueueDeletionTest extends AbstractMultiKahaDBDeletionTest {
 
     protected static final Logger LOG = LoggerFactory

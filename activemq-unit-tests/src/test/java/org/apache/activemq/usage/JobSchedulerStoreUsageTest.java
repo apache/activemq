@@ -34,7 +34,10 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 
 import static org.junit.Assert.assertNotEquals;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
+@Category(ParallelTest.class)
 public class JobSchedulerStoreUsageTest extends EmbeddedBrokerTestSupport {
 
     private static final Logger LOG = LoggerFactory.getLogger(JobSchedulerStoreUsageTest.class);

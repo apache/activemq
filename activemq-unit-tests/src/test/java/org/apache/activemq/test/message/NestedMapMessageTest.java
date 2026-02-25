@@ -28,10 +28,13 @@ import jakarta.jms.Message;
 import org.apache.activemq.test.JmsTopicSendReceiveWithTwoConnectionsAndEmbeddedBrokerTest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  *
  */
+@Category(ParallelTest.class)
 public class NestedMapMessageTest extends JmsTopicSendReceiveWithTwoConnectionsAndEmbeddedBrokerTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(NestedMapMessageTest.class);

@@ -26,8 +26,11 @@ import org.apache.activemq.store.AbstractVmConcurrentDispatchTest;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 @RunWith(Parameterized.class)
+@Category(ParallelTest.class)
 public class MultiKahaDbVmConcurrentDispatchTest extends AbstractVmConcurrentDispatchTest {
 
     private final boolean concurrentDispatch;

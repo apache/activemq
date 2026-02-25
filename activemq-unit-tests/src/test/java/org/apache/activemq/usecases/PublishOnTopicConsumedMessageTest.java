@@ -20,13 +20,16 @@ import jakarta.jms.Destination;
 import jakarta.jms.JMSException;
 import jakarta.jms.Message;
 import jakarta.jms.MessageProducer;
+import org.apache.activemq.test.annotations.ParallelTest;
 import org.apache.activemq.test.JmsTopicSendReceiveWithTwoConnectionsTest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.junit.experimental.categories.Category;
 
 /**
  * 
  */
+@Category(ParallelTest.class)
 public class PublishOnTopicConsumedMessageTest extends JmsTopicSendReceiveWithTwoConnectionsTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(PublishOnTopicConsumedMessageTest.class);

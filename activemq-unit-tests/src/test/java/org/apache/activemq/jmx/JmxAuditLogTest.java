@@ -47,7 +47,10 @@ import org.junit.Test;
 
 import static org.apache.activemq.broker.util.JMXAuditLogEntry.VERBS;
 import static org.apache.activemq.util.TestUtils.findOpenPort;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
+@Category(ParallelTest.class)
 public class JmxAuditLogTest extends TestSupport
 {
    protected BrokerService broker;

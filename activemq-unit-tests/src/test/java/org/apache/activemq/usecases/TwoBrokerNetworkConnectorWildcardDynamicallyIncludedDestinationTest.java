@@ -18,7 +18,10 @@ package org.apache.activemq.usecases;
 
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.network.NetworkConnector;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
+@Category(ParallelTest.class)
 public class TwoBrokerNetworkConnectorWildcardDynamicallyIncludedDestinationTest extends AbstractTwoBrokerNetworkConnectorWildcardIncludedDestinationTestSupport {
 	
     protected void addIncludedDestination(NetworkConnector nc) {

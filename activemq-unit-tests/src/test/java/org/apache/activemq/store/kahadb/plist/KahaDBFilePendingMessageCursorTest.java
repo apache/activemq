@@ -31,10 +31,13 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */
+@Category(ParallelTest.class)
 public class KahaDBFilePendingMessageCursorTest extends FilePendingMessageCursorTestSupport {
 
     @Test

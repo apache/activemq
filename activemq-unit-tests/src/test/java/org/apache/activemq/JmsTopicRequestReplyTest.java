@@ -34,10 +34,13 @@ import jakarta.jms.TextMessage;
 import org.apache.activemq.test.TestSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * 
  */
+@Category(ParallelTest.class)
 public class JmsTopicRequestReplyTest extends TestSupport implements MessageListener {
     private static final Logger LOG = LoggerFactory.getLogger(JmsTopicRequestReplyTest.class);
 

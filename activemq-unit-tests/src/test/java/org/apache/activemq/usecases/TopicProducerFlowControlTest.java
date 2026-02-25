@@ -50,7 +50,10 @@ import org.apache.logging.log4j.core.filter.AbstractFilter;
 import org.apache.logging.log4j.core.layout.MessageLayout;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
+@Category(ParallelTest.class)
 public class TopicProducerFlowControlTest extends TestCase implements MessageListener {
     private static final Logger LOG = LoggerFactory.getLogger(TopicProducerFlowControlTest.class);
     private static final String brokerName = "testBroker";

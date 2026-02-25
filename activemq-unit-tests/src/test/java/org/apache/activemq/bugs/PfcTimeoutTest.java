@@ -43,8 +43,11 @@ import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 
+@Category(ParallelTest.class)
 public class PfcTimeoutTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(PfcTimeoutTest.class);

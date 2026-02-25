@@ -29,11 +29,14 @@ import jakarta.jms.Topic;
 import junit.framework.TestCase;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * @author Peter Henning
  *
  */
+@Category(ParallelTest.class)
 public class CreateTemporaryQueueBeforeStartTest extends TestCase {
     private final String bindAddress = "tcp://localhost:0";
     private String connectionUri;

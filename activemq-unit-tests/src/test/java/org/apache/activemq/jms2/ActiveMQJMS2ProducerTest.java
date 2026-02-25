@@ -37,7 +37,10 @@ import jakarta.jms.TextMessage;
 
 import org.apache.activemq.ActiveMQMessageProducerSupport;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
+@Category(ParallelTest.class)
 public class ActiveMQJMS2ProducerTest extends ActiveMQJMS2TestBase {
 
     private static final String PROPERTY_NAME_VALID="ValidName";

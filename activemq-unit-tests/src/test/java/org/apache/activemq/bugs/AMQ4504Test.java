@@ -31,7 +31,10 @@ import org.junit.Test;
 
 
 import static org.junit.Assert.assertNotNull;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
+@Category(ParallelTest.class)
 public class AMQ4504Test {
 
     BrokerService brokerService;

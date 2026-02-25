@@ -20,7 +20,10 @@ import junit.framework.Test;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
+@Category(ParallelTest.class)
 public class JdbcXARecoveryBrokerNoCacheTest extends JdbcXARecoveryBrokerTest {
 
     @Override

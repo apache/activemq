@@ -20,7 +20,10 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
 
 import java.io.IOException;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
+@Category(ParallelTest.class)
 public class UsageBlockedDispatchConcurrentStoreAndDispatchFalseTest  extends UsageBlockedDispatchTest {
     @Override
     protected BrokerService createBroker() throws IOException {

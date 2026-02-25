@@ -43,6 +43,8 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * Test class to verify composite consumers correctly create demand
@@ -50,6 +52,7 @@ import org.slf4j.LoggerFactory;
  * See AMQ-9262
  */
 @RunWith(Parameterized.class)
+@Category(ParallelTest.class)
 public class CompositeConsumerNetworkBridgeTest extends DynamicNetworkTestSupport {
 
     protected static final Logger LOG = LoggerFactory.getLogger(CompositeConsumerNetworkBridgeTest.class);

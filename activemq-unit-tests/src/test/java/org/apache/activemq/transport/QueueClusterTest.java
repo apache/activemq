@@ -16,9 +16,13 @@
  */
 package org.apache.activemq.transport;
 
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
+
 /**
  * 
  */
+@Category(ParallelTest.class)
 public class QueueClusterTest extends TopicClusterTest {
 
     protected void setUp() throws Exception {

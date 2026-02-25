@@ -16,6 +16,10 @@
  */
 package org.apache.activemq.spring;
 
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
+
+@Category(ParallelTest.class)
 public class Spring2XmlNamespacesWithoutRemoteSchemaTest extends SpringTestSupport {
     public void testUsingSpring2NamespacesForANonExistingXsdDocument() throws Exception {
         assertSenderConfig("spring-embedded-xbean-noversion.xml");

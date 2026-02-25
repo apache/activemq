@@ -19,7 +19,10 @@ package org.apache.activemq.transport.failover;
 import junit.framework.Test;
 
 import org.apache.activemq.transport.tcp.TransportUriTest;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
+@Category(ParallelTest.class)
 public class FailoverUriTest extends TransportUriTest {
 
     @Override

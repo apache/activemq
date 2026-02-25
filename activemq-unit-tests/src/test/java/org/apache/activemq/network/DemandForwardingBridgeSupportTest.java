@@ -23,7 +23,10 @@ import org.apache.activemq.command.*;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.util.Arrays;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
+@Category(ParallelTest.class)
 public class DemandForwardingBridgeSupportTest extends NetworkTestSupport {
 
     private DemandForwardingBridge bridge;

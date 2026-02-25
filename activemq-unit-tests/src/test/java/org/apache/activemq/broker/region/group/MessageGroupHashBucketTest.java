@@ -16,11 +16,15 @@
  */
 package org.apache.activemq.broker.region.group;
 
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
+
 
 /**
  *
  * 
  */
+@Category(ParallelTest.class)
 public class MessageGroupHashBucketTest extends MessageGroupMapTest {
 
     protected MessageGroupMap createMessageGroupMap() {

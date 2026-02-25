@@ -38,12 +38,15 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * Test that statistics for a sent message are properly counted for a temporary destination
  * whether inside a transaction or not.
  */
 @RunWith(Parameterized.class)
+@Category(ParallelTest.class)
 public class AMQ6194Test {
 
     private boolean transaction;

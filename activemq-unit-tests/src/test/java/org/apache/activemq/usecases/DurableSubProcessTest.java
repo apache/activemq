@@ -35,9 +35,12 @@ import java.util.HashSet;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CopyOnWriteArrayList;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 // see https://issues.apache.org/activemq/browse/AMQ-2985
 // this demonstrated receiving old messages eventually along with validating order receipt
+@Category(ParallelTest.class)
 public class DurableSubProcessTest extends org.apache.activemq.TestSupport  {
     private static final Logger LOG = LoggerFactory.getLogger(DurableSubProcessTest.class);
     public static final long RUNTIME = 4 * 60 * 1000;

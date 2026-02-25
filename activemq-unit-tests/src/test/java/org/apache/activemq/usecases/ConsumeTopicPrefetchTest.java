@@ -30,10 +30,13 @@ import org.apache.activemq.util.Wait;
 import org.apache.activemq.util.Wait.Condition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * 
  */
+@Category(ParallelTest.class)
 public class ConsumeTopicPrefetchTest extends ProducerConsumerTestSupport {
     private static final Logger LOG = LoggerFactory.getLogger(ConsumeTopicPrefetchTest.class);
 

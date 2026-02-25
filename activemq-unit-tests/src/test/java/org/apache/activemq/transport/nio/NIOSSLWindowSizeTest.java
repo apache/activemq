@@ -27,8 +27,11 @@ import jakarta.jms.MessageConsumer;
 import jakarta.jms.MessageProducer;
 import jakarta.jms.Queue;
 import jakarta.jms.Session;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 @SuppressWarnings("javadoc")
+@Category(ParallelTest.class)
 public class NIOSSLWindowSizeTest extends TestCase {
 	
     BrokerService broker;

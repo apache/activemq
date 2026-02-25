@@ -30,6 +30,8 @@ import java.util.List;
 import org.apache.activemq.util.ClassLoadingAwareObjectInputStream;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * Quick port to java to support AMQ build.
@@ -48,6 +50,7 @@ import org.junit.Test;
  *
  */
 @SuppressWarnings({ "rawtypes", "unchecked" })
+@Category(ParallelTest.class)
 public class AMQ3537Test implements InvocationHandler, Serializable {
 
     static {

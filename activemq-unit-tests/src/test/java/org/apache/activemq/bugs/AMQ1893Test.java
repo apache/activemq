@@ -37,7 +37,10 @@ import jakarta.jms.TextMessage;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
+@Category(ParallelTest.class)
 public class AMQ1893Test extends TestCase {
 
     private static final Logger log = LoggerFactory.getLogger(AMQ1893Test.class);

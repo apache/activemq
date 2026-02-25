@@ -19,7 +19,10 @@ package org.apache.activemq.store;
 import java.util.ArrayList;
 import org.apache.activemq.store.kahadb.FilteredKahaDBPersistenceAdapter;
 import org.apache.activemq.store.kahadb.MultiKahaDBPersistenceAdapter;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
+@Category(ParallelTest.class)
 public class AutoStorePerDestinationTest extends StorePerDestinationTest {
 
     // use perDestinationFlag to get multiple stores from one match all adapter

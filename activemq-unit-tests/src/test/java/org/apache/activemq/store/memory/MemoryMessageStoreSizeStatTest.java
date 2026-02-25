@@ -28,6 +28,8 @@ import org.apache.activemq.store.AbstractMessageStoreSizeStatTest;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * This test checks that KahaDB properly sets the new storeMessageSize statistic.
@@ -35,6 +37,7 @@ import org.slf4j.LoggerFactory;
  * AMQ-5748
  *
  */
+@Category(ParallelTest.class)
 public class MemoryMessageStoreSizeStatTest extends AbstractMessageStoreSizeStatTest {
     protected static final Logger LOG = LoggerFactory
             .getLogger(MemoryMessageStoreSizeStatTest.class);

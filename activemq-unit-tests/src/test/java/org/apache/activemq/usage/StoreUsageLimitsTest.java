@@ -34,7 +34,10 @@ import org.apache.logging.log4j.core.layout.MessageLayout;
 
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
+@Category(ParallelTest.class)
 public class StoreUsageLimitsTest {
 
     final int WAIT_TIME_MILLS = 20 * 1000;

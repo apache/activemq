@@ -18,7 +18,10 @@ package org.apache.activemq.usecases;
 
 import java.io.IOException;
 import org.apache.activemq.store.PersistenceAdapter;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
+@Category(ParallelTest.class)
 public class KahaDBDurableSubscriptionTest extends DurableSubscriptionTestSupport {
 
     protected PersistenceAdapter createPersistenceAdapter() throws IOException {

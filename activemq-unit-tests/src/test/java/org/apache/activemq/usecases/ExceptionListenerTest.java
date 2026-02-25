@@ -40,10 +40,13 @@ import org.slf4j.LoggerFactory;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * @author Oliver Belikan
  */
+@Category(ParallelTest.class)
 public class ExceptionListenerTest implements ExceptionListener {
     private static final Logger LOG = LoggerFactory.getLogger(ExceptionListenerTest.class);
     BrokerService brokerService;

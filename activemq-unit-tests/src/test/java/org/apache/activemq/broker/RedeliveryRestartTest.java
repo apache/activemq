@@ -38,8 +38,11 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 @RunWith(value = Parameterized.class)
+@Category(ParallelTest.class)
 public class RedeliveryRestartTest extends TestSupport {
 
     private static final transient Logger LOG = LoggerFactory.getLogger(RedeliveryRestartTest.class);

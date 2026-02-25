@@ -45,8 +45,11 @@ import org.apache.activemq.transport.MutexTransport;
 import org.apache.activemq.transport.ResponseCorrelator;
 import org.apache.activemq.transport.failover.FailoverTransport;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 
+@Category(ParallelTest.class)
 public class AMQ2364Test {
 
     @SuppressWarnings("unchecked")

@@ -38,11 +38,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /*
  demonstrates that with nio it does not make sense to block on the broker but thread pool
  shold grow past initial corepoolsize of 10
  */
+@Category(ParallelTest.class)
 public class NIOAsyncSendWithPFCTest extends TestCase {
 
     private static final Logger LOG = LoggerFactory.getLogger(NIOAsyncSendWithPFCTest.class);

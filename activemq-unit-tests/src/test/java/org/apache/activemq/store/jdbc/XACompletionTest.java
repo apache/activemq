@@ -68,9 +68,12 @@ import java.util.Arrays;
 import java.util.Enumeration;
 
 import static org.apache.activemq.util.TestUtils.createXid;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 
 @RunWith(value = Parameterized.class)
+@Category(ParallelTest.class)
 public class XACompletionTest extends TestSupport {
     private static final Logger LOG = LoggerFactory.getLogger(XACompletionTest.class);
 

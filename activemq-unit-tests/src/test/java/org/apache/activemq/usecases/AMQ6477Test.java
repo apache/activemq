@@ -55,11 +55,14 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * Test that clearUnMarshalled data gets called properly to reduce memory usage
  */
 @RunWith(Parameterized.class)
+@Category(ParallelTest.class)
 public class AMQ6477Test {
 
     static final Logger LOG = LoggerFactory.getLogger(AMQ6477Test.class);

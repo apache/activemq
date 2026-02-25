@@ -23,7 +23,10 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
+@Category(ParallelTest.class)
 public class TransactionContextTest {
 
     org.apache.activemq.store.jdbc.TransactionContext underTest;

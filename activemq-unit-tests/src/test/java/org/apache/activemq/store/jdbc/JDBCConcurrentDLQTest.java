@@ -48,8 +48,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 
+@Category(ParallelTest.class)
 public class JDBCConcurrentDLQTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(JDBCConcurrentDLQTest.class);

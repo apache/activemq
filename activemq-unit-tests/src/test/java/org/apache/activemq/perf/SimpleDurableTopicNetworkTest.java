@@ -21,7 +21,6 @@ import jakarta.jms.DeliveryMode;
 import jakarta.jms.Destination;
 import jakarta.jms.JMSException;
 
-
 public class SimpleDurableTopicNetworkTest extends SimpleNetworkTest {
     
     protected void setUp() throws Exception {
