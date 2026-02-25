@@ -1,19 +1,3 @@
-/**
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package org.apache.activemq.transport.amqp;
 
 import static org.junit.Assert.assertEquals;
@@ -22,8 +6,12 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
+import java.net.Socket;
+import java.net.ServerSocket;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.net.SocketFactory;
@@ -36,11 +24,25 @@ import org.apache.activemq.transport.TransportFactory;
 import org.apache.activemq.transport.TransportFilter;
 import org.apache.activemq.transport.tcp.SslTransport;
 import org.apache.activemq.transport.tcp.TcpTransport;
+import org.junit.After;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 @Category(ParallelTest.class)
 public class AmqpTransportFactoryConfigurationTest {
+
+    private final List<TcpTransport> createdTransports = new ArrayList<>();
+
+    @After
+    public void cleanup() throws Exception {
+        for (TcpTransport transport : createdTransports) {
+            Socket socket = transport.narrow(Socket.class);
+            if (socket != null && !socket.isClosed()) {
+                socket.close();
+            }
+        }
+        createdTransports.clear();
+    }
 
     @Test
     public void testServerConfigureStripsMutexTransportForAllAmqpFactories() throws Exception {
@@ -113,20 +115,31 @@ public class AmqpTransportFactoryConfigurationTest {
     }
 
     private TcpTransport createTcpTransport(AmqpWireFormat wireFormat) throws Exception {
+        int dynamicPort = findAvailablePort();
         return new TcpTransport(
             wireFormat,
             SocketFactory.getDefault(),
-            new URI("tcp://localhost:61616"),
+            new URI("tcp://localhost:" + dynamicPort),
             null);
     }
 
+    private int findAvailablePort() throws Exception {
+        try (ServerSocket socket = new ServerSocket(0)) {
+            return socket.getLocalPort();
+        }
+    }
+
     private TcpTransport createTransportForFactory(TransportFactory factory, AmqpWireFormat wireFormat) throws Exception {
+        TcpTransport transport;
         if (factory instanceof AmqpSslTransportFactory || factory instanceof AmqpNioSslTransportFactory) {
             SSLSocket socket = (SSLSocket) SSLSocketFactory.getDefault().createSocket();
-            return new SslTransport(wireFormat, socket);
+            transport = new SslTransport(wireFormat, socket);
+        } else {
+            transport = createTcpTransport(wireFormat);
         }
 
-        return createTcpTransport(wireFormat);
+        createdTransports.add(transport);
+        return transport;
     }
 
     private <T> T findInChain(Transport transport, Class<T> type) {
