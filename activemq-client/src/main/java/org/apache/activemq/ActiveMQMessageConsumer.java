@@ -1671,7 +1671,12 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                             try {
                                 boolean expired = isConsumerExpiryCheckEnabled() && message.isExpired();
                                 if (!expired) {
-                                    listener.onMessage(message);
+                                    ActiveMQSession.IN_MESSAGE_LISTENER_CALLBACK.set(true);
+                                    try {
+                                        listener.onMessage(message);
+                                    } finally {
+                                        ActiveMQSession.IN_MESSAGE_LISTENER_CALLBACK.set(false);
+                                    }
                                 }
                                 afterMessageIsConsumed(md, expired);
                             } catch (RuntimeException e) {
