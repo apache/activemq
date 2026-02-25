@@ -2272,11 +2272,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
         for (Iterator<ActiveMQMessageConsumer> iter = consumers.iterator(); iter.hasNext();) {
             ActiveMQMessageConsumer c = iter.next();
             if (c.getConsumerId().equals(id)) {
-                try {
-                    c.close();
-                } catch (JMSException e) {
-                    LOG.warn("Exception closing consumer", e);
-                }
+                c.close();
                 LOG.warn("Closed consumer on Command, " + id);
                 break;
             }
