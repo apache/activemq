@@ -203,6 +203,10 @@ public class QueueZeroPrefetchLazyDispatchPriorityTest {
             final ArrayList<Message> consumeList = consumeMessages("TestQ");
             LOG.info("Consumed list {}", consumeList.size());
 
+            // wait until remaining messages are actually consumed
+            assertTrue("Remaining messages consumed",
+                    Wait.waitFor(() -> consumeList.size() == numToSend - 1, 5000, 100));
+
             // compare lists
             // assertEquals("Iteration: " + i
             // +", message 1 should be priority high", 5,
