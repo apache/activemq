@@ -26,13 +26,20 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import jakarta.jms.BytesMessage;
+import jakarta.jms.CompletionListener;
 import jakarta.jms.Destination;
 import jakarta.jms.IllegalStateException;
+import jakarta.jms.IllegalStateRuntimeException;
 import jakarta.jms.InvalidDestinationException;
 import jakarta.jms.InvalidSelectorException;
 import jakarta.jms.JMSException;
@@ -235,6 +242,20 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     private MessageTransformer transformer;
     private BlobTransferPolicy blobTransferPolicy;
     private long lastDeliveredSequenceId = -2;
+
+    // Single-threaded executor for async send: ensures one CompletionListener callback at a time
+    // and that callbacks are invoked in the same order as the corresponding send calls
+    // per Jakarta Messaging 3.1 spec section 7.3.8
+    private final ExecutorService asyncSendExecutor = Executors.newSingleThreadExecutor(
+        r -> new Thread(r, "ActiveMQ async-send"));
+
+    // Set to true on the executor thread while a CompletionListener callback is executing.
+    // Used to detect illegal session operations (close/commit/rollback) from within a callback.
+    static final ThreadLocal<Boolean> IN_COMPLETION_LISTENER_CALLBACK = ThreadLocal.withInitial(() -> false);
+
+    // Set to true on the dispatch thread while a MessageListener.onMessage() callback is executing.
+    // Used to detect illegal connection/session operations from within a MessageListener callback.
+    static final ThreadLocal<Boolean> IN_MESSAGE_LISTENER_CALLBACK = ThreadLocal.withInitial(() -> false);
 
     /**
      * Construct the Session
@@ -577,6 +598,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     @Override
     public void commit() throws JMSException {
         checkClosed();
+        checkNotInCompletionListenerCallback("commit");
         if (!getTransacted()) {
             throw new jakarta.jms.IllegalStateException("Not a transacted session");
         }
@@ -598,6 +620,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     @Override
     public void rollback() throws JMSException {
         checkClosed();
+        checkNotInCompletionListenerCallback("rollback");
         if (!getTransacted()) {
             throw new jakarta.jms.IllegalStateException("Not a transacted session");
         }
@@ -637,6 +660,8 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      */
     @Override
     public void close() throws JMSException {
+        checkNotInCompletionListenerCallback("close");
+        checkNotInMessageListenerCallback("close");
         if (!closed) {
             if (getTransactionContext().isInXATransaction()) {
                 if (!synchronizationRegistered) {
@@ -725,6 +750,15 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
         if (!closed) {
 
             try {
+                // Shutdown async send executor and wait for any in-progress callbacks to finish
+                // per Jakarta Messaging 3.1 spec section 7.3.5
+                asyncSendExecutor.shutdown();
+                try {
+                    asyncSendExecutor.awaitTermination(60, TimeUnit.SECONDS);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    LOG.debug("Interrupted while waiting for async send executor to terminate", e);
+                }
                 executor.close();
 
                 for (Iterator<ActiveMQMessageConsumer> iter = consumers.iterator(); iter.hasNext();) {
@@ -1054,7 +1088,12 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
                     }
 
                     LOG.trace("{} onMessage({})", this, message.getMessageId());
-                    messageListener.onMessage(message);
+                    IN_MESSAGE_LISTENER_CALLBACK.set(true);
+                    try {
+                        messageListener.onMessage(message);
+                    } finally {
+                        IN_MESSAGE_LISTENER_CALLBACK.set(false);
+                    }
 
                 } catch (Throwable e) {
                     if (!isClosed()) {
@@ -2360,6 +2399,153 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
 
         if (deliveryTimeMethod != null) {
             foreignMessage.setJMSDeliveryTime(deliveryTime);
+        }
+    }
+
+    /**
+     * Sends a message with a CompletionListener for async notification per Jakarta Messaging 3.1 spec section 7.3.
+     * <p>
+     * The wire-level send is performed synchronously (inside sendMutex to preserve ordering). The
+     * CompletionListener is then invoked on a dedicated single-threaded executor, ensuring:
+     * <ul>
+     *   <li>Callbacks are not called on the sender's thread (spec 7.3.8)</li>
+     *   <li>Only one callback executes at a time (spec 7.3.8)</li>
+     *   <li>Callbacks are in the same order as the corresponding send calls (spec 7.3.8)</li>
+     * </ul>
+     * The sender thread blocks until the send completes and the callback has been invoked.
+     */
+    protected void send(ActiveMQMessageProducer producer, ActiveMQDestination destination, Message message,
+                        int deliveryMode, int priority, long timeToLive,
+                        boolean disableMessageID, boolean disableMessageTimestamp,
+                        MemoryUsage producerWindow, int sendTimeout,
+                        CompletionListener completionListener) throws JMSException {
+
+        checkClosed();
+        if (destination.isTemporary() && connection.isDeleted(destination)) {
+            throw new InvalidDestinationException("Cannot publish to a deleted Destination: " + destination);
+        }
+
+        final ActiveMQMessage msg;
+        final Message originalMessage = message;
+
+        synchronized (sendMutex) {
+            doStartTransaction();
+            if (transactionContext.isRollbackOnly()) {
+                throw new IllegalStateException("transaction marked rollback only");
+            }
+            final TransactionId txid = transactionContext.getTransactionId();
+            final long sequenceNumber = producer.getMessageSequence();
+
+            // Set the "JMS" header fields on the original message, see 1.1 spec section 3.4.11
+            message.setJMSDeliveryMode(deliveryMode);
+            final long timeStamp = System.currentTimeMillis();
+            final long expiration = timeToLive > 0 ? timeToLive + timeStamp : 0L;
+
+            if (!(message instanceof ActiveMQMessage)) {
+                setForeignMessageDeliveryTime(message, timeStamp);
+            } else {
+                message.setJMSDeliveryTime(timeStamp);
+            }
+            if (!disableMessageTimestamp && !producer.getDisableMessageTimestamp()) {
+                message.setJMSTimestamp(timeStamp);
+            } else {
+                message.setJMSTimestamp(0L);
+            }
+            message.setJMSExpiration(expiration);
+            message.setJMSPriority(priority);
+            message.setJMSRedelivered(false);
+
+            // Transform to our own message format
+            ActiveMQMessage amqMsg = ActiveMQMessageTransformation.transformMessage(message, connection);
+            amqMsg.setDestination(destination);
+            amqMsg.setMessageId(new MessageId(producer.getProducerInfo().getProducerId(), sequenceNumber));
+
+            // Propagate the message id and destination back to the original message
+            if (amqMsg != message) {
+                message.setJMSMessageID(amqMsg.getMessageId().toString());
+                message.setJMSDestination(destination);
+            }
+            amqMsg.setBrokerPath(null);
+            amqMsg.setTransactionId(txid);
+
+            // Always copy when sending async so the user can safely modify the message after send()
+            // returns without affecting the in-flight message
+            msg = (ActiveMQMessage) amqMsg.copy();
+            msg.setConnection(connection);
+            msg.onSend();
+            msg.setProducerId(msg.getMessageId().getProducerId());
+
+            if (LOG.isTraceEnabled()) {
+                LOG.trace(getSessionId() + " async sending message: " + msg);
+            }
+
+            // Perform the wire-level send synchronously while holding sendMutex.
+            // This ensures messages are delivered to the broker in send order.
+            try {
+                this.connection.syncSendPacket(msg);
+            } catch (JMSException sendEx) {
+                // Send failed - invoke onException on executor thread (not sender thread)
+                final Future<?> future = asyncSendExecutor.submit(() -> {
+                    IN_COMPLETION_LISTENER_CALLBACK.set(true);
+                    try {
+                        completionListener.onException(originalMessage, sendEx);
+                    } finally {
+                        IN_COMPLETION_LISTENER_CALLBACK.set(false);
+                    }
+                });
+                awaitAsyncSendFuture(future, originalMessage, completionListener);
+                return;
+            }
+        }
+
+        // Send succeeded - invoke onCompletion on executor thread (not sender thread) per spec 7.3.8
+        final Future<?> future = asyncSendExecutor.submit(() -> {
+            IN_COMPLETION_LISTENER_CALLBACK.set(true);
+            try {
+                completionListener.onCompletion(originalMessage);
+            } catch (Exception e) {
+                // Per spec 7.3.2, exceptions thrown by the callback are swallowed
+                LOG.warn("CompletionListener.onCompletion threw an exception", e);
+            } finally {
+                IN_COMPLETION_LISTENER_CALLBACK.set(false);
+            }
+        });
+        awaitAsyncSendFuture(future, originalMessage, completionListener);
+    }
+
+    private void awaitAsyncSendFuture(final Future<?> future, final Message originalMessage,
+                                      final CompletionListener completionListener) throws JMSException {
+        try {
+            future.get();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new JMSException("Async send interrupted while waiting for CompletionListener");
+        } catch (ExecutionException e) {
+            // Should not happen since we catch all exceptions inside the submitted task
+            LOG.warn("Unexpected error executing CompletionListener", e.getCause());
+        }
+    }
+
+    /**
+     * Throws {@link jakarta.jms.IllegalStateException} if the current thread is executing a
+     * CompletionListener callback, per Jakarta Messaging 3.1 spec section 7.3.5.
+     * The classic JMS API uses checked IllegalStateException (not the runtime variant).
+     */
+    static void checkNotInCompletionListenerCallback(final String operation) throws jakarta.jms.IllegalStateException {
+        if (Boolean.TRUE.equals(IN_COMPLETION_LISTENER_CALLBACK.get())) {
+            throw new jakarta.jms.IllegalStateException(
+                "Cannot call " + operation + "() from within a CompletionListener callback");
+        }
+    }
+
+    /**
+     * Throws {@link jakarta.jms.IllegalStateException} if the current thread is executing a
+     * MessageListener.onMessage() callback, per Jakarta Messaging spec section 4.4.
+     */
+    static void checkNotInMessageListenerCallback(final String operation) throws jakarta.jms.IllegalStateException {
+        if (Boolean.TRUE.equals(IN_MESSAGE_LISTENER_CALLBACK.get())) {
+            throw new jakarta.jms.IllegalStateException(
+                "Cannot call " + operation + "() from within a MessageListener callback");
         }
     }
 }
