@@ -294,7 +294,7 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
         checkClosed();
         if (destination == null) {
             if (info.getDestination() == null) {
-                throw new UnsupportedOperationException("A destination must be specified.");
+                throw new InvalidDestinationException("A destination must be specified.");
             }
             throw new InvalidDestinationException("Don't understand null destinations");
         }
