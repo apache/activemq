@@ -37,9 +37,29 @@
       </policyMap>
     </destinationPolicy>
     <networkConnectors>
-      <networkConnector uri="static:(tcp://localhost:61616)" />
-      </networkConnectors>
-
+      <networkConnector name="remote-to-local" uri="static:(tcp://localhost:61616)" userName="localAdmin" password="passwordA" remoteUserName="remoteAdmin" remotePassword="passwordB"/>
+    </networkConnectors>
+    <plugins>
+      <authorizationPlugin>
+        <map>
+          <authorizationMap>
+            <authorizationEntries>
+              <authorizationEntry queue=">" read="admins" write="admins" admin="admins" />
+              <authorizationEntry topic="ActiveMQ.Advisory.>" read="*" write="*" admin="*"/>
+            </authorizationEntries>
+            <tempDestinationAuthorizationEntry>
+              <tempDestinationAuthorizationEntry read="admins" write="admins" admin="admins"/>
+            </tempDestinationAuthorizationEntry>
+          </authorizationMap>
+        </map>
+      </authorizationPlugin>
+      <simpleAuthenticationPlugin>
+        <users>
+          <authenticationUser username="localAdmin" password="passwordA" groups="admins"/>
+          <authenticationUser username="remoteAdmin" password="passwordB" groups="admins"/>
+        </users>
+      </simpleAuthenticationPlugin>
+    </plugins>
     <transportConnectors>
       <transportConnector uri="tcp://localhost:61617"/>
     </transportConnectors>

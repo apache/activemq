@@ -40,4 +40,9 @@ public interface NetworkBridgeViewMBean extends Service {
 
     void resetStats();
 
+    long getStartedTimestamp();
+
+    long getLocalExceptionCount();
+
+    long getRemoteExceptionCount();
 }
