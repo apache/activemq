@@ -199,15 +199,23 @@ public class QueueZeroPrefetchLazyDispatchPriorityTest {
             assertNotNull(message);
             assertEquals(5, message.getJMSPriority());
 
-            // consume messages
-            final ArrayList<Message> consumeList = consumeMessages("TestQ");
+            // Wait for remaining messages to be fully available after consumeOneMessage closes its connection.
+            // With lazyDispatch=true + optimizedDispatch=true, messages may briefly be in-flight
+            // during connection teardown and not yet re-queued for dispatch to a new consumer.
+            final int remaining = numToSend - 1;
+            assertTrue("Remaining messages available for dispatch", Wait.waitFor(() -> {
+                final Queue q = (Queue) broker.getDestination(destination);
+                return q != null
+                    && q.getDestinationStatistics().getMessages().getCount() == remaining
+                    && q.getDestinationStatistics().getInflight().getCount() == 0;
+            }, 5000, 100));
+
+            // consume messages (use timeout-based overload for reliable dispatch on slow CI)
+            final ArrayList<Message> consumeList = consumeMessages("TestQ", remaining, TimeUnit.SECONDS.toMillis(30));
             LOG.info("Consumed list {}", consumeList.size());
 
-            // compare lists
-            // assertEquals("Iteration: " + i
-            // +", message 1 should be priority high", 5,
-            // consumeList.get(0).getJMSPriority());
-            for (int j = 1; j < (numToSend - 1); j++) {
+            assertEquals("Iteration: " + i + ", all remaining messages consumed", remaining, consumeList.size());
+            for (int j = 0; j < consumeList.size(); j++) {
                 assertEquals("Iteration: " + i + ", message " + j + " should be priority medium", 4, consumeList.get(j).getJMSPriority());
             }
         }
