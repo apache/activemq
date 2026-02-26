@@ -67,7 +67,7 @@ public class AMQ7270Test extends TestCase {
 
         for (int i = 0; i < messageCount; i++) {
             bytesMessage.setIntProperty("id", i);
-            producer.send(activeMQQueue, bytesMessage);
+            producer.send(bytesMessage);
         }
 
         final QueueViewMBean queueViewMBean = (QueueViewMBean)

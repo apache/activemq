@@ -1427,21 +1427,12 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     @Override
     public MessageConsumer createSharedConsumer(Topic topic, String sharedSubscriptionName) throws JMSException {
         checkClosed();
-        if (topic == null) {
-            throw new InvalidDestinationException("Topic cannot be null");
-        }
         throw new UnsupportedOperationException("createSharedConsumer(Topic, sharedSubscriptionName) is not supported");
     }
 
     @Override
     public MessageConsumer createSharedConsumer(Topic topic, String sharedSubscriptionName, String messageSelector) throws JMSException {
         checkClosed();
-        if (topic == null) {
-            throw new InvalidDestinationException("Topic cannot be null");
-        }
-        if (messageSelector != null && !messageSelector.trim().isEmpty()) {
-            SelectorParser.parse(messageSelector);
-        }
         throw new UnsupportedOperationException("createSharedConsumer(Topic, sharedSubscriptionName, messageSelector) is not supported");
     }
 
@@ -1460,21 +1451,12 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     @Override
     public MessageConsumer createSharedDurableConsumer(Topic topic, String name) throws JMSException {
         checkClosed();
-        if (topic == null) {
-            throw new InvalidDestinationException("Topic cannot be null");
-        }
         throw new UnsupportedOperationException("createSharedDurableConsumer(Topic, name) is not supported");
     }
 
     @Override
     public MessageConsumer createSharedDurableConsumer(Topic topic, String name, String messageSelector) throws JMSException {
         checkClosed();
-        if (topic == null) {
-            throw new InvalidDestinationException("Topic cannot be null");
-        }
-        if (messageSelector != null && !messageSelector.trim().isEmpty()) {
-            SelectorParser.parse(messageSelector);
-        }
         throw new UnsupportedOperationException("createSharedDurableConsumer(Topic, name, messageSelector) is not supported");
     }
 

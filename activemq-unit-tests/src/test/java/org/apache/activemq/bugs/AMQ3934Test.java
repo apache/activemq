@@ -71,7 +71,7 @@ public class AMQ3934Test {
             final Destination queue = session.createQueue(TEST_QUEUE);
             final Message toSend = session.createMessage();
             final MessageProducer producer = session.createProducer(queue);
-            producer.send(queue, toSend);
+            producer.send(toSend);
         } finally {
             conn.close();
         }

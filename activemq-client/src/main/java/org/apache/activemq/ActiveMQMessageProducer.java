@@ -299,11 +299,11 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
     @Override
     public void send(Destination destination, Message message, CompletionListener completionListener) throws JMSException {
         checkClosed();
-        if (completionListener == null) {
-            throw new IllegalArgumentException("CompletionListener must not be null");
-        }
         if (info.getDestination() != null) {
             throw new UnsupportedOperationException("This producer was created with a specific destination. Use send(Message, CompletionListener) variants.");
+        }
+        if (completionListener == null) {
+            throw new IllegalArgumentException("CompletionListener must not be null");
         }
         if (destination == null) {
             throw new InvalidDestinationException("Don't understand null destinations");
@@ -317,11 +317,11 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
     public void send(Destination destination, Message message, int deliveryMode, int priority, long timeToLive,
                      CompletionListener completionListener) throws JMSException {
         checkClosed();
-        if (completionListener == null) {
-            throw new IllegalArgumentException("CompletionListener must not be null");
-        }
         if (info.getDestination() != null) {
             throw new UnsupportedOperationException("This producer was created with a specific destination. Use send(Message, CompletionListener) variants.");
+        }
+        if (completionListener == null) {
+            throw new IllegalArgumentException("CompletionListener must not be null");
         }
         if (destination == null) {
             throw new InvalidDestinationException("Don't understand null destinations");
@@ -337,11 +337,11 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
                      boolean disableMessageID, boolean disableMessageTimestamp,
                      CompletionListener completionListener) throws JMSException {
         checkClosed();
-        if (completionListener == null) {
-            throw new IllegalArgumentException("CompletionListener must not be null");
-        }
         if (info.getDestination() != null) {
             throw new UnsupportedOperationException("This producer was created with a specific destination. Use send(Message, CompletionListener) variants.");
+        }
+        if (completionListener == null) {
+            throw new IllegalArgumentException("CompletionListener must not be null");
         }
         if (destination == null) {
             throw new InvalidDestinationException("Don't understand null destinations");
