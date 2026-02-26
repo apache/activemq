@@ -314,9 +314,7 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
     public Enumeration getPropertyNames() throws JMSException {
         try {
             Vector<String> result = new Vector<String>(this.getProperties().keySet());
-            if( getRedeliveryCounter()!=0 ) {
-                result.add("JMSXDeliveryCount");
-            }
+            result.add("JMSXDeliveryCount");
             if( getGroupID()!=null ) {
                 result.add("JMSXGroupID");
             }

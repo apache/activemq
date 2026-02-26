@@ -1,0 +1,73 @@
+////
+Licensed to the Apache Software Foundation (ASF) under one or more
+contributor license agreements.  See the NOTICE file distributed with
+this work for additional information regarding copyright ownership.
+The ASF licenses this file to You under the Apache License, Version 2.0
+(the "License"); you may not use this file except in compliance with
+the License.  You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+////
+= Jakarta Messaging TCK 3.1.0 Runner
+:toc:
+
+This module runs the official https://jakarta.ee/specifications/messaging/3.1/[Jakarta Messaging 3.1.0 TCK] against Apache ActiveMQ using an embedded broker.
+
+== Prerequisites
+
+* **JDK 17 or 21** — the TCK harness does not compile on JDK 25 (`javax.rmi` removed)
+* **Apache Ant** — must be on `PATH` (e.g. `apt-get install ant`)
+* **curl** and **unzip** — for downloading and extracting the TCK
+
+== How It Works
+
+The module builds a shaded (fat) JAR containing the ActiveMQ broker, client, KahaDB store, and a custom `JNDIInitialContextFactory`.
+The `run_tck.sh` script then:
+
+1. Downloads the TCK ZIP from `download.eclipse.org` (cached after first download)
+2. Verifies the SHA-256 checksum
+3. Extracts and patches the TCK source for JDK 17+ compatibility
+4. Builds the TCK test classes with Ant
+5. Runs all tests via `ant runclient`
+
+Each forked test JVM starts an embedded ActiveMQ broker over `vm://localhost` (non-persistent, no JMX) through the JNDI factory.
+
+== Build
+
+[source,bash]
+----
+mvn clean package -pl activemq-tooling/activemq-jakarta-messaging-tck -am -DskipTests
+----
+
+== Run the TCK
+
+[source,bash]
+----
+mvn verify -pl activemq-tooling/activemq-jakarta-messaging-tck -Prun-tck
+----
+
+If your default JDK is 25, point to a 17 or 21 installation:
+
+[source,bash]
+----
+JAVA_HOME=/path/to/jdk17 mvn verify -pl activemq-tooling/activemq-jakarta-messaging-tck -Prun-tck
+----
+
+Results are written to `target/tck-report/` and `target/tck-work/`.
+
+== Configuration
+
+`ts.jte`::
+TCK environment properties — classpaths, JNDI factory, timeout factor, test execution command.
+`jms.home` and `jms.classes` are appended automatically by the script.
+
+`ts.jtx`::
+Test exclusion list.
+Add entries in the format `com/sun/ts/tests/jms/path/Class#method` to skip known-failing tests.
+
