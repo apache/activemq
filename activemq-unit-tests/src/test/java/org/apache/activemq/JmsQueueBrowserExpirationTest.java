@@ -165,6 +165,9 @@ public class JmsQueueBrowserExpirationTest {
         int browsed = 0;
         while (enumeration.hasMoreElements()) {
             TextMessage m = (TextMessage) enumeration.nextElement();
+            if (m == null) {
+                continue; // message expired during browse
+            }
             browsed++;
             LOG.debug("B[{}]: {}", browsed, m.getText());
         }
