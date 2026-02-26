@@ -105,7 +105,7 @@ public class MessageInterceptorStrategyMemoryUsageTest extends TestSupport {
             BytesMessage sendMessageP = session.createBytesMessage();
             byte[] origBody = new byte[1*1024];
             sendMessageP.writeBytes(origBody);
-            producer.send(queue, sendMessageP);
+            producer.send(sendMessageP);
         }
 
         QueueViewMBean queueViewMBean = getProxyToQueue(queueName);
@@ -127,7 +127,7 @@ public class MessageInterceptorStrategyMemoryUsageTest extends TestSupport {
             BytesMessage sendMessageP = session.createBytesMessage();
             byte[] origBody = new byte[1*1024*1024];
             sendMessageP.writeBytes(origBody);
-            producer.send(queue, sendMessageP);
+            producer.send(sendMessageP);
         }
 
         QueueViewMBean queueViewMBean = getProxyToQueue(queueName);
