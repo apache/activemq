@@ -96,11 +96,11 @@ public class MessageInterceptorStrategyTest extends TestSupport {
         Queue queue = createQueue("mis.forceDeliveryMode.true");
         Message sendMessageP = session.createTextMessage("forceDeliveryMode=true");
         producer.setDeliveryMode(DeliveryMode.PERSISTENT);
-        producer.send(queue, sendMessageP);
+        producer.send(sendMessageP);
 
         Message sendMessageNP = session.createTextMessage("forceDeliveryMode=true");
         producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
-        producer.send(queue, sendMessageNP);
+        producer.send(sendMessageNP);
 
         queueBrowser = session.createBrowser(queue);
         Enumeration<?> browseEnumeration = queueBrowser.getEnumeration();
@@ -124,11 +124,11 @@ public class MessageInterceptorStrategyTest extends TestSupport {
         Queue queue = createQueue("mis.forceDeliveryMode.false");
         Message sendMessageP = session.createTextMessage("forceDeliveryMode=false");
         producer.setDeliveryMode(DeliveryMode.PERSISTENT);
-        producer.send(queue, sendMessageP);
+        producer.send(sendMessageP);
 
         Message sendMessageNP = session.createTextMessage("forceDeliveryMode=false");
         producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
-        producer.send(queue, sendMessageNP);
+        producer.send(sendMessageNP);
 
         queueBrowser = session.createBrowser(queue);
         Enumeration<?> browseEnumeration = queueBrowser.getEnumeration();
@@ -152,7 +152,7 @@ public class MessageInterceptorStrategyTest extends TestSupport {
         Queue queue = createQueue("mis.forceExpiration.zero");
         Message sendMessageP = session.createTextMessage("expiration=zero");
         producer.setTimeToLive(0l);
-        producer.send(queue, sendMessageP);
+        producer.send(sendMessageP);
 
         queueBrowser = session.createBrowser(queue);
         Enumeration<?> browseEnumeration = queueBrowser.getEnumeration();
@@ -178,7 +178,7 @@ public class MessageInterceptorStrategyTest extends TestSupport {
         Queue queue = createQueue("mis.forceExpiration.100k");
         Message sendMessageP = session.createTextMessage("expiration=zero");
         producer.setTimeToLive(100_000l);
-        producer.send(queue, sendMessageP);
+        producer.send(sendMessageP);
 
         queueBrowser = session.createBrowser(queue);
         Enumeration<?> browseEnumeration = queueBrowser.getEnumeration();
@@ -202,7 +202,7 @@ public class MessageInterceptorStrategyTest extends TestSupport {
 
         Queue queue = createQueue("mis.forceExpiration.zero-no-dlq-expiry");
         Message sendMessageP = session.createTextMessage("expiration=zero-no-dlq-expiry");
-        producer.send(queue, sendMessageP);
+        producer.send(sendMessageP);
 
         Thread.sleep(250l);
 
@@ -242,7 +242,7 @@ public class MessageInterceptorStrategyTest extends TestSupport {
         Queue queue = createQueue("mis.forceExpiration.maxValue");
         Message sendMessageP = session.createTextMessage("expiration=ceiling");
         producer.setTimeToLive(expiryTime);
-        producer.send(queue, sendMessageP);
+        producer.send(sendMessageP);
 
         queueBrowser = session.createBrowser(queue);
         Enumeration<?> browseEnumeration = queueBrowser.getEnumeration();
