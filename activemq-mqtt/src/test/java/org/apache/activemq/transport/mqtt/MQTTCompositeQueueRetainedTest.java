@@ -42,9 +42,12 @@ import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.util.ByteSequence;
 import org.junit.Test;
 
+import org.junit.experimental.categories.Category;
+
 /**
  *
  */
+@Category(ParallelTest.class)
 public class MQTTCompositeQueueRetainedTest extends MQTTTestSupport {
 
     // configure composite topic

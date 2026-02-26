@@ -18,12 +18,14 @@ package org.apache.activemq.transport.mqtt;
 
 import org.fusesource.mqtt.client.*;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
+@Category(ParallelTest.class)
 public class MQTTWillTest extends MQTTTestSupport {
 
     @Test(timeout = 60 * 1000)

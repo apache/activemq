@@ -16,9 +16,12 @@
  */
 package org.apache.activemq.transport.mqtt;
 
+import org.junit.experimental.categories.Category;
+
 /**
  * Test the NIO transport with this Test group
  */
+@Category(ParallelTest.class)
 public class PahoMQTTNIOTest extends PahoMQTTTest {
 
     @Override
