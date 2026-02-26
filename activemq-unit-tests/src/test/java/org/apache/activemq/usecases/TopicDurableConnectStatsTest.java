@@ -187,7 +187,7 @@ public class TopicDurableConnectStatsTest extends org.apache.activemq.TestSuppor
             TextMessage message = producerSessions.createTextMessage(createMessageText(i));
             message.setJMSExpiration(0);
             message.setStringProperty("filter", "true");
-            producer.send(topic, message);
+            producer.send(message);
             producerSessions.commit();
 
         }

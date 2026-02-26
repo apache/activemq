@@ -168,6 +168,7 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
      */
     @Override
     public void close() throws JMSException {
+        ActiveMQSession.checkNotInCompletionListenerCallback("close");
         if (!closed) {
             dispose();
             this.session.asyncSendPacket(info.createRemoveCommand());
@@ -197,6 +198,35 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
         }
     }
 
+    @Override
+    public void send(Message message) throws JMSException {
+        checkClosed();
+        if (info.getDestination() == null) {
+            throw new UnsupportedOperationException("A destination must be specified.");
+        }
+        super.send(message);
+    }
+
+    @Override
+    public void send(Message message, int deliveryMode, int priority, long timeToLive) throws JMSException {
+        checkClosed();
+        if (info.getDestination() == null) {
+            throw new UnsupportedOperationException("A destination must be specified.");
+        }
+        validateDeliveryMode(deliveryMode);
+        validatePriority(priority);
+        super.send(message, deliveryMode, priority, timeToLive);
+    }
+
+    @Override
+    public void send(Destination destination, Message message) throws JMSException {
+        checkClosed();
+        if (info.getDestination() != null) {
+            throw new UnsupportedOperationException("This producer was created with a specific destination. Use send(Message) variants.");
+        }
+        super.send(destination, message);
+    }
+
     /**
      * Sends a message to a destination for an unidentified message producer,
      * specifying delivery mode, priority and time to live.
@@ -221,42 +251,133 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
      */
     @Override
     public void send(Destination destination, Message message, int deliveryMode, int priority, long timeToLive) throws JMSException {
-        this.send(destination, message, deliveryMode, priority, timeToLive, (AsyncCallback)null);
+        validateDeliveryMode(deliveryMode);
+        validatePriority(priority);
+        this.send(destination, message, deliveryMode, priority, timeToLive, (AsyncCallback) null);
     }
 
     /**
      *
      * @param message the message to send
-     * @param CompletionListener to callback
+     * @param completionListener to callback
      * @throws JMSException if the JMS provider fails to send the message due to
      *                 some internal error.
-     * @throws UnsupportedOperationException if an invalid destination is
-     *                 specified.
-     * @throws InvalidDestinationException if a client uses this method with an
-     *                 invalid destination.
+     * @throws UnsupportedOperationException if called on an anonymous producer (no fixed destination)
      * @see jakarta.jms.Session#createProducer
      * @since 2.0
      */
     @Override
     public void send(Message message, CompletionListener completionListener) throws JMSException {
-        throw new UnsupportedOperationException("send(Message, CompletionListener) is not supported");
+        checkClosed();
+        if (completionListener == null) {
+            throw new IllegalArgumentException("CompletionListener must not be null");
+        }
+        if (info.getDestination() == null) {
+            throw new UnsupportedOperationException("A destination must be specified.");
+        }
+        this.doSendWithCompletionListener(info.getDestination(), message, this.defaultDeliveryMode,
+                this.defaultPriority, this.defaultTimeToLive,
+                getDisableMessageID(), getDisableMessageTimestamp(), completionListener);
     }
 
     @Override
     public void send(Message message, int deliveryMode, int priority, long timeToLive,
                       CompletionListener completionListener) throws JMSException {
-        throw new UnsupportedOperationException("send(Message, deliveryMode, priority, timetoLive, CompletionListener) is not supported");
+        checkClosed();
+        if (completionListener == null) {
+            throw new IllegalArgumentException("CompletionListener must not be null");
+        }
+        if (info.getDestination() == null) {
+            throw new UnsupportedOperationException("A destination must be specified.");
+        }
+        validateDeliveryMode(deliveryMode);
+        validatePriority(priority);
+        this.doSendWithCompletionListener(info.getDestination(), message, deliveryMode, priority, timeToLive,
+                getDisableMessageID(), getDisableMessageTimestamp(), completionListener);
     }
 
     @Override
     public void send(Destination destination, Message message, CompletionListener completionListener) throws JMSException {
-        throw new UnsupportedOperationException("send(Destination, Message, CompletionListener) is not supported");
+        checkClosed();
+        if (info.getDestination() != null) {
+            throw new UnsupportedOperationException("This producer was created with a specific destination. Use send(Message, CompletionListener) variants.");
+        }
+        if (completionListener == null) {
+            throw new IllegalArgumentException("CompletionListener must not be null");
+        }
+        if (destination == null) {
+            throw new InvalidDestinationException("Don't understand null destinations");
+        }
+        this.doSendWithCompletionListener(ActiveMQDestination.transform(destination), message,
+                this.defaultDeliveryMode, this.defaultPriority, this.defaultTimeToLive,
+                getDisableMessageID(), getDisableMessageTimestamp(), completionListener);
     }
 
     @Override
     public void send(Destination destination, Message message, int deliveryMode, int priority, long timeToLive,
                      CompletionListener completionListener) throws JMSException {
-        throw new UnsupportedOperationException("send(Destination, Message, deliveryMode, priority, timetoLive, CompletionListener) is not supported");
+        checkClosed();
+        if (info.getDestination() != null) {
+            throw new UnsupportedOperationException("This producer was created with a specific destination. Use send(Message, CompletionListener) variants.");
+        }
+        if (completionListener == null) {
+            throw new IllegalArgumentException("CompletionListener must not be null");
+        }
+        if (destination == null) {
+            throw new InvalidDestinationException("Don't understand null destinations");
+        }
+        validateDeliveryMode(deliveryMode);
+        validatePriority(priority);
+        this.doSendWithCompletionListener(ActiveMQDestination.transform(destination), message,
+                deliveryMode, priority, timeToLive,
+                getDisableMessageID(), getDisableMessageTimestamp(), completionListener);
+    }
+
+    public void send(Destination destination, Message message, int deliveryMode, int priority, long timeToLive,
+                     boolean disableMessageID, boolean disableMessageTimestamp,
+                     CompletionListener completionListener) throws JMSException {
+        checkClosed();
+        if (info.getDestination() != null) {
+            throw new UnsupportedOperationException("This producer was created with a specific destination. Use send(Message, CompletionListener) variants.");
+        }
+        if (completionListener == null) {
+            throw new IllegalArgumentException("CompletionListener must not be null");
+        }
+        if (destination == null) {
+            throw new InvalidDestinationException("Don't understand null destinations");
+        }
+        validateDeliveryMode(deliveryMode);
+        validatePriority(priority);
+        this.doSendWithCompletionListener(ActiveMQDestination.transform(destination), message,
+                deliveryMode, priority, timeToLive, disableMessageID, disableMessageTimestamp, completionListener);
+    }
+
+    private void doSendWithCompletionListener(final ActiveMQDestination dest, Message message,
+                                              final int deliveryMode, final int priority, final long timeToLive,
+                                              final boolean disableMessageID, final boolean disableMessageTimestamp,
+                                              final CompletionListener completionListener) throws JMSException {
+        if (dest == null) {
+            throw new JMSException("No destination specified");
+        }
+
+        if (transformer != null) {
+            final Message transformedMessage = transformer.producerTransform(session, this, message);
+            if (transformedMessage != null) {
+                message = transformedMessage;
+            }
+        }
+
+        if (producerWindow != null) {
+            try {
+                producerWindow.waitForSpace();
+            } catch (InterruptedException e) {
+                throw new JMSException("Send aborted due to thread interrupt.");
+            }
+        }
+
+        this.session.send(this, dest, message, deliveryMode, priority, timeToLive,
+                disableMessageID, disableMessageTimestamp, producerWindow, sendTimeout, completionListener);
+        stats.onMessage();
     }
 
     public void send(Message message, AsyncCallback onComplete) throws JMSException {
@@ -294,7 +415,7 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
         checkClosed();
         if (destination == null) {
             if (info.getDestination() == null) {
-                throw new UnsupportedOperationException("A destination must be specified.");
+                throw new InvalidDestinationException("A destination must be specified.");
             }
             throw new InvalidDestinationException("Don't understand null destinations");
         }

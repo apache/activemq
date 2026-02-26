@@ -173,7 +173,7 @@ public class AMQ6059Test {
         connection.start();
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         MessageProducer producer = session.createProducer(destination);
-        producer.send(destination, session.createTextMessage("DLQ message"), DeliveryMode.PERSISTENT, 4, 1000);
+        producer.send(session.createTextMessage("DLQ message"), DeliveryMode.PERSISTENT, 4, 1000);
         connection.stop();
         LOG.info("### Send message that will expire.");
     }

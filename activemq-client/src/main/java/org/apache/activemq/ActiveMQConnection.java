@@ -609,6 +609,8 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      */
     @Override
     public void stop() throws JMSException {
+        ActiveMQSession.checkNotInCompletionListenerCallback("stop");
+        ActiveMQSession.checkNotInMessageListenerCallback("stop");
         doStop(true);
     }
 
@@ -677,6 +679,8 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      */
     @Override
     public void close() throws JMSException {
+        ActiveMQSession.checkNotInCompletionListenerCallback("close");
+        ActiveMQSession.checkNotInMessageListenerCallback("close");
         try {
             // If we were running, lets stop first.
             if (!closed.get() && !transportFailed.get()) {
@@ -1362,7 +1366,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      */
     public void checkClientIDWasManuallySpecified() throws JMSException {
         if (!userSpecifiedClientID) {
-            throw new JMSException("You cannot create a durable subscriber without specifying a unique clientID on a Connection");
+            throw new IllegalStateException("You cannot create a durable subscriber without specifying a unique clientID on a Connection");
         }
     }
 

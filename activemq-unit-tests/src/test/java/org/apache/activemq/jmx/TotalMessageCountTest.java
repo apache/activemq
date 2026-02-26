@@ -105,7 +105,7 @@ public class TotalMessageCountTest {
             Destination queue = session.createQueue(TESTQUEUE);
             TextMessage msg = session.createTextMessage("This is a message.");
             MessageProducer producer = session.createProducer(queue);
-            producer.send(queue, msg);
+            producer.send(msg);
             LOG.info("Message sent to " + TESTQUEUE);
         } finally {
             conn.close();
