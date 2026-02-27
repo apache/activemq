@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.transport.discovery.masterslave;
+package org.apache.activemq.transport.discovery.staticfailover;
 
 import org.apache.activemq.transport.discovery.DiscoveryAgent;
 import org.apache.activemq.transport.discovery.DiscoveryAgentFactory;
@@ -27,8 +27,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.Map;
 
-@Deprecated(forRemoval = true)
-public class MasterSlaveDiscoveryAgentFactory extends DiscoveryAgentFactory {
+public class StaticFailoverDiscoveryAgentFactory extends DiscoveryAgentFactory {
 
     @Override
     protected DiscoveryAgent doCreateDiscoveryAgent(URI uri) throws IOException {
@@ -37,7 +36,7 @@ public class MasterSlaveDiscoveryAgentFactory extends DiscoveryAgentFactory {
             CompositeData data = URISupport.parseComposite(uri);
             Map options = data.getParameters();
 
-            MasterSlaveDiscoveryAgent rc = new MasterSlaveDiscoveryAgent();
+            StaticFailoverDiscoveryAgent rc = new StaticFailoverDiscoveryAgent();
             IntrospectionSupport.setProperties(rc, options);
             rc.setServices(data.getComponents());
 

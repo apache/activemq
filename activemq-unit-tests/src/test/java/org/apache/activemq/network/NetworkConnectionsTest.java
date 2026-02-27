@@ -24,16 +24,20 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import jakarta.jms.*;
+import jakarta.jms.Connection;
+import jakarta.jms.Message;
+import jakarta.jms.MessageConsumer;
+import jakarta.jms.MessageProducer;
+import jakarta.jms.Session;
 
 public class NetworkConnectionsTest extends TestCase {
     private static final Logger LOG = LoggerFactory.getLogger(NetworkConnectionsTest.class);
 
     private static final String LOCAL_BROKER_TRANSPORT_URI = "tcp://localhost:61616";
-    private static final String REMOTE_BROKER_TRANSPORT_URI = "tcp://localhost:61617";
+    protected static final String REMOTE_BROKER_TRANSPORT_URI = "tcp://localhost:61617";
     private static final String DESTINATION_NAME = "TEST.RECONNECT";
 
-    private BrokerService localBroker;
+    protected BrokerService localBroker;
     private BrokerService remoteBroker;
 
     @Test
@@ -41,7 +45,7 @@ public class NetworkConnectionsTest extends TestCase {
         LOG.info("testIsStarted is starting...");
 
         LOG.info("Adding network connector...");
-        NetworkConnector nc = localBroker.addNetworkConnector("static:(" + REMOTE_BROKER_TRANSPORT_URI + ")");
+        NetworkConnector nc = addNetworkConnector();
         nc.setName("NC1");
 
         LOG.info("Starting network connector...");
@@ -80,7 +84,7 @@ public class NetworkConnectionsTest extends TestCase {
         LOG.info("testNetworkConnectionRestart is starting...");
 
         LOG.info("Adding network connector...");
-        NetworkConnector nc = localBroker.addNetworkConnector("static:(" + REMOTE_BROKER_TRANSPORT_URI + ")");
+        NetworkConnector nc = addNetworkConnector();
         nc.setName("NC1");
         nc.start();
         assertTrue(nc.isStarted());
@@ -132,7 +136,7 @@ public class NetworkConnectionsTest extends TestCase {
         LOG.info("testNetworkConnectionReAddURI is starting...");
 
         LOG.info("Adding network connector 'NC1'...");
-        NetworkConnector nc = localBroker.addNetworkConnector("static:(" + REMOTE_BROKER_TRANSPORT_URI + ")");
+        NetworkConnector nc = addNetworkConnector();
         nc.setName("NC1");
         nc.start();
         assertTrue(nc.isStarted());
@@ -241,5 +245,9 @@ public class NetworkConnectionsTest extends TestCase {
             remoteBroker.waitUntilStopped();
             remoteBroker = null;
         }
+    }
+
+    protected NetworkConnector addNetworkConnector() throws Exception {
+        return localBroker.addNetworkConnector("static:(" + REMOTE_BROKER_TRANSPORT_URI + ")");
     }
 }
