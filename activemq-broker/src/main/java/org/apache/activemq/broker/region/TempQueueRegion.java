@@ -58,7 +58,7 @@ public class TempQueueRegion extends AbstractTempRegion {
 
         super.removeDestination(context, destination, timeout);
     }
-    
+
     /*
      * For a Queue, dispatch order is imperative to match acks, so the dispatch is deferred till 
      * the notification to ensure that the subscription chosen by the master is used.
