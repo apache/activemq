@@ -47,7 +47,6 @@
     <staging.siteURL>scp://people.apache.org/x1/www/activemq.apache.org</staging.siteURL>
 
     <!-- JAR dependency versions -->
-    <activemq-protobuf-version>1.1</activemq-protobuf-version>
     <activesoap-version>1.3</activesoap-version>
     <annogen-version>0.1.0</annogen-version>
     <ant-version>1.10.15</ant-version>
@@ -191,6 +190,8 @@
   <modules>
     <module>bom</module>
     <module>activemq-openwire-generator</module>
+    <module>activemq-protobuf</module>
+    <module>activemq-protobuf-test</module>
     <module>activemq-client</module>
     <module>activemq-openwire-legacy</module>
     <module>activemq-broker</module>
@@ -414,7 +415,7 @@
       <dependency>
         <groupId>org.apache.activemq.protobuf</groupId>
         <artifactId>activemq-protobuf</artifactId>
-        <version>${activemq-protobuf-version}</version>
+        <version>${project.version}</version>
       </dependency>
 
       <!-- =============================== -->
@@ -956,7 +957,7 @@
         <plugin>
           <groupId>org.apache.activemq.protobuf</groupId>
           <artifactId>activemq-protobuf</artifactId>
-          <version>${activemq-protobuf-version}</version>
+          <version>${project.version}</version>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
