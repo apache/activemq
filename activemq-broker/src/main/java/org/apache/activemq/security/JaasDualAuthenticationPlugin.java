@@ -29,10 +29,11 @@ import org.apache.activemq.broker.Broker;
  */
 public class JaasDualAuthenticationPlugin extends JaasAuthenticationPlugin {
     private String sslConfiguration = "activemq-ssl-domain";
+    private boolean certificateRequired = false;
 
     public Broker installPlugin(Broker broker) {
         initialiseJaas();
-        return new JaasDualAuthenticationBroker(broker, configuration, sslConfiguration);
+        return new JaasDualAuthenticationBroker(broker, configuration, sslConfiguration, certificateRequired);
     }
 
     // Properties
@@ -47,5 +48,13 @@ public class JaasDualAuthenticationPlugin extends JaasAuthenticationPlugin {
 
     public String getSslConfiguration() {
         return sslConfiguration;
+    }
+
+    public void setCertificateRequired(boolean certificateRequired) {
+        this.certificateRequired = certificateRequired;
+    }
+
+    public boolean isCertificateRequired() {
+        return this.certificateRequired;
     }
 }
