@@ -1,0 +1,15 @@
+apiVersion: v2
+name: activemq
+description: A Helm chart for Apache ActiveMQ
+type: application
+version: 1.0.0
+appVersion: "latest"
+keywords:
+  - activemq
+  - message queue
+  - messaging
+home: https://activemq.apache.org
+sources:
+  - https://github.com/apache/activemq
+maintainers:
+  - name: activemq
