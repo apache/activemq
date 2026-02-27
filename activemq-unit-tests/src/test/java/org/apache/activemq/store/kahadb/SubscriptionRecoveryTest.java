@@ -81,7 +81,8 @@ public class SubscriptionRecoveryTest {
         pa.setCleanupInterval(TimeUnit.SECONDS.toMillis(5));
         //Delete the index files on recovery
         if (recover) {
-            for (File index : FileUtils.listFiles(dataFile, new WildcardFileFilter("*.data"), TrueFileFilter.INSTANCE)) {
+            WildcardFileFilter fileFilter = WildcardFileFilter.builder().setWildcards("*.data").get();
+            for (File index : FileUtils.listFiles(dataFile, fileFilter, TrueFileFilter.INSTANCE)) {
                 LOG.info("deleting: " + index);
                 FileUtils.deleteQuietly(index);
             }

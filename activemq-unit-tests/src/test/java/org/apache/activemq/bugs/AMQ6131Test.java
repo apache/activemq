@@ -25,7 +25,7 @@ import static org.junit.Assert.assertTrue;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
-import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -111,7 +111,7 @@ public class AMQ6131Test {
         TopicSubscriber durable = jmsSession.createDurableSubscriber(new ActiveMQTopic("durable.sub"), "sub");
         final MessageProducer producer = jmsSession.createProducer(new ActiveMQTopic("durable.sub"));
 
-        final int original = new ArrayList<File>(FileUtils.listFiles(persistentDir, new WildcardFileFilter("*.log"), TrueFileFilter.INSTANCE)).size();
+        final int original = listFiles(persistentDir, "*.log").size();
 
         // 100k messages
         final byte[] data = new byte[100000];
@@ -132,7 +132,7 @@ public class AMQ6131Test {
                     messageCount.getAndIncrement();
                 }
 
-                return new ArrayList<File>(FileUtils.listFiles(persistentDir, new WildcardFileFilter("*.log"), TrueFileFilter.INSTANCE)).size() > original;
+                return listFiles(persistentDir, "*.log").size() > original;
             }
         }));
 
@@ -159,7 +159,7 @@ public class AMQ6131Test {
 
             @Override
             public boolean isSatisified() throws Exception {
-                return new ArrayList<File>(FileUtils.listFiles(persistentDir, new WildcardFileFilter("*.log"), TrueFileFilter.INSTANCE)).size() == original;
+                return listFiles(persistentDir, "*.log").size() == original;
             }
         }, 5000, 500));
 
@@ -169,7 +169,7 @@ public class AMQ6131Test {
 
         // delete the index so that the durables are gone from the index
         // The test passes if you take out this delete section
-        for (File index : FileUtils.listFiles(persistentDir, new WildcardFileFilter("db.*"), TrueFileFilter.INSTANCE)) {
+        for (File index : listFiles(persistentDir, "db.*")) {
             FileUtils.deleteQuietly(index);
         }
 
@@ -208,7 +208,7 @@ public class AMQ6131Test {
         TopicSubscriber durable = jmsSession.createDurableSubscriber(new ActiveMQTopic("durable.sub"), "sub");
         final MessageProducer producer = jmsSession.createProducer(new ActiveMQTopic("durable.sub"));
 
-        final int original = new ArrayList<File>(FileUtils.listFiles(persistentDir, new WildcardFileFilter("*.log"), TrueFileFilter.INSTANCE)).size();
+        final int original = listFiles(persistentDir, "*.log").size();
 
         // 100k messages
         final byte[] data = new byte[100000];
@@ -229,7 +229,7 @@ public class AMQ6131Test {
                     messageCount.getAndIncrement();
                 }
 
-                return new ArrayList<File>(FileUtils.listFiles(persistentDir, new WildcardFileFilter("*.log"), TrueFileFilter.INSTANCE)).size() > original;
+                return listFiles(persistentDir, "*.log").size() > original;
             }
         }));
 
@@ -255,7 +255,7 @@ public class AMQ6131Test {
 
             @Override
             public boolean isSatisified() throws Exception {
-                return new ArrayList<File>(FileUtils.listFiles(persistentDir, new WildcardFileFilter("*.log"), TrueFileFilter.INSTANCE)).size() == original;
+                return listFiles(persistentDir, "*.log").size() == original;
             }
         }));
 
@@ -265,7 +265,7 @@ public class AMQ6131Test {
 
         // delete the index so that the durables are gone from the index
         // The test passes if you take out this delete section
-        for (File index : FileUtils.listFiles(persistentDir, new WildcardFileFilter("db.*"), TrueFileFilter.INSTANCE)) {
+        for (File index : listFiles(persistentDir, "db.*")) {
             FileUtils.deleteQuietly(index);
         }
 
@@ -287,5 +287,10 @@ public class AMQ6131Test {
         assertEquals(1, broker.getAdminView().getDurableTopicSubscribers().length);
 
         assertNull(durable2.receive(500));
+    }
+
+    private Collection<File> listFiles(File directory, String filterPattern) {
+        WildcardFileFilter filter = WildcardFileFilter.builder().setWildcards(filterPattern).get();
+        return FileUtils.listFiles(directory, filter, TrueFileFilter.INSTANCE);
     }
 }

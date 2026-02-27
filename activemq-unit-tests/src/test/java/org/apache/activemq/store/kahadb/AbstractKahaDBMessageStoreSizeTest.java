@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
+import java.util.Collection;
 
 import org.apache.activemq.store.AbstractMessageStoreSizeTest;
 import org.apache.activemq.store.MessageStore;
@@ -124,7 +125,9 @@ public abstract class AbstractKahaDBMessageStoreSizeTest extends AbstractMessage
             FileUtils.deleteDirectory(new File(dataDirectory));
         FileUtils.copyDirectory(new File(getVersion5Dir()),
                 dataDir);
-        for (File index : FileUtils.listFiles(new File(dataDirectory), new WildcardFileFilter("*.data"), TrueFileFilter.INSTANCE)) {
+        WildcardFileFilter fileFilter = WildcardFileFilter.builder().setWildcards("*.data").get();
+        Collection<File> files = FileUtils.listFiles(new File(dataDirectory), fileFilter, TrueFileFilter.INSTANCE);
+        for (File index : files) {
             FileUtils.deleteQuietly(index);
         }
 
