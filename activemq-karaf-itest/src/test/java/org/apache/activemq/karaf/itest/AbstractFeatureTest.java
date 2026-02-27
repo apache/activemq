@@ -57,7 +57,7 @@ import org.slf4j.LoggerFactory;
 @ExamReactorStrategy(PerClass.class)
 public abstract class AbstractFeatureTest {
 
-    private static final String KARAF_MAJOR_VERSION = "4.2.10";
+    private static final String KARAF_MAJOR_VERSION = "4.3.7";
     public static final Logger LOG = LoggerFactory.getLogger(AbstractFeatureTest.class);
     public static final long ASSERTION_TIMEOUT = 30000L;
     public static final String RESOURCE_BASE = "src/test/resources/org/apache/activemq/karaf/itest/";
@@ -120,21 +120,29 @@ public abstract class AbstractFeatureTest {
 	}
 
 	protected void assertBrokerStarted() throws Exception {
-        Thread.sleep(4000);
-		withinReason(new Runnable() {
-	        public void run() {
-	            assertEquals("brokerName = amq-broker", executeCommand("activemq:list").trim());
-	            assertTrue(executeCommand("activemq:bstat").trim().contains("BrokerName = amq-broker"));
-	        }
-	    });
+	    assertBrokerStarted("amq-broker");
 	}
 
-	public static Option configureBrokerStart(String xmlConfig) {
+   protected void assertBrokerStarted(String brokerName) throws Exception {
+        Thread.sleep(4000);
+        withinReason(new Runnable() {
+            public void run() {
+                assertEquals("brokerName = " + brokerName, executeCommand("activemq:list").trim());
+                assertTrue(executeCommand("activemq:bstat").trim().contains("BrokerName = " + brokerName));
+            }
+        });
+    }
+   
+   public static Option configureBrokerStart(String xmlConfig, String cfgFileame) {
         return composite(
                 replaceConfigurationFile("etc/activemq.xml", new File(RESOURCE_BASE + xmlConfig + ".xml")),
-                replaceConfigurationFile("etc/org.apache.activemq.server-default.cfg", 
-                                         new File(RESOURCE_BASE + "org.apache.activemq.server-default.cfg"))
+                replaceConfigurationFile("etc/" + cfgFileame, 
+                                         new File(RESOURCE_BASE + cfgFileame)) 
                 );
+    }
+
+	public static Option configureBrokerStart(String xmlConfig) {
+        return configureBrokerStart(xmlConfig, "org.apache.activemq.server-default.cfg");
     }
 
     public static Option configureBrokerStart() {
