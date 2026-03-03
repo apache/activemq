@@ -2409,6 +2409,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
 
         final ActiveMQMessage msg;
         final Message originalMessage = message;
+        JMSException sendException = null;
 
         synchronized (sendMutex) {
             doStartTransaction();
@@ -2463,21 +2464,29 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
 
             // Perform the wire-level send synchronously while holding sendMutex.
             // This ensures messages are delivered to the broker in send order.
+            // Capture any send failure so the callback can be invoked outside sendMutex,
+            // preventing a deadlock if the CompletionListener calls producer.send().
             try {
                 this.connection.syncSendPacket(msg);
             } catch (JMSException sendEx) {
-                // Send failed - invoke onException on executor thread (not sender thread)
-                final Future<?> future = asyncSendExecutor.submit(() -> {
-                    IN_COMPLETION_LISTENER_CALLBACK.set(true);
-                    try {
-                        completionListener.onException(originalMessage, sendEx);
-                    } finally {
-                        IN_COMPLETION_LISTENER_CALLBACK.set(false);
-                    }
-                });
-                awaitAsyncSendFuture(future, originalMessage, completionListener);
-                return;
+                sendException = sendEx;
             }
+        }
+
+        // Both success and error callbacks are invoked outside sendMutex to avoid deadlock.
+        // A CompletionListener is allowed to call producer.send() which would re-acquire sendMutex.
+        if (sendException != null) {
+            final JMSException finalEx = sendException;
+            final Future<?> future = asyncSendExecutor.submit(() -> {
+                IN_COMPLETION_LISTENER_CALLBACK.set(true);
+                try {
+                    completionListener.onException(originalMessage, finalEx);
+                } finally {
+                    IN_COMPLETION_LISTENER_CALLBACK.set(false);
+                }
+            });
+            awaitAsyncSendFuture(future, originalMessage, completionListener);
+            return;
         }
 
         // Send succeeded - invoke onCompletion on executor thread (not sender thread) per spec 7.3.8
