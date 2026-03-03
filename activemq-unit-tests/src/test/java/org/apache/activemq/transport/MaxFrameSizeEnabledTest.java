@@ -55,6 +55,9 @@ public class MaxFrameSizeEnabledTest {
     private static final int CONNECTION_COUNT = 3;
     private static final int MESSAGE_ATTEMPTS = 3;
     private static final int BODY_SIZE = 20000; // large enough to trip 2k limit, compressible enough for 60k
+    private static final long BROKER_START_TIMEOUT_MS = 30_000;
+    private static final long BROKER_STOP_TIMEOUT_MS = 30_000;
+    private static final int TEST_TIMEOUT_MS = 120_000;
 
     private BrokerService broker;
     private final String transportType;
@@ -158,30 +161,32 @@ public class MaxFrameSizeEnabledTest {
     }
 
     public BrokerService createBroker(String connectorName, String connectorString) throws Exception {
-        BrokerService broker = new BrokerService();
+        final BrokerService broker = new BrokerService();
         broker.setPersistent(false);
         broker.setUseJmx(false);
-        TransportConnector connector = broker.addConnector(connectorString);
+        final TransportConnector connector = broker.addConnector(connectorString);
         connector.setName(connectorName);
         broker.start();
-        broker.waitUntilStarted();
+        assertTrue("Broker should start within timeout",
+                Wait.waitFor(broker::isStarted, BROKER_START_TIMEOUT_MS, 100));
         return broker;
     }
 
     public void stopBroker(BrokerService broker) throws Exception {
         if (broker != null) {
             broker.stop();
-            broker.waitUntilStopped();
+            assertTrue("Broker should stop within timeout",
+                    Wait.waitFor(broker::isStopped, BROKER_STOP_TIMEOUT_MS, 100));
         }
     }
 
-    @Test
+    @Test(timeout = TEST_TIMEOUT_MS)
     public void testMaxFrameSize() throws Exception {
         broker = createBroker(transportType, transportType + "://localhost:0?wireFormat.maxFrameSize=2048" + getServerParams());
         testMaxFrameSize(transportType, getClientUri(broker.getConnectorByName(transportType).getConnectUri().getPort()), false);
     }
 
-    @Test
+    @Test(timeout = TEST_TIMEOUT_MS)
     public void testMaxFrameSizeCompression() throws Exception {
         // Test message body length is 99841 bytes. Compresses to ~ 48000
         broker = createBroker(transportType, transportType + "://localhost:0?wireFormat.maxFrameSize=60000" + getServerParams());

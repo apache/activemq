@@ -41,6 +41,7 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.ActiveMQPrefetchPolicy;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.DestinationStatistics;
@@ -171,6 +172,12 @@ public class AMQ2149Test {
             this.transactional = transactional;
             ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory(brokerURL);
             connectionFactory.setWatchTopicAdvisories(false);
+            if (transactional) {
+                final ActiveMQPrefetchPolicy policy = connectionFactory.getPrefetchPolicy();
+                policy.setQueuePrefetch(1);
+                policy.setTopicPrefetch(1);
+                policy.setDurableTopicPrefetch(1);
+            }
             connection = connectionFactory.createConnection();
             connection.setClientID(dest.toString());
             session = connection.createSession(transactional, transactional ? Session.SESSION_TRANSACTED : Session.AUTO_ACKNOWLEDGE);
@@ -194,7 +201,7 @@ public class AMQ2149Test {
         
         final int TRANSACITON_BATCH = 500;
         boolean resumeOnNextOrPreviousIsOk = false;
-        public void onMessage(Message message) {
+        public synchronized void onMessage(Message message) {
             try {
                 final long seqNum = message.getLongProperty(SEQ_NUM_PROPERTY);
                 if ((seqNum % TRANSACITON_BATCH) == 0) {

@@ -120,6 +120,7 @@ public abstract class StoreOrderTest {
         }
         if (broker != null) {
             broker.stop();
+            broker.waitUntilStopped();
         }
     }
     
@@ -257,6 +258,7 @@ public abstract class StoreOrderTest {
         configureBroker(newBroker);
         newBroker.setDeleteAllMessagesOnStartup(deleteMessagesOnStartup);
         newBroker.start();
+        newBroker.waitUntilStarted();
         return newBroker;
     }
     

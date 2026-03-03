@@ -275,12 +275,7 @@ public class XACompletionTest extends TestSupport {
 
         dumpMessages();
 
-        Wait.waitFor(new Wait.Condition() {
-            @Override
-            public boolean isSatisified() throws Exception {
-                return proxy.getInFlightCount() == 0l;
-            }
-        });
+        Wait.waitFor(() -> proxy.getInFlightCount() == 0L && proxy.cursorSize() == 0);
         assertEquals("prefetch", 0, proxy.getInFlightCount());
         assertEquals("size", 10, proxy.getQueueSize());
         assertEquals("cursor size", 0, proxy.cursorSize());
