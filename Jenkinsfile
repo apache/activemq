@@ -130,6 +130,7 @@ pipeline {
             }
             when { expression { return params.testsEnabled } }
             steps {
+                echo 'Running tests'
                 sh 'java -version'
                 sh 'mvn -version'
 
