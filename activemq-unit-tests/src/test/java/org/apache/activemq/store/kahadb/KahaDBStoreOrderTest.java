@@ -28,7 +28,7 @@ public class KahaDBStoreOrderTest extends StoreOrderTest {
     protected void setPersistentAdapter(BrokerService brokerService)
              throws Exception {
         KahaDBStore kaha = new KahaDBStore();
-        File directory = new File("target/activemq-data/kahadb/storeOrder");
+        File directory = new File("target/activemq-data/kahadb-storeOrder");
         kaha.setDirectory(directory);
         brokerService.setPersistenceAdapter(kaha);
     }
