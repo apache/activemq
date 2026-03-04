@@ -25,6 +25,7 @@ import jakarta.jms.ConnectionMetaData;
 import jakarta.jms.Destination;
 import jakarta.jms.ExceptionListener;
 import jakarta.jms.IllegalStateRuntimeException;
+import jakarta.jms.InvalidDestinationRuntimeException;
 import jakarta.jms.JMSConsumer;
 import jakarta.jms.JMSContext;
 import jakarta.jms.JMSException;
@@ -442,21 +443,37 @@ public class ActiveMQContext implements JMSContext {
 
     @Override
     public JMSConsumer createSharedDurableConsumer(Topic topic, String name) {
+        checkContextState();
+        if (topic == null) {
+            throw new InvalidDestinationRuntimeException("Topic cannot be null");
+        }
         throw new UnsupportedOperationException("createSharedDurableConsumer(topic, name) is not supported");
     }
 
     @Override
     public JMSConsumer createSharedDurableConsumer(Topic topic, String name, String messageSelector) {
-        throw new UnsupportedOperationException("createDurableConsumer(topic, name, messageSelector) is not supported");
+        checkContextState();
+        if (topic == null) {
+            throw new InvalidDestinationRuntimeException("Topic cannot be null");
+        }
+        throw new UnsupportedOperationException("createSharedDurableConsumer(topic, name, messageSelector) is not supported");
     }
 
     @Override
     public JMSConsumer createSharedConsumer(Topic topic, String sharedSubscriptionName) {
+        checkContextState();
+        if (topic == null) {
+            throw new InvalidDestinationRuntimeException("Topic cannot be null");
+        }
         throw new UnsupportedOperationException("createSharedConsumer(topic, sharedSubscriptionName) is not supported");
     }
 
     @Override
     public JMSConsumer createSharedConsumer(Topic topic, String sharedSubscriptionName, String messageSelector) {
+        checkContextState();
+        if (topic == null) {
+            throw new InvalidDestinationRuntimeException("Topic cannot be null");
+        }
         throw new UnsupportedOperationException("createSharedConsumer(topic, sharedSubscriptionName, messageSelector) is not supported");
     }
 

@@ -73,7 +73,7 @@ public final class ActiveMQConnectionMetaData implements ConnectionMetaData {
      */
     @Override
     public String getJMSVersion() {
-        return "1.1";
+        return "3.1";
     }
 
     /**
@@ -83,7 +83,7 @@ public final class ActiveMQConnectionMetaData implements ConnectionMetaData {
      */
     @Override
     public int getJMSMajorVersion() {
-        return 1;
+        return 3;
     }
 
     /**
