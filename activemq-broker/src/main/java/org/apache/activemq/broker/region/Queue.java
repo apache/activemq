@@ -790,17 +790,24 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
     }
 
     public void rollbackPendingCursorAdditions(MessageId messageId) {
+        MessageContext toRollback = null;
         synchronized (indexOrderedCursorUpdates) {
             for (int i = indexOrderedCursorUpdates.size() - 1; i >= 0; i--) {
-                MessageContext mc = indexOrderedCursorUpdates.get(i);
+                final MessageContext mc = indexOrderedCursorUpdates.get(i);
                 if (mc.message.getMessageId().equals(messageId)) {
                     indexOrderedCursorUpdates.remove(mc);
-                    if (mc.onCompletion != null) {
-                        mc.onCompletion.run();
-                    }
+                    toRollback = mc;
                     break;
                 }
             }
+        }
+        // Invoke onCompletion outside synchronized(indexOrderedCursorUpdates) to avoid a
+        // lock-ordering deadlock with JDBCMessageStore.addMessage, which holds
+        // pendingAdditions while calling indexListener.onAdd() (which acquires
+        // indexOrderedCursorUpdates). The onCompletion callback itself acquires
+        // pendingAdditions, so calling it inside the lock produces a lock.
+        if (toRollback != null && toRollback.onCompletion != null) {
+            toRollback.onCompletion.run();
         }
     }
 
