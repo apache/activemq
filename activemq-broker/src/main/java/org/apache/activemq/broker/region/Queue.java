@@ -804,8 +804,8 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         // Invoke onCompletion outside synchronized(indexOrderedCursorUpdates) to avoid a
         // lock-ordering deadlock with JDBCMessageStore.addMessage, which holds
         // pendingAdditions while calling indexListener.onAdd() (which acquires
-        // indexOrderedCursorUpdates). The onCompletion callback itself acquires
-        // pendingAdditions, so calling it inside the lock produces a lock.
+        // indexOrderedCursorUpdates). The onCompletion callback acquires pendingAdditions,
+        // so calling it inside the lock produces a deadlock cycle.
         if (toRollback != null && toRollback.onCompletion != null) {
             toRollback.onCompletion.run();
         }
