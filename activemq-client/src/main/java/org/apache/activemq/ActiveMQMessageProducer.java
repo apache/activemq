@@ -168,7 +168,7 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
      */
     @Override
     public void close() throws JMSException {
-        ActiveMQSession.checkNotInCompletionListenerCallback("close");
+        session.checkNotInCompletionListenerCallback("close");
         if (!closed) {
             dispose();
             this.session.asyncSendPacket(info.createRemoveCommand());
