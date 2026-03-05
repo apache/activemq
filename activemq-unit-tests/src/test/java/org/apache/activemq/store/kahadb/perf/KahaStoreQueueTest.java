@@ -20,10 +20,13 @@ import java.io.File;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.perf.SimpleQueueTest;
 import org.apache.activemq.store.kahadb.KahaDBStore;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * 
  */
+@Category(ParallelTest.class)
 public class KahaStoreQueueTest extends SimpleQueueTest {
 
     protected void configureBroker(BrokerService answer,String uri) throws Exception {

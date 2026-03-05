@@ -36,7 +36,6 @@ import org.apache.activemq.network.NetworkConnector;
 import org.apache.activemq.util.IOHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 /**
  * Show that both directions of a duplex bridge will properly restart the
  * network durable consumers if dynamicOnly is false.

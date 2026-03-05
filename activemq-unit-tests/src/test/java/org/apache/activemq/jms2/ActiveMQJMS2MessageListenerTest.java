@@ -42,13 +42,16 @@ import org.apache.activemq.ActiveMQSession;
 import org.apache.activemq.broker.jmx.QueueViewMBean;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.util.Wait;
+import org.apache.activemq.test.annotations.ParallelTest;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @RunWith(value = Parameterized.class)
+@Category(ParallelTest.class)
 public class ActiveMQJMS2MessageListenerTest extends ActiveMQJMS2TestBase {
 
     private final String destinationName;

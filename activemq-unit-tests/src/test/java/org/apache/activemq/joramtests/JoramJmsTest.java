@@ -38,10 +38,13 @@ import org.objectweb.jtests.jms.conform.session.SessionTest;
 import org.objectweb.jtests.jms.conform.session.TopicSessionTest;
 import org.objectweb.jtests.jms.conform.session.UnifiedSessionTest;
 import org.objectweb.jtests.jms.conform.topic.TemporaryTopicTest;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
  */
+@Category(ParallelTest.class)
 public class JoramJmsTest extends TestCase {
 
     static {

@@ -20,11 +20,14 @@ import junit.framework.TestCase;
 import org.apache.activemq.command.ConnectionId;
 import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.SessionId;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * 
  * 
  */
+@Category(ParallelTest.class)
 public class MessageGroupMapTest extends TestCase {
 
     protected MessageGroupMap map;

@@ -22,11 +22,14 @@ import jakarta.jms.MessageProducer;
 import jakarta.jms.Session;
 import org.apache.activemq.JmsTestSupport;
 import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.test.annotations.ParallelTest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.junit.experimental.categories.Category;
 
 
 
+@Category(ParallelTest.class)
 public class BatchedMessagePriorityConsumerTest extends JmsTestSupport {
 
     private static final Logger LOG = LoggerFactory.getLogger(BatchedMessagePriorityConsumerTest.class);

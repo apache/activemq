@@ -21,7 +21,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 import junit.framework.TestCase;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
+@Category(ParallelTest.class)
 public class QualityOfServiceUtilsTest extends TestCase {
     /**
      * Keeps track of the value that the System has set for the ECN bits, which

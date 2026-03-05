@@ -27,6 +27,8 @@ import jakarta.jms.TextMessage;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * Test case intended to demonstrate delivery interruption to queue consumers when a JMS selector leaves some messages
@@ -43,6 +45,7 @@ import org.apache.activemq.broker.region.policy.PolicyMap;
  * https://issues.apache.org/activemq/browse/AMQ-2217
  *
  */
+@Category(ParallelTest.class)
 public class DiscriminatingConsumerLoadTest extends TestSupport {
 
     private static final org.apache.commons.logging.Log LOG = org.apache.commons.logging.LogFactory.getLog(DiscriminatingConsumerLoadTest.class);

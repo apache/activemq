@@ -17,7 +17,10 @@
 package org.apache.activemq.transport.auto.failover;
 
 import org.apache.activemq.transport.failover.FailoverClusterTest;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
+@Category(ParallelTest.class)
 public class AutoFailoverClusterTest extends FailoverClusterTest {
 
     @Override

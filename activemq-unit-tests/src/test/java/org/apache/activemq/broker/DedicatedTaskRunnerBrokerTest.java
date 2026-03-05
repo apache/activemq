@@ -17,7 +17,10 @@
 package org.apache.activemq.broker;
 
 import junit.framework.Test;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
+@Category(ParallelTest.class)
 public class DedicatedTaskRunnerBrokerTest extends BrokerTest {
 
     protected BrokerService createBroker() throws Exception {

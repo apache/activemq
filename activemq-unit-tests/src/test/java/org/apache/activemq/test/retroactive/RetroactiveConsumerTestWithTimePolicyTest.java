@@ -16,10 +16,14 @@
  */
 package org.apache.activemq.test.retroactive;
 
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
+
 /**
  *
  * 
  */
+@Category(ParallelTest.class)
 public class RetroactiveConsumerTestWithTimePolicyTest extends RetroactiveConsumerTestWithSimpleMessageListTest {
     protected String getBrokerXml() {
         return "org/apache/activemq/test/retroactive/activemq-timed-policy.xml";

@@ -33,8 +33,11 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertTrue;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 @RunWith(BlockJUnit4ClassRunner.class)
+@Category(ParallelTest.class)
 public class AMQ2910Test extends JmsMultipleClientsTestSupport {
 
     final int maxConcurrency = 60;

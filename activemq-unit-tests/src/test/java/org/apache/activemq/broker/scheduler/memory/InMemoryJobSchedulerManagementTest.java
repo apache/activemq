@@ -17,10 +17,13 @@
 package org.apache.activemq.broker.scheduler.memory;
 
 import org.apache.activemq.broker.scheduler.JobSchedulerManagementTest;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * Tests management of in memory scheduler via JMS client.
  */
+@Category(ParallelTest.class)
 public class InMemoryJobSchedulerManagementTest extends JobSchedulerManagementTest {
 
     @Override

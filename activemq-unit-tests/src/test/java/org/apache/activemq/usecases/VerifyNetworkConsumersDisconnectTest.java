@@ -38,7 +38,10 @@ import org.apache.activemq.network.NetworkConnector;
 import org.apache.activemq.util.Wait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
+@Category(ParallelTest.class)
 public class VerifyNetworkConsumersDisconnectTest extends JmsMultipleBrokersTestSupport implements UncaughtExceptionHandler {
     public static final int BROKER_COUNT = 3;
     public static final int CONSUMER_COUNT = 5;

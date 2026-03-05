@@ -43,10 +43,13 @@ import org.junit.Test;
 import org.junit.rules.TestName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * Test that the durable sub updates when the offline sub is reactivated with new values.
  */
+@Category(ParallelTest.class)
 public class DurableSubscriptionUpdatesTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(DurableSubscriptionUpdatesTest.class);

@@ -16,10 +16,14 @@
  */
 package org.apache.activemq.transport.discovery;
 
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
+
 /**
  *
  * 
  */
+@Category(ParallelTest.class)
 public class ZeroconfDiscoverTransportTest extends DiscoveryTransportBrokerTest {
 
     protected String getDiscoveryUri() {

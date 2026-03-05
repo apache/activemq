@@ -34,6 +34,8 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * This test checks that PendingMessageCursor size statistics work with the MemoryPersistentAdapter
@@ -42,6 +44,7 @@ import org.slf4j.LoggerFactory;
  *
  */
 @RunWith(Parameterized.class)
+@Category(ParallelTest.class)
 public class MemoryPendingMessageCursorTest extends AbstractPendingMessageCursorTest {
     protected static final Logger LOG = LoggerFactory
             .getLogger(MemoryPendingMessageCursorTest.class);

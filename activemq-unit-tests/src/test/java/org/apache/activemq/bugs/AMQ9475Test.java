@@ -40,6 +40,8 @@ import java.net.URI;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * This tests that subscribing to a wildcard and sending a ConsumerControl
@@ -47,6 +49,7 @@ import static org.junit.Assert.assertTrue;
  * by mistake.
  */
 @RunWith(Parameterized.class)
+@Category(ParallelTest.class)
 public class AMQ9475Test {
 
     @Parameters(name = "queue={0}")

@@ -33,11 +33,13 @@ import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.test.annotations.ParallelTest;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,6 +61,7 @@ import static org.junit.Assert.assertEquals;
  * pause producers if consumers stall and verify broker drained before resume
  */
 @RunWith(Parameterized.class)
+@Category(ParallelTest.class)
 public class AMQ5266StarvedConsumerTest {
     static Logger LOG = LoggerFactory.getLogger(AMQ5266StarvedConsumerTest.class);
     String activemqURL;

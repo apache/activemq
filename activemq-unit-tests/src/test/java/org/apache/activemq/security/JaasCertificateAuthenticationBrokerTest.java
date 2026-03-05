@@ -34,7 +34,10 @@ import org.apache.activemq.command.ConnectionInfo;
 import org.apache.activemq.jaas.GroupPrincipal;
 import org.apache.activemq.jaas.UserPrincipal;
 import org.apache.activemq.transport.tcp.StubX509Certificate;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
+@Category(ParallelTest.class)
 public class JaasCertificateAuthenticationBrokerTest extends TestCase {
     StubBroker receiveBroker;
 

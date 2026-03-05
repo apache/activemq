@@ -45,10 +45,13 @@ import org.apache.activemq.transport.vm.VMTransportFactory;
 import org.apache.activemq.util.Wait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * @author <a href="http://www.christianposta.com/blog">Christian Posta</a>
  */
+@Category(ParallelTest.class)
 public class AMQ4222Test extends TestSupport {
 
     private static final Logger LOG = LoggerFactory.getLogger(AMQ4222Test.class);

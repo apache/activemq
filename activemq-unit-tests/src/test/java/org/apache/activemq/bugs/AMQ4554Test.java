@@ -31,10 +31,13 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * Unit test for simple App.
  */
+@Category(ParallelTest.class)
 public class AMQ4554Test extends TestCase {
 
     private final Logger LOG = LoggerFactory.getLogger(AMQ4554Test.class);

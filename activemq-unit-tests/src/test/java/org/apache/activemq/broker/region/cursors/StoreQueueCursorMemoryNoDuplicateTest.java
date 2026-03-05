@@ -18,11 +18,14 @@
 package org.apache.activemq.broker.region.cursors;
 
 import org.apache.activemq.broker.BrokerService;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * @author gtully
  * @see https://issues.apache.org/activemq/browse/AMQ-2020
  **/
+@Category(ParallelTest.class)
 public class StoreQueueCursorMemoryNoDuplicateTest extends StoreQueueCursorNoDuplicateTest {
   
     protected BrokerService createBroker() throws Exception {

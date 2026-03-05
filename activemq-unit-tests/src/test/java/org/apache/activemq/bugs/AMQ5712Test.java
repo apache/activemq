@@ -56,10 +56,13 @@ import org.junit.Test;
 import org.junit.rules.TestName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * Test behavior of senders when broker side producer flow control kicks in.
  */
+@Category(ParallelTest.class)
 public class AMQ5712Test {
 
     private static final Logger LOG = LoggerFactory.getLogger(AMQ5712Test.class);

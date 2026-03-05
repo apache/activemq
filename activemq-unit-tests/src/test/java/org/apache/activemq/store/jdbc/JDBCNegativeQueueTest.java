@@ -27,7 +27,10 @@ import javax.sql.DataSource;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.cursors.NegativeQueueTest;
 import org.apache.derby.jdbc.EmbeddedDataSource;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
+@Category(ParallelTest.class)
 public class JDBCNegativeQueueTest extends NegativeQueueTest {
 
     DataSource dataSource;

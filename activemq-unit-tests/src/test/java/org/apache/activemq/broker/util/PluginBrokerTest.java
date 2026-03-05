@@ -27,11 +27,14 @@ import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.test.JmsTopicSendReceiveTest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * 
  * 
  */
+@Category(ParallelTest.class)
 public class PluginBrokerTest extends JmsTopicSendReceiveTest {
     private static final Logger LOG = LoggerFactory.getLogger(PluginBrokerTest.class);
     private BrokerService broker;

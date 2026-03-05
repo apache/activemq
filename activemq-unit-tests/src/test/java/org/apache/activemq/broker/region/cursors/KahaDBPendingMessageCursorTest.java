@@ -56,6 +56,8 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * This test checks that pending message metrics work properly with KahaDB
@@ -64,6 +66,7 @@ import org.slf4j.LoggerFactory;
  *
  */
 @RunWith(Parameterized.class)
+@Category(ParallelTest.class)
 public class KahaDBPendingMessageCursorTest extends
         AbstractPendingMessageCursorTest {
 

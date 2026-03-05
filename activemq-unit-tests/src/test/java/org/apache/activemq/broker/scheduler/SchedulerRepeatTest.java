@@ -33,7 +33,10 @@ import org.apache.activemq.ScheduledMessage;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.scheduler.memory.InMemoryJobSchedulerStore;
 import org.apache.activemq.store.memory.MemoryPersistenceAdapter;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
+@Category(ParallelTest.class)
 public class SchedulerRepeatTest {
     
     private static BrokerService broker;

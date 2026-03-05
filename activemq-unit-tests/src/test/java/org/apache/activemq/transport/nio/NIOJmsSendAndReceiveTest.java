@@ -18,11 +18,14 @@ package org.apache.activemq.transport.nio;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.test.annotations.ParallelTest;
 import org.apache.activemq.test.JmsTopicSendReceiveWithTwoConnectionsTest;
+import org.junit.experimental.categories.Category;
 
 /**
  * 
  */
+@Category(ParallelTest.class)
 public class NIOJmsSendAndReceiveTest extends JmsTopicSendReceiveWithTwoConnectionsTest {
     protected BrokerService broker;
 

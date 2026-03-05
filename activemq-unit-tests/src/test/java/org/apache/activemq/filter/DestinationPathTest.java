@@ -17,7 +17,10 @@
 package org.apache.activemq.filter;
 
 import org.apache.activemq.test.TestSupport;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
+@Category(ParallelTest.class)
 public class DestinationPathTest extends TestSupport {
 
     public void testPathParse() {

@@ -26,7 +26,10 @@ import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
 import org.apache.activemq.store.kahadb.MultiKahaDBPersistenceAdapter;
 import org.apache.activemq.util.Wait;
 import org.apache.commons.io.FileUtils;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
+@Category(ParallelTest.class)
 public class MKahaDbSharedLockerTest extends TestCase {
 
 
