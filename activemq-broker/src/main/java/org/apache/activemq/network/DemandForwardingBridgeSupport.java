@@ -37,6 +37,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Pattern;
 
 import javax.management.ObjectName;
@@ -171,6 +172,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
     private final ExecutorService syncExecutor = Executors.newSingleThreadExecutor();
     private Transport duplexInboundLocalBroker = null;
     private ProducerInfo duplexInboundLocalProducerInfo;
+    private AtomicLong startedTimestamp = new AtomicLong(0L);
 
     public DemandForwardingBridgeSupport(NetworkBridgeConfiguration configuration, Transport localBroker, Transport remoteBroker) {
         this.configuration = configuration;
@@ -338,6 +340,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                     startedLatch.countDown();
                     localStartedLatch.countDown();
                     staticDestinationsLatch.countDown();
+                    startedTimestamp.set(0L);
 
                     ss.throwFirstException();
                 }
@@ -372,6 +375,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                     // Once we have all required broker info we can attempt to start
                     // the local and then remote sides of the bridge.
                     doStartLocalAndRemoteBridges();
+                    startedTimestamp.set(System.currentTimeMillis());
                 } finally {
                     Thread.currentThread().setName(originalName);
                 }
@@ -647,6 +651,8 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
 
     @Override
     public void serviceRemoteException(Throwable error) {
+        networkBridgeStatistics.getRemoteExceptionCount().increment();
+
         if (!disposed.get()) {
             if (error instanceof SecurityException || error instanceof GeneralSecurityException) {
                 LOG.error("Network connection between {} and {} shutdown due to a remote error: {}", localBroker, remoteBroker, error.toString());
@@ -654,6 +660,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                 LOG.warn("Network connection between {} and {} shutdown due to a remote error: {}", localBroker, remoteBroker, error.toString());
             }
             LOG.debug("The remote Exception was: {}", error, error);
+
             brokerService.getTaskRunnerFactory().execute(new Runnable() {
                 @Override
                 public void run() {
@@ -1112,6 +1119,8 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
 
     public void serviceLocalException(MessageDispatch messageDispatch, Throwable error) {
         LOG.trace("serviceLocalException: disposed {} ex", disposed.get(), error);
+        networkBridgeStatistics.getLocalExceptionCount().increment();
+
         if (!disposed.get()) {
             if (error instanceof DestinationDoesNotExistException && ((DestinationDoesNotExistException) error).isTemporary()) {
                 // not a reason to terminate the bridge - temps can disappear with
@@ -1924,6 +1933,21 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
     @Override
     public long getEnqueueCounter() {
         return networkBridgeStatistics.getEnqueues().getCount();
+    }
+
+    @Override
+    public long getStartedTimestamp() {
+        return startedTimestamp.get();
+    }
+
+    @Override
+    public long getLocalExceptionCount() {
+        return networkBridgeStatistics.getLocalExceptionCount().getCount();
+    }
+
+    @Override
+    public long getRemoteExceptionCount() {
+        return networkBridgeStatistics.getRemoteExceptionCount().getCount();
     }
 
     @Override
