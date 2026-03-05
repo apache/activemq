@@ -129,7 +129,7 @@ public class InitalReconnectDelayTest {
 
         LOG.info("Attempting to send... failover should throw on disconnect");
         try {
-            producer.send(destination, message);
+            producer.send(message);
             fail("Expect IOException to bubble up on send");
         } catch (jakarta.jms.IllegalStateException producerClosed) {
         }

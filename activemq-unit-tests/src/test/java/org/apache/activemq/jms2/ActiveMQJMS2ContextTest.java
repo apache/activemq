@@ -301,7 +301,7 @@ public class ActiveMQJMS2ContextTest extends ActiveMQJMS2TestBase {
          messageProducer.send(session.createQueue(methodNameDestinationName), null, (CompletionListener)null);
     }
 
-    @Test(expected = UnsupportedOperationException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void testProducerSendMessageQoSParamsCompletionListener() throws JMSException {
          messageProducer.send(null, 1, 4, 0l, null);
     }
