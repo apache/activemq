@@ -34,12 +34,12 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 import jakarta.jms.BytesMessage;
 import jakarta.jms.CompletionListener;
 import jakarta.jms.Destination;
 import jakarta.jms.IllegalStateException;
-import jakarta.jms.IllegalStateRuntimeException;
 import jakarta.jms.InvalidDestinationException;
 import jakarta.jms.InvalidSelectorException;
 import jakarta.jms.JMSException;
@@ -65,7 +65,6 @@ import jakarta.jms.TopicSession;
 import jakarta.jms.TopicSubscriber;
 import jakarta.jms.TransactionRolledBackException;
 
-import org.apache.activemq.selector.SelectorParser;
 import org.apache.activemq.blob.BlobDownloader;
 import org.apache.activemq.blob.BlobTransferPolicy;
 import org.apache.activemq.blob.BlobUploader;
@@ -249,13 +248,13 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     private final ExecutorService asyncSendExecutor = Executors.newSingleThreadExecutor(
         r -> new Thread(r, "ActiveMQ async-send"));
 
-    // Set to true on the executor thread while a CompletionListener callback is executing.
-    // Used to detect illegal session operations (close/commit/rollback) from within a callback.
-    static final ThreadLocal<Boolean> IN_COMPLETION_LISTENER_CALLBACK = ThreadLocal.withInitial(() -> false);
+    // Tracks the thread currently executing a CompletionListener callback for this session.
+    // Session-scoped (instance field) so checks only apply to this session's own callbacks,
+    // not to callbacks from other sessions running on the same thread.
+    final AtomicReference<Thread> completionListenerThread = new AtomicReference<>();
 
-    // Set to true on the dispatch thread while a MessageListener.onMessage() callback is executing.
-    // Used to detect illegal connection/session operations from within a MessageListener callback.
-    static final ThreadLocal<Boolean> IN_MESSAGE_LISTENER_CALLBACK = ThreadLocal.withInitial(() -> false);
+    // Tracks the thread currently executing a MessageListener.onMessage() callback for this session.
+    final AtomicReference<Thread> messageListenerThread = new AtomicReference<>();
 
     /**
      * Construct the Session
@@ -1088,11 +1087,11 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
                     }
 
                     LOG.trace("{} onMessage({})", this, message.getMessageId());
-                    IN_MESSAGE_LISTENER_CALLBACK.set(true);
+                    messageListenerThread.set(Thread.currentThread());
                     try {
                         messageListener.onMessage(message);
                     } finally {
-                        IN_MESSAGE_LISTENER_CALLBACK.set(false);
+                        messageListenerThread.set(null);
                     }
 
                 } catch (Throwable e) {
@@ -2478,11 +2477,11 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
         if (sendException != null) {
             final JMSException finalEx = sendException;
             final Future<?> future = asyncSendExecutor.submit(() -> {
-                IN_COMPLETION_LISTENER_CALLBACK.set(true);
+                completionListenerThread.set(Thread.currentThread());
                 try {
                     completionListener.onException(originalMessage, finalEx);
                 } finally {
-                    IN_COMPLETION_LISTENER_CALLBACK.set(false);
+                    completionListenerThread.set(null);
                 }
             });
             awaitAsyncSendFuture(future, originalMessage, completionListener);
@@ -2491,14 +2490,14 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
 
         // Send succeeded - invoke onCompletion on executor thread (not sender thread) per spec 7.3.8
         final Future<?> future = asyncSendExecutor.submit(() -> {
-            IN_COMPLETION_LISTENER_CALLBACK.set(true);
+            completionListenerThread.set(Thread.currentThread());
             try {
                 completionListener.onCompletion(originalMessage);
             } catch (Exception e) {
                 // Per spec 7.3.2, exceptions thrown by the callback are swallowed
                 LOG.warn("CompletionListener.onCompletion threw an exception", e);
             } finally {
-                IN_COMPLETION_LISTENER_CALLBACK.set(false);
+                completionListenerThread.set(null);
             }
         });
         awaitAsyncSendFuture(future, originalMessage, completionListener);
@@ -2519,11 +2518,11 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
 
     /**
      * Throws {@link jakarta.jms.IllegalStateException} if the current thread is executing a
-     * CompletionListener callback, per Jakarta Messaging 3.1 spec section 7.3.5.
-     * The classic JMS API uses checked IllegalStateException (not the runtime variant).
+     * CompletionListener callback for this session, per Jakarta Messaging 3.1 spec section 7.3.5.
+     * The check is session-scoped: callbacks from other sessions on the same thread are unaffected.
      */
-    static void checkNotInCompletionListenerCallback(final String operation) throws jakarta.jms.IllegalStateException {
-        if (Boolean.TRUE.equals(IN_COMPLETION_LISTENER_CALLBACK.get())) {
+    void checkNotInCompletionListenerCallback(final String operation) throws jakarta.jms.IllegalStateException {
+        if (Thread.currentThread() == completionListenerThread.get()) {
             throw new jakarta.jms.IllegalStateException(
                 "Cannot call " + operation + "() from within a CompletionListener callback");
         }
@@ -2531,10 +2530,11 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
 
     /**
      * Throws {@link jakarta.jms.IllegalStateException} if the current thread is executing a
-     * MessageListener.onMessage() callback, per Jakarta Messaging spec section 4.4.
+     * MessageListener.onMessage() callback for this session, per Jakarta Messaging spec section 4.4.
+     * The check is session-scoped: callbacks from other sessions on the same thread are unaffected.
      */
-    static void checkNotInMessageListenerCallback(final String operation) throws jakarta.jms.IllegalStateException {
-        if (Boolean.TRUE.equals(IN_MESSAGE_LISTENER_CALLBACK.get())) {
+    void checkNotInMessageListenerCallback(final String operation) throws jakarta.jms.IllegalStateException {
+        if (Thread.currentThread() == messageListenerThread.get()) {
             throw new jakarta.jms.IllegalStateException(
                 "Cannot call " + operation + "() from within a MessageListener callback");
         }
