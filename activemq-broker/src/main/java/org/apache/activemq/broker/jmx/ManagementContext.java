@@ -18,6 +18,7 @@ package org.apache.activemq.broker.jmx;
 
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
+import java.net.ServerSocket;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -26,7 +27,10 @@ import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.rmi.server.RMIClientSocketFactory;
+import java.rmi.server.RMIServerSocketFactory;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -50,8 +54,11 @@ import javax.management.remote.JMXConnectorServer;
 import javax.management.remote.JMXServiceURL;
 import javax.management.remote.rmi.RMIConnectorServer;
 import javax.management.remote.rmi.RMIJRMPServerImpl;
+import javax.rmi.ssl.SslRMIClientSocketFactory;
+import javax.rmi.ssl.SslRMIServerSocketFactory;
 
 import org.apache.activemq.Service;
+import org.apache.activemq.broker.SslContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -115,6 +122,7 @@ public class ManagementContext implements Service {
     private List<ObjectName> suppressMBeanList;
     private Remote serverStub;
     private RMIJRMPServerImpl server;
+    private SslContext sslContext;
 
     public ManagementContext() {
         this(null);
@@ -162,7 +170,23 @@ public class ManagementContext implements Service {
                                 try {
                                     // need to remove MDC as we must not inherit MDC in child threads causing leaks
                                     MDC.remove("activemq.broker");
-                                    connectorServer.start();
+                                    // When SSL is enabled, temporarily set java.rmi.server.hostname
+                                    // to connectorHost so RMI stubs embed the configured host rather
+                                    // than the machine's auto-detected IP. Without this, SSL hostname
+                                    // verification fails on multi-homed hosts because the stub carries
+                                    // an IP that is not covered by the certificate's SAN entries.
+                                    // Pre-existing user-defined values are respected and not overwritten.
+                                    final String prevRmiHostname = System.getProperty("java.rmi.server.hostname");
+                                    if (sslContext != null && prevRmiHostname == null) {
+                                        System.setProperty("java.rmi.server.hostname", connectorHost);
+                                    }
+                                    try {
+                                        connectorServer.start();
+                                    } finally {
+                                        if (sslContext != null && prevRmiHostname == null) {
+                                            System.clearProperty("java.rmi.server.hostname");
+                                        }
+                                    }
                                     serverStub = server.toStub();
                                 } finally {
                                     if (brokerName != null) {
@@ -549,11 +573,36 @@ public class ManagementContext implements Service {
     }
 
     private void createConnector(MBeanServer mbeanServer) throws IOException {
+        // Resolve ephemeral port (0) to an actual free port, similar to tcp://localhost:0
+        if (connectorPort == 0) {
+            try (final ServerSocket ss = new ServerSocket(0)) {
+                connectorPort = ss.getLocalPort();
+            }
+            LOG.debug("Resolved ephemeral JMX connector port to {}", connectorPort);
+        }
+
+        // Resolve SSL socket factories first, so they can be shared by registry and connector
+        final RMIClientSocketFactory csf;
+        final RMIServerSocketFactory ssf;
+        if (sslContext != null) {
+            try {
+                final javax.net.ssl.SSLContext ctx = sslContext.getSSLContext();
+                csf = new SslRMIClientSocketFactory();
+                ssf = new SslRMIServerSocketFactory(ctx, null, null, false);
+                LOG.info("JMX connector will use SSL from configured sslContext");
+            } catch (Exception e) {
+                throw new IOException("Failed to initialize SSL for JMX connector", e);
+            }
+        } else {
+            csf = null;
+            ssf = null;
+        }
+
         // Create the NamingService, needed by JSR 160
         try {
             if (registry == null) {
                 LOG.debug("Creating RMIRegistry on port {}", connectorPort);
-                registry = jmxRegistry(connectorPort);
+                registry = jmxRegistry(connectorPort, csf, ssf);
             }
 
             namingServiceObjectName = ObjectName.getInstance("naming:type=rmiregistry");
@@ -579,12 +628,25 @@ public class ManagementContext implements Service {
             rmiServer = ""+getConnectorHost()+":" + rmiServerPort;
         }
 
-        server = new RMIJRMPServerImpl(connectorPort, null, null, environment);
+        server = new RMIJRMPServerImpl(connectorPort, csf, ssf, environment);
 
         final String serviceURL = "service:jmx:rmi://" + rmiServer + "/jndi/rmi://" +getConnectorHost()+":" + connectorPort + connectorPath;
         final JMXServiceURL url = new JMXServiceURL(serviceURL);
 
-        connectorServer = new RMIConnectorServer(url, environment, server, ManagementFactory.getPlatformMBeanServer());
+        // When SSL is enabled, the RMIConnectorServer needs the SSL socket factory
+        // in its environment to connect to the SSL-enabled RMI registry for JNDI binding
+        final Map<String, Object> connectorEnv;
+        if (csf != null) {
+            connectorEnv = new HashMap<>();
+            if (environment != null) {
+                connectorEnv.putAll(environment);
+            }
+            connectorEnv.put("com.sun.jndi.rmi.factory.socket", csf);
+        } else {
+            connectorEnv = environment != null ? new HashMap<>(environment) : null;
+        }
+
+        connectorServer = new RMIConnectorServer(url, connectorEnv, server, ManagementFactory.getPlatformMBeanServer());
         LOG.debug("Created JMXConnectorServer {}", connectorServer);
     }
 
@@ -659,6 +721,28 @@ public class ManagementContext implements Service {
         this.environment = environment;
     }
 
+    /**
+     * Get the SSL context used for the JMX connector.
+     */
+    public SslContext getSslContext() {
+        return sslContext;
+    }
+
+    /**
+     * Set the SSL context to use for the JMX connector.
+     * When configured, the JMX RMI connector will use SSL with the
+     * keyStore and trustStore from this context, allowing reuse of
+     * the broker's {@code <sslContext>} configuration.
+     *
+     * Example XML configuration:
+     * <pre>
+     * &lt;managementContext createConnector="true" sslContext="#brokerSslContext"/&gt;
+     * </pre>
+     */
+    public void setSslContext(SslContext sslContext) {
+        this.sslContext = sslContext;
+    }
+
     public boolean isAllowRemoteAddressInMBeanNames() {
         return allowRemoteAddressInMBeanNames;
     }
@@ -683,9 +767,11 @@ public class ManagementContext implements Service {
     }
 
     // do not use sun.rmi.registry.RegistryImpl! it is not always easily available
-    private Registry jmxRegistry(final int port) throws RemoteException {
+    private Registry jmxRegistry(final int port, final RMIClientSocketFactory csf, final RMIServerSocketFactory ssf) throws RemoteException {
         final var loader = Thread.currentThread().getContextClassLoader();
-        final var delegate = LocateRegistry.createRegistry(port);
+        final var delegate = (csf != null && ssf != null)
+                ? LocateRegistry.createRegistry(port, csf, ssf)
+                : LocateRegistry.createRegistry(port);
         return Registry.class.cast(Proxy.newProxyInstance(
                 loader == null ? getSystemClassLoader() : loader,
                 new Class<?>[]{Registry.class}, (proxy, method, args) -> {
