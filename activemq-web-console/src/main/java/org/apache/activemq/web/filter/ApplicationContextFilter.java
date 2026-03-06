@@ -29,10 +29,7 @@ import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 
-import org.apache.activemq.web.BrokerFacade;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.ServletRequestDataBinder;
@@ -60,101 +57,27 @@ import org.springframework.web.context.support.WebApplicationContextUtils;
  * 
  */
 public class ApplicationContextFilter implements Filter {
-    private static final transient Logger LOG = LoggerFactory.getLogger(ApplicationContextFilter.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ApplicationContextFilter.class);
 
     private ServletContext servletContext;
-    private String applicationContextName = "applicationContext";
     private String requestContextName = "requestContext";
-    private String requestName = "request";
 
     public void init(FilterConfig config) throws ServletException {
         this.servletContext = config.getServletContext();
-        this.applicationContextName = getInitParameter(config, "applicationContextName", applicationContextName);
         this.requestContextName = getInitParameter(config, "requestContextName", requestContextName);
-        this.requestName = getInitParameter(config, "requestName", requestName);
 
-        // register the application context in the applicationScope
-        WebApplicationContext context = WebApplicationContextUtils.getWebApplicationContext(servletContext);
-        Map wrapper = createApplicationContextWrapper(context);
-        servletContext.setAttribute(applicationContextName, wrapper);
+        LOG.info("Application Context Filter initialized. Request context is available in '{}'", requestContextName);
     }
 
-    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-        // lets register a requestContext in the requestScope
-        Map requestContextWrapper = createRequestContextWrapper(request);
-        String path = ((HttpServletRequest)request).getRequestURI();
-        // handle slave brokers
-//        try {
-//            if ( !(path.endsWith("css") || path.endsWith("png") || path.endsWith("ico") || path.endsWith(slavePage))
-//                    && ((BrokerFacade)requestContextWrapper.get("brokerQuery")).isSlave()) {
-//                ((HttpServletResponse)response).sendRedirect(slavePage);
-//                return;
-//            }
-//        } catch (Exception e) {
-//            LOG.warn(path + ", failed to access BrokerFacade: reason: " + e.getLocalizedMessage());
-//            if (LOG.isDebugEnabled()) {
-//                LOG.debug(request.toString(), e);
-//            }
-//            throw new IOException(e);
-//        }
-        request.setAttribute(requestContextName, requestContextWrapper);
-        request.setAttribute(requestName, request);
-        chain.doFilter(request, response);
-    }
-
-    public void destroy() {
-    }
-
-    public ServletContext getServletContext() {
-        return servletContext;
-    }
-
-    public String getApplicationContextName() {
-        return applicationContextName;
-    }
-
-    public void setApplicationContextName(String variableName) {
-        this.applicationContextName = variableName;
-    }
-
-    public String getRequestContextName() {
-        return requestContextName;
-    }
-
-    public void setRequestContextName(String requestContextName) {
-        this.requestContextName = requestContextName;
-    }
-
-    protected String getInitParameter(FilterConfig config, String key, String defaultValue) {
+    private String getInitParameter(final FilterConfig config, final String key, final String defaultValue) {
         String parameter = config.getInitParameter(key);
         return (parameter != null) ? parameter : defaultValue;
     }
 
-    /**
-     * Creates a wrapper around the web application context so that it can be
-     * accessed easily from inside JSP EL (or other expression languages in
-     * other view technologies).
-     */
-    protected Map createApplicationContextWrapper(final WebApplicationContext context) {
-        Map wrapper = new AbstractMap() {
-
-            public WebApplicationContext getContext() {
-                return context;
-            }
-
-            public Object get(Object key) {
-                if (key == null) {
-                    return null;
-                }
-                return context.getBean(key.toString());
-            }
-
-            public Set entrySet() {
-                return Collections.EMPTY_SET;
-            }
-
-        };
-        return wrapper;
+    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
+        // lets register a requestContext in the requestScope
+        request.setAttribute(requestContextName, createRequestContextWrapper(request));
+        chain.doFilter(request, response);
     }
 
     /**
@@ -163,28 +86,21 @@ public class ApplicationContextFilter implements Filter {
      * accessed easily from inside JSP EL (or other expression languages in
      * other view technologies).
      */
-    protected Map createRequestContextWrapper(final ServletRequest request) {
+    private Map createRequestContextWrapper(final ServletRequest request) {
         final WebApplicationContext context = WebApplicationContextUtils.getWebApplicationContext(servletContext);
-        Map wrapper = new AbstractMap() {
-
-            public WebApplicationContext getContext() {
-                return context;
-            }
-
+        return new AbstractMap<>() {
             public Object get(Object key) {
                 if (key == null) {
                     return null;
                 }
-                return bindRequestBean(context.getBean(key.toString()), request);
+                final Object emptyBean = context.getBean(key.toString());
+                return bindRequestBean(emptyBean, request);
             }
 
             public Set entrySet() {
                 return Collections.EMPTY_SET;
             }
-
         };
-        return wrapper;
-
     }
 
     /**
@@ -197,5 +113,4 @@ public class ApplicationContextFilter implements Filter {
         binder.bind(request);
         return bean;
     }
-
 }
