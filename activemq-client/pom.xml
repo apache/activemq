@@ -323,6 +323,7 @@
 
   <profiles>
     <!-- Execute with: mvn -P openwire-generate antrun:run -->
+    <!-- NB: this requires JDK8 still -->
     <profile>
       <id>openwire-generate</id>
       <build>
@@ -340,11 +341,11 @@
               </execution>
             </executions>
             <configuration>
-              <tasks>
+              <target>
                 <echo>Running OpenWire Generator</echo>
                 <taskdef name="generate" classname="org.apache.activemq.openwire.tool.JavaGeneratorTask" classpathref="maven.compile.classpath" />
                 <generate version="12" basedir="${basedir}" generateTests="false" />
-              </tasks>
+              </target>
             </configuration>
             <dependencies>
                 <dependency>
