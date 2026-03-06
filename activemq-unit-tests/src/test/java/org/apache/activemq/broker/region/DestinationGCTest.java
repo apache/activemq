@@ -43,6 +43,8 @@ import org.slf4j.LoggerFactory;
 import org.apache.activemq.test.annotations.ParallelTest;
 import org.junit.experimental.categories.Category;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 @Category(ParallelTest.class)
 public class DestinationGCTest {
 
@@ -50,6 +52,8 @@ public class DestinationGCTest {
 
     private final ActiveMQQueue queue = new ActiveMQQueue("TEST");
     private final ActiveMQQueue otherQueue = new ActiveMQQueue("TEST-OTHER");
+    private final ActiveMQQueue wildcardQueueA = new ActiveMQQueue("TEST.FOO.A");
+    private final ActiveMQQueue wildcardQueueB = new ActiveMQQueue("TEST.FOO.B");
 
     private BrokerService brokerService;
 
@@ -71,6 +75,7 @@ public class DestinationGCTest {
     protected BrokerService createBroker() throws Exception {
         PolicyEntry entry = new PolicyEntry();
         entry.setGcInactiveDestinations(true);
+        entry.setGcWithOnlyWildcardConsumers(true);
         entry.setInactiveTimeoutBeforeGC(3000);
         PolicyMap map = new PolicyMap();
         map.setDefaultEntry(entry);
@@ -112,6 +117,60 @@ public class DestinationGCTest {
         }));
 
         connection.close();
+    }
+
+    @Test
+    public void testDestinationGCWithOnlyWildcardConsumers() throws Exception {
+        assertEquals(1, brokerService.getAdminView().getQueues().length);
+
+        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("vm://localhost?create=false");
+
+        final AtomicInteger receivedCount = new AtomicInteger(0);
+
+        try(Connection connection = factory.createConnection()) {
+            Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            try(var producerA = session.createProducer(wildcardQueueA)) {
+                producerA.send(session.createTextMessage("Test first step queueA"));
+            }
+
+            try(var producerB = session.createProducer(wildcardQueueB)) {
+                producerB.send(session.createTextMessage("Test first step queueB"));
+            }
+
+            MessageConsumer consumer = session.createConsumer(session.createQueue("TEST.FOO.*"));
+            consumer.setMessageListener(new MessageListener() {
+                @Override
+                public void onMessage(Message message) {
+                    receivedCount.incrementAndGet();
+                }
+            });
+
+            connection.start();
+
+            // Confirm queues are gc'd
+            assertTrue("After GC runs there should be one Queue (count=" + brokerService.getAdminView().getQueues().length + ")", Wait.waitFor(new Condition() {
+                @Override
+                public boolean isSatisified() throws Exception {
+                    return brokerService.getAdminView().getQueues().length == 1;
+                }
+            }, 30000, 1000));
+
+            assertEquals(Integer.valueOf(2), Integer.valueOf(receivedCount.get()));
+
+            // Confirm wild-card consumer is able to stay active after zero matching destinations
+            try(var producer = session.createProducer(wildcardQueueA)) {
+                producer.send(session.createTextMessage("Test second step queueA"));
+            }
+
+            // Confirm queues are gc'd
+            assertTrue("After GC runs there should be one Queue (count=" + brokerService.getAdminView().getQueues().length + ")", Wait.waitFor(new Condition() {
+                @Override
+                public boolean isSatisified() throws Exception {
+                    return brokerService.getAdminView().getQueues().length == 1;
+                }
+            }, 30000, 1000));
+            assertEquals(Integer.valueOf(3), Integer.valueOf(receivedCount.get()));
+        }
     }
 
     @Test(timeout = 60000)

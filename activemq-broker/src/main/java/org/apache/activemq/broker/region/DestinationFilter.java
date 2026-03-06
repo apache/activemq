@@ -429,6 +429,11 @@ public class DestinationFilter implements Destination {
         next.setAdvancedMessageStatisticsEnabled(advancedMessageStatisticsEnabled);
     }
 
+    @Override
+    public boolean isGcWithOnlyWildcardConsumers() {
+        return next.isGcWithOnlyWildcardConsumers();
+    }
+
     public void deleteSubscription(ConnectionContext context, SubscriptionKey key) throws Exception {
         if (next instanceof DestinationFilter) {
             DestinationFilter filter = (DestinationFilter) next;

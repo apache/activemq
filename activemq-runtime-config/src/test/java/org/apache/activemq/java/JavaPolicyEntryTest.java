@@ -662,7 +662,7 @@ public class JavaPolicyEntryTest extends RuntimeConfigTestSupport {
 
         //initial config
         setAllDestPolicyProperties(entry, true, true, 10,
-                100, 200, 1000, 400, 40, 30, true, true, 1000, true, true,
+                100, 200, 1000, 400, 40, 30, true, true, true, 1000, true, true,
                 30, true, true, true, true, true, true, true, true, true);
         setAllQueuePolicyProperties(entry, 10000, true, true, true, true, 100,
                 100, true, true);
@@ -675,7 +675,7 @@ public class JavaPolicyEntryTest extends RuntimeConfigTestSupport {
 
         //validate config
         assertAllDestPolicyProperties(getQueue("Before"), true, true, 10,
-                100, 200, 1000, 400, 40, 30, true, true, 1000, true, true,
+                100, 200, 1000, 400, 40, 30, true, true, true, 1000, true, true,
                 30, true, true, true,true, true, true, true, true, true);
         assertAllQueuePolicyProperties(getQueue("Before"), 10000, true, true, true, true, 100,
                 100, true, true);
@@ -683,7 +683,7 @@ public class JavaPolicyEntryTest extends RuntimeConfigTestSupport {
 
         //change config
         setAllDestPolicyProperties(entry, false, false, 100,
-                1000, 2000, 10000, 4000, 400, 300, false, false, 1000, false, false,
+                1000, 2000, 10000, 4000, 400, 300, false, false, false, 1000, false, false,
                 300, false, false, false,false, false, false, false, false, false);
         setAllQueuePolicyProperties(entry, 100000, false, false, false, false, 1000,
                 1000, false, false);
@@ -692,14 +692,14 @@ public class JavaPolicyEntryTest extends RuntimeConfigTestSupport {
         TimeUnit.SECONDS.sleep(SLEEP);
 
         assertAllDestPolicyProperties(getQueue("Before"), false, false, 100,
-                1000, 2000, 10000, 4000, 400, 300, false, false, 1000, false, false,
+                1000, 2000, 10000, 4000, 400, 300, false, false, false, 1000, false, false,
                 300, false, false, false,false, false, false, false, false, false);
         assertAllQueuePolicyProperties(getQueue("Before"), 100000, false, false, false, false, 1000,
                 1000, false, false);
 
         //check new dest
         assertAllDestPolicyProperties(getQueue("After"), false, false, 100,
-                1000, 2000, 10000, 4000, 400, 300, false, false, 1000, false, false,
+                1000, 2000, 10000, 4000, 400, 300, false, false, false, 1000, false, false,
                 300, false, false, false, false, false, false, false, false, false);
         assertAllQueuePolicyProperties(getQueue("After"), 100000, false, false, false, false, 1000,
                 1000, false, false);
@@ -713,7 +713,7 @@ public class JavaPolicyEntryTest extends RuntimeConfigTestSupport {
 
         //initial config
         setAllDestPolicyProperties(entry, true, true, 10,
-                100, 200, 1000, 400, 40, 30, true, true, 1000, true, true,
+                100, 200, 1000, 400, 40, 30, true, true, true, 1000, true, true,
                 30, true, true, true, true, true, true, true, true, true);
         setAllTopicPolicyProperties(entry, 10000, true);
 
@@ -725,14 +725,14 @@ public class JavaPolicyEntryTest extends RuntimeConfigTestSupport {
 
         //validate config
         assertAllDestPolicyProperties(getTopic("Before"), true, true, 10,
-                100, 200, 1000, 400, 40, 30, true, true, 1000, true, true,
+                100, 200, 1000, 400, 40, 30, true, true, true, 1000, true, true,
                 30, true, true, true, true, true, true, true, true, true);
         assertAllTopicPolicyProperties(getTopic("Before"), 10000, true);
 
 
         //change config
         setAllDestPolicyProperties(entry, false, false, 100,
-                1000, 2000, 10000, 4000, 400, 300, false, false, 1000, false, false,
+                1000, 2000, 10000, 4000, 400, 300, false, false, false, 1000, false, false,
                 300, false, false, false, false, false, false, false, false, false);
         setAllTopicPolicyProperties(entry, 100000, false);
 
@@ -740,13 +740,13 @@ public class JavaPolicyEntryTest extends RuntimeConfigTestSupport {
         TimeUnit.SECONDS.sleep(SLEEP);
 
         assertAllDestPolicyProperties(getTopic("Before"), false, false, 100,
-                1000, 2000, 10000, 4000, 400, 300, false, false, 1000, false, false,
+                1000, 2000, 10000, 4000, 400, 300, false, false, false, 1000, false, false,
                 300, false, false, false, false, false, false, false, false, false);
         assertAllTopicPolicyProperties(getTopic("Before"), 100000, false);
 
         //check new dest
         assertAllDestPolicyProperties(getTopic("After"), false, false, 100,
-                1000, 2000, 10000, 4000, 400, 300, false, false, 1000, false, false,
+                1000, 2000, 10000, 4000, 400, 300, false, false, false, 1000, false, false,
                 300, false, false, false, false, false, false, false, false, false);
         assertAllTopicPolicyProperties(getTopic("After"), 100000, false);
     }
@@ -820,6 +820,7 @@ public class JavaPolicyEntryTest extends RuntimeConfigTestSupport {
         properties.add("cursorMemoryHighWaterMark");
         properties.add("storeUsageHighWaterMark");
         properties.add("gcInactiveDestinations");
+        properties.add("gcWithOnlyWildcardConsumers");
         properties.add("gcWithNetworkConsumers");
         properties.add("inactiveTimeoutBeforeGC");
         properties.add("reduceMemoryFootprint");
@@ -862,12 +863,12 @@ public class JavaPolicyEntryTest extends RuntimeConfigTestSupport {
     private void setAllDestPolicyProperties(PolicyEntry entry, boolean producerFlowControl,
             boolean alwaysRetroactive, long blockedProducerWarningInterval, int maxPageSize,
             int maxBrowsePageSize, long minimumMessageSize, int maxExpirePageSize, int cursorMemoryHighWaterMark,
-            int storeUsageHighWaterMark, boolean gcInactiveDestinations, boolean gcWithNetworkConsumers,
-            long inactiveTimeoutBeforeGC,boolean reduceMemoryFootprint, boolean doOptimizeMessageStore,
-            int optimizeMessageStoreInFlightLimit, boolean advisoryForConsumed, boolean advisoryForDelivery,
-            boolean advisoryForDispatched, boolean advisoryForDiscardingMessages, boolean advisoryForSlowConsumers,
-            boolean advisoryForFastProducers, boolean advisoryWhenFull, boolean includeBodyForAdvisory,
-            boolean sendAdvisoryIfNoConsumers) {
+            int storeUsageHighWaterMark, boolean gcInactiveDestinations, boolean gcWithOnlyWildcardConsumers,
+            boolean gcWithNetworkConsumers, long inactiveTimeoutBeforeGC, boolean reduceMemoryFootprint,
+            boolean doOptimizeMessageStore, int optimizeMessageStoreInFlightLimit, boolean advisoryForConsumed,
+            boolean advisoryForDelivery, boolean advisoryForDispatched, boolean advisoryForDiscardingMessages,
+            boolean advisoryForSlowConsumers, boolean advisoryForFastProducers, boolean advisoryWhenFull,
+            boolean includeBodyForAdvisory, boolean sendAdvisoryIfNoConsumers) {
 
         entry.setProducerFlowControl(producerFlowControl);
         entry.setAlwaysRetroactive(alwaysRetroactive);
@@ -879,6 +880,7 @@ public class JavaPolicyEntryTest extends RuntimeConfigTestSupport {
         entry.setCursorMemoryHighWaterMark(cursorMemoryHighWaterMark);
         entry.setStoreUsageHighWaterMark(storeUsageHighWaterMark);
         entry.setGcInactiveDestinations(gcInactiveDestinations);
+        entry.setGcWithOnlyWildcardConsumers(gcWithOnlyWildcardConsumers);
         entry.setGcWithNetworkConsumers(gcWithNetworkConsumers);
         entry.setInactiveTimeoutBeforeGC(inactiveTimeoutBeforeGC);
         entry.setReduceMemoryFootprint(reduceMemoryFootprint);
@@ -920,13 +922,12 @@ public class JavaPolicyEntryTest extends RuntimeConfigTestSupport {
     private void assertAllDestPolicyProperties(BaseDestination dest, boolean producerFlowControl,
             boolean alwaysRetroactive, long blockedProducerWarningInterval, int maxPageSize,
             int maxBrowsePageSize, long minimumMessageSize, int maxExpirePageSize, int cursorMemoryHighWaterMark,
-            int storeUsageHighWaterMark, boolean gcInactiveDestinations, boolean gcWithNetworkConsumers,
-            long inactiveTimeoutBeforeGC,boolean reduceMemoryFootprint, boolean doOptimizeMessageStore,
-            int optimizeMessageStoreInFlightLimit, boolean advisoryForConsumed, boolean advisoryForDelivery,
-            boolean advisoryForDispatched, boolean advisoryForDiscardingMessages, boolean advisoryForSlowConsumers,
-            boolean advisoryForFastProducers, boolean advisoryWhenFull, boolean includeBodyForAdvisory,
-            boolean sendAdvisoryIfNoConsumers) {
-
+            int storeUsageHighWaterMark, boolean gcInactiveDestinations, boolean gcWithOnlyWildcardConsumers,
+            boolean gcWithNetworkConsumers, long inactiveTimeoutBeforeGC, boolean reduceMemoryFootprint,
+            boolean doOptimizeMessageStore, int optimizeMessageStoreInFlightLimit, boolean advisoryForConsumed,
+            boolean advisoryForDelivery, boolean advisoryForDispatched, boolean advisoryForDiscardingMessages,
+            boolean advisoryForSlowConsumers, boolean advisoryForFastProducers, boolean advisoryWhenFull,
+            boolean includeBodyForAdvisory, boolean sendAdvisoryIfNoConsumers) {
 
         assertEquals(producerFlowControl, dest.isProducerFlowControl());
         assertEquals(alwaysRetroactive, dest.isAlwaysRetroactive());
@@ -938,6 +939,7 @@ public class JavaPolicyEntryTest extends RuntimeConfigTestSupport {
         assertEquals(cursorMemoryHighWaterMark, dest.getCursorMemoryHighWaterMark());
         assertEquals(storeUsageHighWaterMark, dest.getStoreUsageHighWaterMark());
         assertEquals(gcInactiveDestinations, dest.isGcIfInactive());
+        assertEquals(gcWithOnlyWildcardConsumers, dest.isGcWithOnlyWildcardConsumers());
         assertEquals(gcWithNetworkConsumers, dest.isGcWithNetworkConsumers());
         assertEquals(inactiveTimeoutBeforeGC, dest.getInactiveTimeoutBeforeGC());
         assertEquals(reduceMemoryFootprint, dest.isReduceMemoryFootprint());
