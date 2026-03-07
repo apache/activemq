@@ -288,8 +288,15 @@ public class ActiveMQObjectMessage extends ActiveMQMessage implements ObjectMess
     }
 
     @Override
-    public boolean isBodyAssignableTo(Class c) throws JMSException {
-        final Serializable object = getObject();
+    public boolean isBodyAssignableTo(Class c) {
+        final Serializable object;
+        try {
+            object = getObject();
+        } catch (JMSException e) {
+            // Per Jakarta Messaging 3.1: if the message is an ObjectMessage
+            // and object deserialization fails then false is returned.
+            return false;
+        }
         if (object == null) {
             return true;
         }
