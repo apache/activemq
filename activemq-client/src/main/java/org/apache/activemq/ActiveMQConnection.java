@@ -150,7 +150,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     private boolean optimizeAcknowledge;
     private long optimizeAcknowledgeTimeOut = 0;
     private long optimizedAckScheduledAckInterval = 0;
-    private boolean nestedMapAndListEnabled = true;
+    private boolean nestedMapAndListEnabled = false;
     private boolean useRetroactiveConsumer;
     private boolean exclusiveConsumer;
     private boolean alwaysSyncSend;
