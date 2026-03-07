@@ -35,6 +35,7 @@ import jakarta.jms.InvalidDestinationException;
 import jakarta.jms.JMSException;
 import jakarta.jms.Message;
 import jakarta.jms.MessageConsumer;
+import jakarta.jms.MessageFormatException;
 import jakarta.jms.MessageListener;
 import jakarta.jms.TransactionRolledBackException;
 
@@ -711,6 +712,144 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         beforeMessageIsConsumed(md);
         afterMessageIsConsumed(md, false);
         return createActiveMQMessage(md);
+    }
+
+    /**
+     * Receives the next message produced for this message consumer and returns
+     * its body as an object of the specified type. This call blocks
+     * indefinitely until a message is produced or until this message consumer
+     * is closed.
+     * <p>
+     * If the message is not of a type for which the body can be assigned to
+     * the specified type, a {@code MessageFormatException} is thrown and the
+     * message is not acknowledged. It may be delivered again when a subsequent
+     * {@code receive} or {@code receiveBody} call is made.
+     *
+     * @param c the type to which the body of the next message should be
+     *          assigned
+     * @return the body of the next message, or null if this message consumer
+     *         is concurrently closed
+     * @throws MessageFormatException if the message body cannot be assigned to
+     *         the specified type
+     * @throws JMSException if the JMS provider fails to receive the next
+     *         message due to some internal error
+     */
+    public <T> T receiveBody(Class<T> c) throws JMSException {
+        checkClosed();
+        checkMessageListener();
+
+        sendPullCommand(0);
+        MessageDispatch md = dequeue(-1);
+        if (md == null) {
+            return null;
+        }
+
+        return doReceiveBody(md, c);
+    }
+
+    /**
+     * Receives the next message produced for this message consumer and returns
+     * its body as an object of the specified type, blocking up to the
+     * specified timeout. A {@code timeout} of zero never expires and the call
+     * blocks indefinitely.
+     * <p>
+     * If the message is not of a type for which the body can be assigned to
+     * the specified type, a {@code MessageFormatException} is thrown and the
+     * message is not acknowledged. It may be delivered again when a subsequent
+     * {@code receive} or {@code receiveBody} call is made.
+     *
+     * @param c       the type to which the body of the next message should be
+     *                assigned
+     * @param timeout the timeout value (in milliseconds), a timeout of zero
+     *                never expires
+     * @return the body of the next message, or null if the timeout expires or
+     *         this message consumer is concurrently closed
+     * @throws MessageFormatException if the message body cannot be assigned to
+     *         the specified type
+     * @throws JMSException if the JMS provider fails to receive the next
+     *         message due to some internal error
+     */
+    public <T> T receiveBody(Class<T> c, long timeout) throws JMSException {
+        checkClosed();
+        checkMessageListener();
+        if (timeout == 0) {
+            return this.receiveBody(c);
+        }
+
+        sendPullCommand(timeout);
+        while (timeout > 0) {
+            MessageDispatch md;
+            if (info.getPrefetchSize() == 0) {
+                md = dequeue(-1);
+            } else {
+                md = dequeue(timeout);
+            }
+
+            if (md == null) {
+                return null;
+            }
+
+            return doReceiveBody(md, c);
+        }
+        return null;
+    }
+
+    /**
+     * Receives the next message produced for this message consumer and returns
+     * its body as an object of the specified type if one is immediately
+     * available.
+     * <p>
+     * If the message is not of a type for which the body can be assigned to
+     * the specified type, a {@code MessageFormatException} is thrown and the
+     * message is not acknowledged. It may be delivered again when a subsequent
+     * {@code receive} or {@code receiveBody} call is made.
+     *
+     * @param c the type to which the body of the next message should be
+     *          assigned
+     * @return the body of the next message, or null if one is not immediately
+     *         available
+     * @throws MessageFormatException if the message body cannot be assigned to
+     *         the specified type
+     * @throws JMSException if the JMS provider fails to receive the next
+     *         message due to some internal error
+     */
+    public <T> T receiveBodyNoWait(Class<T> c) throws JMSException {
+        checkClosed();
+        checkMessageListener();
+        sendPullCommand(-1);
+
+        MessageDispatch md;
+        if (info.getPrefetchSize() == 0) {
+            md = dequeue(-1);
+        } else {
+            md = dequeue(0);
+        }
+
+        if (md == null) {
+            return null;
+        }
+
+        return doReceiveBody(md, c);
+    }
+
+    /**
+     * Checks that the message body can be assigned to the requested type,
+     * acknowledges the message, and returns its body.  If the body cannot be
+     * assigned, the message is re-enqueued without acknowledgement so that it
+     * remains available for a subsequent {@code receive} or
+     * {@code receiveBody} call.
+     */
+    private <T> T doReceiveBody(MessageDispatch md, Class<T> c) throws JMSException {
+        ActiveMQMessage message = createActiveMQMessage(md);
+        if (!message.isBodyAssignableTo(c)) {
+            // spec: message is not acknowledged and left for redelivery
+            unconsumedMessages.enqueueFirst(md);
+            throw new MessageFormatException("Message body cannot be read as type: " + c);
+        }
+
+        beforeMessageIsConsumed(md);
+        afterMessageIsConsumed(md, false);
+        return message.getBody(c);
     }
 
     /**
