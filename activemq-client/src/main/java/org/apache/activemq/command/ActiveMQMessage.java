@@ -525,17 +525,19 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
     }
 
     protected void checkValidObject(Object value) throws MessageFormatException {
-
-        boolean valid = value instanceof Boolean || value instanceof Byte || value instanceof Short || value instanceof Integer || value instanceof Long;
-        valid = valid || value instanceof Float || value instanceof Double || value instanceof Character || value instanceof String || value == null;
+        // Types allowed by the Jakarta Messaging Specification
+        boolean valid = value instanceof Boolean || value instanceof Byte || value instanceof Short ||
+                value instanceof Integer || value instanceof Long || value instanceof Float ||
+                value instanceof Double || value instanceof String || value == null;
 
         if (!valid) {
 
             ActiveMQConnection conn = getConnection();
             // conn is null if we are in the broker rather than a JMS client
             if (conn == null || conn.isNestedMapAndListEnabled()) {
-                if (!(value instanceof Map || value instanceof List)) {
-                    throw new MessageFormatException("Only objectified primitive objects, String, Map and List types are allowed but was: " + value + " type: " + value.getClass());
+                // Standard rules: only primitives and Strings are allowed
+                if (!(value instanceof Map || value instanceof List || value instanceof Character)) {
+                    throw new MessageFormatException("Only objectified primitive objects, String, Map, List and Character types are allowed but was: " + value + " type: " + value.getClass());
                 }
             } else {
                 throw new MessageFormatException("Only objectified primitive objects and String types are allowed but was: " + value + " type: " + value.getClass());
