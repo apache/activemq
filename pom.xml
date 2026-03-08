@@ -66,7 +66,9 @@
     <hawtdispatch-version>1.22</hawtdispatch-version>
     <httpclient-version>4.5.14</httpclient-version>
     <httpcore-version>4.4.16</httpcore-version>
+    <insight-version>1.2.0.Beta4</insight-version>
     <jackson-version>2.21.2</jackson-version>
+    <nimbus-jose-jwt-version>10.3</nimbus-jose-jwt-version>
     <jackson-annotations-version>2.21</jackson-annotations-version>
     <jakarta-jms-api-version>3.1.0</jakarta-jms-api-version>
     <jasypt-version>1.9.3</jasypt-version>
@@ -590,6 +592,11 @@
         <groupId>com.fasterxml.jackson.dataformat</groupId>
         <artifactId>jackson-dataformat-xml</artifactId>
         <version>${jackson-version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.nimbusds</groupId>
+        <artifactId>nimbus-jose-jwt</artifactId>
+        <version>${nimbus-jose-jwt-version}</version>
       </dependency>
 
       <!-- Used to configure the activemq logs -->
