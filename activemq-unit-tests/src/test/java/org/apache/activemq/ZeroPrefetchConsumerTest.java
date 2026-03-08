@@ -139,9 +139,9 @@ public class ZeroPrefetchConsumerTest extends EmbeddedBrokerTestSupport {
         }
         // now lets receive it
         MessageConsumer consumer = session.createConsumer(queue);
-        TextMessage answer = (TextMessage)consumer.receiveNoWait();
+        TextMessage answer = (TextMessage)consumer.receive(5000);
         assertEquals("Should have received a message!", answer.getText(), "Msg1");
-        answer = (TextMessage)consumer.receiveNoWait();
+        answer = (TextMessage)consumer.receive(5000);
         assertEquals("Should have received a message!", answer.getText(), "Msg2");
         if (transacted) {
             session.commit();
@@ -160,9 +160,9 @@ public class ZeroPrefetchConsumerTest extends EmbeddedBrokerTestSupport {
         // now lets receive it
         MessageConsumer consumer1 = session.createConsumer(queue);
         MessageConsumer consumer2 = session.createConsumer(queue);
-        TextMessage answer = (TextMessage)consumer1.receiveNoWait();
+        TextMessage answer = (TextMessage)consumer1.receive(5000);
         assertEquals("Should have received a message!", answer.getText(), "Msg1");
-        answer = (TextMessage)consumer2.receiveNoWait();
+        answer = (TextMessage)consumer2.receive(5000);
         assertEquals("Should have received a message!", answer.getText(), "Msg2");
 
         answer = (TextMessage)consumer2.receiveNoWait();
