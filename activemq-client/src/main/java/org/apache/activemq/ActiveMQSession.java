@@ -845,6 +845,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     public void recover() throws JMSException {
 
         checkClosed();
+        checkNotInCompletionListenerCallback("recover");
         if (getTransacted()) {
             throw new IllegalStateException("This session is transacted");
         }
