@@ -307,12 +307,10 @@ public class OAuth2LoginModuleTest extends TestCase {
 
         Subject subject = new Subject();
         OAuth2LoginModule module = new OAuth2LoginModule();
-        module.initialize(subject, new TokenCallbackHandler("token"), new HashMap<>(), options);
-
         try {
-            module.login();
-            fail("Should have thrown LoginException for missing JWKS URL");
-        } catch (LoginException e) {
+            module.initialize(subject, new TokenCallbackHandler("token"), new HashMap<>(), options);
+            fail("Should have thrown IllegalArgumentException for missing JWKS URL");
+        } catch (IllegalArgumentException e) {
             assertTrue("Error should mention JWKS URL", e.getMessage().contains("JWKS URL"));
         }
     }
@@ -323,12 +321,10 @@ public class OAuth2LoginModuleTest extends TestCase {
 
         Subject subject = new Subject();
         OAuth2LoginModule module = new OAuth2LoginModule();
-        module.initialize(subject, new TokenCallbackHandler("token"), new HashMap<>(), options);
-
         try {
-            module.login();
-            fail("Should have thrown LoginException for missing issuer");
-        } catch (LoginException e) {
+            module.initialize(subject, new TokenCallbackHandler("token"), new HashMap<>(), options);
+            fail("Should have thrown IllegalArgumentException for missing issuer");
+        } catch (IllegalArgumentException e) {
             assertTrue("Error should mention issuer", e.getMessage().contains("issuer"));
         }
     }
