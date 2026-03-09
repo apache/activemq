@@ -101,17 +101,18 @@ public class CompositeConsumerNetworkBridgeTest extends DynamicNetworkTestSuppor
 
         // The remote broker should create two durable subs instead of 1
         // Should be 1 durable on each of the topics that are part of the composite
-        assertConsumersCount(broker2, compositeTopic, 0);
-        assertNCDurableSubsCount(broker2, compositeTopic, 0);
+        // First confirm individual topic subs are created (wait for bridge to finish processing)
         for (ActiveMQTopic topic : topics) {
             assertConsumersCount(broker2, topic, 1);
             assertNCDurableSubsCount(broker2, topic, 1);
         }
+        // Then verify no subs were created on the composite topic itself
+        assertConsumersCount(broker2, compositeTopic, 0);
+        assertNCDurableSubsCount(broker2, compositeTopic, 0);
         assertCompositeMapCounts(1, 1);
 
         durSub.close();
-        Thread.sleep(1000);
-        removeSubscription(broker1, subName);
+        waitAndRemoveSubscription(broker1, subName);
 
         //Verify cleanup
         for (ActiveMQTopic topic : topics) {
@@ -148,11 +149,10 @@ public class CompositeConsumerNetworkBridgeTest extends DynamicNetworkTestSuppor
         assertNotNull(durSub2.receive(1000));
 
         durSub1.close();
-        durSub2.close();;
+        durSub2.close();
 
-        Thread.sleep(1000);
-        removeSubscription(broker1, subName + "1");
-        removeSubscription(broker1, subName + "2");
+        waitAndRemoveSubscription(broker1, subName + "1");
+        waitAndRemoveSubscription(broker1, subName + "2");
         assertCompositeMapCounts(0, 0);
     }
 
@@ -268,17 +268,16 @@ public class CompositeConsumerNetworkBridgeTest extends DynamicNetworkTestSuppor
         TopicSubscriber durSub2 = session1.createDurableSubscriber(compositeTopic, subName + "2");
         assertConsumersCount(broker1, compositeTopic, 2);
 
-        assertConsumersCount(broker2, compositeTopic, 0);
-        assertNCDurableSubsCount(broker2, compositeTopic, 0);
         for (ActiveMQTopic topic : topics) {
             assertConsumersCount(broker2, topic, 1);
             assertNCDurableSubsCount(broker2, topic, 1);
         }
+        assertConsumersCount(broker2, compositeTopic, 0);
+        assertNCDurableSubsCount(broker2, compositeTopic, 0);
         assertCompositeMapCounts(2, 2);
 
         durSub1.close();
-        Thread.sleep(1000);
-        removeSubscription(broker1, subName + "1");
+        waitAndRemoveSubscription(broker1, subName + "1");
 
         for (ActiveMQTopic topic : topics) {
             assertConsumersCount(broker2, topic, 1);
@@ -286,8 +285,7 @@ public class CompositeConsumerNetworkBridgeTest extends DynamicNetworkTestSuppor
         }
 
         durSub2.close();
-        Thread.sleep(1000);
-        removeSubscription(broker1, subName + "2");
+        waitAndRemoveSubscription(broker1, subName + "2");
 
         for (ActiveMQTopic topic : topics) {
             assertConsumersCount(broker2, topic, 0);
@@ -305,8 +303,7 @@ public class CompositeConsumerNetworkBridgeTest extends DynamicNetworkTestSuppor
     protected void doSetUp(File localDataDir, File remoteDataDir) throws Exception {
         doSetUpRemoteBroker(remoteDataDir);
         doSetUpLocalBroker(localDataDir);
-        //Give time for advisories to propagate
-        Thread.sleep(1000);
+        assertBridgeStarted();
     }
 
     protected void doSetUpLocalBroker(File dataDir) throws Exception {
@@ -412,6 +409,18 @@ public class CompositeConsumerNetworkBridgeTest extends DynamicNetworkTestSuppor
         DurableConduitBridge bridge = findBridge();
         assertTrue( Wait.waitFor(() -> compositeConsumerIdsSize == bridge.compositeConsumerIds.size(), 5000, 500));
         assertTrue( Wait.waitFor(() -> compositeSubSize == bridge.compositeSubscriptions.size(), 5000, 500));
+    }
+
+    private void waitAndRemoveSubscription(BrokerService broker, String subName) throws Exception {
+        assertTrue("Subscription " + subName + " should be removable",
+            Wait.waitFor(() -> {
+                try {
+                    removeSubscription(broker, subName);
+                    return true;
+                } catch (Exception e) {
+                    return false;
+                }
+            }, 10000, 500));
     }
 
     protected DurableConduitBridge findBridge() throws Exception {
