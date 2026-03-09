@@ -141,6 +141,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     private int producerWindowSize = DEFAULT_PRODUCER_WINDOW_SIZE;
     private long warnAboutUnstartedConnectionTimeout = 500L;
     private int sendTimeout = 0;
+    private int requestTimeout = 0;
     private int connectResponseTimeout = 0;
     private boolean sendAcksAsync=true;
     private TransportListener transportListener;
@@ -434,6 +435,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         connection.setProducerWindowSize(getProducerWindowSize());
         connection.setWarnAboutUnstartedConnectionTimeout(getWarnAboutUnstartedConnectionTimeout());
         connection.setSendTimeout(getSendTimeout());
+        connection.setRequestTimeout(getRequestTimeout());
         connection.setCloseTimeout(getCloseTimeout());
         connection.setSendAcksAsync(isSendAcksAsync());
         connection.setAuditDepth(getAuditDepth());
@@ -739,6 +741,20 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     }
 
     /**
+     * @return the requestTimeout (in milliseconds)
+     */
+    public int getRequestTimeout() {
+        return requestTimeout;
+    }
+
+    /**
+     * @param requestTimeout the requestTimeout to set (in milliseconds)
+     */
+    public void setRequestTimeout(int requestTimeout) {
+        this.requestTimeout = requestTimeout;
+    }
+
+    /**
      * @return the sendAcksAsync
      */
     public boolean isSendAcksAsync() {
@@ -864,6 +880,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         props.setProperty("alwaysSyncSend", Boolean.toString(isAlwaysSyncSend()));
         props.setProperty("producerWindowSize", Integer.toString(getProducerWindowSize()));
         props.setProperty("sendTimeout", Integer.toString(getSendTimeout()));
+        props.setProperty("requestTimeout", Integer.toString(getRequestTimeout()));
         props.setProperty("connectResponseTimeout", Integer.toString(getConnectResponseTimeout()));
         props.setProperty("sendAcksAsync",Boolean.toString(isSendAcksAsync()));
         props.setProperty("auditDepth", Integer.toString(getAuditDepth()));

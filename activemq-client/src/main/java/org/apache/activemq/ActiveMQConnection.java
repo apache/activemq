@@ -158,6 +158,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     private boolean watchTopicAdvisories = true;
     private long warnAboutUnstartedConnectionTimeout = 500L;
     private int sendTimeout =0;
+    private int requestTimeout =0;
     private boolean sendAcksAsync=true;
     private boolean checkForDuplicates = true;
     private boolean queueOnlyConnection = false;
@@ -1509,7 +1510,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      * @throws JMSException
      */
     public Response syncSendPacket(Command command) throws JMSException {
-        return syncSendPacket(command, 0);
+        return syncSendPacket(command, requestTimeout);
     }
 
     /**
@@ -1836,6 +1837,20 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      */
     public void setSendTimeout(int sendTimeout) {
         this.sendTimeout = sendTimeout;
+    }
+
+    /**
+     * @return the requestTimeout (in milliseconds)
+     */
+    public int getRequestTimeout() {
+        return requestTimeout;
+    }
+
+    /**
+     * @param requestTimeout the requestTimeout to set (in milliseconds)
+     */
+    public void setRequestTimeout(int requestTimeout) {
+        this.requestTimeout = requestTimeout;
     }
 
     /**

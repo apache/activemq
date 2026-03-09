@@ -281,7 +281,7 @@ public class TransactionContext implements XAResource {
             TransactionInfo info = new TransactionInfo(getConnectionId(), transactionId, TransactionInfo.ROLLBACK);
             this.transactionId = null;
             //make this synchronous - see https://issues.apache.org/activemq/browse/AMQ-2364
-            this.connection.syncSendPacket(info, this.connection.isClosing() ? this.connection.getCloseTimeout() : 0);
+            this.connection.syncSendPacket(info, this.connection.isClosing() ? this.connection.getCloseTimeout() : this.connection.getRequestTimeout());
             // Notify the listener that the tx was rolled back
             if (localTransactionEventListener != null) {
                 localTransactionEventListener.rollbackEvent();
