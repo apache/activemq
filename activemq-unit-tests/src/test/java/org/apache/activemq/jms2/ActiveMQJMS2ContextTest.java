@@ -23,6 +23,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.util.Enumeration;
+import java.util.concurrent.atomic.AtomicReference;
 
 import jakarta.jms.CompletionListener;
 import jakarta.jms.Destination;
@@ -317,6 +318,34 @@ public class ActiveMQJMS2ContextTest extends ActiveMQJMS2TestBase {
     @Test(expected = UnsupportedOperationException.class)
     public void testProducerSendDestinationMessageQosParamsCompletionListener() throws JMSException {
          messageProducer.send(session.createQueue(methodNameDestinationName), null, 1, 4, 0l, null);
+    }
+
+    /**
+     * Jakarta Messaging 3.1 spec section 7.3.8: calling recover() from within a CompletionListener
+     * callback must throw IllegalStateException.
+     */
+    @Test
+    public void testRecoverThrowsIllegalStateFromCompletionListenerCallback() throws JMSException {
+        final AtomicReference<Exception> callbackException = new AtomicReference<>();
+
+        messageProducer.send(session.createTextMessage("test"), new CompletionListener() {
+            @Override
+            public void onCompletion(final Message message) {
+                try {
+                    session.recover();
+                } catch (final Exception e) {
+                    callbackException.set(e);
+                }
+            }
+
+            @Override
+            public void onException(final Message message, final Exception exception) {
+            }
+        });
+
+        assertNotNull("recover() must throw from within CompletionListener callback", callbackException.get());
+        assertTrue("recover() must throw IllegalStateException from within CompletionListener callback",
+                callbackException.get() instanceof jakarta.jms.IllegalStateException);
     }
 
     protected static void sendMessage(JMSContext jmsContext, Destination testDestination, String textBody) {
