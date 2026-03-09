@@ -28,6 +28,7 @@ import jakarta.jms.Session;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.web.util.HtmlUtils;
 
 /**
  * A servlet which will publish dummy market data prices
@@ -75,8 +76,9 @@ public class PortfolioPublishServlet extends MessageServletSupport {
                 out.println("</body></html>");
 
             } catch (JMSException e) {
-                out.println("<html><body>Failed sending price messages due to <b>" + e + "</b></body></html>");
-                log("Failed to send message: " + e, e);
+                String errorMessage = e.getMessage();
+                out.println("<html><body>Failed sending price messages due to <b>" + escape(errorMessage) + "</b></body></html>");
+                log("Failed to send message: " + errorMessage, e);
             }
         }
     }
@@ -132,6 +134,6 @@ public class PortfolioPublishServlet extends MessageServletSupport {
     }
 
     protected String escape(String text) throws IOException {
-        return java.net.URLEncoder.encode(text, "UTF-8");
+        return text != null ? HtmlUtils.htmlEscape(text, "UTF-8") : null;
     }
 }
