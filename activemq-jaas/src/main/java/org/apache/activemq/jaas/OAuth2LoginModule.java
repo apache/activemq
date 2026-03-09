@@ -118,7 +118,15 @@ public class OAuth2LoginModule implements LoginModule {
         this.debug = Boolean.parseBoolean((String) options.get("debug"));
 
         this.jwksUrl = (String) options.get(JWKS_URL_OPTION);
+        if (jwksUrl == null || jwksUrl.isEmpty()) {
+            throw new IllegalArgumentException("OAuth2 JWKS URL (" + JWKS_URL_OPTION + ") is required");
+        }
+
         this.issuer = (String) options.get(ISSUER_OPTION);
+        if (issuer == null || issuer.isEmpty()) {
+            throw new IllegalArgumentException("OAuth2 issuer (" + ISSUER_OPTION + ") is required");
+        }
+
         this.audience = (String) options.get(AUDIENCE_OPTION);
 
         String userClaim = (String) options.get(USERNAME_CLAIM_OPTION);
@@ -135,13 +143,6 @@ public class OAuth2LoginModule implements LoginModule {
 
     @Override
     public boolean login() throws LoginException {
-        if (jwksUrl == null || jwksUrl.isEmpty()) {
-            throw new LoginException("OAuth2 JWKS URL (oauth2.jwksUrl) is required");
-        }
-        if (issuer == null || issuer.isEmpty()) {
-            throw new LoginException("OAuth2 issuer (oauth2.issuer) is required");
-        }
-
         String token = getToken();
         if (token == null || token.isEmpty()) {
             throw new FailedLoginException("No JWT token provided");
