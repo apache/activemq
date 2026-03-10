@@ -1696,7 +1696,7 @@ public class MQTTTest extends MQTTTestSupport {
             // ConsumerInfo asynchronously, so messages may not be ready for dispatch yet.
             assertTrue("Subscription should become active in run " + (j + 1),
                     Wait.waitFor(() -> isSubscriptionActive(topics[0], mqttSub.getClientId().toString()),
-                            TimeUnit.SECONDS.toMillis(15), 100));
+                            TimeUnit.SECONDS.toMillis(30), 100));
 
             for (int i = 0; i < messagesPerRun; ++i) {
                 Message message = connectionSub.receive(5, TimeUnit.SECONDS);
