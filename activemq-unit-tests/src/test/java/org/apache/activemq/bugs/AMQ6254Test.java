@@ -61,8 +61,11 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 @RunWith(Parameterized.class)
+@Category(ParallelTest.class)
 public class AMQ6254Test {
 
     private static final Logger LOG = LoggerFactory.getLogger(AMQ6254Test.class);

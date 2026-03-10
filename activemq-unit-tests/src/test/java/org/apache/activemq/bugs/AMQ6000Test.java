@@ -40,10 +40,13 @@ import org.junit.Test;
 import org.junit.rules.TestName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * Test for AMQ-6000 issue with pause / resume feature.
  */
+@Category(ParallelTest.class)
 public class AMQ6000Test {
 
     private static Logger LOG = LoggerFactory.getLogger(AMQ6000Test.class);

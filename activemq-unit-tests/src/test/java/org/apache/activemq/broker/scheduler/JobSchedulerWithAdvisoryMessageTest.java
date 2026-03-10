@@ -21,9 +21,11 @@ import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.DestinationInfo;
 import org.apache.activemq.util.Wait;
+import org.apache.activemq.test.annotations.ParallelTest;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import jakarta.jms.Connection;
 import jakarta.jms.JMSException;
@@ -49,6 +51,7 @@ import static org.junit.Assert.assertTrue;
  *
  * See https://issues.apache.org/jira/browse/AMQ-9187
  */
+@Category(ParallelTest.class)
 public class JobSchedulerWithAdvisoryMessageTest extends JobSchedulerTestSupport {
 
     final AtomicLong uniqueQueueId = new AtomicLong(System.currentTimeMillis());

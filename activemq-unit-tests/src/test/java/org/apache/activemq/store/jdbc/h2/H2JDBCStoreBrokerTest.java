@@ -22,7 +22,10 @@ import org.apache.activemq.store.jdbc.JDBCStoreBrokerTest;
 import org.apache.activemq.store.jdbc.adapter.H2JDBCAdapter;
 
 import javax.sql.DataSource;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
+@Category(ParallelTest.class)
 public class H2JDBCStoreBrokerTest extends JDBCStoreBrokerTest {
 
     @Override

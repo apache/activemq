@@ -22,7 +22,10 @@ import javax.naming.NamingException;
 import javax.naming.spi.InitialContextFactory;
 
 import org.apache.activemq.ActiveMQXASslConnectionFactory;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
+@Category(ParallelTest.class)
 public class XASslConnectionFactoryTest extends ActiveMQInitialContextFactoryTest {
 
     public void testConnectionFactoriesIsXA() throws NamingException {

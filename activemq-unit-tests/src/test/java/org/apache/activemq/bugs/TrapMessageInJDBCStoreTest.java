@@ -45,6 +45,8 @@ import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * Test to demostrate a message trapped in the JDBC store and not
@@ -57,6 +59,7 @@ import org.slf4j.LoggerFactory;
  *
  */
 
+@Category(ParallelTest.class)
 public class TrapMessageInJDBCStoreTest extends TestCase {
 
     private static final String MY_TEST_Q = "MY_TEST_Q";

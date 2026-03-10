@@ -43,11 +43,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.Assert.assertTrue;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * Ensure the tempPercentUsage JMX attribute decreases after temp store usage is decreased
  *
  */
+@Category(ParallelTest.class)
 public class AMQ6459Test {
 
     private static final Logger LOG = LoggerFactory.getLogger(AMQ6459Test.class);

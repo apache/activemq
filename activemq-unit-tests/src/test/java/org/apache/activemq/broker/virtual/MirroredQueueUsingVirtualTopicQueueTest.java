@@ -19,11 +19,14 @@ package org.apache.activemq.broker.virtual;
 import jakarta.jms.Destination;
 
 import org.apache.activemq.command.ActiveMQQueue;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  *
  * 
  */
+@Category(ParallelTest.class)
 public class MirroredQueueUsingVirtualTopicQueueTest extends MirroredQueueTest {
 
     @Override

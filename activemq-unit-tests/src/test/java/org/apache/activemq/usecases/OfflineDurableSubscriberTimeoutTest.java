@@ -40,7 +40,10 @@ import org.apache.logging.log4j.core.filter.AbstractFilter;
 import org.apache.logging.log4j.core.layout.MessageLayout;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
+@Category(ParallelTest.class)
 public class OfflineDurableSubscriberTimeoutTest extends org.apache.activemq.TestSupport {
 
     private static final Logger LOG = LoggerFactory.getLogger(OfflineDurableSubscriberTimeoutTest.class);

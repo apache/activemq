@@ -19,7 +19,10 @@ package org.apache.activemq.transport.nio;
 import jakarta.jms.DeliveryMode;
 
 import org.apache.activemq.broker.BrokerService;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
+@Category(ParallelTest.class)
 public class NIOPersistentSendAndReceiveTest extends NIOJmsSendAndReceiveTest {
     protected BrokerService broker;
 

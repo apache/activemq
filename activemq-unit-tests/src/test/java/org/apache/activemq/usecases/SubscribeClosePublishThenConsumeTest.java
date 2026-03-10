@@ -29,11 +29,14 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.test.TestSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * @author Paul Smith
  * 
  */
+@Category(ParallelTest.class)
 public class SubscribeClosePublishThenConsumeTest extends TestSupport {
     private static final Logger LOG = LoggerFactory.getLogger(SubscribeClosePublishThenConsumeTest.class);
 

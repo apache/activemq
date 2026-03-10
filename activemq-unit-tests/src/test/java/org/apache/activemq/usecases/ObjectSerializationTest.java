@@ -28,10 +28,13 @@ import jakarta.jms.ObjectMessage;
 import jakarta.jms.Session;
 
 import org.apache.activemq.test.TestSupport;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * Test that java.util Object serialization is not allowed by default
  */
+@Category(ParallelTest.class)
 public class ObjectSerializationTest extends TestSupport {
 
     private static final String VALUE_NAME = "value";

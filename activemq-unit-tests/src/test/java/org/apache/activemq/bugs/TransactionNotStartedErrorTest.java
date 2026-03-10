@@ -29,6 +29,8 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /*
  * simulate message flow which cause the following exception in the broker
@@ -40,6 +42,7 @@ import org.slf4j.LoggerFactory;
  * This appears to be consistent in a MacBook. Haven't been able to replicate it
  * on Windows though
  */
+@Category(ParallelTest.class)
 public class TransactionNotStartedErrorTest extends TestCase {
 
     private static final Logger LOG = LoggerFactory.getLogger(TransactionNotStartedErrorTest.class);

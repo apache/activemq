@@ -25,7 +25,10 @@ import org.apache.activemq.command.ActiveMQTopic;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
+@Category(ParallelTest.class)
 public class NetworkDestinationFilterTest extends TestCase {
 
     public void testFilter() throws Exception {

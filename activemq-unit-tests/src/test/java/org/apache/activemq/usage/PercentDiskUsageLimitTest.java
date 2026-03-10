@@ -34,6 +34,8 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  *
@@ -42,6 +44,7 @@ import org.slf4j.LoggerFactory;
  * because another process uses up disk space.
  *
  */
+@Category(ParallelTest.class)
 public class PercentDiskUsageLimitTest {
     protected static final Logger LOG = LoggerFactory
             .getLogger(PercentDiskUsageLimitTest.class);

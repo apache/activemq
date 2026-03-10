@@ -22,10 +22,13 @@ import jakarta.jms.MessageProducer;
 import jakarta.jms.TextMessage;
 
 import org.apache.activemq.command.ActiveMQTopic;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * 
  */
+@Category(ParallelTest.class)
 public class RetroactiveConsumerTestWithLastImagePolicyWithWildcardTest extends RetroactiveConsumerTestWithSimpleMessageListTest {
     private int counter = 1;
 

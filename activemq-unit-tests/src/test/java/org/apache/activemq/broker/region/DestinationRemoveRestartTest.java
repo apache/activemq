@@ -20,8 +20,11 @@ import junit.framework.Test;
 import org.apache.activemq.CombinationTestSupport;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQDestination;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 // from https://issues.apache.org/activemq/browse/AMQ-2216
+@Category(ParallelTest.class)
 public class DestinationRemoveRestartTest extends CombinationTestSupport {
     private final static String destinationName = "TEST";
     public byte destinationType = ActiveMQDestination.QUEUE_TYPE;

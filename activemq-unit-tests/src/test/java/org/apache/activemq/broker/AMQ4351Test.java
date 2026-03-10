@@ -34,6 +34,8 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * Implements the test case attached to:
@@ -41,6 +43,7 @@ import java.util.concurrent.atomic.AtomicLong;
  *
  * This version avoids the spring deps.
  */
+@Category(ParallelTest.class)
 public class AMQ4351Test extends BrokerTestSupport {
 
     private static final Logger LOG = LoggerFactory.getLogger(AMQ4351Test.class);

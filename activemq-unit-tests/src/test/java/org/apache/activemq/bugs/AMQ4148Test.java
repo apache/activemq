@@ -29,6 +29,8 @@ import org.apache.activemq.network.DemandForwardingBridgeSupport;
 import org.apache.activemq.network.NetworkConnector;
 import org.apache.activemq.util.Wait;
 import org.junit.Assert;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * This test demonstrates a bug in {@link DemandForwardingBridgeSupport} whereby
@@ -36,6 +38,7 @@ import org.junit.Assert;
  * though the network TTL is 1. This results in duplicate subscriptions on
  * broker3.
  */
+@Category(ParallelTest.class)
 public class AMQ4148Test extends JmsMultipleBrokersTestSupport {
 
     public void test() throws Exception {

@@ -32,7 +32,10 @@ import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.spring.ConsumerBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
+@Category(ParallelTest.class)
 public class VirtualTopicSelectorTest extends CompositeTopicTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(VirtualTopicSelectorTest.class);

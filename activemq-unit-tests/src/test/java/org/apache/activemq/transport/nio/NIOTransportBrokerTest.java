@@ -19,7 +19,10 @@ package org.apache.activemq.transport.nio;
 import junit.framework.Test;
 import junit.textui.TestRunner;
 import org.apache.activemq.transport.TransportBrokerTestSupport;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
+@Category(ParallelTest.class)
 public class NIOTransportBrokerTest extends TransportBrokerTestSupport {
 
     protected String getBindLocation() {

@@ -21,7 +21,10 @@ import junit.framework.Test;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
+@Category(ParallelTest.class)
 public class SimpleAuthenticationPluginSeparatorTest extends SimpleAuthenticationPluginTest {
 
     public static Test suite() {

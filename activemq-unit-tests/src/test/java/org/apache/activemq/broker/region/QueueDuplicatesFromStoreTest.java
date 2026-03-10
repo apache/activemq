@@ -54,11 +54,14 @@ import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * @author gtully
  * @see https://issues.apache.org/activemq/browse/AMQ-2020
  **/
+@Category(ParallelTest.class)
 public class QueueDuplicatesFromStoreTest extends TestCase {
     private static final Logger LOG = LoggerFactory
             .getLogger(QueueDuplicatesFromStoreTest.class);

@@ -33,10 +33,13 @@ import org.apache.activemq.test.TestSupport;
 import org.apache.activemq.util.IdGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * 
  */
+@Category(ParallelTest.class)
 public class TopicRedeliverTest extends TestSupport {
 
     private static final Logger LOG = LoggerFactory.getLogger(TopicRedeliverTest.class);

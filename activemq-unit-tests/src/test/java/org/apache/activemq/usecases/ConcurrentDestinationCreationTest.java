@@ -34,7 +34,10 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
+@Category(ParallelTest.class)
 public class ConcurrentDestinationCreationTest extends org.apache.activemq.TestSupport {
     private static final Logger LOG = LoggerFactory.getLogger(ConcurrentDestinationCreationTest.class);
     BrokerService broker;

@@ -50,7 +50,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
+@Category(ParallelTest.class)
 public class DestinationGCStressTest {
 
     protected static final Logger logger = LoggerFactory.getLogger(DestinationGCStressTest.class);

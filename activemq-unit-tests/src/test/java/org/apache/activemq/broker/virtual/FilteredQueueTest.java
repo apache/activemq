@@ -17,10 +17,13 @@
 package org.apache.activemq.broker.virtual;
 
 import org.apache.activemq.spring.ConsumerBean;
+import org.junit.experimental.categories.Category;
+import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * 
  */
+@Category(ParallelTest.class)
 public class FilteredQueueTest extends CompositeQueueTest {
 
     @Override

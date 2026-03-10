@@ -17,10 +17,13 @@
 package org.apache.activemq.transport.auto.nio;
 
 import org.apache.activemq.transport.nio.NIOJmsSendAndReceiveTest;
+import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.experimental.categories.Category;
 
 /**
  *
  */
+@Category(ParallelTest.class)
 public class AutoNIOJmsSendAndReceiveTest extends NIOJmsSendAndReceiveTest {
 
     @Override

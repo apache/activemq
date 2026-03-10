@@ -22,11 +22,13 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.transport.nio.SelectorManager;
 import org.apache.activemq.util.Wait;
+import org.apache.activemq.test.annotations.ParallelTest;
 import org.junit.After;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import org.junit.experimental.categories.Category;
 
 import jakarta.jms.Connection;
 import jakarta.jms.JMSException;
@@ -46,6 +48,7 @@ import static org.junit.Assert.*;
 
 //Test for AMQ-8142
 @RunWith(value = Parameterized.class)
+@Category(ParallelTest.class)
 public class MaxFrameSizeEnabledTest {
 
     public static final String KEYSTORE_TYPE = "jks";
