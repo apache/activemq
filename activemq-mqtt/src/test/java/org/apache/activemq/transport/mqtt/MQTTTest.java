@@ -1640,7 +1640,7 @@ public class MQTTTest extends MQTTTestSupport {
         assertEquals("Should have received " + topics.length + " messages", topics.length, received);
     }
 
-    @Test(timeout = 60 * 1000)
+    @Test(timeout = 2 * 60 * 1000)
     public void testReceiveMessageSentWhileOffline() throws Exception {
         final byte[] payload = new byte[1024 * 32];
         for (int i = 0; i < payload.length; i++) {
@@ -1679,36 +1679,38 @@ public class MQTTTest extends MQTTTestSupport {
         // Wait for broker to process disconnect before publishing messages for offline delivery.
         assertTrue("Subscription should become inactive",
                 Wait.waitFor(() -> isSubscriptionInactive(topics[0], mqttSub.getClientId().toString()),
-                        TimeUnit.SECONDS.toMillis(5), 100));
+                        TimeUnit.SECONDS.toMillis(10), 100));
 
-        try {
-            for (int j = 0; j < numberOfRuns; j++) {
+        for (int j = 0; j < numberOfRuns; j++) {
 
-                for (int i = 0; i < messagesPerRun; ++i) {
-                    connectionPub.publish(topics[0].name().toString(), payload, QoS.AT_LEAST_ONCE, false);
-                }
-
-                connectionSub = mqttSub.blockingConnection();
-                connectionSub.connect();
-                connectionSub.subscribe(topics);
-
-                for (int i = 0; i < messagesPerRun; ++i) {
-                    Message message = connectionSub.receive(5, TimeUnit.SECONDS);
-                    assertNotNull(message);
-                    received++;
-                    assertTrue(Arrays.equals(payload, message.getPayload()));
-                    message.ack();
-                }
-                connectionSub.disconnect();
-
-                // Wait for broker to process disconnect before next iteration publishes
-                assertTrue("Subscription should become inactive",
-                        Wait.waitFor(() -> isSubscriptionInactive(topics[0], mqttSub.getClientId().toString()),
-                                TimeUnit.SECONDS.toMillis(5), 100));
+            for (int i = 0; i < messagesPerRun; ++i) {
+                connectionPub.publish(topics[0].name().toString(), payload, QoS.AT_LEAST_ONCE, false);
             }
-        } catch (Exception exception) {
-            LOG.error("unexpected exception", exception);
-            exception.printStackTrace();
+
+            connectionSub = mqttSub.blockingConnection();
+            connectionSub.connect();
+            connectionSub.subscribe(topics);
+
+            // Wait for broker to fully activate the subscription and start dispatching
+            // queued messages. subscribe() returns on SUBACK but broker processes the
+            // ConsumerInfo asynchronously, so messages may not be ready for dispatch yet.
+            assertTrue("Subscription should become active in run " + (j + 1),
+                    Wait.waitFor(() -> isSubscriptionActive(topics[0], mqttSub.getClientId().toString()),
+                            TimeUnit.SECONDS.toMillis(15), 100));
+
+            for (int i = 0; i < messagesPerRun; ++i) {
+                Message message = connectionSub.receive(5, TimeUnit.SECONDS);
+                assertNotNull("Should have received message " + (i + 1) + " of " + messagesPerRun + " in run " + (j + 1), message);
+                received++;
+                assertTrue(Arrays.equals(payload, message.getPayload()));
+                message.ack();
+            }
+            connectionSub.disconnect();
+
+            // Wait for broker to process disconnect before next iteration publishes
+            assertTrue("Subscription should become inactive",
+                    Wait.waitFor(() -> isSubscriptionInactive(topics[0], mqttSub.getClientId().toString()),
+                            TimeUnit.SECONDS.toMillis(10), 100));
         }
         assertEquals("Should have received " + (messagesPerRun * (numberOfRuns + 1)) + " messages", (messagesPerRun * (numberOfRuns + 1)), received);
     }
@@ -1724,6 +1726,20 @@ public class MQTTTest extends MQTTTestSupport {
         } else {
             return brokerService.getAdminView().getDurableTopicSubscribers().length == 0 &&
                    brokerService.getAdminView().getInactiveDurableTopicSubscribers().length == 1;
+        }
+    }
+
+    private boolean isSubscriptionActive(Topic topic, String clientId) throws Exception {
+        if (isVirtualTopicSubscriptionStrategy()) {
+            String queueName = buildVirtualTopicQueueName(topic, clientId);
+            try {
+                return getProxyToQueue(queueName).getConsumerCount() > 0;
+            } catch (Exception ignore) {
+                return false;
+            }
+        } else {
+            return brokerService.getAdminView().getDurableTopicSubscribers().length == 1 &&
+                   brokerService.getAdminView().getInactiveDurableTopicSubscribers().length == 0;
         }
     }
 
