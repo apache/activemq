@@ -26,7 +26,8 @@ import org.apache.activemq.util.IOExceptionSupport;
 
 public abstract class DiscoveryAgentFactory {
 
-    private static final FactoryFinder DISCOVERY_AGENT_FINDER = new FactoryFinder("META-INF/services/org/apache/activemq/transport/discoveryagent/");
+    private static final FactoryFinder<DiscoveryAgentFactory> DISCOVERY_AGENT_FINDER =
+            new FactoryFinder<>("META-INF/services/org/apache/activemq/transport/discoveryagent/", DiscoveryAgentFactory.class);
     private static final ConcurrentMap<String, DiscoveryAgentFactory> DISCOVERY_AGENT_FACTORYS = new ConcurrentHashMap<String, DiscoveryAgentFactory>();
 
     /**
@@ -43,7 +44,7 @@ public abstract class DiscoveryAgentFactory {
         if (daf == null) {
             // Try to load if from a META-INF property.
             try {
-                daf = (DiscoveryAgentFactory)DISCOVERY_AGENT_FINDER.newInstance(scheme);
+                daf = DISCOVERY_AGENT_FINDER.newInstance(scheme);
                 DISCOVERY_AGENT_FACTORYS.put(scheme, daf);
             } catch (Throwable e) {
                 throw IOExceptionSupport.create("DiscoveryAgent scheme NOT recognized: [" + scheme + "]", e);

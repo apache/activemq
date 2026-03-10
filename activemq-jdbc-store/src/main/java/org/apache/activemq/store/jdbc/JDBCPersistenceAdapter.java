@@ -75,10 +75,10 @@ import org.slf4j.LoggerFactory;
 public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements PersistenceAdapter {
 
     private static final Logger LOG = LoggerFactory.getLogger(JDBCPersistenceAdapter.class);
-    private static FactoryFinder adapterFactoryFinder = new FactoryFinder(
-        "META-INF/services/org/apache/activemq/store/jdbc/");
-    private static FactoryFinder lockFactoryFinder = new FactoryFinder(
-        "META-INF/services/org/apache/activemq/store/jdbc/lock/");
+    private static final FactoryFinder<JDBCAdapter> adapterFactoryFinder = new FactoryFinder<>(
+        "META-INF/services/org/apache/activemq/store/jdbc/", JDBCAdapter.class);
+    private static final FactoryFinder<Locker> lockFactoryFinder = new FactoryFinder<>(
+        "META-INF/services/org/apache/activemq/store/jdbc/lock/", Locker.class);
 
     public static final long DEFAULT_LOCK_KEEP_ALIVE_PERIOD = 30 * 1000;
 
@@ -456,7 +456,7 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
         return adapter;
     }
 
-    private Object loadAdapter(FactoryFinder finder, String kind) throws IOException {
+    private Object loadAdapter(FactoryFinder<?> finder, String kind) throws IOException {
         Object adapter = null;
         TransactionContext c = getTransactionContext();
         try {

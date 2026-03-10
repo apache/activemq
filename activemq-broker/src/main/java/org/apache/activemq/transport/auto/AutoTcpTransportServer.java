@@ -80,15 +80,17 @@ public class AutoTcpTransportServer extends TcpTransportServer {
     protected int maxConnectionThreadPoolSize = Integer.MAX_VALUE;
     protected int protocolDetectionTimeOut = 30000;
 
-    private static final FactoryFinder TRANSPORT_FACTORY_FINDER = new FactoryFinder("META-INF/services/org/apache/activemq/transport/");
+    private static final FactoryFinder<TransportFactory> TRANSPORT_FACTORY_FINDER =
+            new FactoryFinder<>("META-INF/services/org/apache/activemq/transport/", TransportFactory.class);
     private final ConcurrentMap<String, TransportFactory> transportFactories = new ConcurrentHashMap<String, TransportFactory>();
 
-    private static final FactoryFinder WIREFORMAT_FACTORY_FINDER = new FactoryFinder("META-INF/services/org/apache/activemq/wireformat/");
+    private static final FactoryFinder<WireFormatFactory> WIREFORMAT_FACTORY_FINDER =
+            new FactoryFinder<>("META-INF/services/org/apache/activemq/wireformat/", WireFormatFactory.class);
 
     public WireFormatFactory findWireFormatFactory(String scheme, Map<String, Map<String, Object>> options) throws IOException {
         WireFormatFactory wff = null;
         try {
-            wff = (WireFormatFactory)WIREFORMAT_FACTORY_FINDER.newInstance(scheme);
+            wff = WIREFORMAT_FACTORY_FINDER.newInstance(scheme);
             if (options != null) {
                 final Map<String, Object> wfOptions = new HashMap<>();
                 if (options.get(AutoTransportUtils.ALL) != null) {
@@ -117,7 +119,7 @@ public class AutoTcpTransportServer extends TcpTransportServer {
         if (tf == null) {
             // Try to load if from a META-INF property.
             try {
-                tf = (TransportFactory)TRANSPORT_FACTORY_FINDER.newInstance(scheme);
+                tf = TRANSPORT_FACTORY_FINDER.newInstance(scheme);
                 if (options != null) {
                     IntrospectionSupport.setProperties(tf, options);
                 }

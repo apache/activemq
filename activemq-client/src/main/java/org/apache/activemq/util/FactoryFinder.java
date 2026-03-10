@@ -20,14 +20,22 @@ import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
+import java.net.UnknownServiceException;
+import java.nio.file.Path;
+import java.security.Security;
+import java.util.Arrays;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.Properties;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.stream.Collectors;
 
 /**
  *
  */
-public class FactoryFinder {
+public class FactoryFinder<T> {
 
     /**
      * The strategy that the FactoryFinder uses to find load and instantiate Objects
@@ -44,51 +52,54 @@ public class FactoryFinder {
          * @param path the full service path
          * @return
          */
-        public Object create(String path) throws IllegalAccessException, InstantiationException, IOException, ClassNotFoundException;
+        Object create(String path) throws IllegalAccessException, InstantiationException, IOException, ClassNotFoundException;
 
+        @SuppressWarnings("unchecked")
+        default <T> T create(String path, Class<T> requiredType, Set<Class<? extends T>> allowedImpls)
+                throws IllegalAccessException, InstantiationException, IOException, ClassNotFoundException {
+            return (T) create(path);
+        }
     }
 
     /**
      * The default implementation of Object factory which works well in standalone applications.
      */
     protected static class StandaloneObjectFactory implements ObjectFactory {
-        final ConcurrentMap<String, Class> classMap = new ConcurrentHashMap<String, Class>();
+        final ConcurrentMap<String, Class<?>> classMap = new ConcurrentHashMap<>();
 
         @Override
-        public Object create(final String path) throws InstantiationException, IllegalAccessException, ClassNotFoundException, IOException {
-            Class clazz = classMap.get(path);
+        public Object create(final String path)
+                throws IllegalAccessException, InstantiationException, IOException, ClassNotFoundException {
+            throw new UnsupportedOperationException("Create is not supported without requiredType and allowed impls");
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        public <T> T create(String path, Class<T> requiredType, Set<Class<? extends T>> allowedImpls) throws InstantiationException, IllegalAccessException, ClassNotFoundException, IOException {
+            Class<?> clazz = classMap.get(path);
             if (clazz == null) {
                 clazz = loadClass(loadProperties(path));
+                // no reason to cache if invalid so validate before caching
+                validateClass(clazz, requiredType, allowedImpls);
                 classMap.put(path, clazz);
+            } else {
+                // Validate again (even for previously cached classes) in case
+                // a path is re-used with a different requiredType.
+                // This object factory is static and shared by all factory finder instances by default,
+                // so it would be possible (although probably a mistake) to use the same
+                // path again with a different requiredType in a different FactoryFinder
+                validateClass(clazz, requiredType, allowedImpls);
             }
-            
+
             try {
-               return clazz.getConstructor().newInstance();
+               return (T) clazz.getConstructor().newInstance();
             } catch (NoSuchMethodException | InvocationTargetException e) {
                throw new InstantiationException(e.getMessage());
             }
         }
 
-        static public Class loadClass(Properties properties) throws ClassNotFoundException, IOException {
-
-            String className = properties.getProperty("class");
-            if (className == null) {
-                throw new IOException("Expected property is missing: class");
-            }
-            Class clazz = null;
-            ClassLoader loader = Thread.currentThread().getContextClassLoader();
-            if (loader != null) {
-                try {
-                    clazz = loader.loadClass(className);
-                } catch (ClassNotFoundException e) {
-                    // ignore
-                }
-            }
-            if (clazz == null) {
-                clazz = FactoryFinder.class.getClassLoader().loadClass(className);
-            }
-
-            return clazz;
+        static Class<?> loadClass(Properties properties) throws ClassNotFoundException, IOException {
+            return FactoryFinder.loadClass(properties.getProperty("class"));
         }
 
         static public Properties loadProperties(String uri) throws IOException {
@@ -138,10 +149,41 @@ public class FactoryFinder {
     // Instance methods and properties
     // ================================================================
     private final String path;
+    private final Class<T> requiredType;
+    private final Set<Class<? extends T>> allowedImpls;
 
-    public FactoryFinder(String path) {
-        this.path = path;
+    public FactoryFinder(String path, Class<T> requiredType) {
+        this(path, requiredType, null);
     }
+
+    public FactoryFinder(String path, Class<T> requiredType, String allowedImpls) {
+        this.path = Objects.requireNonNull(path);
+        this.requiredType = Objects.requireNonNull(requiredType);
+        this.allowedImpls = loadAllowedImpls(requiredType, allowedImpls);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <T> Set<Class<? extends T>> loadAllowedImpls(Class<T> requiredType, String allowedImpls) {
+        // If allowedImpls is either null or an asterisk (allow all wild card) then set to null so we don't filter
+        // If allowedImpls is only an empty string we return an empty set meaning allow none
+        // Otherwise split/trim all values
+        return allowedImpls != null && !allowedImpls.equals("*") ?
+            Arrays.stream(allowedImpls.split("\\s*,\\s*"))
+                .filter(s -> !s.isEmpty())
+                .map(s -> {
+                    try {
+                        final Class<?> clazz = FactoryFinder.loadClass(s);
+                        if (!requiredType.isAssignableFrom(clazz)) {
+                            throw new IllegalArgumentException(
+                                    "Class " + clazz + " is not assignable to " + requiredType);
+                        }
+                        return (Class<? extends T>)clazz;
+                    } catch (ClassNotFoundException | IOException e) {
+                        throw new IllegalArgumentException(e);
+                    }
+                }).collect(Collectors.toUnmodifiableSet()) : null;
+    }
+
 
     /**
      * Creates a new instance of the given key
@@ -150,9 +192,71 @@ public class FactoryFinder {
      *                the factory name
      * @return a newly created instance
      */
-    public Object newInstance(String key) throws IllegalAccessException, InstantiationException, IOException, ClassNotFoundException {
-        return objectFactory.create(path+key);
+    public T newInstance(String key) throws IllegalAccessException, InstantiationException, IOException, ClassNotFoundException {
+        return objectFactory.create(resolvePath(key), requiredType, allowedImpls);
     }
 
+    Set<Class<? extends T>> getAllowedImpls() {
+        return allowedImpls;
+    }
+
+    Class<T> getRequiredType() {
+        return requiredType;
+    }
+
+    private String resolvePath(final String key) throws InstantiationException {
+        // Normalize the base path with the given key. This
+        // will resolve/remove any relative ".." sections of the path.
+        // Example: "/dir1/dir2/dir3/../file" becomes "/dir1/dir2/file"
+        final Path resolvedPath = Path.of(path).resolve(key).normalize();
+
+        // Validate the resoled path is still within the original defined
+        // root path and throw an error of it is not.
+        if (!resolvedPath.startsWith(path)) {
+            throw new InstantiationException("Provided key escapes the FactoryFinder configured directory");
+        }
+
+        return resolvedPath.toString();
+    }
+
+    public static String buildAllowedImpls(Class<?>...classes) {
+        return Arrays.stream(Objects.requireNonNull(classes, "List of allowed classes may not be null"))
+                .map(Class::getName).collect(Collectors.joining(","));
+    }
+
+    public static <T> void validateClass(Class<?> clazz, Class<T> requiredType,
+            Set<Class<? extends T>> allowedImpls) throws InstantiationException {
+        // Validate the loaded class is an allowed impl
+        if (allowedImpls != null && !allowedImpls.contains(clazz)) {
+            throw new InstantiationException("Class " + clazz + " is not an allowed implementation "
+                    + "of type " + requiredType);
+        }
+        // Validate the loaded class is a subclass of the right type
+        // The allowedImpls may not be used so also check requiredType. Even if set
+        // generics can be erased and this is an extra safety check
+        if (!requiredType.isAssignableFrom(clazz)) {
+            throw new InstantiationException("Class " + clazz + " is not assignable to " + requiredType);
+        }
+    }
+
+    static Class<?> loadClass(String className) throws ClassNotFoundException, IOException {
+        if (className == null) {
+            throw new IOException("Expected property is missing: class");
+        }
+        Class<?> clazz = null;
+        ClassLoader loader = Thread.currentThread().getContextClassLoader();
+        if (loader != null) {
+            try {
+                clazz = loader.loadClass(className);
+            } catch (ClassNotFoundException e) {
+                // ignore
+            }
+        }
+        if (clazz == null) {
+            clazz = FactoryFinder.class.getClassLoader().loadClass(className);
+        }
+
+        return clazz;
+    }
 
 }

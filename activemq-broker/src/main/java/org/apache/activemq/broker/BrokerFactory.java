@@ -31,14 +31,15 @@ import org.apache.activemq.util.IOExceptionSupport;
  */
 public final class BrokerFactory {
 
-    private static final FactoryFinder BROKER_FACTORY_HANDLER_FINDER = new FactoryFinder("META-INF/services/org/apache/activemq/broker/");
+    private static final FactoryFinder<BrokerFactoryHandler> BROKER_FACTORY_HANDLER_FINDER
+            = new FactoryFinder<>("META-INF/services/org/apache/activemq/broker/", BrokerFactoryHandler.class);
 
     private BrokerFactory() {        
     }
     
     public static BrokerFactoryHandler createBrokerFactoryHandler(String type) throws IOException {
         try {
-            return (BrokerFactoryHandler)BROKER_FACTORY_HANDLER_FINDER.newInstance(type);
+            return BROKER_FACTORY_HANDLER_FINDER.newInstance(type);
         } catch (Throwable e) {
             throw IOExceptionSupport.create("Could not load " + type + " factory:" + e, e);
         }
