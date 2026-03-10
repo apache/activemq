@@ -84,10 +84,12 @@ public class SyncSendPacketTimeoutTest {
         factory.setRequestTimeout(5000);
         try (ActiveMQConnection connection = (ActiveMQConnection) factory.createConnection()) {
             connection.start();
-            // Creating a session triggers syncSendPacket internally — should succeed within timeout
+            // Creating a session triggers syncSendPacket internally — should succeed within
+            // timeout
             try (Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-                 // Creating a consumer triggers syncSendPacket internally — should succeed within timeout
-                 MessageConsumer consumer = session.createConsumer(session.createQueue("TEST.QUEUE"))) {
+                    // Creating a consumer triggers syncSendPacket internally — should succeed
+                    // within timeout
+                    MessageConsumer consumer = session.createConsumer(session.createQueue("TEST.QUEUE"))) {
                 assertNotNull("Session should be created successfully", session);
                 assertNotNull("Consumer should be created successfully", consumer);
             }
@@ -100,8 +102,12 @@ public class SyncSendPacketTimeoutTest {
         // requestTimeout=0 means no timeout (default)
         try (ActiveMQConnection connection = (ActiveMQConnection) factory.createConnection()) {
             connection.start();
-            try (Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE)) {
+            try (Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+                    // Creating a consumer triggers syncSendPacket internally — should succeed
+                    // no timeout
+                    MessageConsumer consumer = session.createConsumer(session.createQueue("TEST.QUEUE"))) {
                 assertNotNull("Session should be created successfully with no timeout", session);
+                assertNotNull("Consumer should be created successfully", consumer);
             }
         }
     }
