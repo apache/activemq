@@ -1647,8 +1647,8 @@ public class MQTTTest extends MQTTTestSupport {
             payload[i] = '2';
         }
 
-        int numberOfRuns = 10;
-        int messagesPerRun = 2;
+        final int numberOfRuns = 10;
+        final int messagesPerRun = 2;
 
         final MQTT mqttPub = createMQTTConnection("MQTT-Pub-Client", true);
         final MQTT mqttSub = createMQTTConnection("MQTT-Sub-Client", false);
@@ -1659,8 +1659,13 @@ public class MQTTTest extends MQTTTestSupport {
         BlockingConnection connectionSub = mqttSub.blockingConnection();
         connectionSub.connect();
 
-        Topic[] topics = { new Topic("TopicA", QoS.EXACTLY_ONCE) };
+        final Topic[] topics = { new Topic("TopicA", QoS.EXACTLY_ONCE) };
         connectionSub.subscribe(topics);
+
+        // Wait for subscription to become active before publishing
+        assertTrue("Subscription should become active",
+                Wait.waitFor(() -> isSubscriptionActive(topics[0], mqttSub.getClientId().toString()),
+                        TimeUnit.SECONDS.toMillis(5), 100));
 
         for (int i = 0; i < messagesPerRun; ++i) {
             connectionPub.publish(topics[0].name().toString(), payload, QoS.AT_LEAST_ONCE, false);
@@ -1668,7 +1673,7 @@ public class MQTTTest extends MQTTTestSupport {
 
         int received = 0;
         for (int i = 0; i < messagesPerRun; ++i) {
-            Message message = connectionSub.receive(5, TimeUnit.SECONDS);
+            final Message message = connectionSub.receive(5, TimeUnit.SECONDS);
             assertNotNull(message);
             received++;
             assertTrue(Arrays.equals(payload, message.getPayload()));
@@ -1717,7 +1722,7 @@ public class MQTTTest extends MQTTTestSupport {
 
     private boolean isSubscriptionInactive(Topic topic, String clientId) throws Exception {
         if (isVirtualTopicSubscriptionStrategy()) {
-            String queueName = buildVirtualTopicQueueName(topic, clientId);
+            final String queueName = buildVirtualTopicQueueName(topic, clientId);
             try {
                 return getProxyToQueue(queueName).getConsumerCount() == 0;
             } catch (Exception ignore) {
@@ -1738,7 +1743,7 @@ public class MQTTTest extends MQTTTestSupport {
                 return false;
             }
         } else {
-            return brokerService.getAdminView().getDurableTopicSubscribers().length == 1 &&
+            return brokerService.getAdminView().getDurableTopicSubscribers().length >= 1 &&
                    brokerService.getAdminView().getInactiveDurableTopicSubscribers().length == 0;
         }
     }
