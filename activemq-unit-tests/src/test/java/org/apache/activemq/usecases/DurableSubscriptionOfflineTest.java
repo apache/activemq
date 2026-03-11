@@ -128,7 +128,7 @@ public class DurableSubscriptionOfflineTest extends DurableSubscriptionOfflineTe
         }
 
         assertTrue("messages enqueued to topic",
-            Wait.waitFor(() -> broker.getDestination(topic).getDestinationStatistics().getEnqueues().getCount() >= sent, 5000, 100));
+            Wait.waitFor(() -> broker.getDestination(topic).getDestinationStatistics().getEnqueues().getCount() >= 10, 5000, 100));
 
         session.close();
         con.close();
@@ -603,7 +603,7 @@ public class DurableSubscriptionOfflineTest extends DurableSubscriptionOfflineTe
         consumer.setMessageListener(listener);
 
         assertTrue("offline consumer got all messages",
-            Wait.waitFor(() -> listener.count >= sent, 5000, 100));
+            Wait.waitFor(() -> listener.count >= 10, 5000, 100));
 
         session.close();
         con.close();
@@ -629,7 +629,7 @@ public class DurableSubscriptionOfflineTest extends DurableSubscriptionOfflineTe
         // send messages
         con = createConnection();
         session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        final MessageProducer producer = session.createProducer(null);
+        MessageProducer producer = session.createProducer(null);
 
         final int sent = 10;
         for (int i = 0; i < sent; i++) {

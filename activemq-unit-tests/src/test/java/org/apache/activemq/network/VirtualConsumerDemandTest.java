@@ -1268,6 +1268,7 @@ public class VirtualConsumerDemandTest extends DynamicNetworkTestSupport {
         final Message test = localSession.createTextMessage("test");
         //wait for consumer demand to propagate to local broker
         final DestinationStatistics destinationStatistics = localBroker.getDestination(included).getDestinationStatistics();
+        final MessageConsumer bridgeConsumer = remoteSession.createDurableSubscriber(new ActiveMQTopic("include.test.bar.bridge"), "sub1");
         waitForConsumerCount(destinationStatistics, 1);
 
         includedProducer.send(test);
@@ -1341,13 +1342,9 @@ public class VirtualConsumerDemandTest extends DynamicNetworkTestSupport {
         final MessageProducer includedProducer = localSession.createProducer(included);
         final Message test = localSession.createTextMessage("test");
 
-        final MessageConsumer bridgeConsumer = remoteSession.createConsumer(new ActiveMQTopic("include.test.bar.bridge"));
-
-
         final DestinationStatistics destinationStatistics = localBroker.getDestination(included).getDestinationStatistics();
 
-        final MessageConsumer bridgeConsumer = remoteSession.createDurableSubscriber(
-                new ActiveMQTopic("include.test.bar.bridge"), "sub1");
+        final MessageConsumer bridgeConsumer = remoteSession.createDurableSubscriber(new ActiveMQTopic("include.test.bar.bridge"), "sub1");
         //wait for durable subscription demand to propagate
         waitForConsumerCount(destinationStatistics, 1);
 
