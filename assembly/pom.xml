@@ -703,5 +703,52 @@
         </plugins>
       </build>
     </profile>
+    <profile>
+      <id>docker</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>io.fabric8</groupId>
+            <artifactId>docker-maven-plugin</artifactId>
+            <version>0.45.1</version>
+            <configuration>
+              <images>
+                <image>
+                  <name>apache/activemq:${project.version}</name>
+                  <build>
+                    <dockerFile>${project.basedir}/src/docker/Dockerfile</dockerFile>
+                    <contextDir>${project.basedir}/src/docker</contextDir>
+                    <args>
+                      <activemq_dist>_TMP_/apache-activemq.tar.gz</activemq_dist>
+                    </args>
+                    <assembly>
+                      <name>_TMP_</name>
+                      <inline>
+                        <files>
+                          <file>
+                            <source>${project.build.directory}/apache-activemq-${project.version}-bin.tar.gz</source>
+                            <destName>apache-activemq.tar.gz</destName>
+                            <outputDirectory>.</outputDirectory>
+                          </file>
+                        </files>
+                      </inline>
+                    </assembly>
+                  </build>
+                </image>
+              </images>
+            </configuration>
+            <executions>
+              <execution>
+                <id>docker-build</id>
+                <phase>package</phase>
+                <goals>
+                  <goal>build</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
   </profiles>
 </project>
