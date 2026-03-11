@@ -123,24 +123,26 @@ public class DuplexNetworkMBeanTest {
 
     @Test
     public void testMbeanPresenceOnBrokerRestart() throws Exception {
-        // Start primary broker first to discover its ephemeral port
-        BrokerService broker = createBroker();
-        broker.start();
-        broker.waitUntilStarted();
-        final URI primaryBrokerURI = broker.getTransportConnectors().get(0).getConnectUri();
+        // Start primary broker briefly to discover its ephemeral port, then stop it
+        // so the networked broker starts with no active bridge (MBean count expectations
+        // assume the bridge is not yet connected on initial startup).
+        final BrokerService tempBroker = createBroker();
+        tempBroker.start();
+        tempBroker.waitUntilStarted();
+        final URI primaryBrokerURI = tempBroker.getTransportConnectors().get(0).getConnectUri();
+        tempBroker.stop();
+        tempBroker.waitUntilStopped();
 
-        // Create and start networked broker pointing at the primary's actual port
+        // Start networked broker - bridge cannot connect since primary is down
         final BrokerService networkedBroker = createNetworkedBroker(primaryBrokerURI);
+        BrokerService broker = null;
         try {
             networkedBroker.start();
             networkedBroker.waitUntilStarted();
             assertEquals(1, waitForMbeanCount(networkedBroker, "connector=networkConnectors", 1, 30000));
             assertEquals(0, countMbeans(networkedBroker, "connectionName"));
 
-            // Stop the primary broker, then restart it multiple times on the same port
-            broker.stop();
-            broker.waitUntilStopped();
-
+            // Restart the primary broker multiple times on the same port
             for (int i = 0; i < numRestarts; i++) {
                 broker = createBrokerOnPort(primaryBrokerURI);
                 try {
@@ -166,6 +168,10 @@ public class DuplexNetworkMBeanTest {
         } finally {
             networkedBroker.stop();
             networkedBroker.waitUntilStopped();
+            if (broker != null && !broker.isStopped()) {
+                broker.stop();
+                broker.waitUntilStopped();
+            }
         }
     }
 
@@ -240,13 +246,11 @@ public class DuplexNetworkMBeanTest {
         }
     }
 
-    private int countMbeans(final BrokerService broker, String type) throws Exception {
-        if (!type.contains("=")) {
-            type = type + "=*";
-        }
+    private int countMbeans(final BrokerService broker, final String type) throws Exception {
+        final String queryType = type.contains("=") ? type : type + "=*";
 
         final ObjectName beanName = new ObjectName("org.apache.activemq:type=Broker,brokerName="
-                + broker.getBrokerName() + "," + type + ",*");
+                + broker.getBrokerName() + "," + queryType + ",*");
 
         LOG.info("Query name: " + beanName);
         final Set<ObjectName> mbeans = mBeanServer.queryNames(beanName, null);
@@ -257,13 +261,11 @@ public class DuplexNetworkMBeanTest {
      * Waits up to {@code timeout} ms for the MBean count matching {@code type} to reach
      * the {@code expectedCount}. Returns the actual count found.
      */
-    private int waitForMbeanCount(final BrokerService broker, String type, final int expectedCount, final int timeout) throws Exception {
-        if (!type.contains("=")) {
-            type = type + "=*";
-        }
+    private int waitForMbeanCount(final BrokerService broker, final String type, final int expectedCount, final int timeout) throws Exception {
+        final String queryType = type.contains("=") ? type : type + "=*";
 
         final ObjectName beanName = new ObjectName("org.apache.activemq:type=Broker,brokerName="
-                + broker.getBrokerName() + "," + type + ",*");
+                + broker.getBrokerName() + "," + queryType + ",*");
 
         final int[] resultHolder = new int[1];
         final boolean found = Wait.waitFor(() -> {

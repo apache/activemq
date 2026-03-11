@@ -48,32 +48,28 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.Assert.assertEquals;
-import org.junit.experimental.categories.Category;
-import org.apache.activemq.test.annotations.ParallelTest;
+import static org.junit.Assert.assertTrue;
 
-@Category(ParallelTest.class)
 public class DuplicateFromStoreTest {
-    static Logger LOG = LoggerFactory.getLogger(DuplicateFromStoreTest.class);
-    String activemqURL;
-    BrokerService broker;
+    private static final Logger LOG = LoggerFactory.getLogger(DuplicateFromStoreTest.class);
+    private String activemqURL;
+    private BrokerService broker;
 
-    protected final static String DESTNAME = "TEST";
-    protected final static int NUM_PRODUCERS = 100;
-    protected final static int NUM_CONSUMERS = 20;
+    private static final String DESTNAME = "TEST";
+    private static final int NUM_PRODUCERS = 100;
+    private static final int NUM_CONSUMERS = 20;
 
-    protected final static int NUM_MSGS = 20000;
-    protected final static int CONSUMER_SLEEP = 0;
-    protected final static int PRODUCER_SLEEP = 10;
+    private static final int NUM_MSGS = 20000;
+    private static final int CONSUMER_SLEEP = 0;
+    private static final int PRODUCER_SLEEP = 10;
 
-    public static CountDownLatch producersFinished = new CountDownLatch(NUM_PRODUCERS);
-    public static CountDownLatch consumersFinished = new CountDownLatch(NUM_CONSUMERS );
+    private final CountDownLatch producersFinished = new CountDownLatch(NUM_PRODUCERS);
+    private final CountDownLatch consumersFinished = new CountDownLatch(NUM_CONSUMERS);
 
-    public AtomicInteger totalMessagesToSend = new AtomicInteger(NUM_MSGS);
-    public AtomicInteger totalMessagesSent = new AtomicInteger(NUM_MSGS);
+    private final AtomicInteger totalMessagesToSend = new AtomicInteger(NUM_MSGS);
+    private final AtomicInteger totalMessagesSent = new AtomicInteger(NUM_MSGS);
 
-    public AtomicInteger totalReceived = new AtomicInteger(0);
-
-    public int messageSize = 16*1000;
+    private final AtomicInteger totalReceived = new AtomicInteger(0);
 
 
     @Before
@@ -84,31 +80,31 @@ public class DuplicateFromStoreTest {
         broker.addConnector("tcp://0.0.0.0:0");
 
         // Create <policyEntry>
-        PolicyEntry policy = new PolicyEntry();
-        ActiveMQDestination dest = new ActiveMQQueue(">");
+        final PolicyEntry policy = new PolicyEntry();
+        final ActiveMQDestination dest = new ActiveMQQueue(">");
         policy.setDestination(dest);
         policy.setMemoryLimit(10 * 1024 * 1024); // 10 MB
         policy.setExpireMessagesPeriod(0);
         policy.setEnableAudit(false); // allow any duplicates from the store to bubble up to the q impl
         policy.setQueuePrefetch(100);
-        PolicyMap policies = new PolicyMap();
+        final PolicyMap policies = new PolicyMap();
         policies.put(dest, policy);
         broker.setDestinationPolicy(policies);
 
         // configure <systemUsage>
-        MemoryUsage memoryUsage = new MemoryUsage();
+        final MemoryUsage memoryUsage = new MemoryUsage();
         memoryUsage.setPercentOfJvmHeap(50);
 
-        StoreUsage storeUsage = new StoreUsage();
+        final StoreUsage storeUsage = new StoreUsage();
         storeUsage.setLimit(8 * 1024 * 1024 * 1024); // 8 gb
 
-        SystemUsage memoryManager = new SystemUsage();
+        final SystemUsage memoryManager = new SystemUsage();
         memoryManager.setMemoryUsage(memoryUsage);
         memoryManager.setStoreUsage(storeUsage);
         broker.setSystemUsage(memoryManager);
 
         // configure KahaDB persistence
-        PersistenceAdapter kahadb = new KahaDBStore();
+        final PersistenceAdapter kahadb = new KahaDBStore();
         ((KahaDBStore) kahadb).setConcurrentStoreAndDispatchQueues(true);
         broker.setPersistenceAdapter(kahadb);
 
@@ -131,16 +127,16 @@ public class DuplicateFromStoreTest {
         LOG.info("Testing for duplicate messages.");
 
         //create producer and consumer threads
-        ExecutorService producers = Executors.newFixedThreadPool(NUM_PRODUCERS);
-        ExecutorService consumers = Executors.newFixedThreadPool(NUM_CONSUMERS);
+        final ExecutorService producers = Executors.newFixedThreadPool(NUM_PRODUCERS);
+        final ExecutorService consumers = Executors.newFixedThreadPool(NUM_CONSUMERS);
 
         createOpenwireClients(producers, consumers);
 
         LOG.info("All producers and consumers got started. Awaiting their termination");
-        producersFinished.await(2, TimeUnit.MINUTES);
+        assertTrue("producers should finish", producersFinished.await(2, TimeUnit.MINUTES));
         LOG.info("All producers have terminated. remaining to send: " + totalMessagesToSend.get() + ", sent:" + totalMessagesSent.get());
 
-        consumersFinished.await(2, TimeUnit.MINUTES);
+        assertTrue("consumers should finish", consumersFinished.await(2, TimeUnit.MINUTES));
         LOG.info("All consumers have terminated.");
 
         producers.shutdownNow();
@@ -153,13 +149,13 @@ public class DuplicateFromStoreTest {
     }
 
 
-    protected void createOpenwireClients(ExecutorService producers, ExecutorService consumers) {
+    protected void createOpenwireClients(final ExecutorService producers, final ExecutorService consumers) {
         for (int i = 0; i < NUM_CONSUMERS; i++) {
             LOG.trace("Creating consumer for destination " + DESTNAME);
-            Consumer consumer = new Consumer(DESTNAME, false);
+            final Consumer consumer = new Consumer(DESTNAME, false);
             consumers.submit(consumer);
             // wait for consumer to signal it has fully initialized
-            synchronized(consumer.init) {
+            synchronized (consumer.init) {
                 try {
                     consumer.init.wait();
                 } catch (InterruptedException e) {
@@ -169,8 +165,8 @@ public class DuplicateFromStoreTest {
         }
 
         for (int i = 0; i < NUM_PRODUCERS; i++) {
-            LOG.trace("Creating producer for destination " + DESTNAME );
-            Producer producer = new Producer(DESTNAME, false, 0);
+            LOG.trace("Creating producer for destination " + DESTNAME);
+            final Producer producer = new Producer(DESTNAME, false, 0);
             producers.submit(producer);
         }
     }

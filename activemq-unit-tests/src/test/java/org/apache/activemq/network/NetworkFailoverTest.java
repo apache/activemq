@@ -76,8 +76,17 @@ public class NetworkFailoverTest extends TestCase {
         final MessageConsumer remoteConsumer = remoteSession.createConsumer(included);
         remoteConsumer.setMessageListener(msg -> {
             final TextMessage textMsg = (TextMessage) msg;
+            // Extract original text before try block so it's accessible in catch
+            // (clearBody()/setText() inside try modifies the message body)
+            String origText;
             try {
-                final String originalText = textMsg.getText();
+                origText = textMsg.getText();
+            } catch (JMSException e) {
+                LOG.warn("Failed to read original message text", e);
+                origText = "unknown";
+            }
+            final String originalText = origText;
+            try {
                 final String payload = "REPLY: " + originalText + ", " + textMsg.getJMSMessageID();
                 final Destination replyTo = msg.getJMSReplyTo();
                 textMsg.clearBody();
@@ -90,8 +99,8 @@ public class NetworkFailoverTest extends TestCase {
                 // Temp queue was removed during failover but not yet recreated.
                 // Track the unique original message text so duplicates don't double-count.
                 try {
-                    nedMessages.add(textMsg.getText());
-                    LOG.info("NED: " + textMsg.getJMSMessageID() + ", text: " + textMsg.getText());
+                    nedMessages.add(originalText);
+                    LOG.info("NED: " + textMsg.getJMSMessageID() + ", text: " + originalText);
                 } catch (JMSException e) {
                     e.printStackTrace();
                 }

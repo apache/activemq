@@ -527,6 +527,12 @@ public class VirtualConsumerDemandTest extends DynamicNetworkTestSupport {
                     }
                 }, 10000, 200));
 
+        //wait for the local broker's bridge to process the virtual destination update;
+        //the bridge removes the old demand subscription before adding the new one,
+        //so the consumer count transitions 1 -> 0 -> 1
+        Wait.waitFor(() -> destinationStatistics.getConsumers().getCount() == 0, 5000, 100);
+        waitForConsumerCount(destinationStatistics, 1);
+
         includedProducer.send(test);
 
         waitForDispatchFromLocalBroker(destinationStatistics, 2);
