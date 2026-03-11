@@ -123,6 +123,13 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     private BlobTransferPolicy blobTransferPolicy = new BlobTransferPolicy();
     private MessageTransformer transformer;
 
+    /**
+     * If set to true, strict Jakarta Messaging 3.1 compliance is enforced.
+     * This rejects non-standard property types (like Character) and forces
+     * legacy features like nestedMapAndListEnabled to false.
+     */
+    private boolean strictCompliance = false;
+
     private boolean disableTimeStampsByDefault;
     private boolean optimizedMessageDispatch = true;
     private long optimizeAcknowledgeTimeOut = 300;
@@ -135,7 +142,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     private int closeTimeout = 15000;
     private boolean useRetroactiveConsumer;
     private boolean exclusiveConsumer;
-    private boolean nestedMapAndListEnabled = false;
+    private boolean nestedMapAndListEnabled = true;
     private boolean alwaysSyncSend;
     private boolean watchTopicAdvisories = true;
     private int producerWindowSize = DEFAULT_PRODUCER_WINDOW_SIZE;
@@ -998,6 +1005,22 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
      */
     public void setNestedMapAndListEnabled(boolean structuredMapsEnabled) {
         this.nestedMapAndListEnabled = structuredMapsEnabled;
+    }
+
+    public boolean isStrictCompliance() {
+        return strictCompliance;
+    }
+
+    /**
+     * If this flag is set then the connection follows strict Jakarta Messaging
+     * compliance. Enabling this will automatically force nestedMapAndListEnabled to false.
+     */
+    public void setStrictCompliance(boolean strictCompliance) {
+        this.strictCompliance = strictCompliance;
+        if (strictCompliance) {
+            this.setNestedMapAndListEnabled(false);
+            LOG.info("Strict compliance enabled: nestedMapAndListEnabled has been forced to false to align with Jakarta specifications.");
+        }
     }
 
     public String getClientIDPrefix() {

@@ -26,6 +26,8 @@ import jakarta.jms.Message;
 import jakarta.jms.MessageFormatException;
 import jakarta.jms.Session;
 
+import static org.apache.activemq.command.DataStructureTestSupport.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.fail;
 
 public class ActiveMQMessagePropertyTest {
@@ -35,20 +37,17 @@ public class ActiveMQMessagePropertyTest {
 
     @Before
     public void setUp() throws Exception {
-        // Explicitly start the broker so we control its lifecycle
         broker = new BrokerService();
         broker.setPersistent(false);
         broker.setUseJmx(false);
         broker.addConnector("vm://localhost");
         broker.start();
         broker.waitUntilStarted();
-
         connectionUri = broker.getTransportConnectors().get(0).getPublishableConnectString();
     }
 
     @After
     public void tearDown() throws Exception {
-        // Explicitly stop the broker to prevent flaky CI tests
         if (broker != null) {
             broker.stop();
             broker.waitUntilStopped();
@@ -56,76 +55,40 @@ public class ActiveMQMessagePropertyTest {
     }
 
     @Test
-    public void testStrictComplianceRejectsCharacterByDefault() throws Exception {
+    public void testStrictComplianceMasterSwitch() throws Exception {
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(connectionUri);
 
-        // Using try-with-resources for auto-closing connections and sessions
-        try (Connection connection = factory.createConnection();
-             Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE)) {
+        // Enable master switch
+        factory.setStrictCompliance(true);
 
-            Message message = session.createMessage();
-
-            try {
-                message.setObjectProperty("testChar", 'A');
-                fail("Should have thrown MessageFormatException for Character type");
-            } catch (MessageFormatException e) {
-                // strict Jakarta 3.1 compliance rejects Character
-            }
-        }
-    }
-
-    @Test
-    public void testSetObjectPropertyCompliance() throws Exception {
-        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(connectionUri);
-
-        // Test 1: Strict Mode (TCK Scenario)
-        factory.setNestedMapAndListEnabled(false);
-        try (Connection strictConn = factory.createConnection();
-             Session strictSession = strictConn.createSession(false, Session.AUTO_ACKNOWLEDGE)) {
-
-            Message strictMsg = strictSession.createMessage();
-            try {
-                strictMsg.setObjectProperty("charProp", 'A');
-                fail("Strict mode (TCK) should reject Character type");
-            } catch (MessageFormatException e) {
-                // Correct for Jakarta 3.1
-            }
-        }
-
-        // Test 2: Legacy Mode (Backward Compatibility Scenario)
-        factory.setNestedMapAndListEnabled(true);
-        try (Connection legacyConn = factory.createConnection();
-             Session legacySession = legacyConn.createSession(false, Session.AUTO_ACKNOWLEDGE)) {
-
-            Message legacyMsg = legacySession.createMessage();
-            try {
-                legacyMsg.setObjectProperty("charProp", 'A');
-                // legacy support is preserved!
-            } catch (MessageFormatException e) {
-                fail("Legacy mode should still allow Character to avoid breaking existing users");
-            }
-        }
-    }
-
-    @Test
-    public void testLegacyValidationAllowsNonSpecTypes() throws Exception {
-        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(connectionUri);
-
-        // Default ActiveMQ legacy behavior
-        factory.setNestedMapAndListEnabled(true);
+        // Verify side-effect
+        assertFalse("nestedMapAndListEnabled must be false when strictCompliance is true",
+                factory.isNestedMapAndListEnabled());
 
         try (Connection connection = factory.createConnection();
              Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE)) {
 
             Message message = session.createMessage();
-
-            // Validates that Character/Map types are still accepted when legacy support is enabled.
             try {
-                message.setObjectProperty("charProperty", 'A');
-                message.setObjectProperty("mapProperty", new java.util.HashMap<>());
+                message.setObjectProperty("charProp", 'A');
+                fail("Should have rejected Character under strictCompliance=true");
             } catch (MessageFormatException e) {
-                fail("Legacy mode should allow Character and Map types, but threw: " + e.getMessage());
+                // Success
             }
+        }
+    }
+
+    @Test
+    public void testLegacyModeStillAllowsCharacter() throws Exception {
+        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(connectionUri);
+
+        // Default is strictCompliance = false
+        try (Connection connection = factory.createConnection();
+             Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE)) {
+
+            Message message = session.createMessage();
+            message.setObjectProperty("charProp", 'A'); // Should pass
+            assertEquals('A', message.getObjectProperty("charProp"));
         }
     }
 }

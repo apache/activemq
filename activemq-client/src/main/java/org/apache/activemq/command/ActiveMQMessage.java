@@ -533,6 +533,13 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
         if (!valid) {
 
             ActiveMQConnection conn = getConnection();
+
+            // Jakarta 3.1 Compliance: If strictCompliance is enabled, only allow standard types.
+            // This acts as the "Master Switch" and overrides legacy behavior.
+            if (conn != null && conn.isStrictCompliance()) {
+                throw new MessageFormatException("Only objectified primitive objects and String types are allowed when strictCompliance is enabled but was: " + value + " type: " + value.getClass());
+            }
+
             // conn is null if we are in the broker rather than a JMS client
             if (conn == null || conn.isNestedMapAndListEnabled()) {
                 // Standard rules: only primitives and Strings are allowed
