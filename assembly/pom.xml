@@ -718,6 +718,12 @@
                   <build>
                     <dockerFile>${project.basedir}/src/docker/Dockerfile</dockerFile>
                     <contextDir>${project.basedir}/src/docker</contextDir>
+                    <buildx>
+                      <platforms>
+                        <platform>linux/amd64</platform>
+                        <platform>linux/arm64</platform>
+                      </platforms>
+                    </buildx>
                     <args>
                       <activemq_dist>_TMP_/apache-activemq.tar.gz</activemq_dist>
                     </args>
