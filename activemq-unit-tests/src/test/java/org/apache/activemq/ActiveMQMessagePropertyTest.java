@@ -16,69 +16,116 @@
  */
 package org.apache.activemq;
 
+import org.apache.activemq.broker.BrokerService;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
 import jakarta.jms.Connection;
 import jakarta.jms.Message;
 import jakarta.jms.MessageFormatException;
 import jakarta.jms.Session;
-import org.junit.Test;
+
 import static org.junit.Assert.fail;
 
 public class ActiveMQMessagePropertyTest {
 
+    private BrokerService broker;
+    private String connectionUri;
+
+    @Before
+    public void setUp() throws Exception {
+        // Explicitly start the broker so we control its lifecycle
+        broker = new BrokerService();
+        broker.setPersistent(false);
+        broker.setUseJmx(false);
+        broker.addConnector("vm://localhost");
+        broker.start();
+        broker.waitUntilStarted();
+
+        connectionUri = broker.getTransportConnectors().get(0).getPublishableConnectString();
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        // Explicitly stop the broker to prevent flaky CI tests
+        if (broker != null) {
+            broker.stop();
+            broker.waitUntilStopped();
+        }
+    }
+
+    @Test
+    public void testStrictComplianceRejectsCharacterByDefault() throws Exception {
+        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(connectionUri);
+
+        // Using try-with-resources for auto-closing connections and sessions
+        try (Connection connection = factory.createConnection();
+             Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE)) {
+
+            Message message = session.createMessage();
+
+            try {
+                message.setObjectProperty("testChar", 'A');
+                fail("Should have thrown MessageFormatException for Character type");
+            } catch (MessageFormatException e) {
+                // strict Jakarta 3.1 compliance rejects Character
+            }
+        }
+    }
+
     @Test
     public void testSetObjectPropertyCompliance() throws Exception {
-        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("vm://localhost?broker.persistent=false");
+        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(connectionUri);
 
         // Test 1: Strict Mode (TCK Scenario)
         factory.setNestedMapAndListEnabled(false);
-        Connection strictConn = factory.createConnection();
-        Session strictSession = strictConn.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        Message strictMsg = strictSession.createMessage();
+        try (Connection strictConn = factory.createConnection();
+             Session strictSession = strictConn.createSession(false, Session.AUTO_ACKNOWLEDGE)) {
 
-        try {
-            strictMsg.setObjectProperty("charProp", 'A');
-            fail("Strict mode (TCK) should reject Character type");
-        } catch (MessageFormatException e) {
-            // Correct for Jakarta 3.1
+            Message strictMsg = strictSession.createMessage();
+            try {
+                strictMsg.setObjectProperty("charProp", 'A');
+                fail("Strict mode (TCK) should reject Character type");
+            } catch (MessageFormatException e) {
+                // Correct for Jakarta 3.1
+            }
         }
-        strictConn.close();
 
         // Test 2: Legacy Mode (Backward Compatibility Scenario)
         factory.setNestedMapAndListEnabled(true);
-        Connection legacyConn = factory.createConnection();
-        Session legacySession = legacyConn.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        Message legacyMsg = legacySession.createMessage();
+        try (Connection legacyConn = factory.createConnection();
+             Session legacySession = legacyConn.createSession(false, Session.AUTO_ACKNOWLEDGE)) {
 
-        try {
-            legacyMsg.setObjectProperty("charProp", 'A');
-            // legacy support is preserved!
-        } catch (MessageFormatException e) {
-            fail("Legacy mode should still allow Character to avoid breaking existing users");
+            Message legacyMsg = legacySession.createMessage();
+            try {
+                legacyMsg.setObjectProperty("charProp", 'A');
+                // legacy support is preserved!
+            } catch (MessageFormatException e) {
+                fail("Legacy mode should still allow Character to avoid breaking existing users");
+            }
         }
-        legacyConn.close();
     }
 
     @Test
     public void testLegacyValidationAllowsNonSpecTypes() throws Exception {
-        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("vm://localhost?broker.persistent=false");
+        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(connectionUri);
 
         // Default ActiveMQ legacy behavior
         factory.setNestedMapAndListEnabled(true);
 
-        Connection connection = factory.createConnection();
-        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        Message message = session.createMessage();
+        try (Connection connection = factory.createConnection();
+             Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE)) {
 
-        // Validates that Character/Map types are still accepted when legacy support is enabled.
-        try {
-            message.setObjectProperty("charProperty", 'A');
-            message.setObjectProperty("mapProperty", new java.util.HashMap<>());
-        } catch (MessageFormatException e) {
-            fail("Legacy mode should allow Character and Map types, but threw: " + e.getMessage());
+            Message message = session.createMessage();
+
+            // Validates that Character/Map types are still accepted when legacy support is enabled.
+            try {
+                message.setObjectProperty("charProperty", 'A');
+                message.setObjectProperty("mapProperty", new java.util.HashMap<>());
+            } catch (MessageFormatException e) {
+                fail("Legacy mode should allow Character and Map types, but threw: " + e.getMessage());
+            }
         }
-
-        connection.close();
     }
-
-
 }
