@@ -257,6 +257,16 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
     }
 
     /**
+     * Sends a message using the default delivery mode, priority and time to live,
+     * notifying the specified {@code CompletionListener} when the send has completed.
+     *
+     * <p><b>Implementation note:</b> the current ActiveMQ Classic implementation performs the
+     * send synchronously and then invokes the {@code CompletionListener} on a separate thread.
+     * This is explicitly permitted by the JMS 2.0 specification (section 7.3).
+     * A future version may implement fully asynchronous sending; application code that follows
+     * the specification will be compatible with both behaviours.
+     * For high-throughput asynchronous sending outside the JMS specification, see
+     * {@link ActiveMQMessageProducer#send(Destination, Message, AsyncCallback)}.
      *
      * @param message the message to send
      * @param completionListener to callback
@@ -280,6 +290,23 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
                 getDisableMessageID(), getDisableMessageTimestamp(), completionListener);
     }
 
+    /**
+     * Sends a message with the specified delivery mode, priority and time to live,
+     * notifying the specified {@code CompletionListener} when the send has completed.
+     *
+     * <p><b>Implementation note:</b> the current ActiveMQ Classic implementation performs the
+     * send synchronously and then invokes the {@code CompletionListener} on a separate thread.
+     * See {@link #send(Message, CompletionListener)} for details.
+     *
+     * @param message the message to send
+     * @param deliveryMode the delivery mode to use
+     * @param priority the priority for this message
+     * @param timeToLive the message's lifetime (in milliseconds)
+     * @param completionListener to callback
+     * @throws JMSException if the JMS provider fails to send the message due to some internal error.
+     * @throws UnsupportedOperationException if called on an anonymous producer (no fixed destination)
+     * @since 2.0
+     */
     @Override
     public void send(Message message, int deliveryMode, int priority, long timeToLive,
                       CompletionListener completionListener) throws JMSException {
@@ -296,6 +323,23 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
                 getDisableMessageID(), getDisableMessageTimestamp(), completionListener);
     }
 
+    /**
+     * Sends a message to the specified destination using the default delivery mode, priority
+     * and time to live, notifying the specified {@code CompletionListener} when the send
+     * has completed.
+     *
+     * <p><b>Implementation note:</b> the current ActiveMQ Classic implementation performs the
+     * send synchronously and then invokes the {@code CompletionListener} on a separate thread.
+     * See {@link #send(Message, CompletionListener)} for details.
+     *
+     * @param destination the destination to send this message to
+     * @param message the message to send
+     * @param completionListener to callback
+     * @throws JMSException if the JMS provider fails to send the message due to some internal error.
+     * @throws UnsupportedOperationException if called on a producer with a fixed destination
+     * @throws InvalidDestinationException if a null destination is specified
+     * @since 2.0
+     */
     @Override
     public void send(Destination destination, Message message, CompletionListener completionListener) throws JMSException {
         checkClosed();
@@ -313,6 +357,26 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
                 getDisableMessageID(), getDisableMessageTimestamp(), completionListener);
     }
 
+    /**
+     * Sends a message to the specified destination with the specified delivery mode, priority
+     * and time to live, notifying the specified {@code CompletionListener} when the send
+     * has completed.
+     *
+     * <p><b>Implementation note:</b> the current ActiveMQ Classic implementation performs the
+     * send synchronously and then invokes the {@code CompletionListener} on a separate thread.
+     * See {@link #send(Message, CompletionListener)} for details.
+     *
+     * @param destination the destination to send this message to
+     * @param message the message to send
+     * @param deliveryMode the delivery mode to use
+     * @param priority the priority for this message
+     * @param timeToLive the message's lifetime (in milliseconds)
+     * @param completionListener to callback
+     * @throws JMSException if the JMS provider fails to send the message due to some internal error.
+     * @throws UnsupportedOperationException if called on a producer with a fixed destination
+     * @throws InvalidDestinationException if a null destination is specified
+     * @since 2.0
+     */
     @Override
     public void send(Destination destination, Message message, int deliveryMode, int priority, long timeToLive,
                      CompletionListener completionListener) throws JMSException {
@@ -333,6 +397,26 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
                 getDisableMessageID(), getDisableMessageTimestamp(), completionListener);
     }
 
+    /**
+     * Sends a message to the specified destination with full control over delivery parameters,
+     * notifying the specified {@code CompletionListener} when the send has completed.
+     *
+     * <p><b>Implementation note:</b> the current ActiveMQ Classic implementation performs the
+     * send synchronously and then invokes the {@code CompletionListener} on a separate thread.
+     * See {@link #send(Message, CompletionListener)} for details.
+     *
+     * @param destination the destination to send this message to
+     * @param message the message to send
+     * @param deliveryMode the delivery mode to use
+     * @param priority the priority for this message
+     * @param timeToLive the message's lifetime (in milliseconds)
+     * @param disableMessageID whether to disable setting the message ID
+     * @param disableMessageTimestamp whether to disable setting the message timestamp
+     * @param completionListener to callback
+     * @throws JMSException if the JMS provider fails to send the message due to some internal error.
+     * @throws UnsupportedOperationException if called on a producer with a fixed destination
+     * @throws InvalidDestinationException if a null destination is specified
+     */
     public void send(Destination destination, Message message, int deliveryMode, int priority, long timeToLive,
                      boolean disableMessageID, boolean disableMessageTimestamp,
                      CompletionListener completionListener) throws JMSException {
