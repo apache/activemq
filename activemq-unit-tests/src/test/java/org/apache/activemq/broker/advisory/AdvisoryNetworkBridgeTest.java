@@ -26,6 +26,7 @@ import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.BrokerInfo;
+import org.apache.activemq.util.Wait;
 
 import java.net.URI;
 
@@ -38,26 +39,24 @@ public class AdvisoryNetworkBridgeTest extends TestCase {
     public void testAdvisory() throws Exception {
         createBroker1();
 
-        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("vm://broker1");
-        Connection conn = factory.createConnection();
-        Session sess = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        final ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("vm://broker1");
+        final Connection conn = factory.createConnection();
+        final Session sess = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
         conn.start();
-        MessageConsumer consumer = sess.createConsumer(AdvisorySupport.getNetworkBridgeAdvisoryTopic());
-        
-        Thread.sleep(1000);
+        final MessageConsumer consumer = sess.createConsumer(AdvisorySupport.getNetworkBridgeAdvisoryTopic());
 
         createBroker2();
-        
-        ActiveMQMessage advisory = (ActiveMQMessage)consumer.receive(2000);
+
+        ActiveMQMessage advisory = (ActiveMQMessage)consumer.receive(5000);
         assertNotNull(advisory);
         assertTrue(advisory.getDataStructure() instanceof BrokerInfo);
         assertTrue(advisory.getBooleanProperty("started"));
         assertCreatedByDuplex(advisory.getBooleanProperty("createdByDuplex"));
-        
+
         broker2.stop();
         broker2.waitUntilStopped();
 
-        advisory = (ActiveMQMessage)consumer.receive(2000);
+        advisory = (ActiveMQMessage)consumer.receive(5000);
         assertNotNull(advisory);
         assertTrue(advisory.getDataStructure() instanceof BrokerInfo);
         assertFalse(advisory.getBooleanProperty("started"));
@@ -70,15 +69,18 @@ public class AdvisoryNetworkBridgeTest extends TestCase {
 
         createBroker2();
 
-        Thread.sleep(1000);
+        // Wait for the network bridge to be established
+        assertTrue("network bridge started",
+            Wait.waitFor(() -> !broker1.getNetworkConnectors().isEmpty()
+                && !broker1.getNetworkConnectors().get(0).activeBridges().isEmpty(), 10000, 100));
 
-        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("vm://broker1");
-        Connection conn = factory.createConnection();
-        Session sess = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        final ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("vm://broker1");
+        final Connection conn = factory.createConnection();
+        final Session sess = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
         conn.start();
         MessageConsumer consumer = sess.createConsumer(AdvisorySupport.getNetworkBridgeAdvisoryTopic());
 
-        ActiveMQMessage advisory = (ActiveMQMessage)consumer.receive(2000);
+        ActiveMQMessage advisory = (ActiveMQMessage)consumer.receive(5000);
         assertNotNull(advisory);
         assertTrue(advisory.getDataStructure() instanceof BrokerInfo);
         assertTrue(advisory.getBooleanProperty("started"));
@@ -87,7 +89,7 @@ public class AdvisoryNetworkBridgeTest extends TestCase {
         broker2.stop();
         broker2.waitUntilStopped();
 
-        advisory = (ActiveMQMessage)consumer.receive(2000);
+        advisory = (ActiveMQMessage)consumer.receive(5000);
         assertNotNull(advisory);
         assertTrue(advisory.getDataStructure() instanceof BrokerInfo);
         assertFalse(advisory.getBooleanProperty("started"));

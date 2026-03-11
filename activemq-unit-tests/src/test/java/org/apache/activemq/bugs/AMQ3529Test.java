@@ -31,10 +31,12 @@ import javax.naming.NamingException;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.util.Wait;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -135,11 +137,15 @@ public class AMQ3529Test {
             }
         };
         client.start();
-        Thread.sleep(5000);
+        // Wait for the client thread to be in a blocked receive() call
+        assertTrue("client thread entered receive()",
+            Wait.waitFor(() -> client.getState() == Thread.State.TIMED_WAITING, 10000, 100));
         client.interrupt();
         client.join();
-        Thread.sleep(2000);
-        Thread[] remainThreads = new Thread[tg.activeCount()];
+        // Wait for any remaining threads in the group to finish
+        assertTrue("all threads in group finished",
+            Wait.waitFor(() -> tg.activeCount() == 0, 10000, 100));
+        final Thread[] remainThreads = new Thread[tg.activeCount()];
         tg.enumerate(remainThreads);
         for (Thread t : remainThreads) {
             if (t.isAlive() && !t.isDaemon())

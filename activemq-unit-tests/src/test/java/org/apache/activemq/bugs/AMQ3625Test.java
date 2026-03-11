@@ -18,6 +18,7 @@ package org.apache.activemq.bugs;
 
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.util.Wait;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.core.LogEvent;
@@ -108,7 +109,9 @@ public class AMQ3625Test {
         connectURI = connectURI.replace("?needClientAuth=true", "?verifyHostName=false");
         broker2.addNetworkConnector("static:(" + connectURI + ")").start();
 
-        Thread.sleep(10 * 1000);
+        // Wait for the authentication failure to be logged
+        assertTrue("authentication failure should be logged",
+            Wait.waitFor(authenticationFailed::get, 15000, 200));
 
         logger.removeAppender(appender);
 

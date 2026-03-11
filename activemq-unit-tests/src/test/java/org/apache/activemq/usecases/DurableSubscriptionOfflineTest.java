@@ -43,6 +43,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -56,7 +57,7 @@ public class DurableSubscriptionOfflineTest extends DurableSubscriptionOfflineTe
 
     @Override
     protected ActiveMQConnectionFactory createConnectionFactory() throws Exception {
-        ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory("vm://" + getName(true));
+        final ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory("vm://" + getName(true));
         connectionFactory.setWatchTopicAdvisories(false);
         return connectionFactory;
     }
@@ -75,15 +76,15 @@ public class DurableSubscriptionOfflineTest extends DurableSubscriptionOfflineTe
         session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
         MessageProducer producer = session.createProducer(null);
 
-        int sent = 0;
-        for (int i = 0; i < 10; i++) {
-            sent++;
-            Message message = session.createMessage();
+        final int sent = 10;
+        for (int i = 0; i < sent; i++) {
+            final Message message = session.createMessage();
             message.setStringProperty("filter", "true");
             producer.send(topic, message);
         }
 
-        Thread.sleep(1 * 1000);
+        assertTrue("messages enqueued to topic",
+            Wait.waitFor(() -> broker.getDestination(topic).getDestinationStatistics().getEnqueues().getCount() >= 10, 5000, 100));
 
         session.close();
         con.close();
@@ -91,11 +92,14 @@ public class DurableSubscriptionOfflineTest extends DurableSubscriptionOfflineTe
         // consume messages
         con = createConnection();
         session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        MessageConsumer consumer = session.createDurableSubscriber(topic, "SubsId", "filter = 'true'", true);
-        DurableSubscriptionOfflineTestListener listener = new DurableSubscriptionOfflineTestListener();
+        final MessageConsumer consumer = session.createDurableSubscriber(topic, "SubsId", "filter = 'true'", true);
+        final DurableSubscriptionOfflineTestListener listener = new DurableSubscriptionOfflineTestListener();
         consumer.setMessageListener(listener);
 
-        Thread.sleep(3 * 1000);
+        // After unsubscribe and re-subscribe, no old messages should arrive.
+        // Wait briefly to confirm no messages are unexpectedly delivered.
+        assertFalse("no messages should be received after unsubscribe",
+            Wait.waitFor(() -> listener.count > 0, 2000, 100));
 
         session.close();
         con.close();
@@ -115,30 +119,31 @@ public class DurableSubscriptionOfflineTest extends DurableSubscriptionOfflineTe
         // send messages
         con = createConnection();
         session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        MessageProducer producer = session.createProducer(null);
+        final MessageProducer producer = session.createProducer(null);
 
         for (int i = 0; i < 10; i++) {
-            Message message = session.createMessage();
+            final Message message = session.createMessage();
             message.setStringProperty("filter", "true");
             producer.send(topic, message);
         }
 
-        Thread.sleep(1 * 1000);
+        assertTrue("messages enqueued to topic",
+            Wait.waitFor(() -> broker.getDestination(topic).getDestinationStatistics().getEnqueues().getCount() >= sent, 5000, 100));
 
         session.close();
         con.close();
 
         // browse the durable sub
-        ObjectName[] subs = broker.getAdminView().getInactiveDurableTopicSubscribers();
+        final ObjectName[] subs = broker.getAdminView().getInactiveDurableTopicSubscribers();
         assertEquals(1, subs.length);
-        ObjectName subName = subs[0];
-        DurableSubscriptionViewMBean sub = (DurableSubscriptionViewMBean)
+        final ObjectName subName = subs[0];
+        final DurableSubscriptionViewMBean sub = (DurableSubscriptionViewMBean)
                 broker.getManagementContext().newProxyInstance(subName, DurableSubscriptionViewMBean.class, true);
-        CompositeData[] data  = sub.browse();
+        final CompositeData[] data  = sub.browse();
         assertNotNull(data);
         assertEquals(10, data.length);
 
-        TabularData tabularData = sub.browseAsTable();
+        final TabularData tabularData = sub.browseAsTable();
         assertNotNull(tabularData);
         assertEquals(10, tabularData.size());
 
@@ -154,31 +159,32 @@ public class DurableSubscriptionOfflineTest extends DurableSubscriptionOfflineTe
         con.close();
 
         // create durable subscription 2
-        Connection con2 = createConnection("cliId2");
-        Session session2 = con2.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        MessageConsumer consumer2 = session2.createDurableSubscriber(topic, "SubsId", "filter = 'true'", true);
-        DurableSubscriptionOfflineTestListener listener2 = new DurableSubscriptionOfflineTestListener();
+        final Connection con2 = createConnection("cliId2");
+        final Session session2 = con2.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        final MessageConsumer consumer2 = session2.createDurableSubscriber(topic, "SubsId", "filter = 'true'", true);
+        final DurableSubscriptionOfflineTestListener listener2 = new DurableSubscriptionOfflineTestListener();
         consumer2.setMessageListener(listener2);
 
         // send messages
         con = createConnection();
         session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        MessageProducer producer = session.createProducer(null);
+        final MessageProducer producer = session.createProducer(null);
 
-        int sent = 0;
-        for (int i = 0; i < 10; i++) {
-            sent++;
-            Message message = session.createMessage();
+        final int sent = 10;
+        for (int i = 0; i < sent; i++) {
+            final Message message = session.createMessage();
             message.setStringProperty("filter", "true");
             producer.send(topic, message);
         }
 
-        Thread.sleep(1 * 1000);
+        assertTrue("messages enqueued to topic",
+            Wait.waitFor(() -> broker.getDestination(topic).getDestinationStatistics().getEnqueues().getCount() >= sent, 5000, 100));
         session.close();
         con.close();
 
         // test online subs
-        Thread.sleep(3 * 1000);
+        assertTrue("online subscriber got all messages",
+            Wait.waitFor(() -> listener2.count >= sent, 5000, 100));
         session2.close();
         con2.close();
 
@@ -187,11 +193,12 @@ public class DurableSubscriptionOfflineTest extends DurableSubscriptionOfflineTe
         // consume messages
         con = createConnection("cliId1");
         session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        MessageConsumer consumer = session.createDurableSubscriber(topic, "SubsId", "filter = 'true'", true);
-        DurableSubscriptionOfflineTestListener listener = new DurableSubscriptionOfflineTestListener();
+        final MessageConsumer consumer = session.createDurableSubscriber(topic, "SubsId", "filter = 'true'", true);
+        final DurableSubscriptionOfflineTestListener listener = new DurableSubscriptionOfflineTestListener();
         consumer.setMessageListener(listener);
 
-        Thread.sleep(3 * 1000);
+        assertTrue("all messages received by listener",
+            Wait.waitFor(() -> listener.count >= sent, 5000, 100));
 
         session.close();
         con.close();
@@ -201,7 +208,7 @@ public class DurableSubscriptionOfflineTest extends DurableSubscriptionOfflineTe
 
     @Test(timeout = 60 * 1000)
     public void testRemovedDurableSubDeletes() throws Exception {
-        String filter = "$a='A1' AND (($b=true AND $c=true) OR ($d='D1' OR $d='D2'))";
+        final String filter = "$a='A1' AND (($b=true AND $c=true) OR ($d='D1' OR $d='D2'))";
         // create durable subscription 1
         Connection con = createConnection("cliId1");
         Session session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -212,18 +219,19 @@ public class DurableSubscriptionOfflineTest extends DurableSubscriptionOfflineTe
         // send messages
         con = createConnection();
         session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        MessageProducer producer = session.createProducer(null);
+        final MessageProducer producer = session.createProducer(null);
 
         for (int i = 0; i < 10; i++) {
-            Message message = session.createMessage();
+            final Message message = session.createMessage();
             message.setStringProperty("filter", "true");
             producer.send(topic, message);
         }
 
-        Thread.sleep(1 * 1000);
+        assertTrue("messages enqueued to topic",
+            Wait.waitFor(() -> broker.getDestination(topic).getDestinationStatistics().getEnqueues().getCount() >= 10, 5000, 100));
 
-        Connection con2 = createConnection("cliId1");
-        Session session2 = con2.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        final Connection con2 = createConnection("cliId1");
+        final Session session2 = con2.createSession(false, Session.AUTO_ACKNOWLEDGE);
         session2.unsubscribe("SubsId");
         session2.close();
         con2.close();
@@ -232,8 +240,8 @@ public class DurableSubscriptionOfflineTest extends DurableSubscriptionOfflineTe
         topic = new ActiveMQTopic(topic.getPhysicalName() + "?consumer.retroactive=true");
         con = createConnection("offCli2");
         session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        MessageConsumer consumer = session.createDurableSubscriber(topic, "SubsId", filter, true);
-        DurableSubscriptionOfflineTestListener listener = new DurableSubscriptionOfflineTestListener();
+        final MessageConsumer consumer = session.createDurableSubscriber(topic, "SubsId", filter, true);
+        final DurableSubscriptionOfflineTestListener listener = new DurableSubscriptionOfflineTestListener();
         consumer.setMessageListener(listener);
         session.close();
         con.close();
@@ -249,8 +257,8 @@ public class DurableSubscriptionOfflineTest extends DurableSubscriptionOfflineTe
 
         final int numMessages = 2750;
 
-        KahaDBPersistenceAdapter kahaDBPersistenceAdapter = (KahaDBPersistenceAdapter)broker.getPersistenceAdapter();
-        PageFile pageFile = kahaDBPersistenceAdapter.getStore().getPageFile();
+        final KahaDBPersistenceAdapter kahaDBPersistenceAdapter = (KahaDBPersistenceAdapter)broker.getPersistenceAdapter();
+        final PageFile pageFile = kahaDBPersistenceAdapter.getStore().getPageFile();
         LOG.info("PageCount " + pageFile.getPageCount() + " f:" + pageFile.getFreePageCount() + ", fileSize:" + pageFile.getFile().length());
 
         long lastDiff = 0;
@@ -267,17 +275,17 @@ public class DurableSubscriptionOfflineTest extends DurableSubscriptionOfflineTe
             // send messages
             con = createConnection();
             session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
-            MessageProducer producer = session.createProducer(null);
+            final MessageProducer producer = session.createProducer(null);
 
             for (int i = 0; i < numMessages; i++) {
-                Message message = session.createMessage();
+                final Message message = session.createMessage();
                 message.setStringProperty("filter", "true");
                 producer.send(topic, message);
             }
             con.close();
 
-            Connection con2 = createConnection("cliId1" + "-" + repeats);
-            Session session2 = con2.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            final Connection con2 = createConnection("cliId1" + "-" + repeats);
+            final Session session2 = con2.createSession(false, Session.AUTO_ACKNOWLEDGE);
             session2.unsubscribe("SubsId");
             session2.close();
             con2.close();
@@ -310,23 +318,22 @@ public class DurableSubscriptionOfflineTest extends DurableSubscriptionOfflineTe
         // send messages
         con = createConnection();
         session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        MessageProducer producer = session.createProducer(null);
+        final MessageProducer producer = session.createProducer(null);
 
-        int sent = 0;
-        for (int i = 0; i < 10; i++) {
-            boolean filter = (int) (Math.random() * 2) >= 1;
+        final int sent = 10;
+        for (int i = 0; i < sent; i++) {
+            final boolean filter = (int) (Math.random() * 2) >= 1;
 
-            sent++;
-
-            Message message = session.createMessage();
+            final Message message = session.createMessage();
             message.setStringProperty("filter", filter ? "true" : "false");
             producer.send(topic, message);
         }
 
-        Thread.sleep(1 * 1000);
+        assertTrue("messages enqueued to topic",
+            Wait.waitFor(() -> broker.getDestination(topic).getDestinationStatistics().getEnqueues().getCount() >= sent, 5000, 100));
 
-        Connection con2 = createConnection("offCli1");
-        Session session2 = con2.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        final Connection con2 = createConnection("offCli1");
+        final Session session2 = con2.createSession(false, Session.AUTO_ACKNOWLEDGE);
         session2.unsubscribe("SubsId");
         session2.close();
         con2.close();
@@ -334,11 +341,12 @@ public class DurableSubscriptionOfflineTest extends DurableSubscriptionOfflineTe
         // consume all messages
         con = createConnection("offCli2");
         session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        MessageConsumer consumer = session.createDurableSubscriber(topic, "SubsId", null, true);
-        DurableSubscriptionOfflineTestListener listener = new DurableSubscriptionOfflineTestListener("SubsId");
+        final MessageConsumer consumer = session.createDurableSubscriber(topic, "SubsId", null, true);
+        final DurableSubscriptionOfflineTestListener listener = new DurableSubscriptionOfflineTestListener("SubsId");
         consumer.setMessageListener(listener);
 
-        Thread.sleep(3 * 1000);
+        assertTrue("offline consumer got all messages",
+            Wait.waitFor(() -> listener.count >= sent, 5000, 100));
 
         session.close();
         con.close();
@@ -361,7 +369,7 @@ public class DurableSubscriptionOfflineTest extends DurableSubscriptionOfflineTe
         }
 
         class CheckForDupsClient implements Runnable {
-            HashSet<Long> ids = new HashSet<Long>();
+            final HashSet<Long> ids = new HashSet<Long>();
             final int id;
 
             public CheckForDupsClient(int id) {
@@ -371,24 +379,24 @@ public class DurableSubscriptionOfflineTest extends DurableSubscriptionOfflineTe
             @Override
             public void run() {
                 try {
-                    Connection con = createConnection("cli" + id);
-                    Session session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
+                    final Connection con = createConnection("cli" + id);
+                    final Session session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
                     for (int j=0;j<2;j++) {
-                        MessageConsumer consumer = session.createDurableSubscriber(topic, "SubsId", null, true);
+                        final MessageConsumer consumer = session.createDurableSubscriber(topic, "SubsId", null, true);
                         for (int i = 0; i < messageCount/2; i++) {
-                            Message message = consumer.receive(4000);
+                            final Message message = consumer.receive(4000);
                             assertNotNull(message);
-                            long producerSequenceId = new MessageId(message.getJMSMessageID()).getProducerSequenceId();
+                            final long producerSequenceId = new MessageId(message.getJMSMessageID()).getProducerSequenceId();
                             assertTrue("ID=" + id + " not a duplicate: " + producerSequenceId, ids.add(producerSequenceId));
                         }
                         consumer.close();
                     }
 
                     // verify no duplicates left
-                    MessageConsumer consumer = session.createDurableSubscriber(topic, "SubsId", null, true);
-                    Message message = consumer.receive(4000);
+                    final MessageConsumer consumer = session.createDurableSubscriber(topic, "SubsId", null, true);
+                    final Message message = consumer.receive(4000);
                     if (message != null) {
-                        long producerSequenceId = new MessageId(message.getJMSMessageID()).getProducerSequenceId();
+                        final long producerSequenceId = new MessageId(message.getJMSMessageID()).getProducerSequenceId();
                         assertTrue("ID=" + id + " not a duplicate: " + producerSequenceId, ids.add(producerSequenceId));
                     }
                     assertNull(message);
@@ -406,23 +414,20 @@ public class DurableSubscriptionOfflineTest extends DurableSubscriptionOfflineTe
         final String payLoad = new String(new byte[1000]);
         con = createConnection();
         final Session sendSession = con.createSession(true, Session.SESSION_TRANSACTED);
-        MessageProducer producer = sendSession.createProducer(topic);
+        final MessageProducer producer = sendSession.createProducer(topic);
         for (int i = 0; i < messageCount; i++) {
             producer.send(sendSession.createTextMessage(payLoad));
         }
 
-        ExecutorService executorService = Executors.newCachedThreadPool();
+        final ExecutorService executorService = Executors.newCachedThreadPool();
 
         // concurrent commit and activate
-        executorService.execute(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    sendSession.commit();
-                } catch (JMSException e) {
-                    e.printStackTrace();
-                    exceptions.add(e);
-                }
+        executorService.execute(() -> {
+            try {
+                sendSession.commit();
+            } catch (JMSException e) {
+                e.printStackTrace();
+                exceptions.add(e);
             }
         });
         for (int i = 0; i < numConsumers; i++) {
@@ -484,21 +489,21 @@ public class DurableSubscriptionOfflineTest extends DurableSubscriptionOfflineTe
             public void run() {
                 try {
                     synchronized (this) {
-                        Connection con = clientFactory.createConnection();
+                        final Connection con = clientFactory.createConnection();
                         con.setClientID("cli" + id);
                         con.start();
-                        Session session = con.createSession(false, Session.CLIENT_ACKNOWLEDGE);
-                        MessageConsumer consumer = session.createDurableSubscriber(topic, "SubsId", null, true);
+                        final Session session = con.createSession(false, Session.CLIENT_ACKNOWLEDGE);
+                        final MessageConsumer consumer = session.createDurableSubscriber(topic, "SubsId", null, true);
                         int nextId = 0;
 
                         ++runCount;
                         int i=0;
                         for (; i < messageCount/2; i++) {
-                            Message message = consumer.receiveNoWait();
+                            final Message message = consumer.receiveNoWait();
                             if (message == null) {
                                 break;
                             }
-                            long producerSequenceId = new MessageId(message.getJMSMessageID()).getProducerSequenceId();
+                            final long producerSequenceId = new MessageId(message.getJMSMessageID()).getProducerSequenceId();
                             assertEquals(id + " expected order: runCount: " + runCount  + " id: " + message.getJMSMessageID(), ++nextId, producerSequenceId);
                         }
                         LOG.info(con.getClientID() + " peeked " + i);
@@ -512,15 +517,15 @@ public class DurableSubscriptionOfflineTest extends DurableSubscriptionOfflineTe
             }
         }
 
-        Runnable producer = new Runnable() {
+        final Runnable producerRunnable = new Runnable() {
             final String payLoad = new String(new byte[600]);
 
             @Override
             public void run() {
                 try {
-                    Connection con = createConnection();
+                    final Connection con = createConnection();
                     final Session sendSession = con.createSession(true, Session.SESSION_TRANSACTED);
-                    MessageProducer producer = sendSession.createProducer(topic);
+                    final MessageProducer producer = sendSession.createProducer(topic);
                     for (int i = 0; i < messageCount; i++) {
                         producer.send(sendSession.createTextMessage(payLoad));
                     }
@@ -535,7 +540,7 @@ public class DurableSubscriptionOfflineTest extends DurableSubscriptionOfflineTe
             }
         };
 
-        ExecutorService executorService = Executors.newCachedThreadPool();
+        final ExecutorService executorService = Executors.newCachedThreadPool();
 
         // concurrent commit and activate
         for (int i = 0; i < numConsumers; i++) {
@@ -544,7 +549,7 @@ public class DurableSubscriptionOfflineTest extends DurableSubscriptionOfflineTe
                 executorService.execute(client);
             }
         }
-        executorService.execute(producer);
+        executorService.execute(producerRunnable);
 
         executorService.shutdown();
         executorService.awaitTermination(5, TimeUnit.MINUTES);
@@ -565,21 +570,22 @@ public class DurableSubscriptionOfflineTest extends DurableSubscriptionOfflineTe
         // send messages
         con = createConnection();
         session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        MessageProducer producer = session.createProducer(null);
+        final MessageProducer producer = session.createProducer(null);
 
         int filtered = 0;
         for (int i = 0; i < 10; i++) {
-            boolean filter = (i %2 == 0); //(int) (Math.random() * 2) >= 1;
+            final boolean filter = (i %2 == 0); //(int) (Math.random() * 2) >= 1;
             if (filter)
                 filtered++;
 
-            Message message = session.createMessage();
+            final Message message = session.createMessage();
             message.setStringProperty("filter", filter ? "true" : "false");
             producer.send(topic, message);
         }
 
         LOG.info("sent: " + filtered);
-        Thread.sleep(1 * 1000);
+        assertTrue("messages enqueued to topic",
+            Wait.waitFor(() -> broker.getDestination(topic).getDestinationStatistics().getEnqueues().getCount() >= 10, 5000, 100));
         session.close();
         con.close();
 
@@ -592,11 +598,12 @@ public class DurableSubscriptionOfflineTest extends DurableSubscriptionOfflineTe
 
         con = createConnection("offCli1");
         session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        MessageConsumer consumer = session.createDurableSubscriber(topic, "SubsId", "filter = 'true'", true);
-        DurableSubscriptionOfflineTestListener listener = new DurableSubscriptionOfflineTestListener();
+        final MessageConsumer consumer = session.createDurableSubscriber(topic, "SubsId", "filter = 'true'", true);
+        final DurableSubscriptionOfflineTestListener listener = new DurableSubscriptionOfflineTestListener();
         consumer.setMessageListener(listener);
 
-        Thread.sleep(3 * 1000);
+        assertTrue("offline consumer got all messages",
+            Wait.waitFor(() -> listener.count >= sent, 5000, 100));
 
         session.close();
         con.close();
@@ -622,31 +629,32 @@ public class DurableSubscriptionOfflineTest extends DurableSubscriptionOfflineTe
         // send messages
         con = createConnection();
         session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        MessageProducer producer = session.createProducer(null);
+        final MessageProducer producer = session.createProducer(null);
 
-        int sent = 0;
-        for (int i = 0; i < 10; i++) {
-            Message message = session.createMessage();
+        final int sent = 10;
+        for (int i = 0; i < sent; i++) {
+            final Message message = session.createMessage();
             message.setStringProperty("filter", "true");
             producer.send(topic, message);
-            sent++;
         }
 
         LOG.info("sent: " + sent);
-        Thread.sleep(1 * 1000);
+        assertTrue("messages enqueued to topic",
+            Wait.waitFor(() -> broker.getDestination(topic).getDestinationStatistics().getEnqueues().getCount() >= sent, 5000, 100));
         session.close();
         con.close();
 
         con = createConnection("cli1");
         session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
         MessageConsumer consumer = session.createDurableSubscriber(topic, "SubsId", filter, true);
-        DurableSubscriptionOfflineTestListener listener = new DurableSubscriptionOfflineTestListener();
-        consumer.setMessageListener(listener);
-        Thread.sleep(3 * 1000);
+        final DurableSubscriptionOfflineTestListener listener1 = new DurableSubscriptionOfflineTestListener();
+        consumer.setMessageListener(listener1);
+        assertTrue("cli1 got all messages",
+            Wait.waitFor(() -> listener1.count >= sent, 5000, 100));
         session.close();
         con.close();
 
-        assertEquals(sent, listener.count);
+        assertEquals(sent, listener1.count);
 
         LOG.info("cli2 pull 2");
         con = createConnection("cli2");
@@ -662,15 +670,14 @@ public class DurableSubscriptionOfflineTest extends DurableSubscriptionOfflineTe
         session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
         producer = session.createProducer(null);
 
-        sent = 0;
         for (int i = 0; i < 2; i++) {
-            Message message = session.createMessage();
+            final Message message = session.createMessage();
             message.setStringProperty("filter", i==1 ? "true" : "false");
             producer.send(topic, message);
-            sent++;
         }
-        LOG.info("sent: " + sent);
-        Thread.sleep(1 * 1000);
+        LOG.info("sent: 2");
+        assertTrue("second batch enqueued to topic",
+            Wait.waitFor(() -> broker.getDestination(topic).getDestinationStatistics().getEnqueues().getCount() >= sent + 2, 5000, 100));
         session.close();
         con.close();
 
@@ -678,13 +685,14 @@ public class DurableSubscriptionOfflineTest extends DurableSubscriptionOfflineTe
         con = createConnection("cli1");
         session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
         consumer = session.createDurableSubscriber(topic, "SubsId", filter, true);
-        listener = new DurableSubscriptionOfflineTestListener();
-        consumer.setMessageListener(listener);
-        Thread.sleep(3 * 1000);
+        final DurableSubscriptionOfflineTestListener listener2 = new DurableSubscriptionOfflineTestListener();
+        consumer.setMessageListener(listener2);
+        assertTrue("cli1 got 1 new filtered message",
+            Wait.waitFor(() -> listener2.count >= 1, 5000, 100));
         session.close();
         con.close();
 
-        assertEquals(1, listener.count);
+        assertEquals(1, listener2.count);
     }
 
     // https://issues.apache.org/jira/browse/AMQ-3190
@@ -748,8 +756,8 @@ public class DurableSubscriptionOfflineTest extends DurableSubscriptionOfflineTe
         // pick up the first of the next twenty messages
         con = createConnection("cli2");
         session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        MessageConsumer consumer = session.createDurableSubscriber(topic, "SubsId", filter, true);
-        Message m = consumer.receive(3000);
+        final MessageConsumer consumer = session.createDurableSubscriber(topic, "SubsId", filter, true);
+        final Message m = consumer.receive(3000);
         assertEquals("is message 10", 10, m.getIntProperty("ID"));
 
         session.close();
@@ -758,11 +766,11 @@ public class DurableSubscriptionOfflineTest extends DurableSubscriptionOfflineTe
         // pick up the first few messages for client1
         con = createConnection("cli1");
         session = con.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        consumer = session.createDurableSubscriber(topic, "SubsId", filter, true);
-        m = consumer.receive(3000);
-        assertEquals("is message 0", 0, m.getIntProperty("ID"));
-        m = consumer.receive(3000);
-        assertEquals("is message 10", 10, m.getIntProperty("ID"));
+        final MessageConsumer consumer1 = session.createDurableSubscriber(topic, "SubsId", filter, true);
+        final Message m1 = consumer1.receive(3000);
+        assertEquals("is message 0", 0, m1.getIntProperty("ID"));
+        final Message m2 = consumer1.receive(3000);
+        assertEquals("is message 10", 10, m2.getIntProperty("ID"));
 
         session.close();
         con.close();
@@ -771,21 +779,21 @@ public class DurableSubscriptionOfflineTest extends DurableSubscriptionOfflineTe
     @org.junit.Test(timeout = 640000)
     public void testInactiveSubscribeAfterBrokerRestart() throws Exception {
         final int messageCount = 20;
-        Connection alwaysOnCon = createConnection("subs1");
-        Connection tearDownFacCon = createConnection("subs2");
-        Session awaysOnCon = alwaysOnCon.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        Session tearDownCon = tearDownFacCon.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        ActiveMQTopic topic = new ActiveMQTopic("TEST.FOO");
-        String consumerName = "consumerName";
-        String tearDownconsumerName = "tearDownconsumerName";
+        final Connection alwaysOnCon = createConnection("subs1");
+        final Connection tearDownFacCon = createConnection("subs2");
+        final Session awaysOnCon = alwaysOnCon.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        final Session tearDownCon = tearDownFacCon.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        final ActiveMQTopic topic = new ActiveMQTopic("TEST.FOO");
+        final String consumerName = "consumerName";
+        final String tearDownconsumerName = "tearDownconsumerName";
         // Setup consumers
-        MessageConsumer remoteConsumer = awaysOnCon.createDurableSubscriber(topic, consumerName);
+        final MessageConsumer remoteConsumer = awaysOnCon.createDurableSubscriber(topic, consumerName);
         MessageConsumer remoteConsumer2 = tearDownCon.createDurableSubscriber(topic, tearDownconsumerName);
-        DurableSubscriptionOfflineTestListener listener = new DurableSubscriptionOfflineTestListener("listener");
+        final DurableSubscriptionOfflineTestListener listener = new DurableSubscriptionOfflineTestListener("listener");
         remoteConsumer.setMessageListener(listener);
         remoteConsumer2.setMessageListener(listener);
         // Setup producer
-        MessageProducer localProducer = awaysOnCon.createProducer(topic);
+        final MessageProducer localProducer = awaysOnCon.createProducer(topic);
         localProducer.setDeliveryMode(DeliveryMode.PERSISTENT);
         // Send messages
         for (int i = 0; i < messageCount; i++) {
@@ -793,25 +801,18 @@ public class DurableSubscriptionOfflineTest extends DurableSubscriptionOfflineTe
                 remoteConsumer2.close();
                 tearDownFacCon.close();
             }
-            Message test = awaysOnCon.createTextMessage("test-" + i);
+            final Message test = awaysOnCon.createTextMessage("test-" + i);
             localProducer.send(test);
         }
         destroyBroker();
         createBroker(false);
-        Connection reconnectCon = createConnection("subs2");
-        Session reconnectSession = reconnectCon.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        final Connection reconnectCon = createConnection("subs2");
+        final Session reconnectSession = reconnectCon.createSession(false, Session.AUTO_ACKNOWLEDGE);
         remoteConsumer2 = reconnectSession.createDurableSubscriber(topic, tearDownconsumerName);
         remoteConsumer2.setMessageListener(listener);
         LOG.info("waiting for messages to flow");
-        Wait.waitFor(new Wait.Condition() {
-            @Override
-            public boolean isSatisified() throws Exception {
-                return listener.count >= messageCount * 2;
-            }
-        });
-        assertTrue("At least message " + messageCount * 2 +
-                        " must be received, count=" + listener.count,
-                messageCount * 2 <= listener.count);
+        assertTrue("At least message " + messageCount * 2 + " must be received, count=" + listener.count,
+            Wait.waitFor(() -> listener.count >= messageCount * 2));
         awaysOnCon.close();
         reconnectCon.close();
     }

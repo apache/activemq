@@ -77,12 +77,13 @@ public class MissingDataFileTest extends TestCase {
 
     protected static final String payload = new String(new byte[500]);
 
-    public Connection createConnection() throws JMSException {
-        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("tcp://localhost:61616");
+    public Connection createConnection() throws Exception {
+        final String connectUri = broker.getTransportConnectors().get(0).getConnectUri().toString();
+        final ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(connectUri);
         return factory.createConnection();
     }
 
-    public Session createSession(Connection connection, boolean transacted) throws JMSException {
+    public Session createSession(final Connection connection, final boolean transacted) throws JMSException {
         return connection.createSession(transacted, Session.AUTO_ACKNOWLEDGE);
     }
 
@@ -91,15 +92,14 @@ public class MissingDataFileTest extends TestCase {
         broker.setDeleteAllMessagesOnStartup(true);
         broker.setPersistent(true);
         broker.setUseJmx(true);
-        broker.addConnector("tcp://localhost:61616").setName("Default");
+        broker.addConnector("tcp://localhost:0").setName("Default");
 
-        SystemUsage systemUsage;
-        systemUsage = new SystemUsage();
-        systemUsage.getMemoryUsage().setLimit(10 * 1024 * 1024); // Just a few messags
+        final SystemUsage systemUsage = new SystemUsage();
+        systemUsage.getMemoryUsage().setLimit(10 * 1024 * 1024); // Just a few messages
         broker.setSystemUsage(systemUsage);
 
-        KahaDBPersistenceAdapter kahaDBPersistenceAdapter = new KahaDBPersistenceAdapter();
-        kahaDBPersistenceAdapter.setJournalMaxFileLength(16*1024);
+        final KahaDBPersistenceAdapter kahaDBPersistenceAdapter = new KahaDBPersistenceAdapter();
+        kahaDBPersistenceAdapter.setJournalMaxFileLength(16 * 1024);
         kahaDBPersistenceAdapter.setCleanupInterval(500);
         broker.setPersistenceAdapter(kahaDBPersistenceAdapter);
 
@@ -120,10 +120,10 @@ public class MissingDataFileTest extends TestCase {
 
         startBroker();
         hectorConnection = createConnection();
-        Thread hectorThread = buildProducer(hectorConnection, hectorToHalo, false, useTopic);
-        Receiver hHectorReceiver = new Receiver() {
+        final Thread hectorThread = buildProducer(hectorConnection, hectorToHalo, false, useTopic);
+        final Receiver hHectorReceiver = new Receiver() {
             @Override
-            public void receive(String s) throws Exception {
+            public void receive(final String s) throws Exception {
                 haloToHectorCtr++;
                 if (haloToHectorCtr >= counter) {
                     synchronized (lock) {
@@ -136,10 +136,10 @@ public class MissingDataFileTest extends TestCase {
         buildReceiver(hectorConnection, haloToHector, false, hHectorReceiver, useTopic);
 
         troyConnection = createConnection();
-        Thread troyThread = buildProducer(troyConnection, troyToHalo);
-        Receiver hTroyReceiver = new Receiver() {
+        final Thread troyThread = buildProducer(troyConnection, troyToHalo);
+        final Receiver hTroyReceiver = new Receiver() {
             @Override
-            public void receive(String s) throws Exception {
+            public void receive(final String s) throws Exception {
                 haloToTroyCtr++;
                 if (haloToTroyCtr >= counter) {
                     synchronized (lock) {
@@ -152,10 +152,10 @@ public class MissingDataFileTest extends TestCase {
         buildReceiver(hectorConnection, haloToTroy, false, hTroyReceiver, false);
 
         xenaConnection = createConnection();
-        Thread xenaThread = buildProducer(xenaConnection, xenaToHalo);
-        Receiver hXenaReceiver = new Receiver() {
+        final Thread xenaThread = buildProducer(xenaConnection, xenaToHalo);
+        final Receiver hXenaReceiver = new Receiver() {
             @Override
-            public void receive(String s) throws Exception {
+            public void receive(final String s) throws Exception {
                 haloToXenaCtr++;
                 if (haloToXenaCtr >= counter) {
                     synchronized (lock) {
@@ -171,9 +171,9 @@ public class MissingDataFileTest extends TestCase {
         final MessageSender hectorSender = buildTransactionalProducer(haloToHector, haloConnection, false);
         final MessageSender troySender = buildTransactionalProducer(haloToTroy, haloConnection, false);
         final MessageSender xenaSender = buildTransactionalProducer(haloToXena, haloConnection, false);
-        Receiver hectorReceiver = new Receiver() {
+        final Receiver hectorReceiver = new Receiver() {
             @Override
-            public void receive(String s) throws Exception {
+            public void receive(final String s) throws Exception {
                 hectorToHaloCtr++;
                 troySender.send(payload);
                 if (hectorToHaloCtr >= counter) {
@@ -184,9 +184,9 @@ public class MissingDataFileTest extends TestCase {
                 }
             }
         };
-        Receiver xenaReceiver = new Receiver() {
+        final Receiver xenaReceiver = new Receiver() {
             @Override
-            public void receive(String s) throws Exception {
+            public void receive(final String s) throws Exception {
                 xenaToHaloCtr++;
                 hectorSender.send(payload);
                 if (xenaToHaloCtr >= counter) {
@@ -197,9 +197,9 @@ public class MissingDataFileTest extends TestCase {
                 possiblySleep(xenaToHaloCtr);
             }
         };
-        Receiver troyReceiver = new Receiver() {
+        final Receiver troyReceiver = new Receiver() {
             @Override
-            public void receive(String s) throws Exception {
+            public void receive(final String s) throws Exception {
                 troyToHaloCtr++;
                 xenaSender.send(payload);
                 if (troyToHaloCtr >= counter) {
@@ -240,7 +240,7 @@ public class MissingDataFileTest extends TestCase {
 
     }
 
-    protected void possiblySleep(int count) throws InterruptedException {
+    protected void possiblySleep(final int count) throws InterruptedException {
         if (useSleep) {
             if (count % 100 == 0) {
                 Thread.sleep(5000);
@@ -251,9 +251,9 @@ public class MissingDataFileTest extends TestCase {
 
     protected void waitForMessagesToBeDelivered() {
         // let's give the listeners enough time to read all messages
-        long maxWaitTime = counter * 1000;
+        final long maxWaitTime = counter * 1000;
         long waitTime = maxWaitTime;
-        long start = (maxWaitTime <= 0) ? 0 : System.currentTimeMillis();
+        final long start = (maxWaitTime <= 0) ? 0 : System.currentTimeMillis();
 
         synchronized (lock) {
             boolean hasMessages = true;
@@ -271,23 +271,23 @@ public class MissingDataFileTest extends TestCase {
         }
     }
 
-    public MessageSender buildTransactionalProducer(String queueName, Connection connection, boolean isTopic) throws Exception {
+    public MessageSender buildTransactionalProducer(final String queueName, final Connection connection, final boolean isTopic) throws Exception {
 
         return new MessageSender(queueName, connection, true, isTopic);
     }
 
-    public Thread buildProducer(Connection connection, final String queueName) throws Exception {
+    public Thread buildProducer(final Connection connection, final String queueName) throws Exception {
         return buildProducer(connection, queueName, false, false);
     }
 
-    public Thread buildProducer(Connection connection, final String queueName, boolean transacted, boolean isTopic) throws Exception {
+    public Thread buildProducer(final Connection connection, final String queueName, final boolean transacted, final boolean isTopic) throws Exception {
         final MessageSender producer = new MessageSender(queueName, connection, transacted, isTopic);
-        Thread thread = new Thread() {
+        final Thread thread = new Thread() {
             @Override
             public synchronized void run() {
                 for (int i = 0; i < counter; i++) {
                     try {
-                        producer.send(payload );
+                        producer.send(payload);
                     } catch (Exception e) {
                         throw new RuntimeException("on " + queueName + " send", e);
                     }
@@ -297,24 +297,20 @@ public class MissingDataFileTest extends TestCase {
         return thread;
     }
 
-    public void buildReceiver(Connection connection, final String queueName, boolean transacted, final Receiver receiver, boolean isTopic) throws Exception {
+    public void buildReceiver(final Connection connection, final String queueName, final boolean transacted, final Receiver receiver, final boolean isTopic) throws Exception {
         final Session session = transacted ? connection.createSession(true, Session.SESSION_TRANSACTED) : connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        MessageConsumer inputMessageConsumer = session.createConsumer(isTopic ? session.createTopic(queueName) : session.createQueue(queueName));
-        MessageListener messageListener = new MessageListener() {
-
-            @Override
-            public void onMessage(Message message) {
-                try {
-                    ObjectMessage objectMessage = (ObjectMessage)message;
-                    String s = (String)objectMessage.getObject();
-                    receiver.receive(s);
-                    if (session.getTransacted()) {
-                        session.commit();
-                    }
-
-                } catch (Exception e) {
-                    e.printStackTrace();
+        final MessageConsumer inputMessageConsumer = session.createConsumer(isTopic ? session.createTopic(queueName) : session.createQueue(queueName));
+        final MessageListener messageListener = message -> {
+            try {
+                final ObjectMessage objectMessage = (ObjectMessage) message;
+                final String s = (String) objectMessage.getObject();
+                receiver.receive(s);
+                if (session.getTransacted()) {
+                    session.commit();
                 }
+
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         };
         inputMessageConsumer.setMessageListener(messageListener);

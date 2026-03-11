@@ -51,6 +51,10 @@ public class FailoverClusterTestSupport extends TestCase {
     private final Map<String, BrokerService> brokers = new HashMap<String, BrokerService>();
     private final List<ActiveMQConnection> connections = new ArrayList<ActiveMQConnection>();
 
+    protected List<ActiveMQConnection> getConnections() {
+        return connections;
+    }
+
     protected void assertClientsConnectedToTwoBrokers() throws Exception {
         assertClientsConnectedToXBrokers(2);
     }
@@ -61,21 +65,16 @@ public class FailoverClusterTestSupport extends TestCase {
 
     protected void assertClientsConnectedToXBrokers(final int x) throws Exception {
         final Set<String> set = new HashSet<String>();
-        Wait.waitFor(new Wait.Condition() {
-            @Override
-            public boolean isSatisified() throws Exception {
+        assertTrue("Only " + x + " connections should be found: " + set,
+            Wait.waitFor(() -> {
                 set.clear();
-                for (ActiveMQConnection c : connections) {
+                for (final ActiveMQConnection c : connections) {
                     if (c.getTransportChannel().getRemoteAddress() != null) {
                         set.add(c.getTransportChannel().getRemoteAddress());
                     }
                 }
                 return set.size() == x;
-            }
-        });
-
-        assertTrue("Only " + x + " connections should be found: " + set,
-                set.size() == x);
+            }));
     }
 
     protected void assertClientsConnectionsEvenlyDistributed(double minimumPercentage) {
@@ -106,31 +105,40 @@ public class FailoverClusterTestSupport extends TestCase {
     }
 
     protected void assertAllConnected(final int expected) throws Exception {
-        assertTrue("All connections connected!", Wait.waitFor(new Wait.Condition() {
-            @Override
-            public boolean isSatisified() throws Exception {
-                int connectedCount = 0;
-                for (ActiveMQConnection c : connections) {
-                    if(c.getTransportChannel().isConnected()) {
-                        connectedCount++;
-                    }
+        assertTrue("All connections connected!", Wait.waitFor(() -> {
+            int connectedCount = 0;
+            for (final ActiveMQConnection c : connections) {
+                if (c.getTransportChannel().isConnected()) {
+                    connectedCount++;
                 }
-                logger.info("Found " + connectedCount + " of " + expected + " connected");
-                return connectedCount == expected;
             }
+            logger.info("Found " + connectedCount + " of " + expected + " connected");
+            return connectedCount == expected;
         }));
     }
 
-    protected void assertAllConnectedTo(String url) throws Exception {
-        for (ActiveMQConnection c : connections) {
-            assertEquals(url, c.getTransportChannel().getRemoteAddress());
-        }
+    protected void assertAllConnectedTo(final String url) throws Exception {
+        assertTrue("All connections should be connected to " + url,
+            Wait.waitFor(() -> {
+                for (final ActiveMQConnection c : connections) {
+                    if (!url.equals(c.getTransportChannel().getRemoteAddress())) {
+                        return false;
+                    }
+                }
+                return true;
+            }, 10000, 100));
     }
 
-    protected void assertBrokerInfo(String brokerName) throws Exception {
-        for (ActiveMQConnection c : connections) {
-            assertEquals(brokerName, c.getBrokerInfo().getBrokerName());
-        }
+    protected void assertBrokerInfo(final String brokerName) throws Exception {
+        assertTrue("All connections should report broker " + brokerName,
+            Wait.waitFor(() -> {
+                for (final ActiveMQConnection c : connections) {
+                    if (c.getBrokerInfo() == null || !brokerName.equals(c.getBrokerInfo().getBrokerName())) {
+                        return false;
+                    }
+                }
+                return true;
+            }, 10000, 100));
     }
 
     protected void addBroker(String name, BrokerService brokerService) {

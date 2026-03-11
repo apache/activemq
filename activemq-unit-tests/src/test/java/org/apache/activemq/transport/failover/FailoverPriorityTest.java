@@ -28,7 +28,11 @@ public class FailoverPriorityTest extends FailoverClusterTestSupport {
     private static final String BROKER_A_CLIENT_TC_ADDRESS = "tcp://127.0.0.1:61616";
     private static final String BROKER_B_CLIENT_TC_ADDRESS = "tcp://127.0.0.1:61617";
     private static final String BROKER_C_CLIENT_TC_ADDRESS = "tcp://127.0.0.1:61618";
-    private final HashMap<String,String> urls = new HashMap<String,String>();
+    private final HashMap<String, String> urls = new HashMap<>();
+
+    private static final String BROKER_A_NAME = "BROKERA";
+    private static final String BROKER_B_NAME = "BROKERB";
+    private static final String BROKER_C_NAME = "BROKERC";
 
     @Override
     public void setUp() throws Exception {
@@ -37,16 +41,10 @@ public class FailoverPriorityTest extends FailoverClusterTestSupport {
         urls.put(BROKER_B_NAME, BROKER_B_CLIENT_TC_ADDRESS);
     }
 
-    private static final String BROKER_A_NAME = "BROKERA";
-    private static final String BROKER_B_NAME = "BROKERB";
-    private static final String BROKER_C_NAME = "BROKERC";
-
-
     public void testPriorityBackup() throws Exception {
         createBrokerA();
         createBrokerB();
         getBroker(BROKER_B_NAME).waitUntilStarted();
-        Thread.sleep(1000);
 
         setClientUrl("failover:(" + BROKER_A_CLIENT_TC_ADDRESS + "," + BROKER_B_CLIENT_TC_ADDRESS + ")?randomize=false&priorityBackup=true&initialReconnectDelay=1000&useExponentialBackOff=false");
         createClients(5);
@@ -60,22 +58,16 @@ public class FailoverPriorityTest extends FailoverClusterTestSupport {
             restart(true, BROKER_A_NAME, BROKER_B_NAME);
         }
 
-        Thread.sleep(5000);
-
         restart(false, BROKER_A_NAME, BROKER_B_NAME);
-
     }
 
     public void testPriorityBackupList() throws Exception {
         createBrokerA();
         createBrokerB();
         getBroker(BROKER_B_NAME).waitUntilStarted();
-        Thread.sleep(1000);
 
         setClientUrl("failover:(" + BROKER_A_CLIENT_TC_ADDRESS + "," + BROKER_B_CLIENT_TC_ADDRESS + ")?randomize=false&priorityBackup=true&priorityURIs=tcp://127.0.0.1:61617&initialReconnectDelay=1000&useExponentialBackOff=false");
         createClients(5);
-
-        Thread.sleep(3000);
 
         assertAllConnectedTo(urls.get(BROKER_B_NAME));
 
@@ -86,7 +78,6 @@ public class FailoverPriorityTest extends FailoverClusterTestSupport {
         }
 
         restart(false, BROKER_B_NAME, BROKER_A_NAME);
-
     }
 
     public void testThreeBrokers() throws Exception {
@@ -111,9 +102,7 @@ public class FailoverPriorityTest extends FailoverClusterTestSupport {
         addNetworkBridge(getBroker(BROKER_C_NAME), "C_2_B_Bridge", "static://(" + BROKER_B_CLIENT_TC_ADDRESS + ")?useExponentialBackOff=false", false, null);
         getBroker(BROKER_C_NAME).start();
 
-
         getBroker(BROKER_C_NAME).waitUntilStarted();
-        Thread.sleep(1000);
 
         setClientUrl("failover:(" + BROKER_A_CLIENT_TC_ADDRESS + "," + BROKER_B_CLIENT_TC_ADDRESS + "," + BROKER_C_CLIENT_TC_ADDRESS + ")?randomize=false&priorityBackup=true&initialReconnectDelay=1000&useExponentialBackOff=false");
 
@@ -122,7 +111,6 @@ public class FailoverPriorityTest extends FailoverClusterTestSupport {
         assertAllConnectedTo(urls.get(BROKER_A_NAME));
 
         restart(true, BROKER_A_NAME, BROKER_B_NAME);
-
     }
 
     public void testPriorityBackupAndUpdateClients() throws Exception {
@@ -139,7 +127,6 @@ public class FailoverPriorityTest extends FailoverClusterTestSupport {
         getBroker(BROKER_B_NAME).start();
 
         getBroker(BROKER_B_NAME).waitUntilStarted();
-        Thread.sleep(1000);
 
         setClientUrl("failover:(" + BROKER_A_CLIENT_TC_ADDRESS + "," + BROKER_B_CLIENT_TC_ADDRESS + ")?randomize=false&priorityBackup=true&initialReconnectDelay=1000&useExponentialBackOff=false");
 
@@ -147,52 +134,28 @@ public class FailoverPriorityTest extends FailoverClusterTestSupport {
 
         createClients(5);
 
-        // Let's wait a little bit longer just in case it takes a while to realize that the
-        // Broker A is the one with higher priority.
-        Thread.sleep(5000);
-
         assertAllConnectedTo(urls.get(BROKER_A_NAME));
     }
 
-    private void restart(boolean primary, String primaryName, String secondaryName) throws Exception {
+    private void restart(final boolean primary, final String primaryName, final String secondaryName) throws Exception {
+        final String stoppingName = primary ? primaryName : secondaryName;
+        final String remainingName = primary ? secondaryName : primaryName;
 
-        Thread.sleep(1000);
+        LOG.info("Stopping " + stoppingName);
+        stopBroker(stoppingName);
 
-        if (primary) {
-            LOG.info("Stopping " + primaryName);
-            stopBroker(primaryName);
-        } else {
-            LOG.info("Stopping " + secondaryName);
-            stopBroker(secondaryName);
-        }
-        Thread.sleep(5000);
+        assertAllConnectedTo(urls.get(remainingName));
+        assertBrokerInfo(remainingName);
 
-        if (primary) {
-            assertAllConnectedTo(urls.get(secondaryName));
-            assertBrokerInfo(secondaryName);
-        } else {
-            assertAllConnectedTo(urls.get(primaryName));
-            assertBrokerInfo(primaryName);
-        }
-
-        if (primary) {
-            LOG.info("Starting " + primaryName);
-            createBrokerByName(primaryName);
-            getBroker(primaryName).waitUntilStarted();
-        } else {
-            LOG.info("Starting " + secondaryName);
-            createBrokerByName(secondaryName);
-            getBroker(secondaryName).waitUntilStarted();
-        }
-
-        Thread.sleep(5000);
+        LOG.info("Starting " + stoppingName);
+        createBrokerByName(stoppingName);
+        getBroker(stoppingName).waitUntilStarted();
 
         assertAllConnectedTo(urls.get(primaryName));
         assertBrokerInfo(primaryName);
-
     }
 
-    private void createBrokerByName(String name) throws Exception {
+    private void createBrokerByName(final String name) throws Exception {
         if (name.equals(BROKER_A_NAME)) {
             createBrokerA();
         } else if (name.equals(BROKER_B_NAME)) {

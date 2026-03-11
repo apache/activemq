@@ -16,8 +16,17 @@
  */
 package org.apache.activemq.transport.failover;
 
+import java.net.InetAddress;
+import java.net.ServerSocket;
+import java.net.URI;
+import java.util.concurrent.TimeUnit;
+
+import org.apache.activemq.ActiveMQConnection;
+import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.PublishedAddressPolicy;
 import org.apache.activemq.broker.TransportConnector;
+import org.apache.activemq.network.NetworkConnector;
+import org.apache.activemq.util.Wait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,15 +41,18 @@ import org.slf4j.LoggerFactory;
 public class FailoverComplexClusterTest extends FailoverClusterTestSupport {
     protected final Logger LOG = LoggerFactory.getLogger(FailoverComplexClusterTest.class);
 
-    private static final String BROKER_A_CLIENT_TC_ADDRESS = "tcp://127.0.0.1:61616";
-    private static final String BROKER_B_CLIENT_TC_ADDRESS = "tcp://127.0.0.1:61617";
-    private static final String BROKER_C_CLIENT_TC_ADDRESS = "tcp://127.0.0.1:61618";
-    private static final String BROKER_A_NOB_TC_ADDRESS = "tcp://127.0.0.1:61626";
-    private static final String BROKER_B_NOB_TC_ADDRESS = "tcp://127.0.0.1:61627";
-    private static final String BROKER_C_NOB_TC_ADDRESS = "tcp://127.0.0.1:61628";
     private static final String BROKER_A_NAME = "BROKERA";
     private static final String BROKER_B_NAME = "BROKERB";
     private static final String BROKER_C_NAME = "BROKERC";
+    private static final String EPHEMERAL_BIND_ADDRESS = "tcp://127.0.0.1:0";
+
+    // Resolved addresses after broker start (set dynamically per test)
+    private String brokerAClientAddr;
+    private String brokerBClientAddr;
+    private String brokerCClientAddr;
+    private String brokerANobAddr;
+    private String brokerBNobAddr;
+    private String brokerCNobAddr;
 
     /**
      * Basic dynamic failover 3 broker test
@@ -51,11 +63,8 @@ public class FailoverComplexClusterTest extends FailoverClusterTestSupport {
 
         initSingleTcBroker("", null, null);
 
-        Thread.sleep(2000);
-
-        setClientUrl("failover://(" + BROKER_A_CLIENT_TC_ADDRESS + "," + BROKER_B_CLIENT_TC_ADDRESS + ")");
+        setClientUrl("failover://(" + brokerAClientAddr + "," + brokerBClientAddr + ")");
         createClients();
-        Thread.sleep(2000);
 
         runTests(false, null, null, null);
     }
@@ -72,11 +81,8 @@ public class FailoverComplexClusterTest extends FailoverClusterTestSupport {
 
         initSingleTcBroker("", null, null);
 
-        Thread.sleep(2000);
-
-        setClientUrl("failover://(" + BROKER_A_CLIENT_TC_ADDRESS + "," + BROKER_B_CLIENT_TC_ADDRESS + ")?backup=true&backupPoolSize=2&useExponentialBackOff=false&initialReconnectDelay=500");
+        setClientUrl("failover://(" + brokerAClientAddr + "," + brokerBClientAddr + ")?backup=true&backupPoolSize=2&useExponentialBackOff=false&initialReconnectDelay=500");
         createClients();
-        Thread.sleep(2000);
 
         runTests(false, null, null, null);
     }
@@ -93,10 +99,8 @@ public class FailoverComplexClusterTest extends FailoverClusterTestSupport {
 
         initSingleTcBroker("?transport.closeAsync=false", null, null);
 
-        Thread.sleep(2000);
-        setClientUrl("failover://(" + BROKER_A_CLIENT_TC_ADDRESS + "," + BROKER_B_CLIENT_TC_ADDRESS + ")");
+        setClientUrl("failover://(" + brokerAClientAddr + "," + brokerBClientAddr + ")");
         createClients();
-        Thread.sleep(2000);
 
         runTests(false, null, null, null);
     }
@@ -110,8 +114,7 @@ public class FailoverComplexClusterTest extends FailoverClusterTestSupport {
 
         initSingleTcBroker("?transport.closeAsync=false", null, null);
 
-        Thread.sleep(2000);
-        setClientUrl("failover://(" + BROKER_A_CLIENT_TC_ADDRESS + "," + BROKER_B_CLIENT_TC_ADDRESS + ")");
+        setClientUrl("failover://(" + brokerAClientAddr + "," + brokerBClientAddr + ")");
         createClients();
 
         runTests(false, null, "*", null);
@@ -127,11 +130,8 @@ public class FailoverComplexClusterTest extends FailoverClusterTestSupport {
 
         initMultiTcCluster("", null);
 
-        Thread.sleep(2000);
-
-        setClientUrl("failover://(" + BROKER_A_CLIENT_TC_ADDRESS + "," + BROKER_B_CLIENT_TC_ADDRESS + ")");
+        setClientUrl("failover://(" + brokerAClientAddr + "," + brokerBClientAddr + ")");
         createClients();
-        Thread.sleep(2000);
 
         runTests(true, null, null, null);
     }
@@ -144,9 +144,7 @@ public class FailoverComplexClusterTest extends FailoverClusterTestSupport {
     public void testOriginalBrokerRestart() throws Exception {
         initSingleTcBroker("", null, null);
 
-        Thread.sleep(2000);
-
-        setClientUrl("failover://(" + BROKER_A_CLIENT_TC_ADDRESS + "," + BROKER_B_CLIENT_TC_ADDRESS + ")");
+        setClientUrl("failover://(" + brokerAClientAddr + "," + brokerBClientAddr + ")");
         createClients();
 
         assertClientsConnectedToThreeBrokers();
@@ -159,6 +157,9 @@ public class FailoverComplexClusterTest extends FailoverClusterTestSupport {
 
         createBrokerA(false, null, null, null);
         getBroker(BROKER_A_NAME).waitUntilStarted();
+
+        // Wait for bridges from the recreated broker A to form
+        waitForBridgesFromBroker(BROKER_A_NAME);
 
         assertClientsConnectedToThreeBrokers();
     }
@@ -173,10 +174,8 @@ public class FailoverComplexClusterTest extends FailoverClusterTestSupport {
 
         initSingleTcBroker("", null, null);
 
-        Thread.sleep(2000);
-        setClientUrl("failover://(" + BROKER_A_CLIENT_TC_ADDRESS + "," + BROKER_B_CLIENT_TC_ADDRESS + ")?useExponentialBackOff=false&initialReconnectDelay=500&randomize=false");
+        setClientUrl("failover://(" + brokerAClientAddr + "," + brokerBClientAddr + ")?useExponentialBackOff=false&initialReconnectDelay=500&randomize=false");
         createClients(100);
-        Thread.sleep(5000);
 
         runClientDistributionTests(false, null, null, null);
     }
@@ -191,85 +190,106 @@ public class FailoverComplexClusterTest extends FailoverClusterTestSupport {
 
         initSingleTcBroker("", null, null);
 
-        Thread.sleep(2000);
-        setClientUrl("failover://(" + BROKER_A_CLIENT_TC_ADDRESS + "," + BROKER_B_CLIENT_TC_ADDRESS + ")");
+        setClientUrl("failover://(" + brokerAClientAddr + "," + brokerBClientAddr + ")");
         createClients();
 
         runTests(false, null, null, "Queue.TEST.FOO.>");
     }
 
-    public void testFailOverWithUpdateClientsOnRemove() throws Exception{
-        // Broker A
+    public void testFailOverWithUpdateClientsOnRemove() throws Exception {
+        // Broker A - start first with ephemeral port
         addBroker(BROKER_A_NAME, createBroker(BROKER_A_NAME));
-        TransportConnector connectorA = getBroker(BROKER_A_NAME).addConnector(BROKER_A_CLIENT_TC_ADDRESS);
+        final TransportConnector connectorA = getBroker(BROKER_A_NAME).addConnector(EPHEMERAL_BIND_ADDRESS);
         connectorA.setName("openwire");
         connectorA.setRebalanceClusterClients(true);
         connectorA.setUpdateClusterClients(true);
         connectorA.setUpdateClusterClientsOnRemove(true); //If set to false the test succeeds.
-        addNetworkBridge(getBroker(BROKER_A_NAME), "A_2_B_Bridge", "static://(" + BROKER_B_CLIENT_TC_ADDRESS + ")?useExponentialBackOff=false", false, null);
+        connectorA.getPublishedAddressPolicy().setPublishedHostStrategy(PublishedAddressPolicy.PublishedHostStrategy.IPADDRESS);
         getBroker(BROKER_A_NAME).start();
+        getBroker(BROKER_A_NAME).waitUntilStarted();
+        brokerAClientAddr = connectorA.getPublishableConnectString();
 
-        // Broker B
+        // Broker B - start with ephemeral port, bridge to A using resolved address
         addBroker(BROKER_B_NAME, createBroker(BROKER_B_NAME));
-        TransportConnector connectorB = getBroker(BROKER_B_NAME).addConnector(BROKER_B_CLIENT_TC_ADDRESS);
+        final TransportConnector connectorB = getBroker(BROKER_B_NAME).addConnector(EPHEMERAL_BIND_ADDRESS);
         connectorB.setName("openwire");
         connectorB.setRebalanceClusterClients(true);
         connectorB.setUpdateClusterClients(true);
         connectorB.setUpdateClusterClientsOnRemove(true); //If set to false the test succeeds.
-        addNetworkBridge(getBroker(BROKER_B_NAME), "B_2_A_Bridge", "static://(" + BROKER_A_CLIENT_TC_ADDRESS + ")?useExponentialBackOff=false", false, null);
+        connectorB.getPublishedAddressPolicy().setPublishedHostStrategy(PublishedAddressPolicy.PublishedHostStrategy.IPADDRESS);
+        addNetworkBridge(getBroker(BROKER_B_NAME), "B_2_A_Bridge", "static://(" + brokerAClientAddr + ")?useExponentialBackOff=false", false, null);
         getBroker(BROKER_B_NAME).start();
-
         getBroker(BROKER_B_NAME).waitUntilStarted();
-        Thread.sleep(1000);
+        brokerBClientAddr = connectorB.getPublishableConnectString();
 
-        // create client connecting only to A. It should receive broker B address whet it connects to A.
-        setClientUrl("failover:(" + BROKER_A_CLIENT_TC_ADDRESS + ")?useExponentialBackOff=true");
+        // Now add A->B bridge using B's resolved address and start it
+        addAndStartNetworkBridge(getBroker(BROKER_A_NAME), "A_2_B_Bridge", "static://(" + brokerBClientAddr + ")?useExponentialBackOff=false", false, null);
+
+        // Wait for both bridges to form
+        assertTrue("A->B bridge should form",
+            Wait.waitFor(() -> !getBroker(BROKER_A_NAME).getNetworkConnectors().get(0).activeBridges().isEmpty(),
+                TimeUnit.SECONDS.toMillis(15), TimeUnit.MILLISECONDS.toMillis(500)));
+        assertTrue("B->A bridge should form",
+            Wait.waitFor(() -> !getBroker(BROKER_B_NAME).getNetworkConnectors().get(0).activeBridges().isEmpty(),
+                TimeUnit.SECONDS.toMillis(15), TimeUnit.MILLISECONDS.toMillis(500)));
+
+        // create client connecting only to A. It should receive broker B address when it connects to A.
+        setClientUrl("failover:(" + brokerAClientAddr + ")?useExponentialBackOff=true");
         createClients(1);
-        Thread.sleep(5000);
+
+        // Wait for all clients to be connected
+        assertAllConnected(1);
 
         // We stop broker A.
-        logger.info("Stopping broker A whose address is: {}", BROKER_A_CLIENT_TC_ADDRESS);
+        logger.info("Stopping broker A whose address is: {}", brokerAClientAddr);
         getBroker(BROKER_A_NAME).stop();
         getBroker(BROKER_A_NAME).waitUntilStopped();
-        Thread.sleep(5000);
 
-        // Client should failover to B.
-        assertAllConnectedTo(BROKER_B_CLIENT_TC_ADDRESS);
+        // Client should failover to B - wait for it
+        assertAllConnectedTo(brokerBClientAddr);
     }
 
     public void testStaticInfoAvailableAfterPattialUpdate() throws Exception {
 
         addBroker(BROKER_A_NAME, createBroker(BROKER_A_NAME));
-        TransportConnector connectorA = getBroker(BROKER_A_NAME).addConnector(BROKER_A_CLIENT_TC_ADDRESS);
+        final TransportConnector connectorA = getBroker(BROKER_A_NAME).addConnector(EPHEMERAL_BIND_ADDRESS);
         connectorA.setName("openwire");
         connectorA.setRebalanceClusterClients(true);
         connectorA.setUpdateClusterClients(true);
         connectorA.getPublishedAddressPolicy().setPublishedHostStrategy(PublishedAddressPolicy.PublishedHostStrategy.IPADDRESS);
 
         getBroker(BROKER_A_NAME).start();
+        getBroker(BROKER_A_NAME).waitUntilStarted();
+        brokerAClientAddr = connectorA.getPublishableConnectString();
 
-        setClientUrl("failover://(" + BROKER_A_CLIENT_TC_ADDRESS + "?trace=true," + BROKER_B_CLIENT_TC_ADDRESS + "?trace=true)?useExponentialBackOff=false&initialReconnectDelay=500");
+        // Reserve a port for broker B by using a temporary ServerSocket
+        final int brokerBPort;
+        try (final ServerSocket ss = new ServerSocket(0, 1, InetAddress.getByName("127.0.0.1"))) {
+            brokerBPort = ss.getLocalPort();
+        }
+        final String brokerBBindAddr = "tcp://127.0.0.1:" + brokerBPort;
+
+        setClientUrl("failover://(" + brokerAClientAddr + "?trace=true," + brokerBBindAddr + "?trace=true)?useExponentialBackOff=false&initialReconnectDelay=500");
         createClients(1);
 
-        assertAllConnectedTo(BROKER_A_CLIENT_TC_ADDRESS);
+        assertAllConnectedTo(brokerAClientAddr);
 
         getBroker(BROKER_A_NAME).stop();
+        getBroker(BROKER_A_NAME).waitUntilStopped();
 
-
+        // Now start broker B on the reserved port
         addBroker(BROKER_B_NAME, createBroker(BROKER_B_NAME));
-        TransportConnector connectorB = getBroker(BROKER_B_NAME).addConnector(BROKER_B_CLIENT_TC_ADDRESS);
+        final TransportConnector connectorB = getBroker(BROKER_B_NAME).addConnector(brokerBBindAddr);
         connectorB.setName("openwire");
         connectorB.setRebalanceClusterClients(true);
         connectorB.setUpdateClusterClients(true);
         connectorB.getPublishedAddressPolicy().setPublishedHostStrategy(PublishedAddressPolicy.PublishedHostStrategy.IPADDRESS);
 
         getBroker(BROKER_B_NAME).start();
-
         getBroker(BROKER_B_NAME).waitUntilStarted();
-        Thread.sleep(1000);
 
-        // verify can connect?
-        assertAllConnectedTo(BROKER_B_CLIENT_TC_ADDRESS);
+        // verify client connects to B
+        assertAllConnectedTo(brokerBBindAddr);
     }
 
     /**
@@ -288,7 +308,7 @@ public class FailoverComplexClusterTest extends FailoverClusterTestSupport {
      * @throws Exception
      * @throws InterruptedException
      */
-    private void runTests(boolean multi, String tcParams, String clusterFilter, String destinationFilter) throws Exception, InterruptedException {
+    private void runTests(final boolean multi, final String tcParams, final String clusterFilter, final String destinationFilter) throws Exception, InterruptedException {
         assertClientsConnectedToThreeBrokers();
 
         LOG.info("Stopping BrokerC in prep for restart");
@@ -302,6 +322,9 @@ public class FailoverComplexClusterTest extends FailoverClusterTestSupport {
         createBrokerC(multi, tcParams, clusterFilter, destinationFilter);
         getBroker(BROKER_C_NAME).waitUntilStarted();
 
+        // Wait for network bridges from the recreated broker C to form
+        waitForBridgesFromBroker(BROKER_C_NAME);
+
         assertClientsConnectedToThreeBrokers();
     }
 
@@ -313,7 +336,7 @@ public class FailoverComplexClusterTest extends FailoverClusterTestSupport {
      * @throws Exception
      * @throws InterruptedException
      */
-    private void runClientDistributionTests(boolean multi, String tcParams, String clusterFilter, String destinationFilter) throws Exception, InterruptedException {
+    private void runClientDistributionTests(final boolean multi, final String tcParams, final String clusterFilter, final String destinationFilter) throws Exception, InterruptedException {
         assertClientsConnectedToThreeBrokers();
         assertClientsConnectionsEvenlyDistributed(.25);
 
@@ -327,6 +350,9 @@ public class FailoverComplexClusterTest extends FailoverClusterTestSupport {
         createBrokerC(multi, tcParams, clusterFilter, destinationFilter);
         getBroker(BROKER_C_NAME).waitUntilStarted();
 
+        // Wait for network bridges from the recreated broker C to form
+        waitForBridgesFromBroker(BROKER_C_NAME);
+
         assertClientsConnectedToThreeBrokers();
         assertClientsConnectionsEvenlyDistributed(.20);
     }
@@ -338,72 +364,201 @@ public class FailoverComplexClusterTest extends FailoverClusterTestSupport {
     @Override
     protected void tearDown() throws Exception {
         shutdownClients();
-        Thread.sleep(2000);
         destroyBrokerCluster();
     }
 
-    private void initSingleTcBroker(String params, String clusterFilter, String destinationFilter) throws Exception {
-        createBrokerA(false, params, clusterFilter, null);
-        createBrokerB(false, params, clusterFilter, null);
-        createBrokerC(false, params, clusterFilter, null);
+    private void initSingleTcBroker(final String params, final String clusterFilter, final String destinationFilter) throws Exception {
+        final String tcParams = (params == null) ? "" : params;
+
+        // Phase 1: Create and start all 3 brokers with transport connectors only
+        addBroker(BROKER_A_NAME, createBroker(BROKER_A_NAME));
+        addTransportConnector(getBroker(BROKER_A_NAME), "openwire", EPHEMERAL_BIND_ADDRESS + tcParams, true);
+        getBroker(BROKER_A_NAME).start();
+        getBroker(BROKER_A_NAME).waitUntilStarted();
+        brokerAClientAddr = getBroker(BROKER_A_NAME).getTransportConnectors().get(0).getPublishableConnectString();
+
+        addBroker(BROKER_B_NAME, createBroker(BROKER_B_NAME));
+        addTransportConnector(getBroker(BROKER_B_NAME), "openwire", EPHEMERAL_BIND_ADDRESS + tcParams, true);
+        getBroker(BROKER_B_NAME).start();
+        getBroker(BROKER_B_NAME).waitUntilStarted();
+        brokerBClientAddr = getBroker(BROKER_B_NAME).getTransportConnectors().get(0).getPublishableConnectString();
+
+        addBroker(BROKER_C_NAME, createBroker(BROKER_C_NAME));
+        addTransportConnector(getBroker(BROKER_C_NAME), "openwire", EPHEMERAL_BIND_ADDRESS + tcParams, true);
+        getBroker(BROKER_C_NAME).start();
         getBroker(BROKER_C_NAME).waitUntilStarted();
+        brokerCClientAddr = getBroker(BROKER_C_NAME).getTransportConnectors().get(0).getPublishableConnectString();
+
+        // Phase 2: Add network bridges using resolved addresses and start them
+        addAndStartNetworkBridge(getBroker(BROKER_A_NAME), "A_2_B_Bridge", "static://(" + brokerBClientAddr + ")?useExponentialBackOff=false", false, clusterFilter);
+        addAndStartNetworkBridge(getBroker(BROKER_A_NAME), "A_2_C_Bridge", "static://(" + brokerCClientAddr + ")?useExponentialBackOff=false", false, null);
+
+        addAndStartNetworkBridge(getBroker(BROKER_B_NAME), "B_2_A_Bridge", "static://(" + brokerAClientAddr + ")?useExponentialBackOff=false", false, clusterFilter);
+        addAndStartNetworkBridge(getBroker(BROKER_B_NAME), "B_2_C_Bridge", "static://(" + brokerCClientAddr + ")?useExponentialBackOff=false", false, null);
+
+        addAndStartNetworkBridge(getBroker(BROKER_C_NAME), "C_2_A_Bridge", "static://(" + brokerAClientAddr + ")?useExponentialBackOff=false", false, clusterFilter);
+        addAndStartNetworkBridge(getBroker(BROKER_C_NAME), "C_2_B_Bridge", "static://(" + brokerBClientAddr + ")?useExponentialBackOff=false", false, null);
+
+        // Wait for all bridges to form
+        waitForAllBridges();
     }
 
-    private void initMultiTcCluster(String params, String clusterFilter) throws Exception {
-        createBrokerA(true, params, clusterFilter, null);
-        createBrokerB(true, params, clusterFilter, null);
-        createBrokerC(true, params, clusterFilter, null);
+    private void initMultiTcCluster(final String params, final String clusterFilter) throws Exception {
+        final String tcParams = (params == null) ? "" : params;
+
+        // Phase 1: Create and start all 3 brokers with both transport connectors
+        addBroker(BROKER_A_NAME, createBroker(BROKER_A_NAME));
+        addTransportConnector(getBroker(BROKER_A_NAME), "openwire", EPHEMERAL_BIND_ADDRESS + tcParams, true);
+        addTransportConnector(getBroker(BROKER_A_NAME), "network", EPHEMERAL_BIND_ADDRESS + tcParams, false);
+        getBroker(BROKER_A_NAME).start();
+        getBroker(BROKER_A_NAME).waitUntilStarted();
+        brokerAClientAddr = getBroker(BROKER_A_NAME).getTransportConnectorByName("openwire").getPublishableConnectString();
+        brokerANobAddr = getBroker(BROKER_A_NAME).getTransportConnectorByName("network").getPublishableConnectString();
+
+        addBroker(BROKER_B_NAME, createBroker(BROKER_B_NAME));
+        addTransportConnector(getBroker(BROKER_B_NAME), "openwire", EPHEMERAL_BIND_ADDRESS + tcParams, true);
+        addTransportConnector(getBroker(BROKER_B_NAME), "network", EPHEMERAL_BIND_ADDRESS + tcParams, false);
+        getBroker(BROKER_B_NAME).start();
+        getBroker(BROKER_B_NAME).waitUntilStarted();
+        brokerBClientAddr = getBroker(BROKER_B_NAME).getTransportConnectorByName("openwire").getPublishableConnectString();
+        brokerBNobAddr = getBroker(BROKER_B_NAME).getTransportConnectorByName("network").getPublishableConnectString();
+
+        addBroker(BROKER_C_NAME, createBroker(BROKER_C_NAME));
+        addTransportConnector(getBroker(BROKER_C_NAME), "openwire", EPHEMERAL_BIND_ADDRESS + tcParams, true);
+        addTransportConnector(getBroker(BROKER_C_NAME), "network", EPHEMERAL_BIND_ADDRESS + tcParams, false);
+        getBroker(BROKER_C_NAME).start();
         getBroker(BROKER_C_NAME).waitUntilStarted();
+        brokerCClientAddr = getBroker(BROKER_C_NAME).getTransportConnectorByName("openwire").getPublishableConnectString();
+        brokerCNobAddr = getBroker(BROKER_C_NAME).getTransportConnectorByName("network").getPublishableConnectString();
+
+        // Phase 2: Add network bridges using network connector addresses and start them
+        addAndStartNetworkBridge(getBroker(BROKER_A_NAME), "A_2_B_Bridge", "static://(" + brokerBNobAddr + ")?useExponentialBackOff=false", false, clusterFilter);
+        addAndStartNetworkBridge(getBroker(BROKER_A_NAME), "A_2_C_Bridge", "static://(" + brokerCNobAddr + ")?useExponentialBackOff=false", false, null);
+
+        addAndStartNetworkBridge(getBroker(BROKER_B_NAME), "B_2_A_Bridge", "static://(" + brokerANobAddr + ")?useExponentialBackOff=false", false, clusterFilter);
+        addAndStartNetworkBridge(getBroker(BROKER_B_NAME), "B_2_C_Bridge", "static://(" + brokerCNobAddr + ")?useExponentialBackOff=false", false, null);
+
+        addAndStartNetworkBridge(getBroker(BROKER_C_NAME), "C_2_A_Bridge", "static://(" + brokerANobAddr + ")?useExponentialBackOff=false", false, clusterFilter);
+        addAndStartNetworkBridge(getBroker(BROKER_C_NAME), "C_2_B_Bridge", "static://(" + brokerBNobAddr + ")?useExponentialBackOff=false", false, null);
+
+        // Wait for all bridges to form
+        waitForAllBridges();
     }
 
-    private void createBrokerA(boolean multi, String params, String clusterFilter, String destinationFilter) throws Exception {
-        final String tcParams = (params == null)?"":params;
+    /**
+     * Creates broker A with transport connector and network bridges to B and C.
+     * Rebinds to the same port that was previously used (stored in brokerAClientAddr).
+     * Used for re-creating broker A after it has been stopped.
+     */
+    private void createBrokerA(final boolean multi, final String params, final String clusterFilter, final String destinationFilter) throws Exception {
+        final String tcParams = (params == null) ? "" : params;
         if (getBroker(BROKER_A_NAME) == null) {
+            final String bindAddr = extractBindAddress(brokerAClientAddr);
+
             addBroker(BROKER_A_NAME, createBroker(BROKER_A_NAME));
-            addTransportConnector(getBroker(BROKER_A_NAME), "openwire", BROKER_A_CLIENT_TC_ADDRESS + tcParams, true);
             if (multi) {
-                addTransportConnector(getBroker(BROKER_A_NAME), "network", BROKER_A_NOB_TC_ADDRESS + tcParams, false);
-                addNetworkBridge(getBroker(BROKER_A_NAME), "A_2_B_Bridge", "static://(" + BROKER_B_NOB_TC_ADDRESS + ")?useExponentialBackOff=false", false, clusterFilter);
-                addNetworkBridge(getBroker(BROKER_A_NAME), "A_2_C_Bridge", "static://(" + BROKER_C_NOB_TC_ADDRESS + ")?useExponentialBackOff=false", false, null);
+                final String nobBindAddr = extractBindAddress(brokerANobAddr);
+                addTransportConnector(getBroker(BROKER_A_NAME), "openwire", bindAddr + tcParams, true);
+                addTransportConnector(getBroker(BROKER_A_NAME), "network", nobBindAddr + tcParams, false);
             } else {
-                addNetworkBridge(getBroker(BROKER_A_NAME), "A_2_B_Bridge", "static://(" + BROKER_B_CLIENT_TC_ADDRESS + ")?useExponentialBackOff=false", false, clusterFilter);
-                addNetworkBridge(getBroker(BROKER_A_NAME), "A_2_C_Bridge", "static://(" + BROKER_C_CLIENT_TC_ADDRESS + ")?useExponentialBackOff=false", false, null);
+                addTransportConnector(getBroker(BROKER_A_NAME), "openwire", bindAddr + tcParams, true);
             }
             getBroker(BROKER_A_NAME).start();
-        }
-    }
-
-    private void createBrokerB(boolean multi, String params, String clusterFilter, String destinationFilter) throws Exception {
-        final String tcParams = (params == null)?"":params;
-        if (getBroker(BROKER_B_NAME) == null) {
-            addBroker(BROKER_B_NAME, createBroker(BROKER_B_NAME));
-            addTransportConnector(getBroker(BROKER_B_NAME), "openwire", BROKER_B_CLIENT_TC_ADDRESS + tcParams, true);
+            getBroker(BROKER_A_NAME).waitUntilStarted();
+            brokerAClientAddr = getBroker(BROKER_A_NAME).getTransportConnectorByName("openwire").getPublishableConnectString();
             if (multi) {
-                addTransportConnector(getBroker(BROKER_B_NAME), "network", BROKER_B_NOB_TC_ADDRESS + tcParams, false);
-                addNetworkBridge(getBroker(BROKER_B_NAME), "B_2_A_Bridge", "static://(" + BROKER_A_NOB_TC_ADDRESS + ")?useExponentialBackOff=false", false, clusterFilter);
-                addNetworkBridge(getBroker(BROKER_B_NAME), "B_2_C_Bridge", "static://(" + BROKER_C_NOB_TC_ADDRESS + ")?useExponentialBackOff=false", false, null);
+                brokerANobAddr = getBroker(BROKER_A_NAME).getTransportConnectorByName("network").getPublishableConnectString();
+                addAndStartNetworkBridge(getBroker(BROKER_A_NAME), "A_2_B_Bridge", "static://(" + brokerBNobAddr + ")?useExponentialBackOff=false", false, clusterFilter);
+                addAndStartNetworkBridge(getBroker(BROKER_A_NAME), "A_2_C_Bridge", "static://(" + brokerCNobAddr + ")?useExponentialBackOff=false", false, null);
             } else {
-                addNetworkBridge(getBroker(BROKER_B_NAME), "B_2_A_Bridge", "static://(" + BROKER_A_CLIENT_TC_ADDRESS + ")?useExponentialBackOff=false", false, clusterFilter);
-                addNetworkBridge(getBroker(BROKER_B_NAME), "B_2_C_Bridge", "static://(" + BROKER_C_CLIENT_TC_ADDRESS + ")?useExponentialBackOff=false", false, null);
+                addAndStartNetworkBridge(getBroker(BROKER_A_NAME), "A_2_B_Bridge", "static://(" + brokerBClientAddr + ")?useExponentialBackOff=false", false, clusterFilter);
+                addAndStartNetworkBridge(getBroker(BROKER_A_NAME), "A_2_C_Bridge", "static://(" + brokerCClientAddr + ")?useExponentialBackOff=false", false, null);
             }
-            getBroker(BROKER_B_NAME).start();
         }
     }
 
-    private void createBrokerC(boolean multi, String params, String clusterFilter, String destinationFilter) throws Exception {
-        final String tcParams = (params == null)?"":params;
+    /**
+     * Creates broker C with transport connector and network bridges to A and B.
+     * Rebinds to the same port that was previously used (stored in brokerCClientAddr).
+     * Used for re-creating broker C after it has been stopped.
+     */
+    private void createBrokerC(final boolean multi, final String params, final String clusterFilter, final String destinationFilter) throws Exception {
+        final String tcParams = (params == null) ? "" : params;
         if (getBroker(BROKER_C_NAME) == null) {
+            final String bindAddr = extractBindAddress(brokerCClientAddr);
+
             addBroker(BROKER_C_NAME, createBroker(BROKER_C_NAME));
-            addTransportConnector(getBroker(BROKER_C_NAME), "openwire", BROKER_C_CLIENT_TC_ADDRESS + tcParams, true);
             if (multi) {
-                addTransportConnector(getBroker(BROKER_C_NAME), "network", BROKER_C_NOB_TC_ADDRESS + tcParams, false);
-                addNetworkBridge(getBroker(BROKER_C_NAME), "C_2_A_Bridge", "static://(" + BROKER_A_NOB_TC_ADDRESS + ")?useExponentialBackOff=false", false, clusterFilter);
-                addNetworkBridge(getBroker(BROKER_C_NAME), "C_2_B_Bridge", "static://(" + BROKER_B_NOB_TC_ADDRESS + ")?useExponentialBackOff=false", false, null);
+                final String nobBindAddr = extractBindAddress(brokerCNobAddr);
+                addTransportConnector(getBroker(BROKER_C_NAME), "openwire", bindAddr + tcParams, true);
+                addTransportConnector(getBroker(BROKER_C_NAME), "network", nobBindAddr + tcParams, false);
             } else {
-                addNetworkBridge(getBroker(BROKER_C_NAME), "C_2_A_Bridge", "static://(" + BROKER_A_CLIENT_TC_ADDRESS + ")?useExponentialBackOff=false", false, clusterFilter);
-                addNetworkBridge(getBroker(BROKER_C_NAME), "C_2_B_Bridge", "static://(" + BROKER_B_CLIENT_TC_ADDRESS + ")?useExponentialBackOff=false", false, null);
+                addTransportConnector(getBroker(BROKER_C_NAME), "openwire", bindAddr + tcParams, true);
             }
             getBroker(BROKER_C_NAME).start();
+            getBroker(BROKER_C_NAME).waitUntilStarted();
+            brokerCClientAddr = getBroker(BROKER_C_NAME).getTransportConnectorByName("openwire").getPublishableConnectString();
+            if (multi) {
+                brokerCNobAddr = getBroker(BROKER_C_NAME).getTransportConnectorByName("network").getPublishableConnectString();
+                addAndStartNetworkBridge(getBroker(BROKER_C_NAME), "C_2_A_Bridge", "static://(" + brokerANobAddr + ")?useExponentialBackOff=false", false, clusterFilter);
+                addAndStartNetworkBridge(getBroker(BROKER_C_NAME), "C_2_B_Bridge", "static://(" + brokerBNobAddr + ")?useExponentialBackOff=false", false, null);
+            } else {
+                addAndStartNetworkBridge(getBroker(BROKER_C_NAME), "C_2_A_Bridge", "static://(" + brokerAClientAddr + ")?useExponentialBackOff=false", false, clusterFilter);
+                addAndStartNetworkBridge(getBroker(BROKER_C_NAME), "C_2_B_Bridge", "static://(" + brokerBClientAddr + ")?useExponentialBackOff=false", false, null);
+            }
+        }
+    }
+
+    /**
+     * Extracts the bind address (tcp://host:port) from a publishable connect string.
+     */
+    private static String extractBindAddress(final String publishableAddr) throws Exception {
+        final URI uri = new URI(publishableAddr);
+        return "tcp://127.0.0.1:" + uri.getPort();
+    }
+
+    /**
+     * Adds a network bridge to a broker and starts it immediately.
+     * This is used when the broker is already running.
+     */
+    private void addAndStartNetworkBridge(final BrokerService broker, final String bridgeName,
+                                          final String uri, final boolean duplex, final String destinationFilter) throws Exception {
+        final NetworkConnector network = broker.addNetworkConnector(uri);
+        network.setName(bridgeName);
+        network.setDuplex(duplex);
+        if (destinationFilter != null && !destinationFilter.isEmpty()) {
+            network.setDestinationFilter(bridgeName);
+        }
+        broker.startNetworkConnector(network, null);
+    }
+
+    /**
+     * Waits for all network bridges on all brokers to become active.
+     */
+    private void waitForAllBridges() throws Exception {
+        for (final String brokerName : new String[]{BROKER_A_NAME, BROKER_B_NAME, BROKER_C_NAME}) {
+            final BrokerService broker = getBroker(brokerName);
+            if (broker != null) {
+                for (final NetworkConnector nc : broker.getNetworkConnectors()) {
+                    assertTrue("bridge " + nc.getName() + " on " + brokerName + " should form",
+                        Wait.waitFor(() -> !nc.activeBridges().isEmpty(),
+                            TimeUnit.SECONDS.toMillis(15), TimeUnit.MILLISECONDS.toMillis(500)));
+                }
+            }
+        }
+    }
+
+    /**
+     * Waits for network bridges FROM the specified broker to become active.
+     */
+    private void waitForBridgesFromBroker(final String brokerName) throws Exception {
+        final BrokerService broker = getBroker(brokerName);
+        if (broker != null) {
+            for (final NetworkConnector nc : broker.getNetworkConnectors()) {
+                assertTrue("bridge " + nc.getName() + " on " + brokerName + " should form",
+                    Wait.waitFor(() -> !nc.activeBridges().isEmpty(),
+                        TimeUnit.SECONDS.toMillis(15), TimeUnit.MILLISECONDS.toMillis(500)));
+            }
         }
     }
 }

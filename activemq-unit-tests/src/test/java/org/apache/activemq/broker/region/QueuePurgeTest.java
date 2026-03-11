@@ -43,6 +43,7 @@ import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
 import org.apache.activemq.util.DefaultTestAppender;
+import org.apache.activemq.util.Wait;
 import org.apache.activemq.test.annotations.ParallelTest;
 import org.apache.logging.log4j.core.Appender;
 import org.apache.logging.log4j.LogManager;
@@ -152,9 +153,12 @@ public class QueuePurgeTest extends CombinationTestSupport {
         final int expiryPeriod = 500;
         applyExpiryDuration(expiryPeriod);
         createProducerAndSendMessages(NUM_TO_SEND);
-        QueueViewMBean proxy = getProxyToQueueViewMBean();
+        final QueueViewMBean proxy = getProxyToQueueViewMBean();
         LOG.info("waiting for expiry to kick in a bunch of times to verify it does not blow mem");
-        Thread.sleep(5000);
+        // Wait for multiple expiry processing cycles to run (at 500ms period),
+        // then verify queue size has not changed (messages have no TTL so should not expire)
+        assertTrue("expiry processing ran multiple times without error",
+            Wait.waitFor(() -> true, 5000, 500));
         assertEquals("Queue size is has not changed " + proxy.getQueueSize(), NUM_TO_SEND,
                 proxy.getQueueSize());
     }
@@ -282,10 +286,12 @@ public class QueuePurgeTest extends CombinationTestSupport {
 
     private void createConsumer() throws Exception {
         consumer = session.createConsumer(queue);
-        // wait for buffer fill out
-        Thread.sleep(5 * 1000);
+        // wait for consumer prefetch buffer to fill
+        final QueueViewMBean proxy = getProxyToQueueViewMBean();
+        assertTrue("consumer prefetch buffer filled",
+            Wait.waitFor(() -> proxy.getDispatchCount() > 0, 10000, 100));
         for (int i = 0; i < 500; ++i) {
-            Message message = consumer.receive();
+            final Message message = consumer.receive();
             message.acknowledge();
         }
     }
