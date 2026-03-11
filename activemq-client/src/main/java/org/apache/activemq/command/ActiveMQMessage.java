@@ -525,26 +525,21 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
     }
 
     protected void checkValidObject(Object value) throws MessageFormatException {
-        // Types allowed by the Jakarta Messaging Specification
-        boolean valid = value instanceof Boolean || value instanceof Byte || value instanceof Short ||
-                value instanceof Integer || value instanceof Long || value instanceof Float ||
-                value instanceof Double || value instanceof String || value == null;
+
+        boolean valid = value instanceof Boolean || value instanceof Byte || value instanceof Short || value instanceof Integer || value instanceof Long;
+        valid = valid || value instanceof Float || value instanceof Double || value instanceof String || value == null;
+
+        ActiveMQConnection conn = getConnection();
+        // Legacy behavior: Character is valid ONLY if strictCompliance is OFF
+        if (conn == null || !conn.isStrictCompliance()) {
+            valid = valid || value instanceof Character;
+        }
 
         if (!valid) {
-
-            ActiveMQConnection conn = getConnection();
-
-            // Jakarta 3.1 Compliance: If strictCompliance is enabled, only allow standard types.
-            // This acts as the "Master Switch" and overrides legacy behavior.
-            if (conn != null && conn.isStrictCompliance()) {
-                throw new MessageFormatException("Only objectified primitive objects and String types are allowed when strictCompliance is enabled but was: " + value + " type: " + value.getClass());
-            }
-
             // conn is null if we are in the broker rather than a JMS client
             if (conn == null || conn.isNestedMapAndListEnabled()) {
-                // Standard rules: only primitives and Strings are allowed
-                if (!(value instanceof Map || value instanceof List || value instanceof Character)) {
-                    throw new MessageFormatException("Only objectified primitive objects, String, Map, List and Character types are allowed but was: " + value + " type: " + value.getClass());
+                if (!(value instanceof Map || value instanceof List)) {
+                    throw new MessageFormatException("Only objectified primitive objects, String, Map and List types are allowed but was: " + value + " type: " + value.getClass());
                 }
             } else {
                 throw new MessageFormatException("Only objectified primitive objects and String types are allowed but was: " + value + " type: " + value.getClass());

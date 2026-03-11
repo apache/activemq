@@ -415,6 +415,11 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     protected ActiveMQConnection createActiveMQConnection(Transport transport, JMSStatsImpl stats) throws Exception {
         ActiveMQConnection connection = new ActiveMQConnection(transport, getClientIdGenerator(),
                 getConnectionIdGenerator(), stats);
+
+        // Copy the compliance flags from the Factory to the Connection
+        connection.setStrictCompliance(isStrictCompliance());
+        connection.setNestedMapAndListEnabled(isNestedMapAndListEnabled());
+
         return connection;
     }
 
