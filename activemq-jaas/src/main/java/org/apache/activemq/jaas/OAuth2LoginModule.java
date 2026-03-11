@@ -22,6 +22,7 @@ import java.net.URL;
 import java.security.Principal;
 import java.text.ParseException;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -104,7 +105,7 @@ public class OAuth2LoginModule implements LoginModule {
     private String groupsClaim;
 
     private String user;
-    private final Set<Principal> principals = new HashSet<>();
+    private final LinkedHashSet<Principal> principals = new LinkedHashSet<>();
     private boolean succeeded;
     private boolean commitSucceeded;
 
