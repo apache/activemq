@@ -51,6 +51,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -750,13 +751,42 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
     }
 
     protected void restartRemoteBroker() throws Exception {
-        int port = 0;
-        if (remoteBroker != null) {
-            List<TransportConnector> transportConnectors = remoteBroker.getTransportConnectors();
-            port = transportConnectors.get(0).getConnectUri().getPort();
-        }
+        final int previousPort = remoteBroker.getTransportConnectors().get(0).getConnectUri().getPort();
+        final File dataDir = remoteBroker.getDataDirectoryFile();
         stopRemoteBroker();
-        doSetUpRemoteBroker(false, remoteBroker.getDataDirectoryFile(), port);
+        try {
+            doSetUpRemoteBroker(false, dataDir, previousPort);
+        } catch (final IOException e) {
+            if (e.getCause() instanceof java.net.BindException) {
+                // Previous port still in TIME_WAIT — use a new ephemeral port
+                doSetUpRemoteBroker(false, dataDir, 0);
+                // Update the local broker's network connector to point to the new port
+                updateLocalNetworkConnectorUri();
+            } else {
+                throw e;
+            }
+        }
+    }
+
+    /**
+     * When the remote broker restarts on a new ephemeral port (BindException fallback),
+     * any existing network connector on the local broker still points to the old port.
+     * This method stops the old connector and replaces it with one targeting the new URI.
+     */
+    private void updateLocalNetworkConnectorUri() throws Exception {
+        if (localBroker == null) {
+            return;
+        }
+        final List<NetworkConnector> connectors = localBroker.getNetworkConnectors();
+        if (connectors.isEmpty()) {
+            return;
+        }
+        final NetworkConnector oldConnector = connectors.get(0);
+        oldConnector.stop();
+        localBroker.removeNetworkConnector(oldConnector);
+        final NetworkConnector newConnector = configureLocalNetworkConnector();
+        localBroker.addNetworkConnector(newConnector);
+        newConnector.start();
     }
 
     protected void doSetUpLocalBroker(boolean deleteAllMessages, boolean startNetworkConnector,
@@ -778,8 +808,10 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
             // because some tests restart localBroker before remoteBroker is running,
             // relying on the bridge connecting later when remoteBroker restarts.
             // Tests that need the bridge to be fully started call assertBridgeStarted() explicitly.
+            // Keep timeout short (5s) to avoid growing the NC reconnect backoff too much,
+            // which would delay bridge formation when the remote broker starts later.
             Wait.waitFor(() -> localBroker.getNetworkConnectors().get(0).activeBridges().size() == 1,
-                         TimeUnit.SECONDS.toMillis(15), 500);
+                         TimeUnit.SECONDS.toMillis(5), 500);
         }
         localSession = localConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 
@@ -885,8 +917,7 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
 
         //Need a larger cache size in order to handle all of the durables
         //Use auto+nio+ssl to test out the transport works with bridging
-        //transport.reuseAddress=true allows rebinding to the same port after restart (TIME_WAIT)
-        brokerService.addConnector("auto+nio+ssl://localhost:" + port + "?transport.reuseAddress=true&wireFormat.cacheSize=2048&wireFormat.version=" + remoteBrokerWireFormatVersion);
+        brokerService.addConnector("auto+nio+ssl://localhost:" + port + "?wireFormat.cacheSize=2048&wireFormat.version=" + remoteBrokerWireFormatVersion);
 
         return brokerService;
     }
