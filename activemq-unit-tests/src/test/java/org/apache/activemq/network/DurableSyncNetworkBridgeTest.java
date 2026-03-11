@@ -885,7 +885,8 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
 
         //Need a larger cache size in order to handle all of the durables
         //Use auto+nio+ssl to test out the transport works with bridging
-        brokerService.addConnector("auto+nio+ssl://localhost:" + port + "?wireFormat.cacheSize=2048&wireFormat.version=" + remoteBrokerWireFormatVersion);
+        //transport.reuseAddress=true allows rebinding to the same port after restart (TIME_WAIT)
+        brokerService.addConnector("auto+nio+ssl://localhost:" + port + "?transport.reuseAddress=true&wireFormat.cacheSize=2048&wireFormat.version=" + remoteBrokerWireFormatVersion);
 
         return brokerService;
     }
