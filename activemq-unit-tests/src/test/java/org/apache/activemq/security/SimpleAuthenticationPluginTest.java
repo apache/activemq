@@ -43,6 +43,7 @@ import java.net.URI;
 import java.util.Arrays;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import org.junit.experimental.categories.Category;
 import org.apache.activemq.test.annotations.ParallelTest;
 
@@ -111,11 +112,12 @@ public class SimpleAuthenticationPluginTest extends SecurityTestSupport {
 
     public void testConnectionStartThrowsJMSSecurityException() throws Exception {
         final CountDownLatch exceptionLatch = new CountDownLatch(1);
+        final AtomicReference<JMSException> receivedException = new AtomicReference<>();
 
         try (final Connection connection = factory.createConnection("badUser", "password")) {
             connection.setExceptionListener(e -> {
                 LOG.info("Connection received exception: {}", e.getMessage());
-                assertTrue(e instanceof JMSSecurityException);
+                receivedException.set(e);
                 exceptionLatch.countDown();
             });
 
@@ -123,14 +125,13 @@ public class SimpleAuthenticationPluginTest extends SecurityTestSupport {
                 connection.start();
 
                 // If start() doesn't throw synchronously, wait for async exception
-                assertTrue("Should receive security exception via listener", exceptionLatch.await(5, TimeUnit.SECONDS));
-
+                assertTrue("Should receive security exception via listener",
+                    exceptionLatch.await(5, TimeUnit.SECONDS));
+                assertNotNull("Exception should have been received", receivedException.get());
+                assertTrue("Should be JMSSecurityException but was: " + receivedException.get().getClass(),
+                    receivedException.get() instanceof JMSSecurityException);
             } catch (final JMSSecurityException jmsEx) {
                 // Synchronous security exception - expected
-            } catch (final JMSException e) {
-                // with the latch, we should always pass first into the listener and assert the right exception
-                LOG.info("Expected JMSSecurityException but was: {}", e.getClass());
-                fail("Should throw JMSSecurityException");
             }
         }
     }

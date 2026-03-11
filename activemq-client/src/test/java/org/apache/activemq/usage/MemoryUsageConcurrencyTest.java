@@ -39,26 +39,27 @@ public class MemoryUsageConcurrencyTest {
 
     @Test
     public void testCycle() throws Exception {
-        Random r = new Random(0xb4a14);
+        final Random r = new Random(0xb4a14);
         for (int i = 0; i < 30000; i++) {
             checkPercentage(i, i, r.nextInt(100) + 10, i % 2 == 0, i % 5 == 0);
         }
     }
 
-    private void checkPercentage(int attempt, int seed, int operations, boolean useArrayBlocking, boolean useWaitForSpaceThread) throws InterruptedException {
+    private void checkPercentage(final int attempt, final int seed, final int operations,
+                                 final boolean useArrayBlocking, final boolean useWaitForSpaceThread) throws InterruptedException {
 
         final BlockingQueue<Integer> toAdd;
         final BlockingQueue<Integer> toRemove;
         final BlockingQueue<Integer> removed;
 
         if (useArrayBlocking) {
-            toAdd = new ArrayBlockingQueue<Integer>(operations);
-            toRemove = new ArrayBlockingQueue<Integer>(operations);
-            removed = new ArrayBlockingQueue<Integer>(operations);
+            toAdd = new ArrayBlockingQueue<>(operations);
+            toRemove = new ArrayBlockingQueue<>(operations);
+            removed = new ArrayBlockingQueue<>(operations);
         } else {
-            toAdd = new LinkedBlockingQueue<Integer>();
-            toRemove = new LinkedBlockingQueue<Integer>();
-            removed = new LinkedBlockingQueue<Integer>();
+            toAdd = new LinkedBlockingQueue<>();
+            toRemove = new LinkedBlockingQueue<>();
+            removed = new LinkedBlockingQueue<>();
         }
 
         final AtomicBoolean running = new AtomicBoolean(true);
@@ -68,14 +69,13 @@ public class MemoryUsageConcurrencyTest {
         memUsage.setLimit(1000);
         memUsage.start();
 
-        Thread addThread = new Thread(new Runnable() {
-            @Override
-            public void run() {
+        try {
+            final Thread addThread = new Thread(() -> {
                 try {
                     startLatch.await();
 
                     while (true) {
-                        Integer add = toAdd.poll(1, TimeUnit.MILLISECONDS);
+                        final Integer add = toAdd.poll(1, TimeUnit.MILLISECONDS);
                         if (add == null) {
                             if (!running.get()) {
                                 break;
@@ -89,17 +89,14 @@ public class MemoryUsageConcurrencyTest {
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-            }
-        });
+            });
 
-        Thread removeThread = new Thread(new Runnable() {
-            @Override
-            public void run() {
+            final Thread removeThread = new Thread(() -> {
                 try {
                     startLatch.await();
 
                     while (true) {
-                        Integer remove = toRemove.poll(1, TimeUnit.MILLISECONDS);
+                        final Integer remove = toRemove.poll(1, TimeUnit.MILLISECONDS);
                         if (remove == null) {
                             if (!running.get()) {
                                 break;
@@ -112,65 +109,74 @@ public class MemoryUsageConcurrencyTest {
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-            }
-        });
+            });
 
-        Thread waitForSpaceThread = new Thread(new Runnable() {
-            @Override
-            public void run() {
+            // Use waitForSpace(timeout) instead of unbounded waitForSpace() to avoid
+            // indefinite blocking when usage is >= 100%. The bounded version will return
+            // after the timeout, allowing the thread to check the running flag and exit.
+            final Thread waitForSpaceThread = new Thread(() -> {
                 try {
                     startLatch.await();
 
                     while (running.get()) {
-                        memUsage.waitForSpace();
+                        memUsage.waitForSpace(100);
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
+            });
+
+            // Mark all threads as daemon so they cannot prevent JVM shutdown
+            // even if cleanup logic fails to stop them
+            addThread.setDaemon(true);
+            removeThread.setDaemon(true);
+            waitForSpaceThread.setDaemon(true);
+
+            removeThread.start();
+            addThread.start();
+            if (useWaitForSpaceThread) {
+                waitForSpaceThread.start();
             }
-        });
 
-        removeThread.start();
-        addThread.start();
-        if (useWaitForSpaceThread) {
-            waitForSpaceThread.start();
-        }
+            final Random r = new Random(seed);
 
-        Random r = new Random(seed);
+            startLatch.countDown();
 
-        startLatch.countDown();
-
-        for (int i = 0; i < operations; i++) {
-            toAdd.add(r.nextInt(100) + 1);
-        }
-
-        // we expect the failure percentage to be related to the last operation
-        List<Integer> ops = new ArrayList<Integer>(operations);
-        for (int i = 0; i < operations; i++) {
-            Integer op = removed.poll(1000, TimeUnit.MILLISECONDS);
-            assertNotNull(op);
-            ops.add(op);
-        }
-
-        running.set(false);
-
-        if (useWaitForSpaceThread) {
-            try {
-                waitForSpaceThread.join(1000);
-            } catch (InterruptedException e) {
-                LOG.debug("Attempt: {} : {} waitForSpace never returned", attempt, memUsage);
-                waitForSpaceThread.interrupt();
-                waitForSpaceThread.join();
+            for (int i = 0; i < operations; i++) {
+                toAdd.add(r.nextInt(100) + 1);
             }
-        }
 
-        removeThread.join();
-        addThread.join();
+            // we expect the failure percentage to be related to the last operation
+            final List<Integer> ops = new ArrayList<>(operations);
+            for (int i = 0; i < operations; i++) {
+                final Integer op = removed.poll(1000, TimeUnit.MILLISECONDS);
+                assertNotNull(op);
+                ops.add(op);
+            }
 
-        if (memUsage.getPercentUsage() != 0 || memUsage.getUsage() != memUsage.getPercentUsage()) {
-            LOG.debug("Attempt: {} : {}", attempt, memUsage);
-            LOG.debug("Operations: {}", ops);
-            assertEquals(0, memUsage.getPercentUsage());
+            running.set(false);
+
+            addThread.join(5000);
+            removeThread.join(5000);
+
+            if (useWaitForSpaceThread) {
+                waitForSpaceThread.join(5000);
+                if (waitForSpaceThread.isAlive()) {
+                    LOG.debug("Attempt: {} : {} waitForSpace thread still alive after join, interrupting", attempt, memUsage);
+                    waitForSpaceThread.interrupt();
+                    waitForSpaceThread.join(1000);
+                }
+            }
+
+            if (memUsage.getPercentUsage() != 0 || memUsage.getUsage() != memUsage.getPercentUsage()) {
+                LOG.debug("Attempt: {} : {}", attempt, memUsage);
+                LOG.debug("Operations: {}", ops);
+                assertEquals(0, memUsage.getPercentUsage());
+            }
+        } finally {
+            // Stop the MemoryUsage to signal waitForSpaceCondition, which unblocks
+            // any thread stuck in waitForSpace(). This is critical for cleanup.
+            memUsage.stop();
         }
     }
 }

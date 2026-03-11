@@ -453,14 +453,14 @@ public class AmqpReceiverTest extends AmqpClientTestSupport {
 
     @Test(timeout = 60000)
     public void testTwoQueueReceiversOnSameConnectionReadMessagesAcceptOnEach() throws Exception {
-        int MSG_COUNT = 4;
+        final int MSG_COUNT = 4;
         sendMessages(getTestName(), MSG_COUNT, false);
 
-        AmqpClient client = createAmqpClient();
-        AmqpConnection connection = trackConnection(client.connect());
-        AmqpSession session = connection.createSession();
+        final AmqpClient client = createAmqpClient();
+        final AmqpConnection connection = trackConnection(client.connect());
+        final AmqpSession session = connection.createSession();
 
-        AmqpReceiver receiver1 = session.createReceiver("queue://" + getTestName());
+        final AmqpReceiver receiver1 = session.createReceiver("queue://" + getTestName());
 
         final QueueViewMBean queueView = getProxyToQueue(getTestName());
         assertEquals(MSG_COUNT, queueView.getQueueSize());
@@ -473,17 +473,15 @@ public class AmqpReceiverTest extends AmqpClientTestSupport {
         assertNotNull(message);
         message.accept();
 
-        assertTrue("Should have ack'd two", Wait.waitFor(new Wait.Condition() {
+        assertTrue("Should have ack'd two", Wait.waitFor(
+                () -> queueView.getDequeueCount() == 2,
+                TimeUnit.SECONDS.toMillis(5), TimeUnit.MILLISECONDS.toMillis(50)));
 
-            @Override
-            public boolean isSatisified() throws Exception {
-                return queueView.getDequeueCount() == 2;
-            }
-        }, TimeUnit.SECONDS.toMillis(5), TimeUnit.MILLISECONDS.toMillis(50)));
+        final AmqpReceiver receiver2 = session.createReceiver("queue://" + getTestName());
 
-        AmqpReceiver receiver2 = session.createReceiver("queue://" + getTestName());
-
-        assertEquals(2, brokerService.getAdminView().getQueueSubscribers().length);
+        assertTrue("Second receiver should be registered", Wait.waitFor(
+                () -> brokerService.getAdminView().getQueueSubscribers().length == 2,
+                TimeUnit.SECONDS.toMillis(5), TimeUnit.MILLISECONDS.toMillis(50)));
 
         receiver2.flow(2);
         message = receiver2.receive(5, TimeUnit.SECONDS);
@@ -493,19 +491,19 @@ public class AmqpReceiverTest extends AmqpClientTestSupport {
         assertNotNull(message);
         message.accept();
 
-        assertEquals(MSG_COUNT, queueView.getDispatchCount());
-        assertTrue("Queue should be empty now", Wait.waitFor(new Wait.Condition() {
-
-            @Override
-            public boolean isSatisified() throws Exception {
-                return queueView.getDequeueCount() == 4;
-            }
-        }, TimeUnit.SECONDS.toMillis(15), TimeUnit.MILLISECONDS.toMillis(10)));
+        assertTrue("All messages should be dispatched", Wait.waitFor(
+                () -> queueView.getDispatchCount() == MSG_COUNT,
+                TimeUnit.SECONDS.toMillis(5), TimeUnit.MILLISECONDS.toMillis(50)));
+        assertTrue("Queue should be empty now", Wait.waitFor(
+                () -> queueView.getDequeueCount() == MSG_COUNT,
+                TimeUnit.SECONDS.toMillis(15), TimeUnit.MILLISECONDS.toMillis(10)));
 
         receiver1.close();
         receiver2.close();
 
-        assertEquals(0, queueView.getQueueSize());
+        assertTrue("Queue size should reach zero", Wait.waitFor(
+                () -> queueView.getQueueSize() == 0,
+                TimeUnit.SECONDS.toMillis(5), TimeUnit.MILLISECONDS.toMillis(50)));
 
         connection.close();
     }

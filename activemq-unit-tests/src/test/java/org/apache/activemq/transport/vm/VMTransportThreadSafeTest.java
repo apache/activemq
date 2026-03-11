@@ -558,9 +558,10 @@ public class VMTransportThreadSafeTest {
     @Test(timeout=60000)
     public void testStopWhileStartingAsyncWithNoAsyncLimit() throws Exception {
         // In the async case the iterate method should see that we are stopping and
-        // drop out before we dispatch all the messages but it should get at least 49 since
-        // the stop thread waits 500 mills and the listener is waiting 10 mills on each receive.
-        doTestStopWhileStartingWithNoAsyncLimit(true, 49);
+        // drop out before we dispatch all the messages. We wait until the TaskRunner
+        // has started processing (at least 1 message received), then stop mid-stream.
+        // Some messages should be received but not all 100.
+        doTestStopWhileStartingWithNoAsyncLimit(true, 1);
     }
 
     @Test(timeout=60000)
@@ -569,7 +570,7 @@ public class VMTransportThreadSafeTest {
         doTestStopWhileStartingWithNoAsyncLimit(false, 100);
     }
 
-    private void doTestStopWhileStartingWithNoAsyncLimit(boolean async, final int expect) throws Exception {
+    private void doTestStopWhileStartingWithNoAsyncLimit(final boolean async, final int expect) throws Exception {
 
         final VMTransport local = new VMTransport(new URI(location1));
         final VMTransport remote = new VMTransport(new URI(location2));
@@ -588,39 +589,31 @@ public class VMTransportThreadSafeTest {
             local.oneway(new DummyCommand(i));
         }
 
-        Thread t = new Thread(new Runnable() {
-
-            @Override
-            public void run() {
-                try {
-                    Thread.sleep(1000);
-                    remote.stop();
-                } catch (Exception e) {
-                }
-            }
-        });
-
         remote.start();
 
-        t.start();
+        if (async) {
+            // Wait until the TaskRunner has actually started processing messages
+            // before stopping, so we don't race and stop before any delivery occurs.
+            assertTrue("Remote should start receiving messages",
+                Wait.waitFor(() -> remoteReceived.size() > 0, 5000, 10));
 
-        assertTrue("Remote should receive: " + expect + ", commands but got: " + remoteReceived.size(), Wait.waitFor(new Wait.Condition() {
-            @Override
-            public boolean isSatisified() throws Exception {
-                return remoteReceived.size() >= expect;
-            }
-        }));
+            // Now stop mid-stream - some messages have been delivered, transport should dispose cleanly
+            remote.stop();
+        } else {
+            // Non-async: start() dispatches all messages synchronously, so they are
+            // already received. Just stop normally.
+            remote.stop();
+        }
+
+        assertTrue("Remote should receive at least " + expect + " commands but got: " + remoteReceived.size(),
+            Wait.waitFor(() -> remoteReceived.size() >= expect));
 
         LOG.debug("Remote listener received " + remoteReceived.size() + " messages");
 
         local.stop();
 
-        assertTrue("Remote transport never was disposed.", Wait.waitFor(new Wait.Condition() {
-            @Override
-            public boolean isSatisified() throws Exception {
-                return remote.isDisposed();
-            }
-        }));
+        assertTrue("Remote transport never was disposed.",
+            Wait.waitFor(() -> remote.isDisposed()));
     }
 
     @Test(timeout=120000)

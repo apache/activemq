@@ -34,6 +34,7 @@ import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.network.DiscoveryNetworkConnector;
 import org.apache.activemq.network.NetworkConnector;
 import org.apache.activemq.util.IOHelper;
+import org.apache.activemq.util.Wait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 /**
@@ -63,20 +64,31 @@ public class AMQ6366Test extends JmsMultipleBrokersTestSupport {
         testNonDurableReceiveThrougRestart("BrokerB", "BrokerA");
     }
 
-    protected void testNonDurableReceiveThrougRestart(String pubBroker, String conBroker) throws Exception {
-        NetworkConnector networkConnector = bridgeBrokerPair("BrokerA", "BrokerB");
+    protected void testNonDurableReceiveThrougRestart(final String pubBroker, final String conBroker) throws Exception {
+        final NetworkConnector networkConnector = bridgeBrokerPair("BrokerA", "BrokerB");
 
         startAllBrokers();
         waitForBridgeFormation();
 
-        MessageConsumer client = createDurableSubscriber(conBroker, dest, "sub1");
+        final MessageConsumer client = createDurableSubscriber(conBroker, dest, "sub1");
         client.close();
 
-        Thread.sleep(1000);
-        networkConnector.stop();
-        Thread.sleep(1000);
+        // Wait for the durable subscription to become inactive after closing the consumer
+        final Topic conBrokerDest = (Topic) brokers.get(conBroker).broker.getDestination(dest);
+        assertTrue("Durable sub should become inactive after close",
+                Wait.waitFor(() -> {
+                    final DurableTopicSubscription[] subs = conBrokerDest.getDurableTopicSubs()
+                            .values().toArray(new DurableTopicSubscription[0]);
+                    return subs.length > 0 && !subs[0].isActive();
+                }, 5000, 100));
 
-        Set<ActiveMQDestination> durableDests = new HashSet<>();
+        networkConnector.stop();
+
+        // Wait for the network connector to fully stop
+        assertTrue("Network connector should stop",
+                Wait.waitFor(networkConnector::isStopped, 5000, 100));
+
+        final Set<ActiveMQDestination> durableDests = new HashSet<>();
         durableDests.add(dest);
         //Normally set on broker start from the persistence layer but
         //simulate here since we just stopped and started the network connector
@@ -87,14 +99,15 @@ public class AMQ6366Test extends JmsMultipleBrokersTestSupport {
 
         // Send messages
         sendMessages(pubBroker, dest, 1);
-        Thread.sleep(1000);
 
-        Topic destination = (Topic) brokers.get(conBroker).broker.getDestination(dest);
-        DurableTopicSubscription sub = destination.getDurableTopicSubs().
-                values().toArray(new DurableTopicSubscription[0])[0];
-
-        //Assert that the message made it to the other broker
-        assertEquals(1, sub.getSubscriptionStatistics().getEnqueues().getCount());
+        // Wait for the message to be enqueued through the network bridge
+        final Topic destination = (Topic) brokers.get(conBroker).broker.getDestination(dest);
+        assertTrue("Message should be enqueued to durable subscription",
+                Wait.waitFor(() -> {
+                    final DurableTopicSubscription sub = destination.getDurableTopicSubs()
+                            .values().toArray(new DurableTopicSubscription[0])[0];
+                    return sub.getSubscriptionStatistics().getEnqueues().getCount() == 1;
+                }, 10000, 100));
     }
 
     @Override
@@ -103,16 +116,15 @@ public class AMQ6366Test extends JmsMultipleBrokersTestSupport {
         broker.setAdvisorySupport(true);
     }
 
-    protected NetworkConnector bridgeBrokerPair(String localBrokerName, String remoteBrokerName) throws Exception {
-        BrokerService localBroker = brokers.get(localBrokerName).broker;
-        BrokerService remoteBroker = brokers.get(remoteBrokerName).broker;
+    protected NetworkConnector bridgeBrokerPair(final String localBrokerName, final String remoteBrokerName) throws Exception {
+        final BrokerService localBroker = brokers.get(localBrokerName).broker;
+        final BrokerService remoteBroker = brokers.get(remoteBrokerName).broker;
 
-        List<TransportConnector> transportConnectors = remoteBroker.getTransportConnectors();
-        URI remoteURI;
+        final List<TransportConnector> transportConnectors = remoteBroker.getTransportConnectors();
         if (!transportConnectors.isEmpty()) {
-            remoteURI = transportConnectors.get(0).getConnectUri();
-            String uri = "static:(" + remoteURI + ")";
-            NetworkConnector connector = new DiscoveryNetworkConnector(new URI(uri));
+            final URI remoteURI = transportConnectors.get(0).getConnectUri();
+            final String uri = "static:(" + remoteURI + ")";
+            final NetworkConnector connector = new DiscoveryNetworkConnector(new URI(uri));
             connector.setDynamicOnly(false); // so matching durable subs are loaded on start
             connector.setStaticBridge(false);
             connector.setDuplex(true);
@@ -126,7 +138,7 @@ public class AMQ6366Test extends JmsMultipleBrokersTestSupport {
 
     @Override
     public void setUp() throws Exception {
-        File dataDir = new File(IOHelper.getDefaultDataDirectory());
+        final File dataDir = new File(IOHelper.getDefaultDataDirectory());
         LOG.info("Delete dataDir.." + dataDir.getCanonicalPath());
         org.apache.activemq.TestSupport.recursiveDelete(dataDir);
         super.setAutoFail(true);

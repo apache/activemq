@@ -20,12 +20,14 @@ import java.io.File;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import jakarta.jms.Connection;
 import jakarta.jms.MessageConsumer;
 import jakarta.jms.Session;
 
 import junit.framework.AssertionFailedError;
+import junit.framework.Test;
 import org.apache.activemq.JmsMultipleBrokersTestSupport;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.Destination;
@@ -35,9 +37,6 @@ import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.util.SubscriptionKey;
 import org.apache.activemq.util.Wait;
-import org.apache.activemq.util.Wait.Condition;
-
-import junit.framework.Test;
 
 /**
  * Test to make sure durable subscriptions propagate properly throughout network bridges
@@ -55,8 +54,8 @@ public class DurableFiveBrokerNetworkBridgeTest extends JmsMultipleBrokersTestSu
 
     protected NetworkConnector bridgeBrokers(String localBrokerName, String remoteBrokerName,
                                              boolean dynamicOnly, int networkTTL) throws Exception {
-        NetworkConnector connector = super.bridgeBrokers(localBrokerName, remoteBrokerName);
-        ArrayList<ActiveMQDestination> includedDestinations = new ArrayList<>();
+        final NetworkConnector connector = super.bridgeBrokers(localBrokerName, remoteBrokerName);
+        final ArrayList<ActiveMQDestination> includedDestinations = new ArrayList<>();
         includedDestinations.add(new ActiveMQTopic("TEST.FOO?forceDurable=true"));
         connector.setDynamicallyIncludedDestinations(includedDestinations);
         connector.setDuplex(duplex);
@@ -79,17 +78,18 @@ public class DurableFiveBrokerNetworkBridgeTest extends JmsMultipleBrokersTestSu
         bridgeBrokers("Broker_D_D", "Broker_E_E");
 
         startAllBrokers();
+        waitForBridgeFormation();
 
         // Setup destination
-        ActiveMQTopic dest = (ActiveMQTopic) createDestination("TEST.FOO", true);
+        final ActiveMQTopic dest = (ActiveMQTopic) createDestination("TEST.FOO", true);
 
         // Setup consumers
         Connection conn = brokers.get("Broker_A_A").factory.createConnection();
         conn.setClientID("clientId1");
         conn.start();
         Session ses = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        MessageConsumer clientA = ses.createDurableSubscriber(dest, "subA");
-        MessageConsumer clientA2 = ses.createDurableSubscriber(dest, "subA2");
+        final MessageConsumer clientA = ses.createDurableSubscriber(dest, "subA");
+        final MessageConsumer clientA2 = ses.createDurableSubscriber(dest, "subA2");
 
         // let consumers propagate around the network
         assertNCDurableSubsCount(brokers.get("Broker_B_B").broker, dest, 1);
@@ -104,7 +104,7 @@ public class DurableFiveBrokerNetworkBridgeTest extends JmsMultipleBrokersTestSu
         conn2.start();
         Session ses2 = conn2.createSession(false, Session.AUTO_ACKNOWLEDGE);
         MessageConsumer clientE = ses2.createDurableSubscriber(dest, "subE");
-        MessageConsumer clientE2 = ses2.createDurableSubscriber(dest, "subE2");
+        final MessageConsumer clientE2 = ses2.createDurableSubscriber(dest, "subE2");
 
         // let consumers propagate around the network
         assertNCDurableSubsCount(brokers.get("Broker_B_B").broker, dest, 2);
@@ -120,18 +120,19 @@ public class DurableFiveBrokerNetworkBridgeTest extends JmsMultipleBrokersTestSu
 
         this.destroyAllBrokers();
         deletePersistentMessagesOnStartup = false;
-        String options = new String("?persistent=true&useJmx=false");
-        createBroker(new URI("broker:(tcp://localhost:61616)/Broker_A_A" + options));
-        createBroker(new URI("broker:(tcp://localhost:61617)/Broker_B_B" + options));
-        createBroker(new URI("broker:(tcp://localhost:61618)/Broker_C_C" + options));
-        createBroker(new URI("broker:(tcp://localhost:61619)/Broker_D_D" + options));
-        createBroker(new URI("broker:(tcp://localhost:61620)/Broker_E_E" + options));
+        final String options = "?persistent=true&useJmx=false";
+        createBroker(new URI("broker:(tcp://localhost:0)/Broker_A_A" + options));
+        createBroker(new URI("broker:(tcp://localhost:0)/Broker_B_B" + options));
+        createBroker(new URI("broker:(tcp://localhost:0)/Broker_C_C" + options));
+        createBroker(new URI("broker:(tcp://localhost:0)/Broker_D_D" + options));
+        createBroker(new URI("broker:(tcp://localhost:0)/Broker_E_E" + options));
         bridgeBrokers("Broker_A_A", "Broker_B_B");
         bridgeBrokers("Broker_B_B", "Broker_C_C");
         bridgeBrokers("Broker_C_C", "Broker_D_D");
         bridgeBrokers("Broker_D_D", "Broker_E_E");
 
         startAllBrokers();
+        waitForBridgeFormation();
 
         conn = brokers.get("Broker_A_A").factory.createConnection();
         conn.setClientID("clientId1");
@@ -180,14 +181,15 @@ public class DurableFiveBrokerNetworkBridgeTest extends JmsMultipleBrokersTestSu
         }
 
         startAllBrokers();
+        waitForBridgeFormation();
 
         // Setup destination
-        ActiveMQTopic dest = (ActiveMQTopic) createDestination("TEST.FOO", true);
+        final ActiveMQTopic dest = (ActiveMQTopic) createDestination("TEST.FOO", true);
 
         // Setup consumers
-        Session ses = createSession("Broker_A_A");
-        MessageConsumer clientA = ses.createDurableSubscriber(dest, "subA");
-        MessageConsumer clientB = ses.createDurableSubscriber(dest, "subB");
+        final Session ses = createSession("Broker_A_A");
+        final MessageConsumer clientA = ses.createDurableSubscriber(dest, "subA");
+        final MessageConsumer clientB = ses.createDurableSubscriber(dest, "subB");
 
         // let consumers propagate around the network
         assertNCDurableSubsCount(brokers.get("Broker_B_B").broker, dest, 1);
@@ -199,8 +201,8 @@ public class DurableFiveBrokerNetworkBridgeTest extends JmsMultipleBrokersTestSu
         assertNotNull(clientB.receive(1000));
 
         //bring online a consumer on the other side
-        Session ses2 = createSession("Broker_C_C");
-        MessageConsumer clientC = ses2.createDurableSubscriber(dest, "subC");
+        final Session ses2 = createSession("Broker_C_C");
+        final MessageConsumer clientC = ses2.createDurableSubscriber(dest, "subC");
         //there will be 2 network durables, 1 for each direction of the bridge
         assertNCDurableSubsCount(brokers.get("Broker_B_B").broker, dest, 2);
         assertNCDurableSubsCount(brokers.get("Broker_C_C").broker, dest, 1);
@@ -216,7 +218,6 @@ public class DurableFiveBrokerNetworkBridgeTest extends JmsMultipleBrokersTestSu
         assertNCDurableSubsCount(brokers.get("Broker_A_A").broker, dest, 0);
         assertNCDurableSubsCount(brokers.get("Broker_B_B").broker, dest, 0);
         assertNCDurableSubsCount(brokers.get("Broker_C_C").broker, dest, 0);
-
     }
 
     public void testDurablePropagationConsumerAllBrokersDuplex() throws Exception {
@@ -239,13 +240,14 @@ public class DurableFiveBrokerNetworkBridgeTest extends JmsMultipleBrokersTestSu
         }
 
         startAllBrokers();
+        waitForBridgeFormation();
 
         // Setup destination
-        ActiveMQTopic dest = (ActiveMQTopic) createDestination("TEST.FOO", true);
+        final ActiveMQTopic dest = (ActiveMQTopic) createDestination("TEST.FOO", true);
 
         // Setup consumers
-        Session ses = createSession("Broker_A_A");
-        MessageConsumer clientA = ses.createDurableSubscriber(dest, "subA");
+        final Session ses = createSession("Broker_A_A");
+        final MessageConsumer clientA = ses.createDurableSubscriber(dest, "subA");
 
         // let consumers propagate around the network
         assertNCDurableSubsCount(brokers.get("Broker_B_B").broker, dest, 1);
@@ -253,20 +255,19 @@ public class DurableFiveBrokerNetworkBridgeTest extends JmsMultipleBrokersTestSu
         assertNCDurableSubsCount(brokers.get("Broker_A_A").broker, dest, 0);
 
         //bring online a consumer on the other side
-        Session ses2 = createSession("Broker_B_B");
-        MessageConsumer clientB = ses2.createDurableSubscriber(dest, "subB");
+        final Session ses2 = createSession("Broker_B_B");
+        final MessageConsumer clientB = ses2.createDurableSubscriber(dest, "subB");
 
         assertNCDurableSubsCount(brokers.get("Broker_B_B").broker, dest, 1);
         assertNCDurableSubsCount(brokers.get("Broker_C_C").broker, dest, 1);
         assertNCDurableSubsCount(brokers.get("Broker_A_A").broker, dest, 1);
 
-        Session ses3 = createSession("Broker_C_C");
-        MessageConsumer clientC = ses3.createDurableSubscriber(dest, "subC");
+        final Session ses3 = createSession("Broker_C_C");
+        final MessageConsumer clientC = ses3.createDurableSubscriber(dest, "subC");
 
         assertNCDurableSubsCount(brokers.get("Broker_B_B").broker, dest, 2);
         assertNCDurableSubsCount(brokers.get("Broker_C_C").broker, dest, 1);
         assertNCDurableSubsCount(brokers.get("Broker_A_A").broker, dest, 1);
-
 
         clientA.close();
         clientB.close();
@@ -275,11 +276,9 @@ public class DurableFiveBrokerNetworkBridgeTest extends JmsMultipleBrokersTestSu
         ses2.unsubscribe("subB");
         ses3.unsubscribe("subC");
 
-
         assertNCDurableSubsCount(brokers.get("Broker_A_A").broker, dest, 0);
         assertNCDurableSubsCount(brokers.get("Broker_B_B").broker, dest, 0);
         assertNCDurableSubsCount(brokers.get("Broker_C_C").broker, dest, 0);
-
     }
 
     public void testDurablePropagation5BrokerDuplex() throws Exception {
@@ -306,15 +305,16 @@ public class DurableFiveBrokerNetworkBridgeTest extends JmsMultipleBrokersTestSu
         }
 
         startAllBrokers();
+        waitForBridgeFormation();
 
         // Setup destination
-        ActiveMQTopic dest = (ActiveMQTopic) createDestination("TEST.FOO", true);
+        final ActiveMQTopic dest = (ActiveMQTopic) createDestination("TEST.FOO", true);
 
         // Setup consumers
-        Session ses = createSession("Broker_A_A");
-        MessageConsumer clientA = ses.createDurableSubscriber(dest, "subA");
+        final Session ses = createSession("Broker_A_A");
+        final MessageConsumer clientA = ses.createDurableSubscriber(dest, "subA");
 
-        // let consumers propagate around the network (assertNCDurableSubsCount waits internally)
+        // let consumers propagate around the network
         assertNCDurableSubsCount(brokers.get("Broker_B_B").broker, dest, 1);
         assertNCDurableSubsCount(brokers.get("Broker_C_C").broker, dest, 1);
         assertNCDurableSubsCount(brokers.get("Broker_D_D").broker, dest, 1);
@@ -325,10 +325,10 @@ public class DurableFiveBrokerNetworkBridgeTest extends JmsMultipleBrokersTestSu
         assertNotNull(clientA.receive(1000));
 
         //bring online a consumer on the other side
-        Session ses2 = createSession("Broker_E_E");
-        MessageConsumer clientE = ses2.createDurableSubscriber(dest, "subE");
+        final Session ses2 = createSession("Broker_E_E");
+        final MessageConsumer clientE = ses2.createDurableSubscriber(dest, "subE");
 
-        //there will be 2 network durables, 1 for each direction of the bridge (assertNCDurableSubsCount waits internally)
+        //there will be 2 network durables, 1 for each direction of the bridge
         assertNCDurableSubsCount(brokers.get("Broker_B_B").broker, dest, 2);
         assertNCDurableSubsCount(brokers.get("Broker_C_C").broker, dest, 2);
         assertNCDurableSubsCount(brokers.get("Broker_D_D").broker, dest, 2);
@@ -345,7 +345,6 @@ public class DurableFiveBrokerNetworkBridgeTest extends JmsMultipleBrokersTestSu
         assertNCDurableSubsCount(brokers.get("Broker_C_C").broker, dest, 0);
         assertNCDurableSubsCount(brokers.get("Broker_D_D").broker, dest, 0);
         assertNCDurableSubsCount(brokers.get("Broker_E_E").broker, dest, 0);
-
     }
 
     public void testDurablePropagationSpokeDuplex() throws Exception {
@@ -370,26 +369,27 @@ public class DurableFiveBrokerNetworkBridgeTest extends JmsMultipleBrokersTestSu
         }
 
         startAllBrokers();
+        waitForBridgeFormation();
 
         // Setup destination
-        ActiveMQTopic dest = (ActiveMQTopic) createDestination("TEST.FOO", true);
+        final ActiveMQTopic dest = (ActiveMQTopic) createDestination("TEST.FOO", true);
 
         // Setup consumers
-        Session ses = createSession("Broker_A_A");
-        Session ses2 = createSession("Broker_B_B");
-        Session ses3 = createSession("Broker_C_C");
-        Session ses4 = createSession("Broker_D_D");
+        final Session ses = createSession("Broker_A_A");
+        final Session ses2 = createSession("Broker_B_B");
+        final Session ses3 = createSession("Broker_C_C");
+        final Session ses4 = createSession("Broker_D_D");
 
-        MessageConsumer clientA = ses.createDurableSubscriber(dest, "subA");
-        MessageConsumer clientAB = ses.createDurableSubscriber(dest, "subAB");
+        final MessageConsumer clientA = ses.createDurableSubscriber(dest, "subA");
+        final MessageConsumer clientAB = ses.createDurableSubscriber(dest, "subAB");
 
-        // let consumers propagate around the network (assertNCDurableSubsCount waits internally)
+        // let consumers propagate around the network
         assertNCDurableSubsCount(brokers.get("Broker_B_B").broker, dest, 1);
         assertNCDurableSubsCount(brokers.get("Broker_C_C").broker, dest, 1);
         assertNCDurableSubsCount(brokers.get("Broker_D_D").broker, dest, 1);
         assertNCDurableSubsCount(brokers.get("Broker_A_A").broker, dest, 0);
 
-        MessageConsumer clientD = ses4.createDurableSubscriber(dest, "subD");
+        final MessageConsumer clientD = ses4.createDurableSubscriber(dest, "subD");
 
         assertNCDurableSubsCount(brokers.get("Broker_B_B").broker, dest, 2);
         assertNCDurableSubsCount(brokers.get("Broker_C_C").broker, dest, 1);
@@ -401,10 +401,10 @@ public class DurableFiveBrokerNetworkBridgeTest extends JmsMultipleBrokersTestSu
         sendMessages("Broker_C_C", dest, 1);
         assertNotNull(clientD.receive(1000));
 
-        MessageConsumer clientB = ses2.createDurableSubscriber(dest, "subB");
-        MessageConsumer clientC = ses3.createDurableSubscriber(dest, "subC");
-        Thread.sleep(1000);
+        final MessageConsumer clientB = ses2.createDurableSubscriber(dest, "subB");
+        final MessageConsumer clientC = ses3.createDurableSubscriber(dest, "subC");
 
+        // let consumers propagate around the network (Wait.waitFor polls internally)
         assertNCDurableSubsCount(brokers.get("Broker_B_B").broker, dest, 3);
         assertNCDurableSubsCount(brokers.get("Broker_C_C").broker, dest, 1);
         assertNCDurableSubsCount(brokers.get("Broker_D_D").broker, dest, 1);
@@ -448,16 +448,16 @@ public class DurableFiveBrokerNetworkBridgeTest extends JmsMultipleBrokersTestSu
         }
 
         startAllBrokers();
+        waitForBridgeFormation();
 
         // Setup destination
-        ActiveMQTopic dest = (ActiveMQTopic) createDestination("TEST.FOO", true);
+        final ActiveMQTopic dest = (ActiveMQTopic) createDestination("TEST.FOO", true);
 
         // Setup consumers
-        Session ses = createSession("Broker_A_A");
-        MessageConsumer clientA = ses.createConsumer(dest);
-        Thread.sleep(1000);
+        final Session ses = createSession("Broker_A_A");
+        final MessageConsumer clientA = ses.createConsumer(dest);
 
-        // let consumers propagate around the network
+        // let consumers propagate around the network (Wait.waitFor polls internally)
         assertNCDurableSubsCount(brokers.get("Broker_B_B").broker, dest, 1);
         assertNCDurableSubsCount(brokers.get("Broker_C_C").broker, dest, 1);
         assertNCDurableSubsCount(brokers.get("Broker_A_A").broker, dest, 0);
@@ -465,10 +465,10 @@ public class DurableFiveBrokerNetworkBridgeTest extends JmsMultipleBrokersTestSu
         sendMessages("Broker_C_C", dest, 1);
         assertNotNull(clientA.receive(1000));
 
-        Session ses2 = createSession("Broker_C_C");
-        MessageConsumer clientC = ses2.createConsumer(dest);
-        Thread.sleep(1000);
+        final Session ses2 = createSession("Broker_C_C");
+        final MessageConsumer clientC = ses2.createConsumer(dest);
 
+        // let consumers propagate around the network (Wait.waitFor polls internally)
         assertNCDurableSubsCount(brokers.get("Broker_B_B").broker, dest, 2);
         assertNCDurableSubsCount(brokers.get("Broker_C_C").broker, dest, 1);
         assertNCDurableSubsCount(brokers.get("Broker_A_A").broker, dest, 1);
@@ -493,8 +493,8 @@ public class DurableFiveBrokerNetworkBridgeTest extends JmsMultipleBrokersTestSu
 
     protected void testDurablePropagationSync() throws Exception {
         // Setup broker networks
-        NetworkConnector nc1 = bridgeBrokers("Broker_A_A", "Broker_B_B");
-        NetworkConnector nc2 = bridgeBrokers("Broker_B_B", "Broker_C_C");
+        final NetworkConnector nc1 = bridgeBrokers("Broker_A_A", "Broker_B_B");
+        final NetworkConnector nc2 = bridgeBrokers("Broker_B_B", "Broker_C_C");
 
         NetworkConnector nc3 = null;
         NetworkConnector nc4 = null;
@@ -514,16 +514,16 @@ public class DurableFiveBrokerNetworkBridgeTest extends JmsMultipleBrokersTestSu
         }
 
         // Setup destination
-        ActiveMQTopic dest = (ActiveMQTopic) createDestination("TEST.FOO", true);
+        final ActiveMQTopic dest = (ActiveMQTopic) createDestination("TEST.FOO", true);
 
-        // Setup consumers
-        Session ses = createSession("Broker_A_A");
-        Session ses2 = createSession("Broker_C_C");
-        MessageConsumer clientA = ses.createDurableSubscriber(dest, "subA");
-        MessageConsumer clientB = ses.createDurableSubscriber(dest, "subB");
-        MessageConsumer clientC = ses2.createDurableSubscriber(dest, "subC");
-        Thread.sleep(1000);
+        // Setup consumers -- no bridges are running so no NC subs should be created
+        final Session ses = createSession("Broker_A_A");
+        final Session ses2 = createSession("Broker_C_C");
+        final MessageConsumer clientA = ses.createDurableSubscriber(dest, "subA");
+        final MessageConsumer clientB = ses.createDurableSubscriber(dest, "subB");
+        final MessageConsumer clientC = ses2.createDurableSubscriber(dest, "subC");
 
+        // No bridges running, so no NC durable subs should exist
         assertNCDurableSubsCount(brokers.get("Broker_A_A").broker, dest, 0);
         assertNCDurableSubsCount(brokers.get("Broker_B_B").broker, dest, 0);
         assertNCDurableSubsCount(brokers.get("Broker_C_C").broker, dest, 0);
@@ -553,31 +553,31 @@ public class DurableFiveBrokerNetworkBridgeTest extends JmsMultipleBrokersTestSu
         bridgeBrokers("Broker_B_B", "Broker_C_C");
 
         //Duplicate the bridges with different included destinations - valid use case
-        NetworkConnector nc3 = bridgeBrokers("Broker_A_A", "Broker_B_B");
-        NetworkConnector nc4 = bridgeBrokers("Broker_B_B", "Broker_C_C");
+        final NetworkConnector nc3 = bridgeBrokers("Broker_A_A", "Broker_B_B");
+        final NetworkConnector nc4 = bridgeBrokers("Broker_B_B", "Broker_C_C");
         nc3.setName("nc_3_3");
         nc4.setName("nc_4_4");
-        ArrayList<ActiveMQDestination> includedDestinations = new ArrayList<>();
+        final ArrayList<ActiveMQDestination> includedDestinations = new ArrayList<>();
         includedDestinations.add(new ActiveMQTopic("TEST.FOO2?forceDurable=true"));
         nc3.setDynamicallyIncludedDestinations(includedDestinations);
         nc4.setDynamicallyIncludedDestinations(includedDestinations);
 
         startAllBrokers();
+        waitForBridgeFormation();
 
         // Setup destination
-        ActiveMQTopic dest = (ActiveMQTopic) createDestination("TEST.FOO", true);
-        ActiveMQTopic dest2 = (ActiveMQTopic) createDestination("TEST.FOO2", true);
+        final ActiveMQTopic dest = (ActiveMQTopic) createDestination("TEST.FOO", true);
+        final ActiveMQTopic dest2 = (ActiveMQTopic) createDestination("TEST.FOO2", true);
 
         // Setup consumers
-        Session ses = createSession("Broker_A_A");
-        Session ses2 = createSession("Broker_C_C");
-        MessageConsumer clientA = ses.createDurableSubscriber(dest, "subA");
-        MessageConsumer clientAa = ses.createDurableSubscriber(dest2, "subAa");
-        MessageConsumer clientC = ses2.createDurableSubscriber(dest, "subC");
-        MessageConsumer clientCc = ses2.createDurableSubscriber(dest2, "subCc");
-        Thread.sleep(1000);
+        final Session ses = createSession("Broker_A_A");
+        final Session ses2 = createSession("Broker_C_C");
+        final MessageConsumer clientA = ses.createDurableSubscriber(dest, "subA");
+        final MessageConsumer clientAa = ses.createDurableSubscriber(dest2, "subAa");
+        final MessageConsumer clientC = ses2.createDurableSubscriber(dest, "subC");
+        final MessageConsumer clientCc = ses2.createDurableSubscriber(dest2, "subCc");
 
-        //make sure network durables are online
+        //make sure network durables are online (Wait.waitFor polls internally)
         assertNCDurableSubsCount(brokers.get("Broker_B_B").broker, dest, 2);
         assertNCDurableSubsCount(brokers.get("Broker_C_C").broker, dest, 1);
         assertNCDurableSubsCount(brokers.get("Broker_A_A").broker, dest, 1);
@@ -729,32 +729,32 @@ public class DurableFiveBrokerNetworkBridgeTest extends JmsMultipleBrokersTestSu
         testDurablePropagation(-1, true, List.of(1, 2, 2, 2, 1));
     }
 
-    private void testDurablePropagation(int ttl, boolean dynamicOnly,
-                                        List<Integer> expected) throws Exception {
+    private void testDurablePropagation(final int ttl, final boolean dynamicOnly,
+                                        final List<Integer> expected) throws Exception {
         testDurablePropagation(ttl, dynamicOnly, false, expected);
     }
 
-    private void testDurablePropagation(int ttl, boolean dynamicOnly, boolean restartBrokers,
-                                         List<Integer> expected) throws Exception {
+    private void testDurablePropagation(final int ttl, final boolean dynamicOnly, final boolean restartBrokers,
+                                         final List<Integer> expected) throws Exception {
         duplex = true;
 
         // Setup broker networks
-        NetworkConnector nc1 = bridgeBrokers("Broker_A_A", "Broker_B_B", dynamicOnly, ttl);
-        NetworkConnector nc2 = bridgeBrokers("Broker_B_B", "Broker_C_C", dynamicOnly, ttl);
-        NetworkConnector nc3 = bridgeBrokers("Broker_C_C", "Broker_D_D", dynamicOnly, ttl);
-        NetworkConnector nc4 = bridgeBrokers("Broker_D_D", "Broker_E_E", dynamicOnly, ttl);
+        final NetworkConnector nc1 = bridgeBrokers("Broker_A_A", "Broker_B_B", dynamicOnly, ttl);
+        final NetworkConnector nc2 = bridgeBrokers("Broker_B_B", "Broker_C_C", dynamicOnly, ttl);
+        final NetworkConnector nc3 = bridgeBrokers("Broker_C_C", "Broker_D_D", dynamicOnly, ttl);
+        final NetworkConnector nc4 = bridgeBrokers("Broker_D_D", "Broker_E_E", dynamicOnly, ttl);
 
         startAllBrokers();
         stopNetworkConnectors(nc1, nc2, nc3, nc4);
 
         // Setup destination
-        ActiveMQTopic dest = (ActiveMQTopic) createDestination("TEST.FOO", true);
+        final ActiveMQTopic dest = (ActiveMQTopic) createDestination("TEST.FOO", true);
 
         // Setup consumers
-        Session ses = createSession("Broker_A_A");
-        Session ses2 = createSession("Broker_E_E");
-        MessageConsumer clientA = ses.createDurableSubscriber(dest, "subA");
-        MessageConsumer clientE = ses2.createDurableSubscriber(dest, "subE");
+        final Session ses = createSession("Broker_A_A");
+        final Session ses2 = createSession("Broker_E_E");
+        final MessageConsumer clientA = ses.createDurableSubscriber(dest, "subA");
+        final MessageConsumer clientE = ses2.createDurableSubscriber(dest, "subE");
 
         assertNCDurableSubsCount(brokers.get("Broker_A_A").broker, dest, 0);
         assertNCDurableSubsCount(brokers.get("Broker_B_B").broker, dest, 0);
@@ -764,7 +764,7 @@ public class DurableFiveBrokerNetworkBridgeTest extends JmsMultipleBrokersTestSu
 
         startNetworkConnectors(nc1, nc2, nc3, nc4);
 
-        // Check that the correct network durables exist (assertNCDurableSubsCount waits internally)
+        // Check that the correct network durables exist
         assertNCDurableSubsCount(brokers.get("Broker_A_A").broker, dest, expected.get(0));
         assertNCDurableSubsCount(brokers.get("Broker_B_B").broker, dest, expected.get(1));
         assertNCDurableSubsCount(brokers.get("Broker_C_C").broker, dest, expected.get(2));
@@ -784,6 +784,7 @@ public class DurableFiveBrokerNetworkBridgeTest extends JmsMultipleBrokersTestSu
             bridgeBrokers("Broker_C_C", "Broker_D_D", dynamicOnly, ttl);
             bridgeBrokers("Broker_D_D", "Broker_E_E", dynamicOnly, ttl);
             startAllBrokers();
+            waitForBridgeFormation();
         } else {
             // restart just the network connectors but leave the consumers online
             // to test sync works ok. Things should work for all cases both dynamicOnly
@@ -792,7 +793,7 @@ public class DurableFiveBrokerNetworkBridgeTest extends JmsMultipleBrokersTestSu
             startNetworkConnectors(nc1, nc2, nc3, nc4);
         }
 
-        // after restarting the bridges, check sync/demand are correct (assertNCDurableSubsCount waits internally)
+        // after restarting the bridges, check sync/demand are correct
         assertNCDurableSubsCount(brokers.get("Broker_A_A").broker, dest, expected.get(0));
         assertNCDurableSubsCount(brokers.get("Broker_B_B").broker, dest, expected.get(1));
         assertNCDurableSubsCount(brokers.get("Broker_C_C").broker, dest, expected.get(2));
@@ -802,28 +803,27 @@ public class DurableFiveBrokerNetworkBridgeTest extends JmsMultipleBrokersTestSu
 
     protected void assertNCDurableSubsCount(final BrokerService brokerService, final ActiveMQTopic dest,
             final int count) throws Exception {
-        assertTrue(Wait.waitFor(new Condition() {
-            @Override
-            public boolean isSatisified() throws Exception {
-                return count == getNCDurableSubs(brokerService, dest).size();
-            }
-        }, 10000, 500));
+        assertTrue("Expected " + count + " NC durable sub(s) on " + brokerService.getBrokerName()
+                + " for " + dest.getTopicName() + ", but got "
+                + getNCDurableSubs(brokerService, dest).size(),
+            Wait.waitFor(() -> count == getNCDurableSubs(brokerService, dest).size(),
+                TimeUnit.SECONDS.toMillis(30), 500));
     }
 
     protected List<DurableTopicSubscription> getNCDurableSubs(final BrokerService brokerService,
             final ActiveMQTopic dest) throws Exception {
-        List<DurableTopicSubscription> subs = new ArrayList<>();
-        Destination d = brokerService.getDestination(dest);
-        org.apache.activemq.broker.region.Topic destination = null;
+        final List<DurableTopicSubscription> subs = new ArrayList<>();
+        final Destination d = brokerService.getDestination(dest);
+        final org.apache.activemq.broker.region.Topic destination;
         if (d instanceof DestinationFilter) {
             destination = ((DestinationFilter) d).getAdaptor(org.apache.activemq.broker.region.Topic.class);
         } else {
             destination = (org.apache.activemq.broker.region.Topic) d;
         }
 
-        for (SubscriptionKey key : destination.getDurableTopicSubs().keySet()) {
+        for (final SubscriptionKey key : destination.getDurableTopicSubs().keySet()) {
             if (key.getSubscriptionName().startsWith(DemandForwardingBridge.DURABLE_SUB_PREFIX)) {
-                DurableTopicSubscription sub = destination.getDurableTopicSubs().get(key);
+                final DurableTopicSubscription sub = destination.getDurableTopicSubs().get(key);
                 if (sub != null && sub.isActive()) {
                     subs.add(sub);
                 }
@@ -855,19 +855,19 @@ public class DurableFiveBrokerNetworkBridgeTest extends JmsMultipleBrokersTestSu
     }
 
     protected void startNetworkConnectors(NetworkConnector... connectors) throws Exception {
-        for (NetworkConnector connector : connectors) {
+        for (final NetworkConnector connector : connectors) {
             connector.start();
         }
     }
 
     protected void stopNetworkConnectors(NetworkConnector... connectors) throws Exception {
-        for (NetworkConnector connector : connectors) {
+        for (final NetworkConnector connector : connectors) {
             connector.stop();
         }
     }
 
     protected Session createSession(String broker) throws Exception {
-        Connection con = createConnection(broker);
+        final Connection con = createConnection(broker);
         con.start();
         return con.createSession(false, Session.AUTO_ACKNOWLEDGE);
     }

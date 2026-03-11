@@ -202,16 +202,23 @@ public abstract class AbstractCachedLDAPAuthorizationMapLegacyTest extends Abstr
 
         reader.close();
 
-        assertTrue("did not get expected size after remove", Wait.waitFor(new Wait.Condition() {
-            @Override
-            public boolean isSatisified() throws Exception {
-                return map.getReadACLs(new ActiveMQQueue("TEST.FOO")).size() == 0;
-            }
-        }));
+        assertTrue("did not get expected size after remove", Wait.waitFor(
+                () -> map.getReadACLs(new ActiveMQQueue("TEST.FOO")).size() == 0));
 
-        assertTrue(map.getTempDestinationReadACLs() == null || map.getTempDestinationReadACLs().isEmpty());
-        assertTrue(map.getTempDestinationWriteACLs() == null || map.getTempDestinationWriteACLs().isEmpty());
-        assertTrue(map.getTempDestinationAdminACLs() == null || map.getTempDestinationAdminACLs().isEmpty());
+        // Temp destination ACLs are removed by a separate LDAP listener
+        // (on the Temp subtree), so events may arrive after the Queue events.
+        assertTrue("Temp read ACLs not cleared after remove", Wait.waitFor(() -> {
+            final Set<?> acls = map.getTempDestinationReadACLs();
+            return acls == null || acls.isEmpty();
+        }));
+        assertTrue("Temp write ACLs not cleared after remove", Wait.waitFor(() -> {
+            final Set<?> acls = map.getTempDestinationWriteACLs();
+            return acls == null || acls.isEmpty();
+        }));
+        assertTrue("Temp admin ACLs not cleared after remove", Wait.waitFor(() -> {
+            final Set<?> acls = map.getTempDestinationAdminACLs();
+            return acls == null || acls.isEmpty();
+        }));
     }
 
     @Test
