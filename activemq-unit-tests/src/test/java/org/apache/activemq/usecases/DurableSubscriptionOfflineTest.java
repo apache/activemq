@@ -96,10 +96,8 @@ public class DurableSubscriptionOfflineTest extends DurableSubscriptionOfflineTe
         final DurableSubscriptionOfflineTestListener listener = new DurableSubscriptionOfflineTestListener();
         consumer.setMessageListener(listener);
 
-        // After unsubscribe and re-subscribe, no old messages should arrive.
-        // Wait briefly to confirm no messages are unexpectedly delivered.
-        assertFalse("no messages should be received after unsubscribe",
-            Wait.waitFor(() -> listener.count > 0, 2000, 100));
+        assertTrue("all messages received by listener",
+            Wait.waitFor(() -> listener.count >= sent, 5000, 100));
 
         session.close();
         con.close();
@@ -602,8 +600,9 @@ public class DurableSubscriptionOfflineTest extends DurableSubscriptionOfflineTe
         final DurableSubscriptionOfflineTestListener listener = new DurableSubscriptionOfflineTestListener();
         consumer.setMessageListener(listener);
 
-        assertTrue("offline consumer got all messages",
-            Wait.waitFor(() -> listener.count >= 10, 5000, 100));
+        // After unsubscribe and re-subscribe, no old messages should arrive
+        assertFalse("no messages should be received after unsubscribe",
+            Wait.waitFor(() -> listener.count > 0, 3000, 100));
 
         session.close();
         con.close();

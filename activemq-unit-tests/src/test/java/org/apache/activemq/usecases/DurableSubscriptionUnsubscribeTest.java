@@ -227,6 +227,9 @@ public class DurableSubscriptionUnsubscribeTest extends TestSupport {
                 final ObjectName[] activeSubs = broker.getAdminView().getDurableTopicSubscribers();
                 return inactiveSubs.length == expectedInactive && activeSubs.length == active;
             }, 5000, 100));
+        // Wait for all advisory messages to arrive (100 = all + advisories)
+        assertTrue("advisory count should reach expected total",
+            Wait.waitFor(() -> all + advisories.get() >= 100, 5000, 100));
         assertCount(all, active);
     }
 

@@ -177,8 +177,25 @@ public class NetworkBrokerDetachTest {
         networkedBroker = createNetworkedBroker();
         networkedBroker.start();
 
-        // Add network connector after restart (ports are dynamically assigned)
+        // Re-create both directions of the network bridge with new ports
         addNetworkConnectorToBroker(networkedBroker, broker);
+        addNetworkConnectorToBroker(broker, networkedBroker);
+
+        // Wait for new bridges to fully form
+        assertTrue("bridge should form after restart",
+                Wait.waitFor(() -> {
+                    for (final NetworkConnector nc : networkedBroker.getNetworkConnectors()) {
+                        if (!nc.activeBridges().isEmpty()) return true;
+                    }
+                    return false;
+                }, 30000, 200));
+        assertTrue("bridge broker->networkedBroker should form after restart",
+                Wait.waitFor(() -> {
+                    // Check the newest connector (last added) has an active bridge
+                    final java.util.List<NetworkConnector> ncs = broker.getNetworkConnectors();
+                    if (ncs.size() < 2) return false;
+                    return !ncs.get(ncs.size() - 1).activeBridges().isEmpty();
+                }, 30000, 200));
 
         LOG.info("Recreating durable Consumer on the broker after restart...");
         registerDurableConsumer(networkedBroker, counter);

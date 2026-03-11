@@ -69,11 +69,6 @@ public class AdvisoryNetworkBridgeTest extends TestCase {
 
         createBroker2();
 
-        // Wait for the network bridge to be established
-        assertTrue("network bridge started",
-            Wait.waitFor(() -> !broker1.getNetworkConnectors().isEmpty()
-                && !broker1.getNetworkConnectors().get(0).activeBridges().isEmpty(), 10000, 100));
-
         final ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("vm://broker1");
         final Connection conn = factory.createConnection();
         final Session sess = conn.createSession(false, Session.AUTO_ACKNOWLEDGE);

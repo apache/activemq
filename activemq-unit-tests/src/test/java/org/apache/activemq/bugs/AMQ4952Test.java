@@ -386,9 +386,11 @@ public class AMQ4952Test {
         broker.getManagementContext().setCreateConnector(false);
         broker.setDeleteAllMessagesOnStartup(deleteMessages);
         broker.setBrokerName("BC");
-        // Use ephemeral port
+        // Reuse the same port on restart so failover connections can reconnect
+        final int port = (consumerBrokerUri != null)
+                ? new URI(consumerBrokerUri).getPort() : 0;
         final TransportConnector transportConnector = new TransportConnector();
-        transportConnector.setUri(new URI("tcp://localhost:0"));
+        transportConnector.setUri(new URI("tcp://localhost:" + port));
         final List<TransportConnector> transportConnectors = new ArrayList<>();
         transportConnectors.add(transportConnector);
         broker.setTransportConnectors(transportConnectors);
