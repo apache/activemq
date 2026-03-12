@@ -981,6 +981,7 @@
             <forkCount>1</forkCount>
             <reuseForks>false</reuseForks>
             <forkedProcessTimeoutInSeconds>${surefire.forkedProcessTimeout}</forkedProcessTimeoutInSeconds>
+            <enableProcessChecker>all</enableProcessChecker>
             <failIfNoTests>false</failIfNoTests>
             <systemPropertyVariables>
                 <java.awt.headless>true</java.awt.headless>
