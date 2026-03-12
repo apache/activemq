@@ -125,8 +125,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
 
     /**
      * If set to true, strict Jakarta Messaging 3.1 compliance is enforced.
-     * This rejects non-standard property types (like Character) and forces
-     * legacy features like nestedMapAndListEnabled to false.
+     * This strictly rejects non-standard property types such as Character, Map, and List.
      */
     private boolean strictCompliance = false;
 
@@ -418,7 +417,6 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
 
         // Copy the compliance flags from the Factory to the Connection
         connection.setStrictCompliance(isStrictCompliance());
-        connection.setNestedMapAndListEnabled(isNestedMapAndListEnabled());
 
         return connection;
     }
@@ -1017,15 +1015,10 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     }
 
     /**
-     * If this flag is set then the connection follows strict Jakarta Messaging
-     * compliance. Enabling this will automatically force nestedMapAndListEnabled to false.
+     * If this flag is set then the connection follows strict Jakarta Messaging compliance.
      */
     public void setStrictCompliance(boolean strictCompliance) {
         this.strictCompliance = strictCompliance;
-        if (strictCompliance) {
-            this.setNestedMapAndListEnabled(false);
-            LOG.info("Strict compliance enabled: nestedMapAndListEnabled has been forced to false to align with Jakarta specifications.");
-        }
     }
 
     public String getClientIDPrefix() {

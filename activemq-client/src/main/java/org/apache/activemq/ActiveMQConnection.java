@@ -143,8 +143,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
 
     /**
      * If set to true, strict Jakarta Messaging 3.1 compliance is enforced.
-     * This rejects non-standard property types (like Character) and forces
-     * legacy features like nestedMapAndListEnabled to false.
+     * This strictly rejects non-standard property types such as Character, Map, and List.
      */
     private boolean strictCompliance = false;
 

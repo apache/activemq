@@ -26,6 +26,9 @@ import jakarta.jms.Message;
 import jakarta.jms.MessageFormatException;
 import jakarta.jms.Session;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import static org.apache.activemq.command.DataStructureTestSupport.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.fail;
@@ -56,26 +59,40 @@ public class ActiveMQMessagePropertyTest {
 
     @Test
     public void testStrictComplianceMasterSwitch() throws Exception {
-        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(connectionUri);
+        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("vm://localhost");
 
-        // Enable master switch
+        // Turn on strict compliance
         factory.setStrictCompliance(true);
+        // Explicitly turn on the legacy flag to prove strict mode overrides it
+        factory.setNestedMapAndListEnabled(true);
 
-        // Verify side-effect
-        assertFalse("nestedMapAndListEnabled must be false when strictCompliance is true",
-                factory.isNestedMapAndListEnabled());
+        Connection connection = factory.createConnection();
+        connection.start();
 
-        try (Connection connection = factory.createConnection();
-             Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE)) {
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        Message message = session.createMessage();
 
-            Message message = session.createMessage();
-            try {
-                message.setObjectProperty("charProp", 'A');
-                fail("Should have rejected Character under strictCompliance=true");
-            } catch (MessageFormatException e) {
-                // Success
-            }
+        // Verify standard types work
+        message.setStringProperty("validString", "test"); // Should pass
+
+        // Verify Character is rejected
+        try {
+            message.setObjectProperty("invalidChar", 'A');
+            fail("Should have rejected Character under strict compliance");
+        } catch (MessageFormatException e) {
+            // Expected
         }
+
+        // Verify Map is rejected (even though nestedMapAndListEnabled is true)
+        try {
+            Map<String, String> map = new HashMap<>();
+            message.setObjectProperty("invalidMap", map);
+            fail("Should have rejected Map under strict compliance");
+        } catch (MessageFormatException e) {
+            // Expected
+        }
+
+        connection.close();
     }
 
     @Test
