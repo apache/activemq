@@ -123,6 +123,12 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     private BlobTransferPolicy blobTransferPolicy = new BlobTransferPolicy();
     private MessageTransformer transformer;
 
+    /**
+     * If set to true, strict Jakarta Messaging 3.1 compliance is enforced.
+     * This strictly rejects non-standard property types such as Character, Map, and List.
+     */
+    private boolean strictCompliance = false;
+
     private boolean disableTimeStampsByDefault;
     private boolean optimizedMessageDispatch = true;
     private long optimizeAcknowledgeTimeOut = 300;
@@ -408,6 +414,10 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     protected ActiveMQConnection createActiveMQConnection(Transport transport, JMSStatsImpl stats) throws Exception {
         ActiveMQConnection connection = new ActiveMQConnection(transport, getClientIdGenerator(),
                 getConnectionIdGenerator(), stats);
+
+        // Copy the compliance flags from the Factory to the Connection
+        connection.setStrictCompliance(isStrictCompliance());
+
         return connection;
     }
 
@@ -998,6 +1008,17 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
      */
     public void setNestedMapAndListEnabled(boolean structuredMapsEnabled) {
         this.nestedMapAndListEnabled = structuredMapsEnabled;
+    }
+
+    public boolean isStrictCompliance() {
+        return strictCompliance;
+    }
+
+    /**
+     * If this flag is set then the connection follows strict Jakarta Messaging compliance.
+     */
+    public void setStrictCompliance(boolean strictCompliance) {
+        this.strictCompliance = strictCompliance;
     }
 
     public String getClientIDPrefix() {

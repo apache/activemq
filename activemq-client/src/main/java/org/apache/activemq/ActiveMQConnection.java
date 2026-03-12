@@ -141,6 +141,12 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     private RedeliveryPolicyMap redeliveryPolicyMap;
     private MessageTransformer transformer;
 
+    /**
+     * If set to true, strict Jakarta Messaging 3.1 compliance is enforced.
+     * This strictly rejects non-standard property types such as Character, Map, and List.
+     */
+    private boolean strictCompliance = false;
+
     private boolean disableTimeStampsByDefault;
     private boolean optimizedMessageDispatch = true;
     private boolean copyMessageOnSend = true;
@@ -889,7 +895,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
                                                                     int maxMessages) throws JMSException {
         throw new UnsupportedOperationException("createSharedConnectionConsumer() is not supported");
     }
-    
+
     // Properties
     // -------------------------------------------------------------------------
   
@@ -1033,6 +1039,17 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      */
     public void setNestedMapAndListEnabled(boolean structuredMapsEnabled) {
         this.nestedMapAndListEnabled = structuredMapsEnabled;
+    }
+
+    public boolean isStrictCompliance() {
+        return strictCompliance;
+    }
+
+    /**
+     * Sets whether strict Jakarta Messaging compliance is enforced for this connection.
+     */
+    public void setStrictCompliance(boolean strictCompliance) {
+        this.strictCompliance = strictCompliance;
     }
 
     public boolean isExclusiveConsumer() {

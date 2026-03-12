@@ -527,9 +527,18 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
         boolean valid = value instanceof Boolean || value instanceof Byte || value instanceof Short || value instanceof Integer || value instanceof Long;
         valid = valid || value instanceof Float || value instanceof Double || value instanceof Character || value instanceof String || value == null;
 
-        if (!valid) {
+        ActiveMQConnection conn = getConnection();
 
-            ActiveMQConnection conn = getConnection();
+        // strict rejection for Character
+        if (valid && conn != null && conn.isStrictCompliance() && value instanceof Character) {
+            throw new MessageFormatException("Character type not allowed under strict Jakarta 3.1 compliance");
+        }
+
+        if (!valid) {
+            // Check strict compliance at validation time without side-effecting the 'nested' flag
+            if (conn != null && conn.isStrictCompliance()) {
+                throw new MessageFormatException("Only objectified primitive objects and String types are allowed under strict Jakarta 3.1 compliance but was: " + value + " type: " + value.getClass());
+            }
             // conn is null if we are in the broker rather than a JMS client
             if (conn == null || conn.isNestedMapAndListEnabled()) {
                 if (!(value instanceof Map || value instanceof List)) {
