@@ -710,7 +710,7 @@
           <plugin>
             <groupId>io.fabric8</groupId>
             <artifactId>docker-maven-plugin</artifactId>
-            <version>0.45.1</version>
+            <version>${docker-maven-plugin-version}</version>
             <configuration>
               <images>
                 <image>
@@ -719,6 +719,7 @@
                     <dockerFile>${project.basedir}/src/docker/Dockerfile</dockerFile>
                     <contextDir>${project.basedir}/src/docker</contextDir>
                     <args>
+                      <java_version>${docker-java-version}</java_version>
                       <activemq_dist>_TMP_/apache-activemq.tar.gz</activemq_dist>
                     </args>
                     <assembly>
@@ -757,7 +758,7 @@
           <plugin>
             <groupId>io.fabric8</groupId>
             <artifactId>docker-maven-plugin</artifactId>
-            <version>0.45.1</version>
+            <version>${docker-maven-plugin-version}</version>
             <configuration>
               <images>
                 <image>
@@ -772,6 +773,7 @@
                       </platforms>
                     </buildx>
                     <args>
+                      <java_version>${docker-java-version}</java_version>
                       <activemq_dist>_TMP_/apache-activemq.tar.gz</activemq_dist>
                     </args>
                     <assembly>
