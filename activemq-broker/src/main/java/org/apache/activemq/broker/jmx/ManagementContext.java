@@ -569,7 +569,9 @@ public class ManagementContext implements Service {
         } catch(ClassNotFoundException e) {
             LOG.debug("Probably not using JRE 1.4: {}", e.getLocalizedMessage());
         } catch (Throwable e) {
-            LOG.debug("Failed to create local registry. This exception will be ignored.", e);
+            LOG.debug("Failed to create local RMI registry on port {}. This may happen when another process or broker instance "
+                    + "is already using the port. To resolve, either change the connectorPort in your managementContext configuration "
+                    + "or set createConnector=\"false\" if remote JMX access is not required. This exception will be ignored.", connectorPort, e);
         }
 
         // Create the JMXConnectorServer
