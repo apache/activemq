@@ -14,7 +14,27 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 -->
-<!-- START SNIPPET: example -->
+<!--
+    ActiveMQ with OpenTelemetry distributed tracing
+
+    This configuration enables OpenTelemetry tracing for the broker.
+    The plugin traces message send, dispatch, and acknowledge operations
+    using the OpenTelemetry API with W3C TraceContext propagation.
+
+    To use this, you need to provide an OpenTelemetry SDK implementation
+    and exporter at runtime (e.g., opentelemetry-sdk, opentelemetry-exporter-otlp).
+
+    You can configure the OpenTelemetry SDK via environment variables:
+      OTEL_SERVICE_NAME=activemq
+      OTEL_TRACES_EXPORTER=otlp
+      OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4317
+
+    Or via the Java agent:
+      ACTIVEMQ_OPTS="-javaagent:/path/to/opentelemetry-javaagent.jar"
+
+    To run ActiveMQ with this configuration:
+      $ bin/activemq console xbean:examples/conf/activemq-opentelemetry.xml
+-->
 <beans
   xmlns="http://www.springframework.org/schema/beans"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -28,23 +48,12 @@
         </property>
     </bean>
 
-    <!--
-        The <broker> element is used to configure the ActiveMQ broker.
-    -->
     <broker xmlns="http://activemq.apache.org/schema/core" brokerName="localhost" dataDirectory="${activemq.data}">
 
         <destinationPolicy>
             <policyMap>
               <policyEntries>
                 <policyEntry topic=">" >
-                    <!-- The constantPendingMessageLimitStrategy is used to prevent
-                         slow topic consumers to block producers and affect other consumers
-                         by limiting the number of messages that are retained
-                         For more information, see:
-
-                         http://activemq.apache.org/slow-consumer-handling.html
-
-                    -->
                   <pendingMessageLimitStrategy>
                     <constantPendingMessageLimitStrategy limit="1000"/>
                   </pendingMessageLimitStrategy>
@@ -53,36 +62,32 @@
             </policyMap>
         </destinationPolicy>
 
-
         <!--
-            The managementContext is used to configure how ActiveMQ is exposed in
-            JMX. By default, ActiveMQ uses the MBean server that is started by
-            the JVM. For more information, see:
+            OpenTelemetry tracing plugin.
 
-            http://activemq.apache.org/jmx.html
+            Attributes:
+              traceProducer    - trace message send operations (default: true)
+              traceConsumer    - trace message dispatch/deliver operations (default: true)
+              traceAcknowledge - trace message acknowledgment operations (default: true)
+
+            Span details:
+              send()               -> "{destination} publish"  (PRODUCER span)
+              preProcessDispatch() -> "{destination} deliver"  (CONSUMER span)
+              acknowledge()        -> "{destination} ack"      (INTERNAL span)
+
+            Each span includes standard OTel messaging attributes:
+              messaging.system, messaging.destination.name, messaging.operation,
+              messaging.message.id, messaging.client_id
         -->
-        <managementContext>
-            <managementContext createConnector="false"/>
-        </managementContext>
+        <plugins>
+            <openTelemetryPlugin traceProducer="true" traceConsumer="true" traceAcknowledge="true"/>
+        </plugins>
 
-        <!--
-            Configure message persistence for the broker. The default persistence
-            mechanism is the KahaDB store (identified by the kahaDB tag).
-            For more information, see:
-
-            http://activemq.apache.org/persistence.html
-        -->
         <persistenceAdapter>
             <kahaDB directory="${activemq.data}/kahadb"/>
         </persistenceAdapter>
 
-
-          <!--
-            The systemUsage controls the maximum amount of space the broker will
-            use before disabling caching and/or slowing down producers. For more information, see:
-            http://activemq.apache.org/producer-flow-control.html
-          -->
-          <systemUsage>
+        <systemUsage>
             <systemUsage>
                 <memoryUsage>
                     <memoryUsage percentOfJvmHeap="70" />
@@ -96,23 +101,7 @@
             </systemUsage>
         </systemUsage>
 
-        <!--
-            The plugins element can be used to configure broker plugins.
-            For example, to enable OpenTelemetry distributed tracing, uncomment the following:
-
-        <plugins>
-            <openTelemetryPlugin traceProducer="true" traceConsumer="true" traceAcknowledge="true"/>
-        </plugins>
-        -->
-
-        <!--
-            The transport connectors expose ActiveMQ over a given protocol to
-            clients and other brokers. For more information, see:
-
-            http://activemq.apache.org/configuring-transports.html
-        -->
         <transportConnectors>
-            <!-- DOS protection, limit concurrent connections to 1000 and frame size to 100MB -->
             <transportConnector name="openwire" uri="tcp://0.0.0.0:61616?maximumConnections=1000&amp;wireFormat.maxFrameSize=104857600"/>
             <transportConnector name="amqp" uri="amqp://0.0.0.0:5672?maximumConnections=1000&amp;wireFormat.maxFrameSize=104857600"/>
             <transportConnector name="stomp" uri="stomp://0.0.0.0:61613?maximumConnections=1000&amp;wireFormat.maxFrameSize=104857600"/>
@@ -120,20 +109,12 @@
             <transportConnector name="ws" uri="ws://0.0.0.0:61614?maximumConnections=1000&amp;wireFormat.maxFrameSize=104857600"/>
         </transportConnectors>
 
-        <!-- destroy the spring context on shutdown to stop jetty -->
         <shutdownHooks>
             <bean xmlns="http://www.springframework.org/schema/beans" class="org.apache.activemq.hooks.SpringContextHook" />
         </shutdownHooks>
 
     </broker>
 
-    <!--
-        Enable web consoles, REST and Ajax APIs and demos
-        The web consoles requires by default login, you can disable this in the jetty.xml file
-
-        Take a look at ${ACTIVEMQ_HOME}/conf/jetty.xml for more details
-    -->
     <import resource="jetty.xml"/>
 
 </beans>
-<!-- END SNIPPET: example -->
