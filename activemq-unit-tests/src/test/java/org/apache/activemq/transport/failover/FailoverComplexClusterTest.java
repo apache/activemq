@@ -527,7 +527,7 @@ public class FailoverComplexClusterTest extends FailoverClusterTestSupport {
         network.setName(bridgeName);
         network.setDuplex(duplex);
         if (destinationFilter != null && !destinationFilter.isEmpty()) {
-            network.setDestinationFilter(bridgeName);
+            network.setDestinationFilter(destinationFilter);
         }
         broker.startNetworkConnector(network, null);
     }
