@@ -16,7 +16,8 @@
 # limitations under the License.
 ################################################################################
 
-FROM eclipse-temurin:17-jre
+ARG java_version=17
+FROM eclipse-temurin:${java_version}-jre
 
 # ActiveMQ environment variables
 ENV ACTIVEMQ_INSTALL_PATH /opt
