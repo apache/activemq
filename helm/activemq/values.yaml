@@ -1,0 +1,287 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
+# -- Number of ActiveMQ broker replicas
+replicaCount: 1
+
+image:
+  # -- Container image repository
+  repository: apache/activemq-classic
+  # -- Image pull policy
+  pullPolicy: IfNotPresent
+  # -- Overrides the image tag whose default is the chart appVersion
+  tag: ""
+
+# -- Image pull secrets for private registries
+imagePullSecrets: []
+# -- Override the chart name
+nameOverride: ""
+# -- Override the full release name
+fullnameOverride: ""
+
+serviceAccount:
+  # -- Specifies whether a service account should be created
+  create: true
+  # -- Annotations to add to the service account
+  annotations: {}
+  # -- The name of the service account to use (generated if not set and create is true)
+  name: ""
+
+# -- Annotations to add to the pod
+podAnnotations: {}
+
+# -- Labels to add to the pod
+podLabels: {}
+
+podSecurityContext:
+  # -- Run as non-root user
+  runAsNonRoot: true
+  # -- Run as UID 1000 (activemq user in the Docker image)
+  runAsUser: 1000
+  # -- Run as GID 1000
+  runAsGroup: 1000
+  # -- Set filesystem group
+  fsGroup: 1000
+  seccompProfile:
+    # -- Use RuntimeDefault seccomp profile
+    type: RuntimeDefault
+
+securityContext:
+  # -- Disallow privilege escalation
+  allowPrivilegeEscalation: false
+  capabilities:
+    # -- Drop all capabilities
+    drop:
+      - ALL
+  readOnlyRootFilesystem: false
+
+# -- ActiveMQ broker configuration
+broker:
+  # -- ActiveMQ connection credentials
+  credentials:
+    # -- Connection username
+    username: admin
+    # -- Connection password
+    password: admin
+    # -- Use an existing secret for credentials (keys: connection-username, connection-password)
+    existingSecret: ""
+
+  # -- Web console credentials
+  web:
+    # -- Web console username
+    username: admin
+    # -- Web console password
+    password: admin
+    # -- Use an existing secret for web credentials (keys: web-username, web-password)
+    existingSecret: ""
+
+  # -- JMX credentials
+  jmx:
+    # -- Enable JMX
+    enabled: false
+    # -- JMX username
+    username: admin
+    # -- JMX password
+    password: activemq
+    # -- Use an existing secret for JMX credentials (keys: jmx-username, jmx-password)
+    existingSecret: ""
+
+  # -- JVM memory options
+  jvmMemory: "-Xms64M -Xmx1G"
+  # -- Additional JVM options
+  jvmOpts: ""
+
+  # -- Custom activemq.xml configuration (if empty, uses the default from the image)
+  activemqXml: ""
+  # -- Custom jetty.xml configuration (if empty, uses the default from the image)
+  jettyXml: ""
+  # -- Custom log4j2.properties (if empty, uses the default from the image)
+  log4j2Properties: ""
+
+# -- Service configuration for the OpenWire protocol (primary JMS)
+service:
+  # -- Service type
+  type: ClusterIP
+  # -- OpenWire port
+  openwire:
+    # -- Enable OpenWire transport
+    enabled: true
+    # -- OpenWire service port
+    port: 61616
+  # -- AMQP port
+  amqp:
+    # -- Enable AMQP transport
+    enabled: true
+    # -- AMQP service port
+    port: 5672
+  # -- STOMP port
+  stomp:
+    # -- Enable STOMP transport
+    enabled: true
+    # -- STOMP service port
+    port: 61613
+  # -- MQTT port
+  mqtt:
+    # -- Enable MQTT transport
+    enabled: true
+    # -- MQTT service port
+    port: 1883
+  # -- WebSocket port
+  ws:
+    # -- Enable WebSocket transport
+    enabled: true
+    # -- WebSocket service port
+    port: 61614
+  # -- Additional service annotations
+  annotations: {}
+
+# -- Web console service configuration
+webConsole:
+  # -- Service type for web console
+  type: ClusterIP
+  # -- Web console HTTP port
+  port: 8161
+  # -- Additional service annotations
+  annotations: {}
+
+# -- Ingress configuration for the web console
+ingress:
+  # -- Enable ingress
+  enabled: false
+  # -- Ingress class name
+  className: ""
+  # -- Ingress annotations
+  annotations: {}
+  # -- Ingress hosts
+  hosts:
+    - host: activemq.local
+      paths:
+        - path: /
+          pathType: Prefix
+  # -- Ingress TLS configuration
+  tls: []
+
+resources:
+  # -- Resource requests and limits
+  requests:
+    cpu: 500m
+    memory: 1Gi
+  limits:
+    cpu: "2"
+    memory: 2Gi
+
+# -- Startup probe configuration (used to allow slow broker startup)
+startupProbe:
+  tcpSocket:
+    port: openwire
+  initialDelaySeconds: 10
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 30
+
+# -- Liveness probe configuration
+livenessProbe:
+  httpGet:
+    path: /admin/
+    port: web
+  initialDelaySeconds: 10
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 6
+
+# -- Readiness probe configuration
+readinessProbe:
+  tcpSocket:
+    port: openwire
+  initialDelaySeconds: 10
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+# -- Horizontal Pod Autoscaler configuration
+autoscaling:
+  # -- Enable HPA
+  enabled: false
+  # -- Minimum replicas
+  minReplicas: 1
+  # -- Maximum replicas
+  maxReplicas: 5
+  # -- Target CPU utilization
+  targetCPUUtilizationPercentage: 80
+  # -- Target memory utilization (optional)
+  # targetMemoryUtilizationPercentage: 80
+
+# -- Pod Disruption Budget configuration
+podDisruptionBudget:
+  # -- Enable PDB
+  enabled: false
+  # -- Minimum available pods
+  minAvailable: 1
+  # -- Maximum unavailable pods (mutually exclusive with minAvailable)
+  # maxUnavailable: 1
+
+# -- Persistence configuration for KahaDB message store
+persistence:
+  # -- Enable persistent storage
+  enabled: true
+  # -- Storage class name (empty uses the default)
+  storageClassName: ""
+  # -- Access modes
+  accessModes:
+    - ReadWriteOnce
+  # -- Storage size
+  size: 8Gi
+  # -- Annotations for the PVC
+  annotations: {}
+  # -- Selector labels for matching PVs
+  selector: {}
+
+# -- Node selector for pod scheduling
+nodeSelector: {}
+
+# -- Tolerations for pod scheduling
+tolerations: []
+
+# -- Affinity rules for pod scheduling
+affinity: {}
+
+# -- Topology spread constraints
+topologySpreadConstraints: []
+
+# -- Extra environment variables
+extraEnv: []
+
+# -- Extra volumes
+extraVolumes: []
+
+# -- Extra volume mounts
+extraVolumeMounts: []
+
+# -- Init containers
+initContainers: []
+
+# -- Prometheus ServiceMonitor configuration
+serviceMonitor:
+  # -- Enable ServiceMonitor (requires Prometheus Operator CRDs)
+  enabled: false
+  # -- Scrape interval
+  interval: 30s
+  # -- Additional labels for the ServiceMonitor
+  labels: {}
+
+# -- Graceful shutdown timeout in seconds
+terminationGracePeriodSeconds: 60

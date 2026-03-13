@@ -1,0 +1,89 @@
+{{/*
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+*/}}
+
+Apache ActiveMQ has been deployed successfully!
+
+-------------------------------------------------------------------------------
+ WEB CONSOLE
+-------------------------------------------------------------------------------
+{{- if .Values.ingress.enabled }}
+
+Web Console is available at:
+{{- range $host := .Values.ingress.hosts }}
+  http{{ if $.Values.ingress.tls }}s{{ end }}://{{ $host.host }}
+{{- end }}
+
+{{- else if contains "NodePort" .Values.webConsole.type }}
+
+Get the web console URL by running:
+  export NODE_PORT=$(kubectl get --namespace {{ .Release.Namespace }} -o jsonpath="{.spec.ports[0].nodePort}" services {{ include "activemq.fullname" . }}-web)
+  export NODE_IP=$(kubectl get nodes --namespace {{ .Release.Namespace }} -o jsonpath="{.items[0].status.addresses[0].address}")
+  echo "Web Console: http://$NODE_IP:$NODE_PORT"
+
+{{- else if contains "LoadBalancer" .Values.webConsole.type }}
+
+Get the web console URL by running:
+  NOTE: It may take a few minutes for the LoadBalancer IP to be available.
+  export SERVICE_IP=$(kubectl get svc --namespace {{ .Release.Namespace }} {{ include "activemq.fullname" . }}-web --template "{{"{{ range (index .status.loadBalancer.ingress 0) }}{{.}}{{ end }}"}}")
+  echo "Web Console: http://$SERVICE_IP:{{ .Values.webConsole.port }}"
+
+{{- else if contains "ClusterIP" .Values.webConsole.type }}
+
+Access the web console by running:
+  kubectl port-forward --namespace {{ .Release.Namespace }} svc/{{ include "activemq.fullname" . }}-web {{ .Values.webConsole.port }}:{{ .Values.webConsole.port }}
+
+Then open: http://127.0.0.1:{{ .Values.webConsole.port }}
+
+{{- end }}
+
+-------------------------------------------------------------------------------
+ BROKER CONNECTIONS
+-------------------------------------------------------------------------------
+
+Broker transport connectors (from within the cluster):
+{{- if .Values.service.openwire.enabled }}
+  OpenWire (JMS): tcp://{{ include "activemq.fullname" . }}:{{ .Values.service.openwire.port }}
+{{- end }}
+{{- if .Values.service.amqp.enabled }}
+  AMQP:           amqp://{{ include "activemq.fullname" . }}:{{ .Values.service.amqp.port }}
+{{- end }}
+{{- if .Values.service.stomp.enabled }}
+  STOMP:          stomp://{{ include "activemq.fullname" . }}:{{ .Values.service.stomp.port }}
+{{- end }}
+{{- if .Values.service.mqtt.enabled }}
+  MQTT:           mqtt://{{ include "activemq.fullname" . }}:{{ .Values.service.mqtt.port }}
+{{- end }}
+{{- if .Values.service.ws.enabled }}
+  WebSocket:      ws://{{ include "activemq.fullname" . }}:{{ .Values.service.ws.port }}
+{{- end }}
+
+To connect a JMS client from outside the cluster:
+  kubectl port-forward --namespace {{ .Release.Namespace }} svc/{{ include "activemq.fullname" . }} {{ .Values.service.openwire.port }}:{{ .Values.service.openwire.port }}
+
+Then connect to: tcp://127.0.0.1:{{ .Values.service.openwire.port }}
+
+-------------------------------------------------------------------------------
+ USEFUL COMMANDS
+-------------------------------------------------------------------------------
+
+View logs:
+  kubectl logs --namespace {{ .Release.Namespace }} -l "app.kubernetes.io/name={{ include "activemq.name" . }},app.kubernetes.io/instance={{ .Release.Name }}" -f
+
+Check broker status:
+  kubectl get pods --namespace {{ .Release.Namespace }} -l "app.kubernetes.io/name={{ include "activemq.name" . }},app.kubernetes.io/instance={{ .Release.Name }}"
