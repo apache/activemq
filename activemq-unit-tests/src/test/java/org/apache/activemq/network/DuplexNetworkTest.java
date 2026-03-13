@@ -16,6 +16,9 @@
  */
 package org.apache.activemq.network;
 
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
@@ -25,6 +28,9 @@ import jakarta.jms.MessageProducer;
 import jakarta.jms.TemporaryQueue;
 
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.util.Wait;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -35,42 +41,60 @@ public class DuplexNetworkTest extends SimpleNetworkTest {
 
     @Override
     protected String getLocalBrokerURI() {
-        return "org/apache/activemq/network/duplexLocalBroker.xml";
+        return "org/apache/activemq/network/duplexLocalBroker-ephemeral.xml";
     }
 
     @Override
     protected BrokerService createRemoteBroker() throws Exception {
         final BrokerService broker = new BrokerService();
         broker.setBrokerName("remoteBroker");
-        broker.addConnector("tcp://localhost:61617?transport.connectAttemptTimeout=2000");
+        broker.addConnector("tcp://localhost:0");
         return broker;
     }
 
     @Override
     protected void addNetworkConnectors() throws Exception {
-        // No-op: duplex network connector is already defined in duplexLocalBroker.xml
+        // Add a duplex network connector from localBroker to remoteBroker using the actual
+        // assigned ephemeral port (matching the original duplexLocalBroker.xml config but
+        // without hardcoded ports).
+        final URI remoteConnectURI = remoteBroker.getTransportConnectors().get(0).getConnectUri();
+
+        final DiscoveryNetworkConnector duplexConnector = new DiscoveryNetworkConnector(
+                new URI("static:(" + remoteConnectURI + ")"));
+        duplexConnector.setName("networkConnector");
+        duplexConnector.setDuplex(true);
+        duplexConnector.setDynamicOnly(false);
+        duplexConnector.setConduitSubscriptions(true);
+        duplexConnector.setDecreaseNetworkConsumerPriority(false);
+
+        final List<ActiveMQDestination> excluded = new ArrayList<>();
+        excluded.add(new ActiveMQQueue("exclude.test.foo"));
+        excluded.add(new ActiveMQTopic("exclude.test.bar"));
+        duplexConnector.setExcludedDestinations(excluded);
+
+        localBroker.addNetworkConnector(duplexConnector);
+        localBroker.startNetworkConnector(duplexConnector, null);
     }
 
     @Test
     public void testTempQueues() throws Exception {
-        TemporaryQueue temp = localSession.createTemporaryQueue();
-        MessageProducer producer = localSession.createProducer(temp);
+        final TemporaryQueue temp = localSession.createTemporaryQueue();
+        final MessageProducer producer = localSession.createProducer(temp);
         producer.send(localSession.createTextMessage("test"));
-        Thread.sleep(100);
-        assertEquals("Destination not created", 1, remoteBroker.getAdminView().getTemporaryQueues().length);
+
+        assertTrue("Destination not created", Wait.waitFor(
+            () -> remoteBroker.getAdminView().getTemporaryQueues().length == 1,
+            TimeUnit.SECONDS.toMillis(10), TimeUnit.MILLISECONDS.toMillis(100)));
+
         temp.delete();
 
-        assertTrue("Destination not deleted", Wait.waitFor(new Wait.Condition() {
-            @Override
-            public boolean isSatisified() throws Exception {
-                return 0 == remoteBroker.getAdminView().getTemporaryQueues().length;
-            }
-        }));
+        assertTrue("Destination not deleted", Wait.waitFor(
+            () -> remoteBroker.getAdminView().getTemporaryQueues().length == 0));
     }
 
     @Test
     public void testStaysUp() throws Exception {
-        int bridgeIdentity = getBridgeId();
+        final int bridgeIdentity = getBridgeId();
         LOG.info("Bridges: " + bridgeIdentity);
         TimeUnit.SECONDS.sleep(5);
         assertEquals("Same bridges", bridgeIdentity, getBridgeId());
@@ -96,13 +120,10 @@ public class DuplexNetworkTest extends SimpleNetworkTest {
 
         final NetworkBridge localBridge = localBroker.getNetworkConnectors().get(0).activeBridges().iterator().next();
 
-        assertTrue(Wait.waitFor(new Wait.Condition() {
-            @Override
-            public boolean isSatisified() throws Exception {
-                return expectedLocalSent == localBridge.getNetworkBridgeStatistics().getDequeues().getCount() &&
-                        expectedRemoteSent == localBridge.getNetworkBridgeStatistics().getReceivedCount().getCount();
-            }
-        }));
+        assertTrue(Wait.waitFor(() ->
+            expectedLocalSent == localBridge.getNetworkBridgeStatistics().getDequeues().getCount() &&
+            expectedRemoteSent == localBridge.getNetworkBridgeStatistics().getReceivedCount().getCount()
+        ));
 
     }
 

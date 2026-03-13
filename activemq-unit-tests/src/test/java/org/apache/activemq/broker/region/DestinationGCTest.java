@@ -34,7 +34,6 @@ import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.util.Wait;
-import org.apache.activemq.util.Wait.Condition;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -95,21 +94,12 @@ public class DestinationGCTest {
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         session.createProducer(otherQueue).close();
         MessageConsumer consumer = session.createConsumer(queue);
-        consumer.setMessageListener(new MessageListener() {
-
-            @Override
-            public void onMessage(Message message) {
-            }
-        });
+        consumer.setMessageListener(message -> {});
 
         connection.start();
 
-        assertTrue("After GC runs there should be one Queue.", Wait.waitFor(new Condition() {
-            @Override
-            public boolean isSatisified() throws Exception {
-                return brokerService.getAdminView().getQueues().length == 1;
-            }
-        }));
+        assertTrue("After GC runs there should be one Queue.",
+            Wait.waitFor(() -> brokerService.getAdminView().getQueues().length == 1));
 
         connection.close();
     }
@@ -117,12 +107,8 @@ public class DestinationGCTest {
     @Test(timeout = 60000)
     public void testDestinationGc() throws Exception {
         assertEquals(1, brokerService.getAdminView().getQueues().length);
-        assertTrue("After GC runs the Queue should be empty.", Wait.waitFor(new Condition() {
-            @Override
-            public boolean isSatisified() throws Exception {
-                return brokerService.getAdminView().getQueues().length == 0;
-            }
-        }));
+        assertTrue("After GC runs the Queue should be empty.",
+            Wait.waitFor(() -> brokerService.getAdminView().getQueues().length == 0));
     }
 
     @Test(timeout = 60000)
@@ -134,17 +120,18 @@ public class DestinationGCTest {
         brokerService.getAdminView().addQueue("TEST4");
 
         assertEquals(5, brokerService.getAdminView().getQueues().length);
-        Thread.sleep(7000);
 
-        int queues = brokerService.getAdminView().getQueues().length;
-        assertTrue(queues > 0 && queues < 5);
+        // With maxPurgedDestinationsPerSweep=1, wait until at least one queue has been GC'd
+        // but not all (verifying the sweep limit works)
+        assertTrue("GC should have removed some but not all queues",
+            Wait.waitFor(() -> {
+                final int count = brokerService.getAdminView().getQueues().length;
+                return count > 0 && count < 5;
+            }, 15000, 500));
 
-        assertTrue("After GC runs the Queue should be empty.", Wait.waitFor(new Condition() {
-            @Override
-            public boolean isSatisified() throws Exception {
-                return brokerService.getAdminView().getQueues().length == 0;
-            }
-        }));
+        assertTrue("After GC runs the Queue should be empty.", Wait.waitFor(() ->
+            brokerService.getAdminView().getQueues().length == 0
+        , 30000, 500));
     }
 
     @Test(timeout = 60000)
@@ -161,12 +148,7 @@ public class DestinationGCTest {
 
         // wait for the queue to be marked for GC
         logger.info("Waiting for '{}' to be marked for GC...", q);
-        Wait.waitFor(new Condition() {
-            @Override
-            public boolean isSatisified() throws Exception {
-                return brokerService.getDestination(q).canGC();
-            }
-        }, Wait.MAX_WAIT_MILLIS, 500L);
+        Wait.waitFor(() -> brokerService.getDestination(q).canGC(), Wait.MAX_WAIT_MILLIS, 500L);
 
         // create anonymous producer and send a message
         logger.info("Sending PERSISTENT message to QUEUE '{}'", q.getPhysicalName());

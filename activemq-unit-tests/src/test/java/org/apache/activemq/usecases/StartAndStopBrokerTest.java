@@ -18,8 +18,6 @@ package org.apache.activemq.usecases;
 
 import java.net.URI;
 
-import jakarta.jms.JMSException;
-
 import junit.framework.TestCase;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerFactory;
@@ -29,7 +27,7 @@ import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * @author Oliver Belikan
- * 
+ *
  */
 @Category(ParallelTest.class)
 public class StartAndStopBrokerTest extends TestCase {
@@ -39,11 +37,12 @@ public class StartAndStopBrokerTest extends TestCase {
         System.setProperty("activemq.persistenceAdapter",
                 "org.apache.activemq.store.vm.VMPersistenceAdapter");
 
-        // configuration of container and all protocolls
+        // configuration of container and all protocols
         BrokerService broker = createBroker();
 
-        // start a client
-        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("tcp://localhost:9100");
+        // start a client using the dynamically assigned port
+        final String connectUri = broker.getTransportConnectors().get(0).getConnectUri().toString();
+        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(connectUri);
         factory.createConnection();
 
         // stop activemq broker
@@ -52,8 +51,9 @@ public class StartAndStopBrokerTest extends TestCase {
         // start activemq broker again
         broker = createBroker();
 
-        // start a client again
-        factory = new ActiveMQConnectionFactory("tcp://localhost:9100");
+        // start a client again using the new dynamically assigned port
+        final String connectUri2 = broker.getTransportConnectors().get(0).getConnectUri().toString();
+        factory = new ActiveMQConnectionFactory(connectUri2);
         factory.createConnection();
 
         // stop activemq broker
@@ -61,15 +61,15 @@ public class StartAndStopBrokerTest extends TestCase {
 
     }
 
-    protected BrokerService createBroker() throws JMSException {
+    protected BrokerService createBroker() {
         BrokerService broker = null;
 
         try {
             broker = BrokerFactory.createBroker(new URI("broker://()/localhost"));
             broker.setBrokerName("DefaultBroker");
-            broker.addConnector("tcp://localhost:9100");
+            broker.addConnector("tcp://localhost:0");
             broker.setUseShutdownHook(false);
-            
+
             broker.start();
         } catch (Exception e) {
             e.printStackTrace();

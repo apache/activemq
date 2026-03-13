@@ -39,6 +39,7 @@ import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.command.RemoveSubscriptionInfo;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
+import org.apache.activemq.util.Wait;
 import org.junit.experimental.categories.Category;
 import org.apache.activemq.test.annotations.ParallelTest;
 
@@ -77,8 +78,7 @@ public class DurableSubscriptionUnsubscribeTest extends TestSupport {
         createSubscriptions();
         createAdvisorySubscription();
 
-        Thread.sleep(1000);
-        assertCount(100, 0);
+        waitForCount(100, 0);
 
         if (restart) {
             restartBroker();
@@ -86,21 +86,20 @@ public class DurableSubscriptionUnsubscribeTest extends TestSupport {
             assertCount(100, 0);
         }
 
-        ObjectName[] subs = broker.getAdminView().getInactiveDurableTopicSubscribers();
+        final ObjectName[] subs = broker.getAdminView().getInactiveDurableTopicSubscribers();
 
         for (int i = 0; i < subs.length; i++) {
-            ObjectName subName = subs[i];
-            DurableSubscriptionViewMBean sub = (DurableSubscriptionViewMBean)broker.getManagementContext().newProxyInstance(subName, DurableSubscriptionViewMBean.class, true);
+            final ObjectName subName = subs[i];
+            final DurableSubscriptionViewMBean sub = (DurableSubscriptionViewMBean)broker.getManagementContext().newProxyInstance(subName, DurableSubscriptionViewMBean.class, true);
             sub.destroy();
 
             if (i % 20 == 0) {
-                Thread.sleep(1000);
-                assertCount(100 - i - 1, 0);
+                final int expectedAll = 100 - i - 1;
+                waitForCount(expectedAll, 0);
             }
         }
 
-        Thread.sleep(1000);
-        assertCount(0, 0);
+        waitForCount(0, 0);
 
         if (restart) {
             restartBroker();
@@ -113,30 +112,25 @@ public class DurableSubscriptionUnsubscribeTest extends TestSupport {
         createSubscriptions();
         createAdvisorySubscription();
 
-        Thread.sleep(1000);
-        assertCount(100, 0);
+        waitForCount(100, 0);
 
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         session.createDurableSubscriber(topic, "SubsId1");
 
-        Thread.sleep(1000);
-        assertCount(100, 1);
+        waitForCount(100, 1);
 
-        Session session2 = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        final Session session2 = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         session2.createDurableSubscriber(topic, "SubsId2");
 
-        Thread.sleep(1000);
-        assertCount(100, 2);
+        waitForCount(100, 2);
 
         session.close();
 
-        Thread.sleep(1000);
-        assertCount(100, 1);
+        waitForCount(100, 1);
 
         session2.close();
 
-        Thread.sleep(1000);
-        assertCount(100, 0);
+        waitForCount(100, 0);
 
         if (restart) {
             restartBroker();
@@ -150,13 +144,12 @@ public class DurableSubscriptionUnsubscribeTest extends TestSupport {
             session.close();
 
             if (i % 20 == 0) {
-                Thread.sleep(1000);
-                assertCount(100 - i - 1, 0);
+                final int expectedAll = 100 - i - 1;
+                waitForCount(expectedAll, 0);
             }
         }
 
-        Thread.sleep(1000);
-        assertCount(0, 0);
+        waitForCount(0, 0);
 
         if (restart) {
             restartBroker();
@@ -169,8 +162,7 @@ public class DurableSubscriptionUnsubscribeTest extends TestSupport {
         createSubscriptions();
         createAdvisorySubscription();
 
-        Thread.sleep(1000);
-        assertCount(100, 0);
+        waitForCount(100, 0);
 
         if (restart) {
             restartBroker();
@@ -179,17 +171,17 @@ public class DurableSubscriptionUnsubscribeTest extends TestSupport {
         }
 
         for (int i = 0; i < 100; i++) {
-            RemoveSubscriptionInfo info = new RemoveSubscriptionInfo();
+            final RemoveSubscriptionInfo info = new RemoveSubscriptionInfo();
             info.setClientId(getName());
             info.setSubscriptionName("SubsId" + i);
-            ConnectionContext context = new ConnectionContext();
+            final ConnectionContext context = new ConnectionContext();
             context.setBroker(broker.getRegionBroker());
             context.setClientId(getName());
             broker.getBroker().removeSubscription(context, info);
 
             if (i % 20 == 0) {
-                Thread.sleep(1000);
-                assertCount(100 - i - 1, 0);
+                final int expectedAll = 100 - i - 1;
+                waitForCount(expectedAll, 0);
             }
         }
 
@@ -204,7 +196,7 @@ public class DurableSubscriptionUnsubscribeTest extends TestSupport {
 
     private void createSubscriptions() throws Exception {
         for (int i = 0; i < 100; i++) {
-            Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            final Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
             session.createDurableSubscriber(topic, "SubsId" + i);
             session.close();
         }
@@ -213,28 +205,44 @@ public class DurableSubscriptionUnsubscribeTest extends TestSupport {
     private final AtomicInteger advisories = new AtomicInteger(0);
 
     private void createAdvisorySubscription() throws Exception {
-        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        MessageConsumer advisoryConsumer = session.createConsumer(AdvisorySupport.getConsumerAdvisoryTopic(topic));
-        advisoryConsumer.setMessageListener(new MessageListener() {
-            @Override
-            public void onMessage(Message message) {
-                if (((ActiveMQMessage)message).getDataStructure() instanceof RemoveSubscriptionInfo) {
-                    advisories.incrementAndGet();
-                }
+        final Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        final MessageConsumer advisoryConsumer = session.createConsumer(AdvisorySupport.getConsumerAdvisoryTopic(topic));
+        advisoryConsumer.setMessageListener(message -> {
+            if (((ActiveMQMessage)message).getDataStructure() instanceof RemoveSubscriptionInfo) {
+                advisories.incrementAndGet();
             }
         });
     }
 
+    /**
+     * Waits for the subscription counts to reach the expected values, then performs full assertion.
+     * Uses Wait.waitFor to poll the inactive durable subscriber count via the admin view,
+     * replacing unreliable Thread.sleep-based synchronization.
+     */
+    private void waitForCount(final int all, final int active) throws Exception {
+        final int expectedInactive = all - active;
+        assertTrue("inactive durable subscriber count should reach " + expectedInactive,
+            Wait.waitFor(() -> {
+                final ObjectName[] inactiveSubs = broker.getAdminView().getInactiveDurableTopicSubscribers();
+                final ObjectName[] activeSubs = broker.getAdminView().getDurableTopicSubscribers();
+                return inactiveSubs.length == expectedInactive && activeSubs.length == active;
+            }, 5000, 100));
+        // Wait for all advisory messages to arrive (100 = all + advisories)
+        assertTrue("advisory count should reach expected total",
+            Wait.waitFor(() -> all + advisories.get() >= 100, 5000, 100));
+        assertCount(all, active);
+    }
+
     private void assertCount(int all, int active) throws Exception {
-        int inactive = all - active;
+        final int inactive = all - active;
 
         // broker check
-        Destination destination = broker.getDestination(topic);
-        List<Subscription> subs = destination.getConsumers();
+        final Destination destination = broker.getDestination(topic);
+        final List<Subscription> subs = destination.getConsumers();
         int cActive = 0, cInactive = 0;
-        for (Subscription sub: subs) {
+        for (final Subscription sub: subs) {
             if (sub instanceof DurableTopicSubscription) {
-                DurableTopicSubscription durable = (DurableTopicSubscription) sub;
+                final DurableTopicSubscription durable = (DurableTopicSubscription) sub;
                 if (durable.isActive())
                     cActive++;
                 else
@@ -261,8 +269,8 @@ public class DurableSubscriptionUnsubscribeTest extends TestSupport {
     private int countMBean() throws MalformedObjectNameException, InstanceNotFoundException {
         int count = 0;
         for (int i = 0; i < 100; i++) {
-            String name = "org.apache.activemq:BrokerName=" + getName() + ",Type=Subscription,active=false,name=" + getName() + "_SubsId" + i;
-            ObjectName sub = new ObjectName(name);
+            final String name = "org.apache.activemq:BrokerName=" + getName() + ",Type=Subscription,active=false,name=" + getName() + "_SubsId" + i;
+            final ObjectName sub = new ObjectName(name);
             try {
                 broker.getManagementContext().getObjectInstance(sub);
                 count++;
@@ -281,7 +289,7 @@ public class DurableSubscriptionUnsubscribeTest extends TestSupport {
         broker.setBrokerName(getName());
 
         broker.setPersistent(true);
-        KahaDBPersistenceAdapter persistenceAdapter = new KahaDBPersistenceAdapter();
+        final KahaDBPersistenceAdapter persistenceAdapter = new KahaDBPersistenceAdapter();
         persistenceAdapter.setDirectory(new File("activemq-data/" + getName()));
         broker.setPersistenceAdapter(persistenceAdapter);
         if (deleteMessages) {
@@ -335,7 +343,7 @@ public class DurableSubscriptionUnsubscribeTest extends TestSupport {
 
     @Override
     protected Connection createConnection() throws Exception {
-        Connection rc = super.createConnection();
+        final Connection rc = super.createConnection();
         rc.setClientID(getName());
         rc.start();
         return rc;

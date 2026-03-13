@@ -88,7 +88,6 @@ public class QueueMbeanRestartTest extends TestSupport {
     private void restartBroker() throws Exception {
         broker.stop();
         broker.waitUntilStopped();
-        Thread.sleep(5 * 1000);
         createBroker(false);
         broker.waitUntilStarted();
     }

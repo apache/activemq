@@ -61,54 +61,47 @@ import org.slf4j.LoggerFactory;
 /**
  *  A Test case for AMQ-1479
  */
-public class DurableConsumerTest extends CombinationTestSupport{
+public class DurableConsumerTest extends CombinationTestSupport {
     private static final Logger LOG = LoggerFactory.getLogger(DurableConsumerTest.class);
-    private static int COUNT = 1024;
-    private static String CONSUMER_NAME = "DURABLE_TEST";
+    private static final int COUNT = 1024;
+    private static final String CONSUMER_NAME = "DURABLE_TEST";
     protected BrokerService broker;
-    
-    protected String bindAddress = "tcp://localhost:61616";
-    
-    protected byte[] payload = new byte[1024 * 32];
+
+    protected final String bindAddress = "tcp://localhost:0";
+
+    protected final byte[] payload = new byte[1024 * 32];
     protected ConnectionFactory factory;
-    protected Vector<Exception> exceptions = new Vector<Exception>();
-    
+    protected final Vector<Exception> exceptions = new Vector<>();
+
     private static final String TOPIC_NAME = "failoverTopic";
-    private static final String CONNECTION_URL = "failover:(tcp://localhost:61616,tcp://localhost:61617)";
     public boolean useDedicatedTaskRunner = false;
-    
-    private class SimpleTopicSubscriber implements MessageListener,ExceptionListener{
-        
+
+    private class SimpleTopicSubscriber implements MessageListener, ExceptionListener {
+
         private TopicConnection topicConnection = null;
-        
-        public SimpleTopicSubscriber(String connectionURL,String clientId,String topicName) {
-            
-            ActiveMQConnectionFactory topicConnectionFactory = null;
-            TopicSession topicSession = null;
-            Topic topic = null;
-            TopicSubscriber topicSubscriber = null;
-            
-            topicConnectionFactory = new ActiveMQConnectionFactory(connectionURL);
+
+        public SimpleTopicSubscriber(final String connectionURL, final String clientId, final String topicName) {
+
+            final ActiveMQConnectionFactory topicConnectionFactory = new ActiveMQConnectionFactory(connectionURL);
             try {
-                
-                topic = new ActiveMQTopic(topicName);
+                final Topic topic = new ActiveMQTopic(topicName);
                 topicConnection = topicConnectionFactory.createTopicConnection();
-                topicConnection.setClientID((clientId));
+                topicConnection.setClientID(clientId);
                 topicConnection.start();
-                
-                topicSession = topicConnection.createTopicSession(false, Session.AUTO_ACKNOWLEDGE);
-                topicSubscriber = topicSession.createDurableSubscriber(topic, (clientId));
+
+                final TopicSession topicSession = topicConnection.createTopicSession(false, Session.AUTO_ACKNOWLEDGE);
+                final TopicSubscriber topicSubscriber = topicSession.createDurableSubscriber(topic, clientId);
                 topicSubscriber.setMessageListener(this);
-                
+
             } catch (JMSException e) {
                 e.printStackTrace();
             }
         }
-        
-        public void onMessage(Message arg0){
+
+        public void onMessage(final Message arg0) {
         }
-        
-        public void closeConnection(){
+
+        public void closeConnection() {
             if (topicConnection != null) {
                 try {
                     topicConnection.close();
@@ -116,28 +109,28 @@ public class DurableConsumerTest extends CombinationTestSupport{
                 }
             }
         }
-        
-        public void onException(JMSException exception){
+
+        public void onException(final JMSException exception) {
             exceptions.add(exception);
         }
     }
-    
-    private class MessagePublisher implements Runnable{
+
+    private class MessagePublisher implements Runnable {
         private final boolean shouldPublish = true;
-        
-        public void run(){
-            TopicConnectionFactory topicConnectionFactory = null;
-            TopicConnection topicConnection = null;
-            TopicSession topicSession = null;
-            Topic topic = null;
+        private final String connectionUrl;
+
+        MessagePublisher(final String connectionUrl) {
+            this.connectionUrl = connectionUrl;
+        }
+
+        public void run() {
+            final TopicConnectionFactory topicConnectionFactory = new ActiveMQConnectionFactory(connectionUrl);
             TopicPublisher topicPublisher = null;
             Message message = null;
-            
-            topicConnectionFactory = new ActiveMQConnectionFactory(CONNECTION_URL);
             try {
-                topic = new ActiveMQTopic(TOPIC_NAME);
-                topicConnection = topicConnectionFactory.createTopicConnection();
-                topicSession = topicConnection.createTopicSession(false, Session.AUTO_ACKNOWLEDGE);
+                final Topic topic = new ActiveMQTopic(TOPIC_NAME);
+                final TopicConnection topicConnection = topicConnectionFactory.createTopicConnection();
+                final TopicSession topicSession = topicConnection.createTopicSession(false, Session.AUTO_ACKNOWLEDGE);
                 topicPublisher = topicSession.createPublisher(topic);
                 message = topicSession.createMessage();
             } catch (Exception ex) {
@@ -156,195 +149,193 @@ public class DurableConsumerTest extends CombinationTestSupport{
             }
         }
     }
-    
-    private void configurePersistence(BrokerService broker) throws Exception{
-        File dataDirFile = new File("target/" + getName());
-        KahaDBPersistenceAdapter kahaDBAdapter = new KahaDBPersistenceAdapter();
+
+    private void configurePersistence(final BrokerService broker) throws Exception {
+        final File dataDirFile = new File("target/" + getName());
+        final KahaDBPersistenceAdapter kahaDBAdapter = new KahaDBPersistenceAdapter();
         kahaDBAdapter.setDirectory(dataDirFile);
         broker.setPersistenceAdapter(kahaDBAdapter);
     }
-    
-    public void testFailover() throws Exception{
-        
+
+    public void testFailover() throws Exception {
+
         configurePersistence(broker);
         broker.start();
-        
-        Thread publisherThread = new Thread(new MessagePublisher());
+
+        final String brokerUri = broker.getTransportConnectors().get(0).getConnectUri().toString();
+        final String failoverUrl = "failover:(" + brokerUri + ")";
+
+        final Thread publisherThread = new Thread(new MessagePublisher(failoverUrl));
         publisherThread.start();
         final int numSubs = 100;
-        final List<SimpleTopicSubscriber> list = new ArrayList<SimpleTopicSubscriber>(numSubs);
+        final List<SimpleTopicSubscriber> list = new ArrayList<>(numSubs);
         for (int i = 0; i < numSubs; i++) {
-            
+
             final int id = i;
-            Thread thread = new Thread(new Runnable(){
-                public void run(){
-                    SimpleTopicSubscriber s =new SimpleTopicSubscriber(CONNECTION_URL, System.currentTimeMillis() + "-" + id, TOPIC_NAME);
-                    list.add(s);
-                }
+            final Thread thread = new Thread(() -> {
+                final SimpleTopicSubscriber s = new SimpleTopicSubscriber(failoverUrl, System.currentTimeMillis() + "-" + id, TOPIC_NAME);
+                list.add(s);
             });
             thread.start();
-            
+
         }
 
-        Wait.waitFor(new Wait.Condition(){
-            @Override
-            public boolean isSatisified() throws Exception {
-                return numSubs == list.size();
-            }
-        });
+        Wait.waitFor(() -> numSubs == list.size());
 
         broker.stop();
         broker = createBroker(false);
         configurePersistence(broker);
         broker.start();
-        Thread.sleep(10000);
-        for (SimpleTopicSubscriber s:list) {
+
+        assertTrue("broker restarted and durable subs recovered",
+                Wait.waitFor(() -> broker.getAdminView() != null
+                        && broker.getAdminView().getDurableTopicSubscribers().length
+                         + broker.getAdminView().getInactiveDurableTopicSubscribers().length > 0,
+                        15000, 500));
+
+        for (final SimpleTopicSubscriber s : list) {
             s.closeConnection();
         }
         assertTrue("no exceptions: " + exceptions, exceptions.isEmpty());
     }
-    
+
     // makes heavy use of threads and can demonstrate https://issues.apache.org/activemq/browse/AMQ-2028
     // with use dedicatedTaskRunner=true and produce OOM
-    public void initCombosForTestConcurrentDurableConsumer(){
+    public void initCombosForTestConcurrentDurableConsumer() {
         addCombinationValues("useDedicatedTaskRunner", new Object[] { Boolean.TRUE, Boolean.FALSE });
     }
-    
-    public void testConcurrentDurableConsumer() throws Exception{
-        
+
+    public void testConcurrentDurableConsumer() throws Exception {
+
         broker.start();
         broker.waitUntilStarted();
-        
+
         factory = createConnectionFactory();
         final String topicName = getName();
         final int numMessages = 500;
-        int numConsumers = 1;
+        final int numConsumers = 1;
         final CountDownLatch counsumerStarted = new CountDownLatch(numConsumers);
         final AtomicInteger receivedCount = new AtomicInteger();
-        Runnable consumer = new Runnable(){
-            public void run(){
-                final String consumerName = Thread.currentThread().getName();
-                int acked = 0;
-                int received = 0;
-                
-                try {
-                    while (acked < numMessages / 2) {
-                        // take one message and close, ack on occasion
-                        Connection consumerConnection = factory.createConnection();
-                        ((ActiveMQConnection) consumerConnection).setWatchTopicAdvisories(false);
-                        consumerConnection.setClientID(consumerName);
-                        Session consumerSession = consumerConnection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
-                        Topic topic = consumerSession.createTopic(topicName);
-                        consumerConnection.start();
-                        
-                        MessageConsumer consumer = consumerSession.createDurableSubscriber(topic, consumerName);
-                        
-                        counsumerStarted.countDown();
-                        Message msg = null;
-                        do {
-                            msg = consumer.receive(5000);
-                            if (msg != null) {
-                                receivedCount.incrementAndGet();
-                                if (received != 0 && received % 100 == 0) {
-                                    LOG.info("Received msg: " + msg.getJMSMessageID());
-                                }
-                                if (++received % 2 == 0) {
-                                    msg.acknowledge();
-                                    acked++;
-                                }
-                            }
-                        } while (msg == null);
+        final Runnable consumer = () -> {
+            final String consumerName = Thread.currentThread().getName();
+            int acked = 0;
+            int received = 0;
 
-                        consumerConnection.close();
-                    }
-                    assertTrue(received >= acked);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    exceptions.add(e);
+            try {
+                while (acked < numMessages / 2) {
+                    // take one message and close, ack on occasion
+                    final Connection consumerConnection = factory.createConnection();
+                    ((ActiveMQConnection) consumerConnection).setWatchTopicAdvisories(false);
+                    consumerConnection.setClientID(consumerName);
+                    final Session consumerSession = consumerConnection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
+                    final Topic topic = consumerSession.createTopic(topicName);
+                    consumerConnection.start();
+
+                    final MessageConsumer mc = consumerSession.createDurableSubscriber(topic, consumerName);
+
+                    counsumerStarted.countDown();
+                    Message msg = null;
+                    do {
+                        msg = mc.receive(5000);
+                        if (msg != null) {
+                            receivedCount.incrementAndGet();
+                            if (received != 0 && received % 100 == 0) {
+                                LOG.info("Received msg: " + msg.getJMSMessageID());
+                            }
+                            if (++received % 2 == 0) {
+                                msg.acknowledge();
+                                acked++;
+                            }
+                        }
+                    } while (msg == null);
+
+                    consumerConnection.close();
                 }
+                assertTrue(received >= acked);
+            } catch (Exception e) {
+                e.printStackTrace();
+                exceptions.add(e);
             }
         };
-        
-        ExecutorService executor = Executors.newFixedThreadPool(numConsumers);
-        
+
+        final ExecutorService executor = Executors.newFixedThreadPool(numConsumers);
+
         for (int i = 0; i < numConsumers; i++) {
             executor.execute(consumer);
         }
-        
+
         assertTrue(counsumerStarted.await(30, TimeUnit.SECONDS));
-        
-        Connection producerConnection = factory.createConnection();
+
+        final Connection producerConnection = factory.createConnection();
         ((ActiveMQConnection) producerConnection).setWatchTopicAdvisories(false);
-        Session producerSession = producerConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        Topic topic = producerSession.createTopic(topicName);
-        MessageProducer producer = producerSession.createProducer(topic);
+        final Session producerSession = producerConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        final Topic topic = producerSession.createTopic(topicName);
+        final MessageProducer producer = producerSession.createProducer(topic);
         producerConnection.start();
         for (int i = 0; i < numMessages; i++) {
-            BytesMessage msg = producerSession.createBytesMessage();
+            final BytesMessage msg = producerSession.createBytesMessage();
             msg.writeBytes(payload);
             producer.send(msg);
             if (i != 0 && i % 100 == 0) {
                 LOG.info("Sent msg " + i);
             }
         }
-        
+
         executor.shutdown();
         executor.awaitTermination(30, TimeUnit.SECONDS);
-        
-        Wait.waitFor(new Wait.Condition(){
-            public boolean isSatisified() throws Exception{
-                LOG.info("receivedCount: " + receivedCount.get());
-                return receivedCount.get() == numMessages;
-            }
+
+        Wait.waitFor(() -> {
+            LOG.info("receivedCount: " + receivedCount.get());
+            return receivedCount.get() == numMessages;
         }, 360 * 1000);
         assertEquals("got required some messages", numMessages, receivedCount.get());
         assertTrue("no exceptions, but: " + exceptions, exceptions.isEmpty());
     }
-    
-    public void testConsumerRecover() throws Exception{
+
+    public void testConsumerRecover() throws Exception {
         doTestConsumer(true);
     }
-    
-    public void testConsumer() throws Exception{
+
+    public void testConsumer() throws Exception {
         doTestConsumer(false);
     }
 
     public void testPrefetchViaBrokerConfig() throws Exception {
 
-        Integer prefetchVal = 150;
-        PolicyEntry policyEntry = new PolicyEntry();
+        final Integer prefetchVal = 150;
+        final PolicyEntry policyEntry = new PolicyEntry();
         policyEntry.setDurableTopicPrefetch(prefetchVal);
         policyEntry.setPrioritizedMessages(true);
-        PolicyMap policyMap = new PolicyMap();
+        final PolicyMap policyMap = new PolicyMap();
         policyMap.setDefaultEntry(policyEntry);
         broker.setDestinationPolicy(policyMap);
         broker.start();
 
         factory = createConnectionFactory();
-        Connection consumerConnection = factory.createConnection();
+        final Connection consumerConnection = factory.createConnection();
         consumerConnection.setClientID(CONSUMER_NAME);
-        Session consumerSession = consumerConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        Topic topic = consumerSession.createTopic(getClass().getName());
-        MessageConsumer consumer = consumerSession.createDurableSubscriber(topic, CONSUMER_NAME);
+        final Session consumerSession = consumerConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        final Topic topic = consumerSession.createTopic(getClass().getName());
+        final MessageConsumer consumer = consumerSession.createDurableSubscriber(topic, CONSUMER_NAME);
         consumerConnection.start();
 
-        ObjectName activeSubscriptionObjectName = broker.getAdminView().getDurableTopicSubscribers()[0];
-        Object prefetchFromSubView = broker.getManagementContext().getAttribute(activeSubscriptionObjectName, "PrefetchSize");
+        final ObjectName activeSubscriptionObjectName = broker.getAdminView().getDurableTopicSubscribers()[0];
+        final Object prefetchFromSubView = broker.getManagementContext().getAttribute(activeSubscriptionObjectName, "PrefetchSize");
         assertEquals(prefetchVal, prefetchFromSubView);
     }
-    
-    public void doTestConsumer(boolean forceRecover) throws Exception{
-        
+
+    public void doTestConsumer(final boolean forceRecover) throws Exception {
+
         if (forceRecover) {
             configurePersistence(broker);
         }
         broker.start();
-        
+
         factory = createConnectionFactory();
         Connection consumerConnection = factory.createConnection();
         consumerConnection.setClientID(CONSUMER_NAME);
         Session consumerSession = consumerConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        Topic topic = consumerSession.createTopic(getClass().getName());
+        final Topic topic = consumerSession.createTopic(getClass().getName());
         MessageConsumer consumer = consumerSession.createDurableSubscriber(topic, CONSUMER_NAME);
         consumerConnection.start();
         consumerConnection.close();
@@ -354,15 +345,17 @@ public class DurableConsumerTest extends CombinationTestSupport{
             configurePersistence(broker);
         }
         broker.start();
-        
-        Connection producerConnection = factory.createConnection();
-        
-        Session producerSession = producerConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        
-        MessageProducer producer = producerSession.createProducer(topic);
+
+        // Re-create factory after broker restart (port may have changed)
+        factory = createConnectionFactory();
+        final Connection producerConnection = factory.createConnection();
+
+        final Session producerSession = producerConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+
+        final MessageProducer producer = producerSession.createProducer(topic);
         producerConnection.start();
         for (int i = 0; i < COUNT; i++) {
-            BytesMessage msg = producerSession.createBytesMessage();
+            final BytesMessage msg = producerSession.createBytesMessage();
             msg.writeBytes(payload);
             producer.send(msg);
             if (i != 0 && i % 1000 == 0) {
@@ -376,36 +369,38 @@ public class DurableConsumerTest extends CombinationTestSupport{
             configurePersistence(broker);
         }
         broker.start();
-        
+
+        // Re-create factory after broker restart (port may have changed)
+        factory = createConnectionFactory();
         consumerConnection = factory.createConnection();
         consumerConnection.setClientID(CONSUMER_NAME);
         consumerConnection.start();
         consumerSession = consumerConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        
+
         consumer = consumerSession.createDurableSubscriber(topic, CONSUMER_NAME);
         for (int i = 0; i < COUNT; i++) {
-            Message msg = consumer.receive(10000);
+            final Message msg = consumer.receive(10000);
             assertNotNull("Missing message: " + i, msg);
             if (i != 0 && i % 1000 == 0) {
                 LOG.info("Received msg " + i);
             }
-            
+
         }
         consumerConnection.close();
-        
+
     }
-    
+
     @Override
-    protected void setUp() throws Exception{
+    protected void setUp() throws Exception {
         if (broker == null) {
             broker = createBroker(true);
         }
-        
+
         super.setUp();
     }
-    
+
     @Override
-    protected void tearDown() throws Exception{
+    protected void tearDown() throws Exception {
         super.tearDown();
         if (broker != null) {
             broker.stop();
@@ -413,51 +408,50 @@ public class DurableConsumerTest extends CombinationTestSupport{
             broker = null;
         }
     }
-    
-    protected Topic creatTopic(Session s,String destinationName) throws JMSException{
+
+    protected Topic creatTopic(final Session s, final String destinationName) throws JMSException {
         return s.createTopic(destinationName);
     }
-    
+
     /**
      * Factory method to create a new broker
-     * 
+     *
      * @throws Exception
      */
-    protected BrokerService createBroker(boolean deleteStore) throws Exception{
-        BrokerService answer = new BrokerService();
+    protected BrokerService createBroker(final boolean deleteStore) throws Exception {
+        final BrokerService answer = new BrokerService();
         configureBroker(answer, deleteStore);
         return answer;
     }
-    
-    protected void configureBroker(BrokerService answer,boolean deleteStore) throws Exception{
+
+    protected void configureBroker(final BrokerService answer, final boolean deleteStore) throws Exception {
         answer.setDeleteAllMessagesOnStartup(deleteStore);
-        KahaDBStore kaha = new KahaDBStore();
-        //kaha.setConcurrentStoreAndDispatchTopics(false);
-        File directory = new File("target/activemq-data/kahadb");
+        final KahaDBStore kaha = new KahaDBStore();
+        final File directory = new File("target/activemq-data/kahadb");
         if (deleteStore) {
             IOHelper.deleteChildren(directory);
         }
         kaha.setDirectory(directory);
-        //kaha.setMaxAsyncJobs(10);
-        
+
         answer.setPersistenceAdapter(kaha);
         answer.addConnector(bindAddress);
         answer.setUseShutdownHook(false);
         answer.setAdvisorySupport(false);
         answer.setDedicatedTaskRunner(useDedicatedTaskRunner);
     }
-    
-    protected ActiveMQConnectionFactory createConnectionFactory() throws Exception{
-        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(bindAddress);
+
+    protected ActiveMQConnectionFactory createConnectionFactory() throws Exception {
+        final String connectUri = broker.getTransportConnectors().get(0).getConnectUri().toString();
+        final ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(connectUri);
         factory.setUseDedicatedTaskRunner(useDedicatedTaskRunner);
         return factory;
     }
-    
-    public static Test suite(){
+
+    public static Test suite() {
         return suite(DurableConsumerTest.class);
     }
-    
-    public static void main(String[] args){
+
+    public static void main(final String[] args) {
         junit.textui.TestRunner.run(suite());
     }
 }

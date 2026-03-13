@@ -19,8 +19,7 @@ package org.apache.activemq.network;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.jmx.ManagementContext;
-import org.apache.activemq.util.TestUtils;
-import org.junit.Before;
+import org.apache.activemq.util.Wait;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,7 +32,7 @@ import javax.management.MBeanServer;
 import javax.management.ObjectInstance;
 import javax.management.ObjectName;
 import java.net.MalformedURLException;
-import java.util.List;
+import java.net.URI;
 import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
@@ -47,64 +46,74 @@ public class DuplexNetworkMBeanTest {
     protected static final Logger LOG = LoggerFactory.getLogger(DuplexNetworkMBeanTest.class);
     protected final int numRestarts = 3;
 
-    private int primaryBrokerPort;
-    private int secondaryBrokerPort;
-    private MBeanServer mBeanServer = new ManagementContext().getMBeanServer();
+    private final MBeanServer mBeanServer = new ManagementContext().getMBeanServer();
 
-    @Before
-    public void setUp() throws Exception {
-        List<Integer> ports = TestUtils.findOpenPorts(2);
-
-        primaryBrokerPort = ports.get(0);
-        secondaryBrokerPort = ports.get(1);
-    }
-
-    protected BrokerService createBroker() throws Exception {
-        BrokerService broker = new BrokerService();
+    /**
+     * Creates a primary broker with an ephemeral port transport connector.
+     * Call {@code broker.start()} then use {@code getTransportConnectors().get(0).getConnectUri()}
+     * to retrieve the actual assigned port.
+     */
+    private BrokerService createBroker() throws Exception {
+        final BrokerService broker = new BrokerService();
         broker.setBrokerName("broker");
         broker.getManagementContext().setCreateConnector(false);
-        broker.addConnector("tcp://localhost:" + primaryBrokerPort + "?transport.reuseAddress=true");
-
+        broker.addConnector("tcp://localhost:0");
         return broker;
     }
 
-    protected BrokerService createNetworkedBroker() throws Exception {
-        BrokerService broker = new BrokerService();
-        broker.setBrokerName("networkedBroker");
-        broker.addConnector("tcp://localhost:" + secondaryBrokerPort + "?transport.reuseAddress=true");
+    /**
+     * Creates a primary broker bound to a specific URI (for restart scenarios where
+     * the networked broker expects a known port).
+     */
+    private BrokerService createBrokerOnPort(final URI bindURI) throws Exception {
+        final BrokerService broker = new BrokerService();
+        broker.setBrokerName("broker");
         broker.getManagementContext().setCreateConnector(false);
-        NetworkConnector networkConnector =
-            broker.addNetworkConnector("static:(tcp://localhost:" + primaryBrokerPort + "?wireFormat.maxInactivityDuration=500)?useExponentialBackOff=false");
+        broker.addConnector(bindURI.toString() + "?transport.reuseAddress=true");
+        return broker;
+    }
+
+    private BrokerService createNetworkedBroker(final URI primaryBrokerURI) throws Exception {
+        final BrokerService broker = new BrokerService();
+        broker.setBrokerName("networkedBroker");
+        broker.addConnector("tcp://localhost:0");
+        broker.getManagementContext().setCreateConnector(false);
+        final NetworkConnector networkConnector =
+            broker.addNetworkConnector("static:(" + primaryBrokerURI + "?wireFormat.maxInactivityDuration=500)?useExponentialBackOff=false");
         networkConnector.setDuplex(true);
         return broker;
     }
 
     @Test
     public void testMbeanPresenceOnNetworkBrokerRestart() throws Exception {
-        BrokerService broker = createBroker();
+        final BrokerService broker = createBroker();
         try {
             broker.start();
-            assertEquals(1, countMbeans(broker, "connector", 30000));
+            broker.waitUntilStarted();
+            final URI primaryBrokerURI = broker.getTransportConnectors().get(0).getConnectUri();
+
+            assertEquals(1, waitForMbeanCount(broker, "connector", 1, 30000));
             assertEquals(0, countMbeans(broker, "connectionName"));
             BrokerService networkedBroker = null;
-            for (int i=0; i<numRestarts; i++) {
-                networkedBroker = createNetworkedBroker();
+            for (int i = 0; i < numRestarts; i++) {
+                networkedBroker = createNetworkedBroker(primaryBrokerURI);
                 try {
                     networkedBroker.start();
-                    assertEquals(1, countMbeans(networkedBroker, "networkBridge", 2000));
-                    assertEquals(1, countMbeans(broker, "networkBridge", 2000));
-                    assertEquals(2, countMbeans(broker, "connectionName"));
+                    networkedBroker.waitUntilStarted();
+                    assertEquals(1, waitForMbeanCount(networkedBroker, "networkBridge", 1, 2000));
+                    assertEquals(1, waitForMbeanCount(broker, "networkBridge", 1, 2000));
+                    assertEquals(2, waitForMbeanCount(broker, "connectionName", 2, 5000));
                 } finally {
                     networkedBroker.stop();
                     networkedBroker.waitUntilStopped();
                 }
-                assertEquals(0, countMbeans(networkedBroker, "stopped"));
-                assertEquals(0, countMbeans(broker, "networkBridge"));
+                assertEquals(0, waitForMbeanCount(networkedBroker, "stopped", 0, 5000));
+                assertEquals(0, waitForMbeanCount(broker, "networkBridge", 0, 5000));
             }
 
-            assertEquals(0, countMbeans(networkedBroker, "networkBridge"));
-            assertEquals(0, countMbeans(networkedBroker, "connector"));
-            assertEquals(0, countMbeans(networkedBroker, "connectionName"));
+            assertEquals(0, waitForMbeanCount(networkedBroker, "networkBridge", 0, 5000));
+            assertEquals(0, waitForMbeanCount(networkedBroker, "connector", 0, 5000));
+            assertEquals(0, waitForMbeanCount(networkedBroker, "connectionName", 0, 5000));
             assertEquals(1, countMbeans(broker, "connector"));
         } finally {
             broker.stop();
@@ -114,41 +123,62 @@ public class DuplexNetworkMBeanTest {
 
     @Test
     public void testMbeanPresenceOnBrokerRestart() throws Exception {
+        // Start primary broker briefly to discover its ephemeral port, then stop it
+        // so the networked broker starts with no active bridge (MBean count expectations
+        // assume the bridge is not yet connected on initial startup).
+        final BrokerService tempBroker = createBroker();
+        tempBroker.start();
+        tempBroker.waitUntilStarted();
+        final URI primaryBrokerURI = tempBroker.getTransportConnectors().get(0).getConnectUri();
+        tempBroker.stop();
+        tempBroker.waitUntilStopped();
 
-        BrokerService networkedBroker = createNetworkedBroker();
+        // Start networked broker - bridge cannot connect since primary is down
+        final BrokerService networkedBroker = createNetworkedBroker(primaryBrokerURI);
+        BrokerService broker = null;
         try {
             networkedBroker.start();
-            assertEquals(1, countMbeans(networkedBroker, "connector=networkConnectors", 30000));
+            networkedBroker.waitUntilStarted();
+            assertEquals(1, waitForMbeanCount(networkedBroker, "connector=networkConnectors", 1, 30000));
             assertEquals(0, countMbeans(networkedBroker, "connectionName"));
 
-            BrokerService broker = null;
-            for (int i=0; i<numRestarts; i++) {
-                broker = createBroker();
+            // Restart the primary broker multiple times on the same port
+            for (int i = 0; i < numRestarts; i++) {
+                broker = createBrokerOnPort(primaryBrokerURI);
                 try {
                     broker.start();
-                    assertEquals(1, countMbeans(networkedBroker, "networkBridge", 5000));
-                    assertEquals("restart number: " + i, 2, countMbeans(broker, "connectionName", 10000));
+                    broker.waitUntilStarted();
+                    assertEquals(1, waitForMbeanCount(networkedBroker, "networkBridge", 1, 5000));
+                    assertEquals("restart number: " + i, 2, waitForMbeanCount(broker, "connectionName", 2, 10000));
                 } finally {
                     broker.stop();
                     broker.waitUntilStopped();
                 }
-                assertEquals(0, countMbeans(broker, "stopped"));
+                assertEquals(0, waitForMbeanCount(broker, "stopped", 0, 5000));
             }
 
-            assertEquals(1, countMbeans(networkedBroker, "connector=networkConnectors"));
-            assertEquals(0, countMbeans(networkedBroker, "connectionName"));
-            assertEquals(0, countMbeans(broker, "connectionName"));
+            // After the final broker stop, the duplex bridge on the networked broker needs
+            // time to detect the disconnection (via wireFormat.maxInactivityDuration=500ms)
+            // and clean up. The connector MBean itself persists but bridge MBeans should go away.
+            // The connector=networkConnectors query matches both the connector and any bridge
+            // sub-objects, so we need to wait for the bridge cleanup.
+            assertEquals(1, waitForMbeanCount(networkedBroker, "connector=networkConnectors", 1, 30000));
+            assertEquals(0, waitForMbeanCount(networkedBroker, "connectionName", 0, 10000));
+            assertEquals(0, waitForMbeanCount(broker, "connectionName", 0, 10000));
         } finally {
             networkedBroker.stop();
             networkedBroker.waitUntilStopped();
+            if (broker != null && !broker.isStopped()) {
+                broker.stop();
+                broker.waitUntilStopped();
+            }
         }
     }
 
     @Test
     public void testMBeansNotOverwrittenOnCleanup() throws Exception {
-        BrokerService broker = createBroker();
+        final BrokerService broker = createBroker();
 
-        BrokerService networkedBroker = createNetworkedBroker();
         MessageProducer producerBroker = null;
         MessageConsumer consumerBroker = null;
         Session sessionNetworkBroker = null;
@@ -158,31 +188,35 @@ public class DuplexNetworkMBeanTest {
         try {
             broker.start();
             broker.waitUntilStarted();
-            networkedBroker.start();
-            try {
-                assertEquals(2, countMbeans(networkedBroker, "connector=networkConnectors", 10000));
-                assertEquals(1, countMbeans(broker, "connector=duplexNetworkConnectors", 10000));
+            final URI primaryBrokerURI = broker.getTransportConnectors().get(0).getConnectUri();
 
-                Connection brokerConnection = new ActiveMQConnectionFactory(broker.getVmConnectorURI()).createConnection();
+            final BrokerService networkedBroker = createNetworkedBroker(primaryBrokerURI);
+            networkedBroker.start();
+            networkedBroker.waitUntilStarted();
+            try {
+                assertEquals(2, waitForMbeanCount(networkedBroker, "connector=networkConnectors", 2, 10000));
+                assertEquals(1, waitForMbeanCount(broker, "connector=duplexNetworkConnectors", 1, 10000));
+
+                final Connection brokerConnection = new ActiveMQConnectionFactory(broker.getVmConnectorURI()).createConnection();
                 brokerConnection.start();
 
                 sessionBroker = brokerConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
                 producerBroker = sessionBroker.createProducer(sessionBroker.createTopic("testTopic"));
                 consumerBroker = sessionBroker.createConsumer(sessionBroker.createTopic("testTopic"));
-                Connection netWorkBrokerConnection = new ActiveMQConnectionFactory(networkedBroker.getVmConnectorURI()).createConnection();
+                final Connection netWorkBrokerConnection = new ActiveMQConnectionFactory(networkedBroker.getVmConnectorURI()).createConnection();
                 netWorkBrokerConnection.start();
                 sessionNetworkBroker = netWorkBrokerConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
                 producerNetworkBroker = sessionNetworkBroker.createProducer(sessionBroker.createTopic("testTopic"));
                 consumerNetworkBroker = sessionNetworkBroker.createConsumer(sessionBroker.createTopic("testTopic"));
 
-                assertEquals(4, countMbeans(broker, "destinationType=Topic,destinationName=testTopic", 15000));
-                assertEquals(4, countMbeans(networkedBroker, "destinationType=Topic,destinationName=testTopic", 15000));
+                assertEquals(4, waitForMbeanCount(broker, "destinationType=Topic,destinationName=testTopic", 4, 15000));
+                assertEquals(4, waitForMbeanCount(networkedBroker, "destinationType=Topic,destinationName=testTopic", 4, 15000));
 
                 producerBroker.send(sessionBroker.createTextMessage("test1"));
                 producerNetworkBroker.send(sessionNetworkBroker.createTextMessage("test2"));
 
-                assertEquals(2, countMbeans(networkedBroker, "destinationName=testTopic,direction=*", 10000));
-                assertEquals(2, countMbeans(broker, "destinationName=testTopic,direction=*", 10000));
+                assertEquals(2, waitForMbeanCount(networkedBroker, "destinationName=testTopic,direction=*", 2, 10000));
+                assertEquals(2, waitForMbeanCount(broker, "destinationName=testTopic,direction=*", 2, 10000));
             } finally {
                 if (producerBroker != null) {
                     producerBroker.close();
@@ -205,58 +239,60 @@ public class DuplexNetworkMBeanTest {
                 networkedBroker.stop();
                 networkedBroker.waitUntilStopped();
             }
-            assertEquals(0, countMbeans(broker, "destinationName=testTopic,direction=*", 1500));
+            assertEquals(0, waitForMbeanCount(broker, "destinationName=testTopic,direction=*", 0, 1500));
         } finally {
             broker.stop();
             broker.waitUntilStopped();
         }
     }
 
-    private int countMbeans(BrokerService broker, String type) throws Exception {
-        return countMbeans(broker, type, 0);
-    }
-
-    private int countMbeans(BrokerService broker, String type, int timeout) throws Exception {
-        final long expiryTime = System.currentTimeMillis() + timeout;
-
-        if (!type.contains("=")) {
-            type = type + "=*";
-        }
+    private int countMbeans(final BrokerService broker, final String type) throws Exception {
+        final String queryType = type.contains("=") ? type : type + "=*";
 
         final ObjectName beanName = new ObjectName("org.apache.activemq:type=Broker,brokerName="
-                + broker.getBrokerName() + "," + type +",*");
-        Set<ObjectName> mbeans = null;
-        int count = 0;
-        do {
-            if (timeout > 0) {
-                Thread.sleep(100);
-            }
+                + broker.getBrokerName() + "," + queryType + ",*");
 
-            LOG.info("Query name: " + beanName);
-            mbeans = mBeanServer.queryNames(beanName, null);
-            if (mbeans != null) {
-                count = mbeans.size();
-            } else {
-                logAllMbeans(broker);
-            }
-        } while ((mbeans == null || mbeans.isEmpty()) && expiryTime > System.currentTimeMillis());
-
-        // If port 1099 is in use when the Broker starts, starting the jmx connector
-        // will fail.  So, if we have no mbsc to query, skip the test.
-        if (timeout > 0) {
-            assumeNotNull(mbeans);
-        }
-
-        return count;
+        LOG.info("Query name: " + beanName);
+        final Set<ObjectName> mbeans = mBeanServer.queryNames(beanName, null);
+        return mbeans != null ? mbeans.size() : 0;
     }
 
-    private void logAllMbeans(BrokerService broker) throws MalformedURLException {
+    /**
+     * Waits up to {@code timeout} ms for the MBean count matching {@code type} to reach
+     * the {@code expectedCount}. Returns the actual count found.
+     */
+    private int waitForMbeanCount(final BrokerService broker, final String type, final int expectedCount, final int timeout) throws Exception {
+        final String queryType = type.contains("=") ? type : type + "=*";
+
+        final ObjectName beanName = new ObjectName("org.apache.activemq:type=Broker,brokerName="
+                + broker.getBrokerName() + "," + queryType + ",*");
+
+        final int[] resultHolder = new int[1];
+        final boolean found = Wait.waitFor(() -> {
+            LOG.info("Query name: " + beanName);
+            final Set<ObjectName> mbeans = mBeanServer.queryNames(beanName, null);
+            final int count = mbeans != null ? mbeans.size() : 0;
+            resultHolder[0] = count;
+            return count == expectedCount;
+        }, timeout, 100);
+
+        if (!found) {
+            // If port 1099 is in use when the Broker starts, starting the jmx connector
+            // will fail.  So, if we have no mbsc to query, skip the test.
+            final Set<ObjectName> mbeans = mBeanServer.queryNames(beanName, null);
+            assumeNotNull(mbeans);
+            return mbeans != null ? mbeans.size() : 0;
+        }
+        return resultHolder[0];
+    }
+
+    private void logAllMbeans(final BrokerService broker) throws MalformedURLException {
         try {
             // trace all existing MBeans
-            Set<?> all = mBeanServer.queryNames(null, null);
+            final Set<?> all = mBeanServer.queryNames(null, null);
             LOG.info("Total MBean count=" + all.size());
-            for (Object o : all) {
-                ObjectInstance bean = (ObjectInstance)o;
+            for (final Object o : all) {
+                final ObjectInstance bean = (ObjectInstance) o;
                 LOG.info(bean.getObjectName().toString());
             }
         } catch (Exception ignored) {

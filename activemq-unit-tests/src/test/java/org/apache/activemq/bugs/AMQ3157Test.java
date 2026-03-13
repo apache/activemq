@@ -37,6 +37,7 @@ import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.spring.ConsumerBean;
+import org.apache.activemq.util.Wait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.activemq.test.annotations.ParallelTest;
@@ -89,23 +90,21 @@ public class AMQ3157Test extends EmbeddedBrokerTestSupport {
 
         connection.close();
 
-        List<ObjectName> topics = Arrays.asList(broker.getAdminView().getTopics());
-        assertTrue(topics.contains(createObjectName(consumeDestination)));
-        List<ObjectName> queues = Arrays.asList(broker.getAdminView().getQueues());
-        assertTrue(queues.contains(createObjectName(sendDestination)));
+        final List<ObjectName> initialTopics = Arrays.asList(broker.getAdminView().getTopics());
+        assertTrue(initialTopics.contains(createObjectName(consumeDestination)));
+        final List<ObjectName> initialQueues = Arrays.asList(broker.getAdminView().getQueues());
+        assertTrue(initialQueues.contains(createObjectName(sendDestination)));
 
-        Thread.sleep(TimeUnit.SECONDS.toMillis(10));
+        final ObjectName topicObjectName = createObjectName(consumeDestination);
+        final ObjectName queueObjectName = createObjectName(sendDestination);
 
-        topics = Arrays.asList(broker.getAdminView().getTopics());
-        if (topics != null) {
-            assertFalse("Virtual Topic Desination did not get cleaned up.",
-                        topics.contains(createObjectName(consumeDestination)));
-        }
-        queues = Arrays.asList(broker.getAdminView().getQueues());
-        if (queues != null) {
-            assertFalse("Mirrored Queue Desination did not get cleaned up.",
-                        queues.contains(createObjectName(sendDestination)));
-        }
+        assertTrue("Virtual Topic Destination did not get cleaned up.",
+            Wait.waitFor(() -> !Arrays.asList(broker.getAdminView().getTopics()).contains(topicObjectName),
+                TimeUnit.SECONDS.toMillis(30), TimeUnit.MILLISECONDS.toMillis(500)));
+
+        assertTrue("Mirrored Queue Destination did not get cleaned up.",
+            Wait.waitFor(() -> !Arrays.asList(broker.getAdminView().getQueues()).contains(queueObjectName),
+                TimeUnit.SECONDS.toMillis(30), TimeUnit.MILLISECONDS.toMillis(500)));
     }
 
     protected ActiveMQDestination createConsumeDestination() {

@@ -16,32 +16,37 @@
  */
 package org.apache.activemq.network;
 
+import java.net.URI;
+import java.util.concurrent.TimeUnit;
+
+import jakarta.jms.*;
+
 import junit.framework.TestCase;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.util.Wait;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import jakarta.jms.*;
-
 public class NetworkConnectionsTest extends TestCase {
     private static final Logger LOG = LoggerFactory.getLogger(NetworkConnectionsTest.class);
 
-    private static final String LOCAL_BROKER_TRANSPORT_URI = "tcp://localhost:61616";
-    private static final String REMOTE_BROKER_TRANSPORT_URI = "tcp://localhost:61617";
     private static final String DESTINATION_NAME = "TEST.RECONNECT";
 
     private BrokerService localBroker;
     private BrokerService remoteBroker;
+    private URI localBrokerURI;
+    private URI remoteBrokerURI;
 
     @Test
     public void testIsStarted() throws Exception {
         LOG.info("testIsStarted is starting...");
 
         LOG.info("Adding network connector...");
-        NetworkConnector nc = localBroker.addNetworkConnector("static:(" + REMOTE_BROKER_TRANSPORT_URI + ")");
+        final NetworkConnector nc = localBroker.addNetworkConnector("static:(" + remoteBrokerURI + ")");
         nc.setName("NC1");
 
         LOG.info("Starting network connector...");
@@ -51,12 +56,8 @@ public class NetworkConnectionsTest extends TestCase {
         LOG.info("Stopping network connector...");
         nc.stop();
 
-        while (nc.isStopping()) {
-            LOG.info("... still stopping ...");
-            Thread.sleep(100);
-        }
-
-        assertTrue(nc.isStopped());
+        assertTrue("Network connector should have stopped", Wait.waitFor(
+            nc::isStopped, TimeUnit.SECONDS.toMillis(10), TimeUnit.MILLISECONDS.toMillis(100)));
         assertFalse(nc.isStarted());
 
         LOG.info("Starting network connector...");
@@ -66,12 +67,8 @@ public class NetworkConnectionsTest extends TestCase {
         LOG.info("Stopping network connector...");
         nc.stop();
 
-        while (nc.isStopping()) {
-            LOG.info("... still stopping ...");
-            Thread.sleep(100);
-        }
-
-        assertTrue(nc.isStopped());
+        assertTrue("Network connector should have stopped", Wait.waitFor(
+            nc::isStopped, TimeUnit.SECONDS.toMillis(10), TimeUnit.MILLISECONDS.toMillis(100)));
         assertFalse(nc.isStarted());
     }
 
@@ -80,25 +77,25 @@ public class NetworkConnectionsTest extends TestCase {
         LOG.info("testNetworkConnectionRestart is starting...");
 
         LOG.info("Adding network connector...");
-        NetworkConnector nc = localBroker.addNetworkConnector("static:(" + REMOTE_BROKER_TRANSPORT_URI + ")");
+        final NetworkConnector nc = localBroker.addNetworkConnector("static:(" + remoteBrokerURI + ")");
         nc.setName("NC1");
         nc.start();
         assertTrue(nc.isStarted());
 
         LOG.info("Setting up Message Producer and Consumer");
-        ActiveMQQueue destination = new ActiveMQQueue(DESTINATION_NAME);
+        final ActiveMQQueue destination = new ActiveMQQueue(DESTINATION_NAME);
 
-        ActiveMQConnectionFactory localFactory = new ActiveMQConnectionFactory(LOCAL_BROKER_TRANSPORT_URI);
-        Connection localConnection = localFactory.createConnection();
+        final ActiveMQConnectionFactory localFactory = new ActiveMQConnectionFactory(localBrokerURI);
+        final Connection localConnection = localFactory.createConnection();
         localConnection.start();
-        Session localSession = localConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        MessageProducer localProducer = localSession.createProducer(destination);
+        final Session localSession = localConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        final MessageProducer localProducer = localSession.createProducer(destination);
 
-        ActiveMQConnectionFactory remoteFactory = new ActiveMQConnectionFactory(REMOTE_BROKER_TRANSPORT_URI);
-        Connection remoteConnection = remoteFactory.createConnection();
+        final ActiveMQConnectionFactory remoteFactory = new ActiveMQConnectionFactory(remoteBrokerURI);
+        final Connection remoteConnection = remoteFactory.createConnection();
         remoteConnection.start();
-        Session remoteSession = remoteConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        MessageConsumer remoteConsumer = remoteSession.createConsumer(destination);
+        final Session remoteSession = remoteConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        final MessageConsumer remoteConsumer = remoteSession.createConsumer(destination);
 
         Message message = localSession.createTextMessage("test");
         localProducer.send(message);
@@ -132,31 +129,31 @@ public class NetworkConnectionsTest extends TestCase {
         LOG.info("testNetworkConnectionReAddURI is starting...");
 
         LOG.info("Adding network connector 'NC1'...");
-        NetworkConnector nc = localBroker.addNetworkConnector("static:(" + REMOTE_BROKER_TRANSPORT_URI + ")");
+        NetworkConnector nc = localBroker.addNetworkConnector("static:(" + remoteBrokerURI + ")");
         nc.setName("NC1");
         nc.start();
         assertTrue(nc.isStarted());
 
         LOG.info("Looking up network connector by name...");
-        NetworkConnector nc1 = localBroker.getNetworkConnectorByName("NC1");
+        final NetworkConnector nc1 = localBroker.getNetworkConnectorByName("NC1");
         assertNotNull("Should find network connector 'NC1'", nc1);
         assertTrue(nc1.isStarted());
         assertEquals(nc, nc1);
 
         LOG.info("Setting up producer and consumer...");
-        ActiveMQQueue destination = new ActiveMQQueue(DESTINATION_NAME);
+        final ActiveMQQueue destination = new ActiveMQQueue(DESTINATION_NAME);
 
-        ActiveMQConnectionFactory localFactory = new ActiveMQConnectionFactory(LOCAL_BROKER_TRANSPORT_URI);
-        Connection localConnection = localFactory.createConnection();
+        final ActiveMQConnectionFactory localFactory = new ActiveMQConnectionFactory(localBrokerURI);
+        final Connection localConnection = localFactory.createConnection();
         localConnection.start();
-        Session localSession = localConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        MessageProducer localProducer = localSession.createProducer(destination);
+        final Session localSession = localConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        final MessageProducer localProducer = localSession.createProducer(destination);
 
-        ActiveMQConnectionFactory remoteFactory = new ActiveMQConnectionFactory(REMOTE_BROKER_TRANSPORT_URI);
-        Connection remoteConnection = remoteFactory.createConnection();
+        final ActiveMQConnectionFactory remoteFactory = new ActiveMQConnectionFactory(remoteBrokerURI);
+        final Connection remoteConnection = remoteFactory.createConnection();
         remoteConnection.start();
-        Session remoteSession = remoteConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        MessageConsumer remoteConsumer = remoteSession.createConsumer(destination);
+        final Session remoteSession = remoteConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        final MessageConsumer remoteConsumer = remoteSession.createConsumer(destination);
 
         Message message = localSession.createTextMessage("test");
         localProducer.send(message);
@@ -172,17 +169,17 @@ public class NetworkConnectionsTest extends TestCase {
         LOG.info("Removing network connector...");
         assertTrue(localBroker.removeNetworkConnector(nc));
 
-        nc1 = localBroker.getNetworkConnectorByName("NC1");
-        assertNull("Should not find network connector 'NC1'", nc1);
+        NetworkConnector lookupNc1 = localBroker.getNetworkConnectorByName("NC1");
+        assertNull("Should not find network connector 'NC1'", lookupNc1);
 
         LOG.info("Re-adding network connector 'NC2'...");
-        nc = localBroker.addNetworkConnector("static:(" + REMOTE_BROKER_TRANSPORT_URI + ")");
+        nc = localBroker.addNetworkConnector("static:(" + remoteBrokerURI + ")");
         nc.setName("NC2");
         nc.start();
         assertTrue(nc.isStarted());
 
         LOG.info("Looking up network connector by name...");
-        NetworkConnector nc2 = localBroker.getNetworkConnectorByName("NC2");
+        final NetworkConnector nc2 = localBroker.getNetworkConnectorByName("NC2");
         assertNotNull(nc2);
         assertTrue(nc2.isStarted());
         assertEquals(nc, nc2);
@@ -201,8 +198,8 @@ public class NetworkConnectionsTest extends TestCase {
         LOG.info("Removing network connection 'NC2'");
         assertTrue(localBroker.removeNetworkConnector(nc));
 
-        nc2 = localBroker.getNetworkConnectorByName("NC2");
-        assertNull("Should not find network connector 'NC2'", nc2);
+        final NetworkConnector lookupNc2 = localBroker.getNetworkConnectorByName("NC2");
+        assertNull("Should not find network connector 'NC2'", lookupNc2);
     }
 
     @Override
@@ -212,18 +209,20 @@ public class NetworkConnectionsTest extends TestCase {
         localBroker.setBrokerName("LocalBroker");
         localBroker.setUseJmx(false);
         localBroker.setPersistent(false);
-        localBroker.setTransportConnectorURIs(new String[]{LOCAL_BROKER_TRANSPORT_URI});
+        final TransportConnector localConnector = localBroker.addConnector("tcp://localhost:0");
         localBroker.start();
         localBroker.waitUntilStarted();
+        localBrokerURI = localConnector.getConnectUri();
 
         LOG.info("Setting up RemoteBroker");
         remoteBroker = new BrokerService();
         remoteBroker.setBrokerName("RemoteBroker");
         remoteBroker.setUseJmx(false);
         remoteBroker.setPersistent(false);
-        remoteBroker.setTransportConnectorURIs(new String[]{REMOTE_BROKER_TRANSPORT_URI});
+        final TransportConnector remoteConnector = remoteBroker.addConnector("tcp://localhost:0");
         remoteBroker.start();
         remoteBroker.waitUntilStarted();
+        remoteBrokerURI = remoteConnector.getConnectUri();
     }
 
     @Override

@@ -52,9 +52,9 @@ import org.apache.activemq.test.annotations.ParallelTest;
 @Category(ParallelTest.class)
 public class DurableRedeliveryTest {
 
-    static final Logger LOG = LoggerFactory.getLogger(DurableRedeliveryTest.class);
-    BrokerService broker = null;
-    String topicName = "testTopic";
+    private static final Logger LOG = LoggerFactory.getLogger(DurableRedeliveryTest.class);
+    private BrokerService broker = null;
+    private final String topicName = "testTopic";
 
     @Before
     public void setUp() throws Exception {
@@ -68,9 +68,9 @@ public class DurableRedeliveryTest {
         broker.stop();
     }
 
-    protected void configureBroker(BrokerService broker) throws Exception {
-        PolicyMap policyMap = new PolicyMap();
-        PolicyEntry policy = new PolicyEntry();
+    protected void configureBroker(final BrokerService broker) throws Exception {
+        final PolicyMap policyMap = new PolicyMap();
+        final PolicyEntry policy = new PolicyEntry();
         policyMap.setDefaultEntry(policy);
         broker.setDestinationPolicy(policyMap);
         broker.setPersistent(false);
@@ -80,29 +80,33 @@ public class DurableRedeliveryTest {
     @Test
     public void testRedeliveryFlagAfterConnectionKill() throws Exception {
 
-        ConnectionFactory connectionFactory = new ActiveMQConnectionFactory(
+        final ConnectionFactory connectionFactory = new ActiveMQConnectionFactory(
                 broker.getTransportConnectors().get(0).getPublishableConnectString());
-        ActiveMQConnection producerConnection = (ActiveMQConnection) connectionFactory.createConnection();
+        final ActiveMQConnection producerConnection = (ActiveMQConnection) connectionFactory.createConnection();
         ActiveMQConnection durableConnection = (ActiveMQConnection) connectionFactory.createConnection();
         durableConnection.setClientID("clientId");
         producerConnection.start();
         durableConnection.start();
 
         Session session = durableConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        Topic topic = session.createTopic(topicName);
+        final Topic topic = session.createTopic(topicName);
         MessageConsumer consumer = session.createDurableSubscriber(topic, "sub1");
 
         populateDestination(1, topic, producerConnection);
         producerConnection.close();
-        Wait.waitFor(() -> broker.getBroker().getClients().length == 1);
+        assertTrue("only durable client remains",
+                Wait.waitFor(() -> broker.getBroker().getClients().length == 1));
 
         //Close the connection on the broker side (not the client) so the delivered status of the
         //prefetched message will be unknown which should now trigger the previously dispatched message
         //to be marked as redelivered
-        TransportConnector connector = broker.getTransportConnectors().get(0);
-        TransportConnection connection = connector.getConnections().stream().findFirst().get();
+        final TransportConnector connector = broker.getTransportConnectors().get(0);
+        assertTrue("only durable connection remains",
+                Wait.waitFor(() -> connector.getConnections().size() == 1));
+        final TransportConnection connection = connector.getConnections().stream().findFirst().get();
         connection.stop();
-        Wait.waitFor(() -> broker.getBroker().getClients().length == 0);
+        assertTrue("all clients disconnected",
+                Wait.waitFor(() -> broker.getBroker().getClients().length == 0));
 
         //Reconnect and consume the message
         durableConnection = (ActiveMQConnection) connectionFactory.createConnection();
@@ -110,21 +114,19 @@ public class DurableRedeliveryTest {
         durableConnection.start();
 
         session = durableConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        topic = session.createTopic(topicName);
-        consumer = session.createDurableSubscriber(topic, "sub1");
+        consumer = session.createDurableSubscriber(session.createTopic(topicName), "sub1");
 
-        Message msg = consumer.receive(2000);
+        final Message msg = consumer.receive(2000);
         LOG.info("got: " + msg);
         assertNotNull("got the message", msg);
         assertTrue("got the message has redelivered flag", msg.getJMSRedelivered());
 
-        producerConnection.close();
         durableConnection.close();
     }
 
-    private void populateDestination(final int nbMessages, final Destination destination, jakarta.jms.Connection connection) throws JMSException {
-        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        MessageProducer producer = session.createProducer(destination);
+    private void populateDestination(final int nbMessages, final Destination destination, final jakarta.jms.Connection connection) throws JMSException {
+        final Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        final MessageProducer producer = session.createProducer(destination);
         for (int i = 1; i <= nbMessages; i++) {
             producer.send(session.createTextMessage("test: " + i));
         }

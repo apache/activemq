@@ -48,32 +48,28 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.Assert.assertEquals;
-import org.junit.experimental.categories.Category;
-import org.apache.activemq.test.annotations.ParallelTest;
+import static org.junit.Assert.assertTrue;
 
-@Category(ParallelTest.class)
 public class DuplicateFromStoreTest {
-    static Logger LOG = LoggerFactory.getLogger(DuplicateFromStoreTest.class);
-    String activemqURL;
-    BrokerService broker;
+    private static final Logger LOG = LoggerFactory.getLogger(DuplicateFromStoreTest.class);
+    private String activemqURL;
+    private BrokerService broker;
 
-    protected final static String DESTNAME = "TEST";
-    protected final static int NUM_PRODUCERS = 100;
-    protected final static int NUM_CONSUMERS = 20;
+    private static final String DESTNAME = "TEST";
+    private static final int NUM_PRODUCERS = 100;
+    private static final int NUM_CONSUMERS = 20;
 
-    protected final static int NUM_MSGS = 20000;
-    protected final static int CONSUMER_SLEEP = 0;
-    protected final static int PRODUCER_SLEEP = 10;
+    private static final int NUM_MSGS = 20000;
+    private static final int CONSUMER_SLEEP = 0;
+    private static final int PRODUCER_SLEEP = 10;
 
-    public static CountDownLatch producersFinished = new CountDownLatch(NUM_PRODUCERS);
-    public static CountDownLatch consumersFinished = new CountDownLatch(NUM_CONSUMERS );
+    private final CountDownLatch producersFinished = new CountDownLatch(NUM_PRODUCERS);
+    private final CountDownLatch consumersFinished = new CountDownLatch(NUM_CONSUMERS);
 
-    public AtomicInteger totalMessagesToSend = new AtomicInteger(NUM_MSGS);
-    public AtomicInteger totalMessagesSent = new AtomicInteger(NUM_MSGS);
+    private final AtomicInteger totalMessagesToSend = new AtomicInteger(NUM_MSGS);
+    private final AtomicInteger totalMessagesSent = new AtomicInteger(NUM_MSGS);
 
-    public AtomicInteger totalReceived = new AtomicInteger(0);
-
-    public int messageSize = 16*1000;
+    private final AtomicInteger totalReceived = new AtomicInteger(0);
 
 
     @Before
@@ -84,31 +80,31 @@ public class DuplicateFromStoreTest {
         broker.addConnector("tcp://0.0.0.0:0");
 
         // Create <policyEntry>
-        PolicyEntry policy = new PolicyEntry();
-        ActiveMQDestination dest = new ActiveMQQueue(">");
+        final PolicyEntry policy = new PolicyEntry();
+        final ActiveMQDestination dest = new ActiveMQQueue(">");
         policy.setDestination(dest);
         policy.setMemoryLimit(10 * 1024 * 1024); // 10 MB
         policy.setExpireMessagesPeriod(0);
         policy.setEnableAudit(false); // allow any duplicates from the store to bubble up to the q impl
         policy.setQueuePrefetch(100);
-        PolicyMap policies = new PolicyMap();
+        final PolicyMap policies = new PolicyMap();
         policies.put(dest, policy);
         broker.setDestinationPolicy(policies);
 
         // configure <systemUsage>
-        MemoryUsage memoryUsage = new MemoryUsage();
+        final MemoryUsage memoryUsage = new MemoryUsage();
         memoryUsage.setPercentOfJvmHeap(50);
 
-        StoreUsage storeUsage = new StoreUsage();
+        final StoreUsage storeUsage = new StoreUsage();
         storeUsage.setLimit(8 * 1024 * 1024 * 1024); // 8 gb
 
-        SystemUsage memoryManager = new SystemUsage();
+        final SystemUsage memoryManager = new SystemUsage();
         memoryManager.setMemoryUsage(memoryUsage);
         memoryManager.setStoreUsage(storeUsage);
         broker.setSystemUsage(memoryManager);
 
         // configure KahaDB persistence
-        PersistenceAdapter kahadb = new KahaDBStore();
+        final PersistenceAdapter kahadb = new KahaDBStore();
         ((KahaDBStore) kahadb).setConcurrentStoreAndDispatchQueues(true);
         broker.setPersistenceAdapter(kahadb);
 
@@ -131,16 +127,16 @@ public class DuplicateFromStoreTest {
         LOG.info("Testing for duplicate messages.");
 
         //create producer and consumer threads
-        ExecutorService producers = Executors.newFixedThreadPool(NUM_PRODUCERS);
-        ExecutorService consumers = Executors.newFixedThreadPool(NUM_CONSUMERS);
+        final ExecutorService producers = Executors.newFixedThreadPool(NUM_PRODUCERS);
+        final ExecutorService consumers = Executors.newFixedThreadPool(NUM_CONSUMERS);
 
         createOpenwireClients(producers, consumers);
 
         LOG.info("All producers and consumers got started. Awaiting their termination");
-        producersFinished.await(2, TimeUnit.MINUTES);
+        assertTrue("producers should finish", producersFinished.await(2, TimeUnit.MINUTES));
         LOG.info("All producers have terminated. remaining to send: " + totalMessagesToSend.get() + ", sent:" + totalMessagesSent.get());
 
-        consumersFinished.await(2, TimeUnit.MINUTES);
+        assertTrue("consumers should finish", consumersFinished.await(2, TimeUnit.MINUTES));
         LOG.info("All consumers have terminated.");
 
         producers.shutdownNow();
@@ -153,13 +149,13 @@ public class DuplicateFromStoreTest {
     }
 
 
-    protected void createOpenwireClients(ExecutorService producers, ExecutorService consumers) {
+    protected void createOpenwireClients(final ExecutorService producers, final ExecutorService consumers) {
         for (int i = 0; i < NUM_CONSUMERS; i++) {
             LOG.trace("Creating consumer for destination " + DESTNAME);
-            Consumer consumer = new Consumer(DESTNAME, false);
+            final Consumer consumer = new Consumer(DESTNAME, false);
             consumers.submit(consumer);
             // wait for consumer to signal it has fully initialized
-            synchronized(consumer.init) {
+            synchronized (consumer.init) {
                 try {
                     consumer.init.wait();
                 } catch (InterruptedException e) {
@@ -169,24 +165,21 @@ public class DuplicateFromStoreTest {
         }
 
         for (int i = 0; i < NUM_PRODUCERS; i++) {
-            LOG.trace("Creating producer for destination " + DESTNAME );
-            Producer producer = new Producer(DESTNAME, false, 0);
+            LOG.trace("Creating producer for destination " + DESTNAME);
+            final Producer producer = new Producer(DESTNAME, false, 0);
             producers.submit(producer);
         }
     }
 
     class Producer implements Runnable {
 
-        Logger log = LOG;
-        protected String destName = "TEST";
-        protected boolean isTopicDest = false;
+        private final String destName;
+        private final boolean isTopicDest;
 
-
-        public Producer(String dest, boolean isTopic, int ttl) {
+        public Producer(final String dest, final boolean isTopic, final int ttl) {
             this.destName = dest;
             this.isTopicDest = isTopic;
         }
-
 
         /**
          * Connect to broker and constantly send messages
@@ -194,23 +187,17 @@ public class DuplicateFromStoreTest {
         public void run() {
 
             Connection connection = null;
-            Session session = null;
-            MessageProducer producer = null;
 
             try {
-                ActiveMQConnectionFactory amq = new ActiveMQConnectionFactory(activemqURL);
+                final ActiveMQConnectionFactory amq = new ActiveMQConnectionFactory(activemqURL);
                 connection = amq.createConnection();
 
-                connection.setExceptionListener(new jakarta.jms.ExceptionListener() {
-                    public void onException(jakarta.jms.JMSException e) {
-                        e.printStackTrace();
-                    }
-                });
+                connection.setExceptionListener(e -> e.printStackTrace());
                 connection.start();
 
                 // Create a Session
-                session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-                Destination destination;
+                final Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+                final Destination destination;
                 if (isTopicDest) {
                     // Create the destination (Topic or Queue)
                     destination = session.createTopic(destName);
@@ -218,36 +205,36 @@ public class DuplicateFromStoreTest {
                     destination = session.createQueue(destName);
                 }
                 // Create a MessageProducer from the Session to the Topic or Queue
-                producer = session.createProducer(destination);
+                final MessageProducer producer = session.createProducer(destination);
 
                 // Create message
                 long counter = 0;
                 //enlarge msg to 16 kb
-                int msgSize = 16 * 1024;
-                StringBuilder stringBuilder = new StringBuilder();
+                final int msgSize = 16 * 1024;
+                final StringBuilder stringBuilder = new StringBuilder();
                 stringBuilder.setLength(msgSize + 15);
                 stringBuilder.append("Message: ");
                 stringBuilder.append(counter);
                 for (int j = 0; j < (msgSize / 10); j++) {
                     stringBuilder.append("XXXXXXXXXX");
                 }
-                String text = stringBuilder.toString();
-                TextMessage message = session.createTextMessage(text);
+                final String text = stringBuilder.toString();
+                final TextMessage message = session.createTextMessage(text);
 
                 // send message
                 while (totalMessagesToSend.decrementAndGet() >= 0) {
                     producer.send(message);
                     totalMessagesSent.incrementAndGet();
-                    log.debug("Sent message: " + counter);
+                    LOG.debug("Sent message: " + counter);
                     counter++;
 
                     if ((counter % 10000) == 0)
-                        log.info("sent " + counter + " messages");
+                        LOG.info("sent " + counter + " messages");
 
                     Thread.sleep(PRODUCER_SLEEP);
                 }
             } catch (Exception ex) {
-                log.error(ex.toString());
+                LOG.error(ex.toString());
                 return;
             } finally {
                 try {
@@ -259,19 +246,17 @@ public class DuplicateFromStoreTest {
                     producersFinished.countDown();
                 }
             }
-            log.debug("Closing producer for " + destName);
+            LOG.debug("Closing producer for " + destName);
         }
     }
 
     class Consumer implements Runnable {
 
-        public Object init = new Object();
-        protected String queueName = "TEST";
-        boolean isTopic = false;
+        final Object init = new Object();
+        private final String queueName;
+        private final boolean isTopic;
 
-        Logger log = LOG;
-
-        public Consumer(String destName, boolean topic) {
+        public Consumer(final String destName, final boolean topic) {
             this.isTopic = topic;
             this.queueName = destName;
         }
@@ -282,29 +267,23 @@ public class DuplicateFromStoreTest {
         public void run() {
 
             Connection connection = null;
-            Session session = null;
-            MessageConsumer consumer = null;
 
             try {
-                ActiveMQConnectionFactory amq = new ActiveMQConnectionFactory(activemqURL);
+                final ActiveMQConnectionFactory amq = new ActiveMQConnectionFactory(activemqURL);
                 connection = amq.createConnection();
-                connection.setExceptionListener(new jakarta.jms.ExceptionListener() {
-                    public void onException(jakarta.jms.JMSException e) {
-                        e.printStackTrace();
-                    }
-                });
+                connection.setExceptionListener(e -> e.printStackTrace());
                 connection.start();
                 // Create a Session
-                session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+                final Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
                 // Create the destination (Topic or Queue)
-                Destination destination = null;
+                final Destination destination;
                 if (isTopic)
                     destination = session.createTopic(queueName);
                 else
                     destination = session.createQueue(queueName);
 
                 //Create a MessageConsumer from the Session to the Topic or Queue
-                consumer = session.createConsumer(destination);
+                final MessageConsumer consumer = session.createConsumer(destination);
 
                 synchronized (init) {
                     init.notifyAll();
@@ -313,14 +292,14 @@ public class DuplicateFromStoreTest {
                 // Wait for a message
                 long counter = 0;
                 while (totalReceived.get() < NUM_MSGS) {
-                    Message message2 = consumer.receive(5000);
+                    final Message message2 = consumer.receive(5000);
 
                     if (message2 instanceof TextMessage) {
-                        TextMessage textMessage = (TextMessage) message2;
-                        String text = textMessage.getText();
-                        log.debug("Received: " + text.substring(0, 50));
+                        final TextMessage textMessage = (TextMessage) message2;
+                        final String text = textMessage.getText();
+                        LOG.debug("Received: " + text.substring(0, 50));
                     } else if (totalReceived.get() < NUM_MSGS) {
-                        log.error("Received message of unsupported type. Expecting TextMessage. count: " + totalReceived.get());
+                        LOG.error("Received message of unsupported type. Expecting TextMessage. count: " + totalReceived.get());
                     } else {
                         // all done
                         break;
@@ -329,13 +308,13 @@ public class DuplicateFromStoreTest {
                         counter++;
                         totalReceived.incrementAndGet();
                         if ((counter % 10000) == 0)
-                            log.info("received " + counter + " messages");
+                            LOG.info("received " + counter + " messages");
 
                         Thread.sleep(CONSUMER_SLEEP);
                     }
                 }
             } catch (Exception e) {
-                log.error("Error in Consumer: " + e.getMessage());
+                LOG.error("Error in Consumer: " + e.getMessage());
                 return;
             } finally {
                 try {

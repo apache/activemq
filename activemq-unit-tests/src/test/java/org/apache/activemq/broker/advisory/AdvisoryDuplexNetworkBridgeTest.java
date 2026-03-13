@@ -16,10 +16,10 @@
  */
 package org.apache.activemq.broker.advisory;
 
-import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
-
-import java.net.URI;
+import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.command.ActiveMQTopic;
+import org.apache.activemq.network.NetworkConnector;
 
 public class AdvisoryDuplexNetworkBridgeTest extends AdvisoryNetworkBridgeTest {
 
@@ -27,7 +27,7 @@ public class AdvisoryDuplexNetworkBridgeTest extends AdvisoryNetworkBridgeTest {
     public void createBroker1() throws Exception {
         broker1 = new BrokerService();
         broker1.setBrokerName("broker1");
-        broker1.addConnector("tcp://localhost:61617");
+        broker1.addConnector("tcp://localhost:0");
         broker1.setUseJmx(false);
         broker1.setPersistent(false);
         broker1.start();
@@ -36,12 +36,28 @@ public class AdvisoryDuplexNetworkBridgeTest extends AdvisoryNetworkBridgeTest {
 
     @Override
     public void createBroker2() throws Exception {
-        broker2 = BrokerFactory.createBroker(new URI("xbean:org/apache/activemq/network/duplexLocalBroker.xml"));
+        // Programmatic equivalent of duplexLocalBroker.xml with ephemeral port
+        broker2 = new BrokerService();
+        broker2.setBrokerName("localBroker");
+        broker2.setPersistent(true);
+        broker2.setUseShutdownHook(false);
+        broker2.setUseJmx(false);
+        broker2.addConnector("tcp://localhost:0");
+
+        final String broker1Uri = broker1.getTransportConnectors().get(0).getConnectUri().toString();
+        final NetworkConnector nc = broker2.addNetworkConnector("static:(" + broker1Uri + ")");
+        nc.setDuplex(true);
+        nc.setDynamicOnly(false);
+        nc.setConduitSubscriptions(true);
+        nc.setDecreaseNetworkConsumerPriority(false);
+        nc.getExcludedDestinations().add(new ActiveMQQueue("exclude.test.foo"));
+        nc.getExcludedDestinations().add(new ActiveMQTopic("exclude.test.bar"));
+
         broker2.start();
         broker2.waitUntilStarted();
     }
 
-    public void assertCreatedByDuplex(boolean createdByDuplex) {
+    public void assertCreatedByDuplex(final boolean createdByDuplex) {
         assertTrue(createdByDuplex);
     }
 }

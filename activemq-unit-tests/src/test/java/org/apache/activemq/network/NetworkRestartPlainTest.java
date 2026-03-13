@@ -16,9 +16,13 @@
  */
 package org.apache.activemq.network;
 
+/**
+ * Variant of {@link NetworkRestartTest} that uses a plain network connector
+ * without destination filtering (no dynamicallyIncludedDestinations or excludedDestinations).
+ */
 public class NetworkRestartPlainTest extends NetworkRestartTest {
     @Override
-    protected String getLocalBrokerURI() {
-        return "org/apache/activemq/network/localBroker-plain.xml";
+    protected void configureNetworkConnector(final DiscoveryNetworkConnector networkConnector) {
+        // Plain mode: no destination filtering, just use defaults
     }
 }

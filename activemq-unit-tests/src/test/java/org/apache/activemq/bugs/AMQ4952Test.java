@@ -113,13 +113,18 @@ public class AMQ4952Test {
     protected BrokerService consumerBroker;
     protected BrokerService producerBroker;
 
-    protected ActiveMQQueue QUEUE_NAME = new ActiveMQQueue("duptest.store");
+    protected final ActiveMQQueue QUEUE_NAME = new ActiveMQQueue("duptest.store");
 
     private CountDownLatch stopConsumerBroker;
     private CountDownLatch consumerBrokerRestarted;
     private CountDownLatch consumerRestartedAndMessageForwarded;
 
     private EmbeddedDataSource localDataSource;
+
+    /** The URI of the consumer broker's transport connector (resolved after start) */
+    private volatile String consumerBrokerUri;
+    /** The URI of the producer broker's transport connector (resolved after start) */
+    private volatile String producerBrokerUri;
 
     @Parameterized.Parameter(0)
     public boolean enableCursorAudit;
@@ -135,7 +140,7 @@ public class AMQ4952Test {
     }
 
     public void repeat() throws Exception {
-        for (int i=0; i<10; i++) {
+        for (int i = 0; i < 10; i++) {
             LOG.info("Iteration: " + i);
             testConsumerBrokerRestart();
             tearDown();
@@ -146,103 +151,93 @@ public class AMQ4952Test {
     @Test
     public void testConsumerBrokerRestart() throws Exception {
 
-        Callable consumeMessageTask = new Callable() {
-            @Override
-            public Object call() throws Exception {
+        final Callable<Integer> consumeMessageTask = () -> {
 
-                int receivedMessageCount = 0;
+            int receivedMessageCount = 0;
 
-                ActiveMQConnectionFactory consumerFactory = new ActiveMQConnectionFactory("failover:(tcp://localhost:2006)?randomize=false&backup=false");
-                Connection consumerConnection = consumerFactory.createConnection();
+            final ActiveMQConnectionFactory consumerFactory = new ActiveMQConnectionFactory(
+                    "failover:(" + consumerBrokerUri + ")?randomize=false&backup=false");
+            final Connection consumerConnection = consumerFactory.createConnection();
 
-                try {
+            try {
 
-                    consumerConnection.setClientID("consumer");
-                    consumerConnection.start();
+                consumerConnection.setClientID("consumer");
+                consumerConnection.start();
 
-                    Session consumerSession = consumerConnection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
-                    MessageConsumer messageConsumer = consumerSession.createConsumer(QUEUE_NAME);
+                final Session consumerSession = consumerConnection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
+                final MessageConsumer messageConsumer = consumerSession.createConsumer(QUEUE_NAME);
 
-                    while (true) {
-                        TextMessage textMsg = (TextMessage) messageConsumer.receive(1000);
+                while (true) {
+                    TextMessage textMsg = (TextMessage) messageConsumer.receive(1000);
 
-                        if (textMsg == null) {
-                            textMsg = (TextMessage) messageConsumer.receive(4000);
-                        }
-
-                        if (textMsg == null) {
-                            return receivedMessageCount;
-                        }
-
-                        receivedMessageCount++;
-                        LOG.info("*** receivedMessageCount {} message has MessageID {} ", receivedMessageCount, textMsg.getJMSMessageID());
-
-                        // on first delivery ensure the message is pending an
-                        // ack when it is resent from the producer broker
-                        if (textMsg.getJMSMessageID().endsWith("1") && receivedMessageCount == 1) {
-                            LOG.info("Waiting for restart...");
-                            consumerRestartedAndMessageForwarded.await(90, TimeUnit.SECONDS);
-                        }
-
-                        textMsg.acknowledge();
+                    if (textMsg == null) {
+                        textMsg = (TextMessage) messageConsumer.receive(4000);
                     }
-                } finally {
-                    consumerConnection.close();
+
+                    if (textMsg == null) {
+                        return receivedMessageCount;
+                    }
+
+                    receivedMessageCount++;
+                    LOG.info("*** receivedMessageCount {} message has MessageID {} ", receivedMessageCount, textMsg.getJMSMessageID());
+
+                    // on first delivery ensure the message is pending an
+                    // ack when it is resent from the producer broker
+                    if (textMsg.getJMSMessageID().endsWith("1") && receivedMessageCount == 1) {
+                        LOG.info("Waiting for restart...");
+                        consumerRestartedAndMessageForwarded.await(90, TimeUnit.SECONDS);
+                    }
+
+                    textMsg.acknowledge();
                 }
+            } finally {
+                consumerConnection.close();
             }
         };
 
-        Runnable consumerBrokerResetTask = new Runnable() {
-            @Override
-            public void run() {
+        final Runnable consumerBrokerResetTask = () -> {
+            try {
+                // wait for signal
+                stopConsumerBroker.await();
 
-                try {
-                    // wait for signal
-                    stopConsumerBroker.await();
+                LOG.info("********* STOPPING CONSUMER BROKER");
 
-                    LOG.info("********* STOPPING CONSUMER BROKER");
+                consumerBroker.stop();
+                consumerBroker.waitUntilStopped();
 
-                    consumerBroker.stop();
-                    consumerBroker.waitUntilStopped();
+                LOG.info("***** STARTING CONSUMER BROKER");
+                // do not delete messages on startup
+                consumerBroker = createConsumerBroker(false);
 
-                    LOG.info("***** STARTING CONSUMER BROKER");
-                    // do not delete messages on startup
-                    consumerBroker = createConsumerBroker(false);
+                LOG.info("***** CONSUMER BROKER STARTED!!");
+                consumerBrokerRestarted.countDown();
 
-                    LOG.info("***** CONSUMER BROKER STARTED!!");
-                    consumerBrokerRestarted.countDown();
+                assertTrue("message forwarded on time", Wait.waitFor(() -> {
+                    LOG.info("ProducerBroker totalMessageCount: " + producerBroker.getAdminView().getTotalMessageCount());
+                    return producerBroker.getAdminView().getTotalMessageCount() == 0;
+                }));
+                consumerRestartedAndMessageForwarded.countDown();
 
-                    assertTrue("message forwarded on time", Wait.waitFor(new Wait.Condition() {
-                        @Override
-                        public boolean isSatisified() throws Exception {
-                            LOG.info("ProducerBroker totalMessageCount: " + producerBroker.getAdminView().getTotalMessageCount());
-                            return producerBroker.getAdminView().getTotalMessageCount() == 0;
-                        }
-                    }));
-                    consumerRestartedAndMessageForwarded.countDown();
-
-                } catch (Exception e) {
-                    LOG.error("Exception when stopping/starting the consumerBroker ", e);
-                }
-
+            } catch (Exception e) {
+                LOG.error("Exception when stopping/starting the consumerBroker ", e);
             }
         };
 
-        ExecutorService executor = Executors.newFixedThreadPool(2);
+        final ExecutorService executor = Executors.newFixedThreadPool(2);
 
         // start consumerBroker start/stop task
         executor.execute(consumerBrokerResetTask);
 
         // start consuming messages
-        Future<Integer> numberOfConsumedMessage = executor.submit(consumeMessageTask);
+        final Future<Integer> numberOfConsumedMessage = executor.submit(consumeMessageTask);
 
         produceMessages();
 
         // Wait for consumer to finish
-        int totalMessagesConsumed = numberOfConsumedMessage.get();
+        final int totalMessagesConsumed = numberOfConsumedMessage.get();
 
-        StringBuffer contents = new StringBuffer();
-        boolean messageInStore = isMessageInJDBCStore(localDataSource, contents);
+        final StringBuffer contents = new StringBuffer();
+        final boolean messageInStore = isMessageInJDBCStore(localDataSource, contents);
         LOG.debug("****number of messages received " + totalMessagesConsumed);
 
         assertEquals("number of messages received", 2, totalMessagesConsumed);
@@ -252,21 +247,22 @@ public class AMQ4952Test {
 
     private void produceMessages() throws JMSException {
 
-        ActiveMQConnectionFactory producerFactory = new ActiveMQConnectionFactory("failover:(tcp://localhost:2003)?randomize=false&backup=false");
-        Connection producerConnection = producerFactory.createConnection();
+        final ActiveMQConnectionFactory producerFactory = new ActiveMQConnectionFactory(
+                "failover:(" + producerBrokerUri + ")?randomize=false&backup=false");
+        final Connection producerConnection = producerFactory.createConnection();
 
         try {
             producerConnection.setClientID("producer");
             producerConnection.start();
 
-            Session producerSession = producerConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            final Session producerSession = producerConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 
             final MessageProducer remoteProducer = producerSession.createProducer(QUEUE_NAME);
 
             int i = 0;
             while (MESSAGE_COUNT > i) {
-                String payload = "test msg " + i;
-                TextMessage msg = producerSession.createTextMessage(payload);
+                final String payload = "test msg " + i;
+                final TextMessage msg = producerSession.createTextMessage(payload);
                 remoteProducer.send(msg);
                 i++;
             }
@@ -293,14 +289,14 @@ public class AMQ4952Test {
 
     protected void doTearDown() throws Exception {
 
-        DataSource dataSource = ((JDBCPersistenceAdapter)producerBroker.getPersistenceAdapter()).getDataSource();
+        DataSource dataSource = ((JDBCPersistenceAdapter) producerBroker.getPersistenceAdapter()).getDataSource();
         try {
             producerBroker.stop();
         } catch (Exception ex) {
         } finally {
             DataSourceServiceSupport.shutdownDefaultDataSource(dataSource);
         }
-        dataSource = ((JDBCPersistenceAdapter)consumerBroker.getPersistenceAdapter()).getDataSource();
+        dataSource = ((JDBCPersistenceAdapter) consumerBroker.getPersistenceAdapter()).getDataSource();
         try {
             consumerBroker.stop();
         } catch (Exception ex) {
@@ -310,62 +306,52 @@ public class AMQ4952Test {
     }
 
     protected void doSetUp() throws Exception {
-        producerBroker = createProducerBroker();
         consumerBroker = createConsumerBroker(true);
+        producerBroker = createProducerBroker();
     }
 
     /**
-     * Producer broker listens on localhost:2003 networks to consumerBroker -
-     * localhost:2006
-     *
-     * @return
-     * @throws Exception
+     * Producer broker networks to consumerBroker using ephemeral ports.
      */
     protected BrokerService createProducerBroker() throws Exception {
 
-        String networkToPorts[] = new String[] { "2006" };
-        HashMap<String, String> networkProps = new HashMap<String, String>();
+        final HashMap<String, String> networkProps = new HashMap<>();
 
         networkProps.put("networkTTL", "10");
         networkProps.put("conduitSubscriptions", "true");
         networkProps.put("decreaseNetworkConsumerPriority", "true");
         networkProps.put("dynamicOnly", "true");
 
-        BrokerService broker = new BrokerService();
+        final BrokerService broker = new BrokerService();
         broker.getManagementContext().setCreateConnector(false);
         broker.setDeleteAllMessagesOnStartup(true);
         broker.setBrokerName("BP");
         broker.setAdvisorySupport(false);
 
-        // lazy init listener on broker start
-        TransportConnector transportConnector = new TransportConnector();
-        transportConnector.setUri(new URI("tcp://localhost:2003"));
-        List<TransportConnector> transportConnectors = new ArrayList<TransportConnector>();
+        // Use ephemeral port
+        final TransportConnector transportConnector = new TransportConnector();
+        transportConnector.setUri(new URI("tcp://localhost:0"));
+        final List<TransportConnector> transportConnectors = new ArrayList<>();
         transportConnectors.add(transportConnector);
         broker.setTransportConnectors(transportConnectors);
 
-        // network to consumerBroker
-
-        if (networkToPorts != null && networkToPorts.length > 0) {
-            StringBuilder builder = new StringBuilder("static:(failover:(tcp://localhost:2006)?maxReconnectAttempts=0)?useExponentialBackOff=false");
-            NetworkConnector nc = broker.addNetworkConnector(builder.toString());
-            if (networkProps != null) {
-                IntrospectionSupport.setProperties(nc, networkProps);
-            }
-            nc.setStaticallyIncludedDestinations(Arrays.<ActiveMQDestination> asList(new ActiveMQQueue[] { QUEUE_NAME }));
-        }
+        // network to consumerBroker using the dynamically assigned port
+        final StringBuilder builder = new StringBuilder(
+                "static:(failover:(" + consumerBrokerUri + ")?maxReconnectAttempts=0)?useExponentialBackOff=false");
+        final NetworkConnector nc = broker.addNetworkConnector(builder.toString());
+        IntrospectionSupport.setProperties(nc, networkProps);
+        nc.setStaticallyIncludedDestinations(Arrays.<ActiveMQDestination>asList(new ActiveMQQueue[] { QUEUE_NAME }));
 
         // Persistence adapter
-
-        JDBCPersistenceAdapter jdbc = new JDBCPersistenceAdapter();
-        EmbeddedDataSource remoteDataSource = new EmbeddedDataSource();
+        final JDBCPersistenceAdapter jdbc = new JDBCPersistenceAdapter();
+        final EmbeddedDataSource remoteDataSource = new EmbeddedDataSource();
         remoteDataSource.setDatabaseName("target/derbyDBRemoteBroker");
         remoteDataSource.setCreateDatabase("create");
         jdbc.setDataSource(remoteDataSource);
         broker.setPersistenceAdapter(jdbc);
 
         // set Policy entries
-        PolicyEntry policy = new PolicyEntry();
+        final PolicyEntry policy = new PolicyEntry();
 
         policy.setQueue(">");
         policy.setEnableAudit(false);
@@ -373,47 +359,44 @@ public class AMQ4952Test {
         policy.setExpireMessagesPeriod(0);
 
         // set replay with no consumers
-        ConditionalNetworkBridgeFilterFactory conditionalNetworkBridgeFilterFactory = new ConditionalNetworkBridgeFilterFactory();
+        final ConditionalNetworkBridgeFilterFactory conditionalNetworkBridgeFilterFactory = new ConditionalNetworkBridgeFilterFactory();
         conditionalNetworkBridgeFilterFactory.setReplayWhenNoConsumers(true);
         policy.setNetworkBridgeFilterFactory(conditionalNetworkBridgeFilterFactory);
 
-        PolicyMap pMap = new PolicyMap();
+        final PolicyMap pMap = new PolicyMap();
         pMap.setDefaultEntry(policy);
         broker.setDestinationPolicy(pMap);
 
         broker.start();
         broker.waitUntilStarted();
 
+        producerBrokerUri = broker.getTransportConnectors().get(0).getConnectUri().toString();
+
         return broker;
     }
 
     /**
-     * consumerBroker - listens on localhost:2006
+     * consumerBroker - uses ephemeral port
      *
-     * @param deleteMessages
-     *            - drop messages when broker instance is created
-     * @return
-     * @throws Exception
+     * @param deleteMessages - drop messages when broker instance is created
      */
-    protected BrokerService createConsumerBroker(boolean deleteMessages) throws Exception {
+    protected BrokerService createConsumerBroker(final boolean deleteMessages) throws Exception {
 
-        String scheme = "tcp";
-        String listenPort = "2006";
-
-        BrokerService broker = new BrokerService();
+        final BrokerService broker = new BrokerService();
         broker.getManagementContext().setCreateConnector(false);
         broker.setDeleteAllMessagesOnStartup(deleteMessages);
         broker.setBrokerName("BC");
-        // lazy init listener on broker start
-        TransportConnector transportConnector = new TransportConnector();
-        transportConnector.setUri(new URI(scheme + "://localhost:" + listenPort));
-        List<TransportConnector> transportConnectors = new ArrayList<TransportConnector>();
+        // Reuse the same port on restart so failover connections can reconnect
+        final int port = (consumerBrokerUri != null)
+                ? new URI(consumerBrokerUri).getPort() : 0;
+        final TransportConnector transportConnector = new TransportConnector();
+        transportConnector.setUri(new URI("tcp://localhost:" + port));
+        final List<TransportConnector> transportConnectors = new ArrayList<>();
         transportConnectors.add(transportConnector);
         broker.setTransportConnectors(transportConnectors);
 
         // policy entries
-
-        PolicyEntry policy = new PolicyEntry();
+        final PolicyEntry policy = new PolicyEntry();
 
         policy.setQueue(">");
         policy.setEnableAudit(enableCursorAudit);
@@ -421,18 +404,18 @@ public class AMQ4952Test {
         policy.setSendDuplicateFromStoreToDLQ(true);
 
         // set replay with no consumers
-        ConditionalNetworkBridgeFilterFactory conditionalNetworkBridgeFilterFactory = new ConditionalNetworkBridgeFilterFactory();
+        final ConditionalNetworkBridgeFilterFactory conditionalNetworkBridgeFilterFactory = new ConditionalNetworkBridgeFilterFactory();
         conditionalNetworkBridgeFilterFactory.setReplayWhenNoConsumers(true);
         policy.setNetworkBridgeFilterFactory(conditionalNetworkBridgeFilterFactory);
 
-        PolicyMap pMap = new PolicyMap();
+        final PolicyMap pMap = new PolicyMap();
 
         pMap.setDefaultEntry(policy);
         broker.setDestinationPolicy(pMap);
 
         // Persistence adapter
-        JDBCPersistenceAdapter localJDBCPersistentAdapter = new JDBCPersistenceAdapter();
-        EmbeddedDataSource localDataSource = new EmbeddedDataSource();
+        final JDBCPersistenceAdapter localJDBCPersistentAdapter = new JDBCPersistenceAdapter();
+        final EmbeddedDataSource localDataSource = new EmbeddedDataSource();
         localDataSource.setDatabaseName("target/derbyDBLocalBroker");
         localDataSource.setCreateDatabase("create");
         localJDBCPersistentAdapter.setDataSource(localDataSource);
@@ -448,30 +431,28 @@ public class AMQ4952Test {
         broker.start();
         broker.waitUntilStarted();
 
+        consumerBrokerUri = broker.getTransportConnectors().get(0).getConnectUri().toString();
+
         return broker;
     }
 
     /**
      * Query JDBC Store to see if messages are left
-     *
-     * @param dataSource
-     * @return
-     * @throws SQLException
      */
-    private boolean isMessageInJDBCStore(DataSource dataSource, StringBuffer stringBuffer) throws SQLException {
+    private boolean isMessageInJDBCStore(final DataSource dataSource, final StringBuffer stringBuffer) throws SQLException {
 
         boolean tableHasData = false;
-        String query = "select * from ACTIVEMQ_MSGS";
+        final String query = "select * from ACTIVEMQ_MSGS";
 
-        java.sql.Connection conn = dataSource.getConnection();
-        PreparedStatement s = conn.prepareStatement(query);
+        final java.sql.Connection conn = dataSource.getConnection();
+        final PreparedStatement s = conn.prepareStatement(query);
 
         ResultSet set = null;
 
         try {
-            StringBuffer headers = new StringBuffer();
+            final StringBuffer headers = new StringBuffer();
             set = s.executeQuery();
-            ResultSetMetaData metaData = set.getMetaData();
+            final ResultSetMetaData metaData = set.getMetaData();
             for (int i = 1; i <= metaData.getColumnCount(); i++) {
 
                 if (i == 1) {
@@ -515,19 +496,19 @@ public class AMQ4952Test {
     class MyTestPlugin implements BrokerPlugin {
 
         @Override
-        public Broker installPlugin(Broker broker) throws Exception {
+        public Broker installPlugin(final Broker broker) throws Exception {
             return new MyTestBroker(broker);
         }
     }
 
     class MyTestBroker extends BrokerFilter {
 
-        public MyTestBroker(Broker next) {
+        public MyTestBroker(final Broker next) {
             super(next);
         }
 
         @Override
-        public void send(ProducerBrokerExchange producerExchange, org.apache.activemq.command.Message messageSend) throws Exception {
+        public void send(final ProducerBrokerExchange producerExchange, final org.apache.activemq.command.Message messageSend) throws Exception {
 
             super.send(producerExchange, messageSend);
             LOG.error("Stopping broker on send:  " + messageSend.getMessageId().getProducerSequenceId());

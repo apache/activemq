@@ -41,6 +41,7 @@ import jakarta.jms.TextMessage;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.util.Wait;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -79,7 +80,7 @@ public class MessageListenerRedeliveryTest {
     }
 
     protected RedeliveryPolicy getRedeliveryPolicy() {
-        RedeliveryPolicy redeliveryPolicy = new RedeliveryPolicy();
+        final RedeliveryPolicy redeliveryPolicy = new RedeliveryPolicy();
         redeliveryPolicy.setInitialRedeliveryDelay(0);
         redeliveryPolicy.setRedeliveryDelay(1000);
         redeliveryPolicy.setMaximumRedeliveries(3);
@@ -89,14 +90,14 @@ public class MessageListenerRedeliveryTest {
     }
 
     protected Connection createConnection() throws Exception {
-        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("vm://localhost?broker.persistent=false&marshal=true");
+        final ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("vm://localhost?broker.persistent=false&marshal=true");
         factory.setRedeliveryPolicy(getRedeliveryPolicy());
         return factory.createConnection();
     }
 
     private class TestMessageListener implements MessageListener {
 
-        public int counter;
+        public volatile int counter;
         private final Session session;
 
         public TestMessageListener(Session session) {
@@ -123,130 +124,88 @@ public class MessageListenerRedeliveryTest {
     }
 
     @Test(timeout = 60000)
-    public void testQueueRollbackConsumerListener() throws JMSException {
+    public void testQueueRollbackConsumerListener() throws Exception {
         connection.start();
 
-        Session session = connection.createSession(true, Session.CLIENT_ACKNOWLEDGE);
-        Queue queue = session.createQueue("queue-" + getTestName());
-        MessageProducer producer = createProducer(session, queue);
-        Message message = createTextMessage(session);
+        final Session session = connection.createSession(true, Session.CLIENT_ACKNOWLEDGE);
+        final Queue queue = session.createQueue("queue-" + getTestName());
+        final MessageProducer producer = createProducer(session, queue);
+        final Message message = createTextMessage(session);
         producer.send(message);
         session.commit();
 
-        MessageConsumer consumer = session.createConsumer(queue);
+        final MessageConsumer consumer = session.createConsumer(queue);
 
-        ActiveMQMessageConsumer mc = (ActiveMQMessageConsumer) consumer;
+        final ActiveMQMessageConsumer mc = (ActiveMQMessageConsumer) consumer;
         mc.setRedeliveryPolicy(getRedeliveryPolicy());
 
-        TestMessageListener listener = new TestMessageListener(session);
+        final TestMessageListener listener = new TestMessageListener(session);
         consumer.setMessageListener(listener);
-
-        try {
-            Thread.sleep(500);
-        } catch (InterruptedException e) {
-        }
 
         // first try.. should get 2 since there is no delay on the
         // first redeliver..
-        assertEquals(2, listener.counter);
+        assertTrue("first redelivery (counter==2)", Wait.waitFor(() -> listener.counter >= 2, 5000, 100));
 
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-        }
         // 2nd redeliver (redelivery after 1 sec)
-        assertEquals(3, listener.counter);
+        assertTrue("second redelivery (counter==3)", Wait.waitFor(() -> listener.counter >= 3, 5000, 100));
 
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-        }
         // 3rd redeliver (redelivery after 2 seconds) - it should give up after
         // that
-        assertEquals(4, listener.counter);
+        assertTrue("third redelivery (counter==4)", Wait.waitFor(() -> listener.counter >= 4, 5000, 100));
 
         // create new message
         producer.send(createTextMessage(session));
         session.commit();
 
-        try {
-            Thread.sleep(500);
-        } catch (InterruptedException e) {
-        }
         // it should be committed, so no redelivery
-        assertEquals(5, listener.counter);
+        assertTrue("committed message delivered (counter==5)", Wait.waitFor(() -> listener.counter >= 5, 5000, 100));
 
-        try {
-            Thread.sleep(1500);
-        } catch (InterruptedException e) {
-        }
-        // no redelivery, counter should still be 4
+        // no redelivery, counter should still be 5 - sleep is acceptable here
+        // because we are verifying that NO further redelivery occurs (negative test)
+        Thread.sleep(1500);
         assertEquals(5, listener.counter);
 
         session.close();
     }
 
     @Test(timeout = 60000)
-    public void testQueueRollbackSessionListener() throws JMSException {
+    public void testQueueRollbackSessionListener() throws Exception {
         connection.start();
 
-        Session session = connection.createSession(true, Session.CLIENT_ACKNOWLEDGE);
-        Queue queue = session.createQueue("queue-" + getTestName());
-        MessageProducer producer = createProducer(session, queue);
-        Message message = createTextMessage(session);
+        final Session session = connection.createSession(true, Session.CLIENT_ACKNOWLEDGE);
+        final Queue queue = session.createQueue("queue-" + getTestName());
+        final MessageProducer producer = createProducer(session, queue);
+        final Message message = createTextMessage(session);
         producer.send(message);
         session.commit();
 
-        MessageConsumer consumer = session.createConsumer(queue);
+        final MessageConsumer consumer = session.createConsumer(queue);
 
-        ActiveMQMessageConsumer mc = (ActiveMQMessageConsumer) consumer;
+        final ActiveMQMessageConsumer mc = (ActiveMQMessageConsumer) consumer;
         mc.setRedeliveryPolicy(getRedeliveryPolicy());
 
-        TestMessageListener listener = new TestMessageListener(session);
+        final TestMessageListener listener = new TestMessageListener(session);
         consumer.setMessageListener(listener);
 
-        try {
-            Thread.sleep(500);
-        } catch (InterruptedException e) {
-
-        }
         // first try
-        assertEquals(2, listener.counter);
+        assertTrue("first redelivery (counter==2)", Wait.waitFor(() -> listener.counter >= 2, 5000, 100));
 
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-
-        }
         // second try (redelivery after 1 sec)
-        assertEquals(3, listener.counter);
+        assertTrue("second redelivery (counter==3)", Wait.waitFor(() -> listener.counter >= 3, 5000, 100));
 
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-
-        }
         // third try (redelivery after 2 seconds) - it should give up after that
-        assertEquals(4, listener.counter);
+        assertTrue("third redelivery (counter==4)", Wait.waitFor(() -> listener.counter >= 4, 5000, 100));
 
         // create new message
         producer.send(createTextMessage(session));
         session.commit();
 
-        try {
-            Thread.sleep(500);
-        } catch (InterruptedException e) {
-            // ignore
-        }
         // it should be committed, so no redelivery
-        assertEquals(5, listener.counter);
+        assertTrue("committed message delivered (counter==5)", Wait.waitFor(() -> listener.counter >= 5, 5000, 100));
 
-        try {
-            Thread.sleep(1500);
-        } catch (InterruptedException e) {
-            // ignore
-        }
-        // no redelivery, counter should still be 4
+        // no redelivery, counter should still be 5 - sleep is acceptable here
+        // because we are verifying that NO further redelivery occurs (negative test)
+        Thread.sleep(1500);
         assertEquals(5, listener.counter);
 
         session.close();
@@ -256,37 +215,34 @@ public class MessageListenerRedeliveryTest {
     public void testQueueSessionListenerExceptionRetry() throws Exception {
         connection.start();
 
-        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        Queue queue = session.createQueue("queue-" + getTestName());
-        MessageProducer producer = createProducer(session, queue);
+        final Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        final Queue queue = session.createQueue("queue-" + getTestName());
+        final MessageProducer producer = createProducer(session, queue);
         Message message = createTextMessage(session, "1");
         producer.send(message);
         message = createTextMessage(session, "2");
         producer.send(message);
 
-        MessageConsumer consumer = session.createConsumer(queue);
+        final MessageConsumer consumer = session.createConsumer(queue);
 
         final CountDownLatch gotMessage = new CountDownLatch(2);
         final AtomicInteger count = new AtomicInteger(0);
         final int maxDeliveries = getRedeliveryPolicy().getMaximumRedeliveries();
         final ArrayList<String> received = new ArrayList<String>();
-        consumer.setMessageListener(new MessageListener() {
-            @Override
-            public void onMessage(Message message) {
-                LOG.info("Message Received: " + message);
-                try {
-                    received.add(((TextMessage) message).getText());
-                } catch (JMSException e) {
-                    e.printStackTrace();
-                    fail(e.toString());
-                }
-                if (count.incrementAndGet() < maxDeliveries) {
-                    throw new RuntimeException(getTestName() + " force a redelivery");
-                }
-                // new blood
-                count.set(0);
-                gotMessage.countDown();
+        consumer.setMessageListener(message1 -> {
+            LOG.info("Message Received: " + message1);
+            try {
+                received.add(((TextMessage) message1).getText());
+            } catch (JMSException e) {
+                e.printStackTrace();
+                fail(e.toString());
             }
+            if (count.incrementAndGet() < maxDeliveries) {
+                throw new RuntimeException(getTestName() + " force a redelivery");
+            }
+            // new blood
+            count.set(0);
+            gotMessage.countDown();
         });
 
         assertTrue("got message before retry expiry", gotMessage.await(20, TimeUnit.SECONDS));
@@ -304,37 +260,31 @@ public class MessageListenerRedeliveryTest {
     public void testQueueSessionListenerExceptionDlq() throws Exception {
         connection.start();
 
-        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-        Queue queue = session.createQueue("queue-" + getTestName());
-        MessageProducer producer = createProducer(session, queue);
+        final Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        final Queue queue = session.createQueue("queue-" + getTestName());
+        final MessageProducer producer = createProducer(session, queue);
         Message message = createTextMessage(session);
         producer.send(message);
 
         final Message[] dlqMessage = new Message[1];
-        ActiveMQDestination dlqDestination = new ActiveMQQueue("ActiveMQ.DLQ");
-        MessageConsumer dlqConsumer = session.createConsumer(dlqDestination);
+        final ActiveMQDestination dlqDestination = new ActiveMQQueue("ActiveMQ.DLQ");
+        final MessageConsumer dlqConsumer = session.createConsumer(dlqDestination);
         final CountDownLatch gotDlqMessage = new CountDownLatch(1);
-        dlqConsumer.setMessageListener(new MessageListener() {
-            @Override
-            public void onMessage(Message message) {
-                LOG.info("DLQ Message Received: " + message);
-                dlqMessage[0] = message;
-                gotDlqMessage.countDown();
-            }
+        dlqConsumer.setMessageListener(msg -> {
+            LOG.info("DLQ Message Received: " + msg);
+            dlqMessage[0] = msg;
+            gotDlqMessage.countDown();
         });
 
-        MessageConsumer consumer = session.createConsumer(queue);
+        final MessageConsumer consumer = session.createConsumer(queue);
 
         final int maxDeliveries = getRedeliveryPolicy().getMaximumRedeliveries();
         final CountDownLatch gotMessage = new CountDownLatch(maxDeliveries);
 
-        consumer.setMessageListener(new MessageListener() {
-            @Override
-            public void onMessage(Message message) {
-                LOG.info("Message Received: " + message);
-                gotMessage.countDown();
-                throw new RuntimeException(getTestName() + " force a redelivery");
-            }
+        consumer.setMessageListener(msg -> {
+            LOG.info("Message Received: " + msg);
+            gotMessage.countDown();
+            throw new RuntimeException(getTestName() + " force a redelivery");
         });
 
         assertTrue("got message before retry expiry", gotMessage.await(20, TimeUnit.SECONDS));
@@ -345,7 +295,7 @@ public class MessageListenerRedeliveryTest {
         // check DLQ message cause is captured
         message = dlqMessage[0];
         assertNotNull("dlq message captured", message);
-        String cause = message.getStringProperty(ActiveMQMessage.DLQ_DELIVERY_FAILURE_CAUSE_PROPERTY);
+        final String cause = message.getStringProperty(ActiveMQMessage.DLQ_DELIVERY_FAILURE_CAUSE_PROPERTY);
 
         LOG.info("DLQ'd message cause reported as: {}", cause);
 
@@ -363,42 +313,36 @@ public class MessageListenerRedeliveryTest {
         connection.start();
 
         final Session session = connection.createSession(true, Session.SESSION_TRANSACTED);
-        Queue queue = session.createQueue("queue-" + getTestName());
-        MessageProducer producer = createProducer(session, queue);
+        final Queue queue = session.createQueue("queue-" + getTestName());
+        final MessageProducer producer = createProducer(session, queue);
         Message message = createTextMessage(session);
         producer.send(message);
         session.commit();
 
         final Message[] dlqMessage = new Message[1];
-        ActiveMQDestination dlqDestination = new ActiveMQQueue("ActiveMQ.DLQ");
-        MessageConsumer dlqConsumer = session.createConsumer(dlqDestination);
+        final ActiveMQDestination dlqDestination = new ActiveMQQueue("ActiveMQ.DLQ");
+        final MessageConsumer dlqConsumer = session.createConsumer(dlqDestination);
         final CountDownLatch gotDlqMessage = new CountDownLatch(1);
-        dlqConsumer.setMessageListener(new MessageListener() {
-            @Override
-            public void onMessage(Message message) {
-                LOG.info("DLQ Message Received: " + message);
-                dlqMessage[0] = message;
-                gotDlqMessage.countDown();
-            }
+        dlqConsumer.setMessageListener(msg -> {
+            LOG.info("DLQ Message Received: " + msg);
+            dlqMessage[0] = msg;
+            gotDlqMessage.countDown();
         });
 
-        MessageConsumer consumer = session.createConsumer(queue);
+        final MessageConsumer consumer = session.createConsumer(queue);
 
         final int maxDeliveries = getRedeliveryPolicy().getMaximumRedeliveries();
         final CountDownLatch gotMessage = new CountDownLatch(maxDeliveries);
 
-        consumer.setMessageListener(new MessageListener() {
-            @Override
-            public void onMessage(Message message) {
-                LOG.info("Message Received: " + message);
-                gotMessage.countDown();
-                try {
-                    session.rollback();
-                } catch (JMSException e) {
-                    e.printStackTrace();
-                }
-                throw new RuntimeException(getTestName() + " force a redelivery");
+        consumer.setMessageListener(msg -> {
+            LOG.info("Message Received: " + msg);
+            gotMessage.countDown();
+            try {
+                session.rollback();
+            } catch (JMSException e) {
+                e.printStackTrace();
             }
+            throw new RuntimeException(getTestName() + " force a redelivery");
         });
 
         assertTrue("got message before retry expiry", gotMessage.await(20, TimeUnit.SECONDS));
@@ -409,7 +353,7 @@ public class MessageListenerRedeliveryTest {
         // check DLQ message cause is captured
         message = dlqMessage[0];
         assertNotNull("dlq message captured", message);
-        String cause = message.getStringProperty(ActiveMQMessage.DLQ_DELIVERY_FAILURE_CAUSE_PROPERTY);
+        final String cause = message.getStringProperty(ActiveMQMessage.DLQ_DELIVERY_FAILURE_CAUSE_PROPERTY);
 
         LOG.info("DLQ'd message cause reported as: {}", cause);
 
@@ -430,7 +374,7 @@ public class MessageListenerRedeliveryTest {
     }
 
     private MessageProducer createProducer(Session session, Destination queue) throws JMSException {
-        MessageProducer producer = session.createProducer(queue);
+        final MessageProducer producer = session.createProducer(queue);
         producer.setDeliveryMode(getDeliveryMode());
         return producer;
     }

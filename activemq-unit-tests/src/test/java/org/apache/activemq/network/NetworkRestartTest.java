@@ -16,17 +16,25 @@
  */
 package org.apache.activemq.network;
 
+import java.net.URI;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+
+import jakarta.jms.Connection;
+import jakarta.jms.Message;
+import jakarta.jms.MessageConsumer;
+import jakarta.jms.MessageProducer;
+import jakarta.jms.Session;
+import jakarta.jms.TextMessage;
+
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.TestSupport;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQQueue;
-import org.apache.activemq.xbean.BrokerFactoryBean;
+import org.apache.activemq.command.ActiveMQTopic;
+import org.apache.activemq.util.Wait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.Resource;
-
-import jakarta.jms.*;
 
 public class NetworkRestartTest extends TestSupport {
 
@@ -39,76 +47,83 @@ public class NetworkRestartTest extends TestSupport {
     protected Session localSession;
     protected Session remoteSession;
 
-    protected ActiveMQQueue included=new ActiveMQQueue("include.test.foo");
-
+    protected final ActiveMQQueue included = new ActiveMQQueue("include.test.foo");
 
     public void testConnectorRestart() throws Exception {
-        MessageConsumer remoteConsumer = remoteSession.createConsumer(included);
-        MessageProducer localProducer = localSession.createProducer(included);
+        final MessageConsumer remoteConsumer = remoteSession.createConsumer(included);
+        final MessageProducer localProducer = localSession.createProducer(included);
 
         localProducer.send(localSession.createTextMessage("before"));
-        Message before = remoteConsumer.receive(1000);
+        final Message before = remoteConsumer.receive(5000);
         assertNotNull(before);
-        assertEquals("before", ((TextMessage)before).getText());
+        assertEquals("before", ((TextMessage) before).getText());
 
-        // restart connector
+        // Wait for the network connector bridge to be fully established before stopping
+        final NetworkConnector connector = localBroker.getNetworkConnectorByName("networkConnector");
+        assertNotNull("networkConnector must exist", connector);
 
-        // wait for ack back to localbroker with concurrent store and dispatch, dispatch occurs first
-        Thread.sleep(1000);
-
-        NetworkConnector connector = localBroker.getNetworkConnectorByName("networkConnector");
+        assertTrue("bridge should be active before stop",
+            Wait.waitFor(() -> !connector.activeBridges().isEmpty(),
+                TimeUnit.SECONDS.toMillis(10), TimeUnit.MILLISECONDS.toMillis(100)));
 
         LOG.info("Stopping connector");
         connector.stop();
 
-        Thread.sleep(5000);
+        // Wait until the connector has fully stopped (no active bridges)
+        assertTrue("bridge should stop",
+            Wait.waitFor(() -> connector.activeBridges().isEmpty(),
+                TimeUnit.SECONDS.toMillis(10), TimeUnit.MILLISECONDS.toMillis(100)));
+
         LOG.info("Starting connector");
         connector.start();
 
-        Thread.sleep(5000);
-
+        // Wait until the bridge is re-established and fully started
+        waitForBridgeFullyStarted(connector);
 
         localProducer.send(localSession.createTextMessage("after"));
-        Message after = remoteConsumer.receive(3000);
-        assertNotNull(after);
-        assertEquals("after", ((TextMessage)after).getText());
-
+        final Message after = remoteConsumer.receive(5000);
+        assertNotNull("should receive message after connector restart", after);
+        assertEquals("after", ((TextMessage) after).getText());
     }
 
     public void testConnectorReAdd() throws Exception {
-        MessageConsumer remoteConsumer = remoteSession.createConsumer(included);
-        MessageProducer localProducer = localSession.createProducer(included);
+        final MessageConsumer remoteConsumer = remoteSession.createConsumer(included);
+        final MessageProducer localProducer = localSession.createProducer(included);
 
         localProducer.send(localSession.createTextMessage("before"));
-        Message before = remoteConsumer.receive(1000);
+        final Message before = remoteConsumer.receive(5000);
         assertNotNull(before);
-        assertEquals("before", ((TextMessage)before).getText());
+        assertEquals("before", ((TextMessage) before).getText());
 
-        // restart connector
+        // Wait for the network connector bridge to be fully established before removing
+        final NetworkConnector connector = localBroker.getNetworkConnectorByName("networkConnector");
+        assertNotNull("networkConnector must exist", connector);
 
-        // wait for ack back to localbroker with concurrent store and dispatch, dispatch occurs first
-        Thread.sleep(1000);
-
-        NetworkConnector connector = localBroker.getNetworkConnectorByName("networkConnector");
+        assertTrue("bridge should be active before remove",
+            Wait.waitFor(() -> !connector.activeBridges().isEmpty(),
+                TimeUnit.SECONDS.toMillis(10), TimeUnit.MILLISECONDS.toMillis(100)));
 
         LOG.info("Removing connector");
         connector.stop();
         localBroker.removeNetworkConnector(connector);
 
-        Thread.sleep(5000);
+        // Wait until the connector has fully stopped
+        assertTrue("bridge should stop after removal",
+            Wait.waitFor(() -> connector.activeBridges().isEmpty(),
+                TimeUnit.SECONDS.toMillis(10), TimeUnit.MILLISECONDS.toMillis(100)));
+
         LOG.info("Re-adding connector");
         localBroker.addNetworkConnector(connector);
         connector.start();
 
-        Thread.sleep(5000);
-
+        // Wait until the bridge is re-established and fully started
+        waitForBridgeFullyStarted(connector);
 
         localProducer.send(localSession.createTextMessage("after"));
-        Message after = remoteConsumer.receive(3000);
-        assertNotNull(after);
-        assertEquals("after", ((TextMessage)after).getText());
+        final Message after = remoteConsumer.receive(5000);
+        assertNotNull("should receive message after connector re-add", after);
+        assertEquals("after", ((TextMessage) after).getText());
     }
-
 
     protected void setUp() throws Exception {
         setAutoFail(true);
@@ -133,26 +148,33 @@ public class NetworkRestartTest extends TestSupport {
     }
 
     protected void doSetUp() throws Exception {
-
         remoteBroker = createRemoteBroker();
         remoteBroker.setDeleteAllMessagesOnStartup(true);
         remoteBroker.start();
         remoteBroker.waitUntilStarted();
-        localBroker = createLocalBroker();
+
+        final URI remoteConnectUri = remoteBroker.getTransportConnectorByScheme("tcp").getConnectUri();
+
+        localBroker = createLocalBroker(remoteConnectUri);
         localBroker.setDeleteAllMessagesOnStartup(true);
         localBroker.start();
         localBroker.waitUntilStarted();
 
-        String localURI = "tcp://localhost:61616";
-        String remoteURI = "tcp://localhost:61617";
-        ActiveMQConnectionFactory fac = new ActiveMQConnectionFactory(localURI);
-        localConnection = fac.createConnection();
+        final URI localConnectUri = localBroker.getTransportConnectorByScheme("tcp").getConnectUri();
+
+        // Wait for the network bridge to be fully started before creating connections
+        final NetworkConnector nc = localBroker.getNetworkConnectorByName("networkConnector");
+        assertNotNull("networkConnector should exist after broker start", nc);
+        waitForBridgeFullyStarted(nc);
+
+        final ActiveMQConnectionFactory localFac = new ActiveMQConnectionFactory(localConnectUri);
+        localConnection = localFac.createConnection();
         localConnection.setClientID("local");
         localConnection.start();
 
-        fac = new ActiveMQConnectionFactory(remoteURI);
-        fac.setWatchTopicAdvisories(false);
-        remoteConnection = fac.createConnection();
+        final ActiveMQConnectionFactory remoteFac = new ActiveMQConnectionFactory(remoteConnectUri);
+        remoteFac.setWatchTopicAdvisories(false);
+        remoteConnection = remoteFac.createConnection();
         remoteConnection.setClientID("remote");
         remoteConnection.start();
 
@@ -160,30 +182,62 @@ public class NetworkRestartTest extends TestSupport {
         remoteSession = remoteConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
     }
 
-    protected String getRemoteBrokerURI() {
-        return "org/apache/activemq/network/remoteBroker.xml";
-    }
-
-    protected String getLocalBrokerURI() {
-        return "org/apache/activemq/network/localBroker.xml";
-    }
-
-    protected BrokerService createBroker(String uri) throws Exception {
-        Resource resource = new ClassPathResource(uri);
-        BrokerFactoryBean factory = new BrokerFactoryBean(resource);
-        resource = new ClassPathResource(uri);
-        factory = new BrokerFactoryBean(resource);
-        factory.afterPropertiesSet();
-        BrokerService result = factory.getBroker();
-        return result;
-    }
-
-    protected BrokerService createLocalBroker() throws Exception {
-        return createBroker(getLocalBrokerURI());
-    }
-
     protected BrokerService createRemoteBroker() throws Exception {
-        return createBroker(getRemoteBrokerURI());
+        final BrokerService broker = new BrokerService();
+        broker.setBrokerName("remoteBroker");
+        broker.setUseJmx(false);
+        broker.setPersistent(true);
+        broker.setUseShutdownHook(false);
+        broker.setMonitorConnectionSplits(false);
+        broker.addConnector("tcp://localhost:0");
+        return broker;
     }
 
+    protected BrokerService createLocalBroker(final URI remoteUri) throws Exception {
+        final BrokerService broker = new BrokerService();
+        broker.setBrokerName("localBroker");
+        broker.setPersistent(true);
+        broker.setUseShutdownHook(false);
+        broker.setMonitorConnectionSplits(true);
+        broker.addConnector("tcp://localhost:0");
+
+        final DiscoveryNetworkConnector networkConnector = new DiscoveryNetworkConnector(
+            new URI("static:(" + remoteUri + ")"));
+        networkConnector.setName("networkConnector");
+        configureNetworkConnector(networkConnector);
+        broker.addNetworkConnector(networkConnector);
+
+        return broker;
+    }
+
+    /**
+     * Configure the network connector. Subclasses can override to customize
+     * (e.g., remove destination filtering for plain mode).
+     */
+    protected void configureNetworkConnector(final DiscoveryNetworkConnector networkConnector) {
+        networkConnector.setDynamicOnly(false);
+        networkConnector.setConduitSubscriptions(true);
+        networkConnector.setDecreaseNetworkConsumerPriority(false);
+        networkConnector.setDynamicallyIncludedDestinations(
+            List.of(new ActiveMQQueue("include.test.foo"),
+                new ActiveMQTopic("include.test.bar")));
+        networkConnector.setExcludedDestinations(
+            List.of(new ActiveMQQueue("exclude.test.foo"),
+                new ActiveMQTopic("exclude.test.bar")));
+    }
+
+    private void waitForBridgeFullyStarted(final NetworkConnector connector) throws Exception {
+        assertTrue("bridge should be fully started",
+            Wait.waitFor(() -> {
+                for (final NetworkBridge bridge : connector.activeBridges()) {
+                    if (bridge instanceof DemandForwardingBridgeSupport) {
+                        final DemandForwardingBridgeSupport dfBridge = (DemandForwardingBridgeSupport) bridge;
+                        if (dfBridge.startedLatch.getCount() == 0) {
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            }, TimeUnit.SECONDS.toMillis(15), TimeUnit.MILLISECONDS.toMillis(100)));
+    }
 }
