@@ -1,0 +1,120 @@
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one or more
+    contributor license agreements.  See the NOTICE file distributed with
+    this work for additional information regarding copyright ownership.
+    The ASF licenses this file to You under the Apache License, Version 2.0
+    (the "License"); you may not use this file except in compliance with
+    the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+-->
+<!--
+    ActiveMQ with OpenTelemetry distributed tracing
+
+    This configuration enables OpenTelemetry tracing for the broker.
+    The plugin traces message send, dispatch, and acknowledge operations
+    using the OpenTelemetry API with W3C TraceContext propagation.
+
+    To use this, you need to provide an OpenTelemetry SDK implementation
+    and exporter at runtime (e.g., opentelemetry-sdk, opentelemetry-exporter-otlp).
+
+    You can configure the OpenTelemetry SDK via environment variables:
+      OTEL_SERVICE_NAME=activemq
+      OTEL_TRACES_EXPORTER=otlp
+      OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4317
+
+    Or via the Java agent:
+      ACTIVEMQ_OPTS="-javaagent:/path/to/opentelemetry-javaagent.jar"
+
+    To run ActiveMQ with this configuration:
+      $ bin/activemq console xbean:examples/conf/activemq-opentelemetry.xml
+-->
+<beans
+  xmlns="http://www.springframework.org/schema/beans"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+  http://activemq.apache.org/schema/core http://activemq.apache.org/schema/core/activemq-core.xsd">
+
+    <!-- Allows us to use system properties as variables in this configuration file -->
+    <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+        <property name="locations">
+            <value>file:${activemq.conf}/credentials.properties</value>
+        </property>
+    </bean>
+
+    <broker xmlns="http://activemq.apache.org/schema/core" brokerName="localhost" dataDirectory="${activemq.data}">
+
+        <destinationPolicy>
+            <policyMap>
+              <policyEntries>
+                <policyEntry topic=">" >
+                  <pendingMessageLimitStrategy>
+                    <constantPendingMessageLimitStrategy limit="1000"/>
+                  </pendingMessageLimitStrategy>
+                </policyEntry>
+              </policyEntries>
+            </policyMap>
+        </destinationPolicy>
+
+        <!--
+            OpenTelemetry tracing plugin.
+
+            Attributes:
+              traceProducer    - trace message send operations (default: true)
+              traceConsumer    - trace message dispatch/deliver operations (default: true)
+              traceAcknowledge - trace message acknowledgment operations (default: true)
+
+            Span details:
+              send()               -> "{destination} publish"  (PRODUCER span)
+              preProcessDispatch() -> "{destination} deliver"  (CONSUMER span)
+              acknowledge()        -> "{destination} ack"      (INTERNAL span)
+
+            Each span includes standard OTel messaging attributes:
+              messaging.system, messaging.destination.name, messaging.operation,
+              messaging.message.id, messaging.client_id
+        -->
+        <plugins>
+            <openTelemetryPlugin traceProducer="true" traceConsumer="true" traceAcknowledge="true"/>
+        </plugins>
+
+        <persistenceAdapter>
+            <kahaDB directory="${activemq.data}/kahadb"/>
+        </persistenceAdapter>
+
+        <systemUsage>
+            <systemUsage>
+                <memoryUsage>
+                    <memoryUsage percentOfJvmHeap="70" />
+                </memoryUsage>
+                <storeUsage>
+                    <storeUsage limit="100 gb"/>
+                </storeUsage>
+                <tempUsage>
+                    <tempUsage limit="50 gb"/>
+                </tempUsage>
+            </systemUsage>
+        </systemUsage>
+
+        <transportConnectors>
+            <transportConnector name="openwire" uri="tcp://0.0.0.0:61616?maximumConnections=1000&amp;wireFormat.maxFrameSize=104857600"/>
+            <transportConnector name="amqp" uri="amqp://0.0.0.0:5672?maximumConnections=1000&amp;wireFormat.maxFrameSize=104857600"/>
+            <transportConnector name="stomp" uri="stomp://0.0.0.0:61613?maximumConnections=1000&amp;wireFormat.maxFrameSize=104857600"/>
+            <transportConnector name="mqtt" uri="mqtt://0.0.0.0:1883?maximumConnections=1000&amp;wireFormat.maxFrameSize=104857600"/>
+            <transportConnector name="ws" uri="ws://0.0.0.0:61614?maximumConnections=1000&amp;wireFormat.maxFrameSize=104857600"/>
+        </transportConnectors>
+
+        <shutdownHooks>
+            <bean xmlns="http://www.springframework.org/schema/beans" class="org.apache.activemq.hooks.SpringContextHook" />
+        </shutdownHooks>
+
+    </broker>
+
+    <import resource="jetty.xml"/>
+
+</beans>
