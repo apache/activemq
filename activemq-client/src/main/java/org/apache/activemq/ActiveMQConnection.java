@@ -615,6 +615,10 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      */
     @Override
     public void stop() throws JMSException {
+        for (final ActiveMQSession session : sessions) {
+            session.checkNotInCompletionListenerCallback("stop");
+            session.checkNotInMessageListenerCallback("stop");
+        }
         doStop(true);
     }
 
@@ -683,6 +687,10 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      */
     @Override
     public void close() throws JMSException {
+        for (final ActiveMQSession session : sessions) {
+            session.checkNotInCompletionListenerCallback("close");
+            session.checkNotInMessageListenerCallback("close");
+        }
         try {
             // If we were running, lets stop first.
             if (!closed.get() && !transportFailed.get()) {

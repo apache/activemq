@@ -130,7 +130,7 @@ public class JmsQueueBrowserExpirationTest {
       producer.setTimeToLive(WAIT_TIME);
 
       TextMessage message = session.createTextMessage("Test message");
-      producer.send(producerQueue, message);
+      producer.send(message);
 
       int count = getMessageCount(producerQueue, session);
       assertEquals(1, count);
@@ -165,6 +165,9 @@ public class JmsQueueBrowserExpirationTest {
         int browsed = 0;
         while (enumeration.hasMoreElements()) {
             TextMessage m = (TextMessage) enumeration.nextElement();
+            if (m == null) {
+                continue; // message expired during browse
+            }
             browsed++;
             LOG.debug("B[{}]: {}", browsed, m.getText());
         }

@@ -113,7 +113,7 @@ public class AMQ4361Test {
                         lastLoop.set(System.currentTimeMillis());
                         ObjectMessage objMsg = session.createObjectMessage();
                         objMsg.setObject(data);
-                        producer.send(destination, objMsg);
+                        producer.send(objMsg);
                     }
                 } catch (Exception e) {
                     publishException.set(e);
