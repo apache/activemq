@@ -24,8 +24,13 @@ import jakarta.jms.JMSException;
 import jakarta.jms.MessageConsumer;
 import jakarta.jms.Session;
 
+import org.apache.activemq.broker.Broker;
+import org.apache.activemq.broker.BrokerFilter;
+import org.apache.activemq.broker.BrokerPlugin;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.TransportConnector;
+import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.transport.RequestTimedOutIOException;
@@ -122,21 +127,48 @@ public class SyncSendPacketTimeoutTest {
 
     @Test
     public void testSyncSendPacketFailFromTimeout() throws Exception {
+        // Restart the broker with a plugin that delays addConsumer responses
+        broker.stop();
+        broker.waitUntilStopped();
+
+        broker = new BrokerService();
+        broker.setPersistent(false);
+        broker.setUseJmx(false);
+        broker.setPlugins(new BrokerPlugin[]{new BrokerPlugin() {
+            @Override
+            public Broker installPlugin(Broker broker) {
+                return new BrokerFilter(broker) {
+                    @Override
+                    public Subscription addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
+                        // Only delay consumers on our test queue, not advisory consumers
+                        if (info.getDestination().getPhysicalName().equals("test")) {
+                            Thread.sleep(5000);
+                        }
+                        return super.addConsumer(context, info);
+                    }
+                };
+            }
+        }});
+        broker.addConnector("tcp://localhost:0");
+        broker.start();
+        broker.waitUntilStarted();
+        brokerUrl = broker.getTransportConnectors().get(0).getPublishableConnectString();
+
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(brokerUrl);
-        // Set to super short 1 millisecond so we always time out
-        factory.setRequestTimeout(1);
+        factory.setWatchTopicAdvisories(false);
+        factory.setRequestTimeout(500);
         try (ActiveMQConnection connection = (ActiveMQConnection) factory.createConnection()) {
+            connection.start();
+            Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+
             Exception exception = null;
             try {
-                connection.start();
-                try (Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-                     MessageConsumer consumer = session.createConsumer(session.createQueue("test"))) {
-                    assertNotNull("Consumer should be created successfully", consumer);
-                }
+                session.createConsumer(session.createQueue("test"));
                 fail("Expected JMSException due to request timeout");
             } catch (JMSException expected) {
                 exception = expected;
             }
+            assertNotNull("Should have caught a JMSException", exception);
             assertEquals(RequestTimedOutIOException.class,
                     TransportConnector.getRootCause(exception).getClass());
         }
