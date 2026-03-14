@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.jaas;
+package org.apache.activemq.oauth2;
 
 import java.io.IOException;
 import java.security.KeyPair;
@@ -53,6 +53,9 @@ import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.jwt.proc.ConfigurableJWTProcessor;
 import com.nimbusds.jwt.proc.DefaultJWTClaimsVerifier;
 import com.nimbusds.jwt.proc.DefaultJWTProcessor;
+
+import org.apache.activemq.jaas.GroupPrincipal;
+import org.apache.activemq.jaas.UserPrincipal;
 
 import junit.framework.TestCase;
 
