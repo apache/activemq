@@ -23,20 +23,27 @@ on:
   schedule:
     - cron: '0 0 * * *'
 
+concurrency:
+  group: deploy
+  cancel-in-progress: true
+
 jobs:
   deploy:
 
     permissions:
       contents: read
 
+    timeout-minutes: 60
+
     runs-on: ubuntu-24.04
 
     steps:
       - uses: actions/checkout@v4
-      - name: Set up JDK 
+      - name: Set up JDK
         uses: actions/setup-java@v4
         with:
           java-version: 17
           distribution: temurin
+          cache: 'maven'
       - name: Deploy
         run: mvn -B -e deploy -Pdeploy -DskipTests

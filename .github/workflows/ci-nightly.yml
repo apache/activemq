@@ -22,7 +22,7 @@
 # This build is also used to validate the build on various os (Ubuntu, Windows, MacOS) and various Java versions (17, 21, 25)
 # on a regular basis to make sure we catch any issue that may be introduced by a change in the build or in the dependencies.
 #
-name: CI Nightly
+name: CI Periodic
 
 on:
   schedule:
@@ -30,36 +30,12 @@ on:
 
 jobs:
   build:
+    name: build
 
     permissions:
       contents: read
 
-    strategy:
-      matrix:
-        os: [ ubuntu-24.04, ubuntu-22.04, macos-26, macos-15, windows-2025, windows-2022 ]
-        java-version: [ 17, 21 ]
-
-    runs-on: ${{ matrix.os }}
-
-    steps:
-      - uses: actions/checkout@v4
-      - name: Set up JDK
-        uses: actions/setup-java@v4
-        with:
-          java-version: ${{ matrix.java-version }}
-          distribution: temurin
-      - name: Build
-        run: mvn -U -B -e clean install -DskipTests
-      - name: Verify
-        run: mvn apache-rat:check
-
-  test:
-    name: test
-
-    permissions:
-      contents: read
-      checks: write
-      pull-requests: write
+    timeout-minutes: 60
 
     strategy:
       fail-fast: false
@@ -76,6 +52,39 @@ jobs:
         with:
           java-version: ${{ matrix.java-version }}
           distribution: temurin
+          cache: 'maven'
+      - name: Build
+        run: mvn -U -B -e clean install -DskipTests
+      - name: Verify
+        run: mvn apache-rat:check
+
+  test:
+    name: test
+    needs: build
+
+    permissions:
+      contents: read
+      checks: write
+      pull-requests: write
+
+    timeout-minutes: 120
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-24.04, ubuntu-22.04, macos-26, macos-15, windows-2025, windows-2022 ]
+        java-version: [ 17, 21, 25 ]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ matrix.java-version }}
+          distribution: temurin
+          cache: 'maven'
       - name: Test
         shell: bash
         run: mvn -B -e -fae verify -Pactivemq.tests-quick -Dsurefire.rerunFailingTestsCount=3
