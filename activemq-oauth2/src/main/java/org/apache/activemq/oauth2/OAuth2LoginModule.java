@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.jaas;
+package org.apache.activemq.oauth2;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -49,6 +49,9 @@ import com.nimbusds.jwt.proc.ConfigurableJWTProcessor;
 import com.nimbusds.jwt.proc.DefaultJWTClaimsVerifier;
 import com.nimbusds.jwt.proc.DefaultJWTProcessor;
 
+import org.apache.activemq.jaas.GroupPrincipal;
+import org.apache.activemq.jaas.UserPrincipal;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -72,7 +75,7 @@ import org.slf4j.LoggerFactory;
  * Example login.config:
  * <pre>
  * activemq-oauth2 {
- *     org.apache.activemq.jaas.OAuth2LoginModule required
+ *     org.apache.activemq.oauth2.OAuth2LoginModule required
  *         oauth2.jwksUrl="https://idp.example.com/.well-known/jwks.json"
  *         oauth2.issuer="https://idp.example.com"
  *         oauth2.audience="activemq"
