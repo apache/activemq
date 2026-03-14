@@ -30,9 +30,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import jakarta.jms.Connection;
 import jakarta.jms.JMSException;
-import jakarta.jms.Message;
 import jakarta.jms.MessageConsumer;
-import jakarta.jms.MessageListener;
 import jakarta.jms.MessageProducer;
 import jakarta.jms.Session;
 import jakarta.jms.TextMessage;
@@ -57,19 +55,16 @@ public class JmsCronSchedulerTest extends JobSchedulerTestSupport {
         MessageConsumer consumer = session.createConsumer(destination);
 
         final CountDownLatch latch = new CountDownLatch(COUNT);
-        consumer.setMessageListener(new MessageListener() {
-            @Override
-            public void onMessage(Message message) {
-                count.incrementAndGet();
-                latch.countDown();
-                assertTrue(message instanceof TextMessage);
-                TextMessage tm = (TextMessage) message;
-                try {
-                    LOG.info("Received [{}] count: {} ", tm.getText(), count.get());
-                } catch (JMSException e) {
-                    LOG.error("Unexpected exception in onMessage", e);
-                    fail("Unexpected exception in onMessage: " + e.getMessage());
-                }
+        consumer.setMessageListener(message -> {
+            count.incrementAndGet();
+            latch.countDown();
+            assertTrue(message instanceof TextMessage);
+            final TextMessage tm = (TextMessage) message;
+            try {
+                LOG.info("Received [{}] count: {} ", tm.getText(), count.get());
+            } catch (JMSException e) {
+                LOG.error("Unexpected exception in onMessage", e);
+                fail("Unexpected exception in onMessage: " + e.getMessage());
             }
         });
 
@@ -88,9 +83,11 @@ public class JmsCronSchedulerTest extends JobSchedulerTestSupport {
         JobScheduler js = sb.getJobScheduler();
         List<Job> list = js.getAllJobs();
         assertEquals(COUNT, list.size());
-        latch.await(2, TimeUnit.MINUTES);
-        // All should messages should have been received by now
-        assertEquals(COUNT, count.get());
+        assertTrue("all scheduled messages should fire", latch.await(2, TimeUnit.MINUTES));
+        // Cron "* * * * *" fires every minute, so count may exceed COUNT
+        // if a second minute boundary is crossed during the wait
+        assertTrue("at least " + COUNT + " messages received, got " + count.get(),
+                count.get() >= COUNT);
 
         connection.close();
     }
