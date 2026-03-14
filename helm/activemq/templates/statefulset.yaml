@@ -24,9 +24,7 @@ metadata:
   labels:
     {{- include "activemq.labels" . | nindent 4 }}
 spec:
-  {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
-  {{- end }}
   serviceName: {{ include "activemq.fullname" . }}
   selector:
     matchLabels:

@@ -165,14 +165,10 @@ helm uninstall my-activemq
 | `securityContext.allowPrivilegeEscalation` | Allow privilege escalation | `false` |
 | `securityContext.capabilities.drop` | Dropped capabilities | `["ALL"]` |
 
-### Scaling and Availability
+### Availability
 
 | Parameter | Description | Default |
 |-----------|-------------|---------|
-| `autoscaling.enabled` | Enable Horizontal Pod Autoscaler | `false` |
-| `autoscaling.minReplicas` | HPA minimum replicas | `1` |
-| `autoscaling.maxReplicas` | HPA maximum replicas | `5` |
-| `autoscaling.targetCPUUtilizationPercentage` | Target CPU utilization | `80` |
 | `podDisruptionBudget.enabled` | Enable Pod Disruption Budget | `false` |
 | `podDisruptionBudget.minAvailable` | Minimum available pods | `1` |
 

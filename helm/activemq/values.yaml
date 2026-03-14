@@ -212,19 +212,6 @@ readinessProbe:
   timeoutSeconds: 5
   failureThreshold: 3
 
-# -- Horizontal Pod Autoscaler configuration
-autoscaling:
-  # -- Enable HPA
-  enabled: false
-  # -- Minimum replicas
-  minReplicas: 1
-  # -- Maximum replicas
-  maxReplicas: 5
-  # -- Target CPU utilization
-  targetCPUUtilizationPercentage: 80
-  # -- Target memory utilization (optional)
-  # targetMemoryUtilizationPercentage: 80
-
 # -- Pod Disruption Budget configuration
 podDisruptionBudget:
   # -- Enable PDB
