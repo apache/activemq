@@ -528,8 +528,8 @@
       <artifactId>jackson-databind</artifactId>
     </dependency>
     <dependency>
-      <groupId>com.nimbusds</groupId>
-      <artifactId>nimbus-jose-jwt</artifactId>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>activemq-oauth2</artifactId>
     </dependency>
 
     <!-- JAXB/Activation/iStack -->

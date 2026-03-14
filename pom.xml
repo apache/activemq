@@ -209,6 +209,7 @@
     <module>activemq-rar</module>
     <module>activemq-run</module>
     <module>activemq-shiro</module>
+    <module>activemq-oauth2</module>
     <module>activemq-spring</module>
     <module>activemq-runtime-config</module>
     <module>activemq-tooling</module>
@@ -339,6 +340,11 @@
       <dependency>
         <groupId>org.apache.activemq</groupId>
         <artifactId>activemq-shiro</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.activemq</groupId>
+        <artifactId>activemq-oauth2</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
