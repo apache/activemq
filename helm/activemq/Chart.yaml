@@ -20,7 +20,7 @@ name: activemq
 description: Apache ActiveMQ - the most popular open source, multi-protocol, Java-based message broker
 type: application
 version: 6.3.0-SNAPSHOT
-appVersion: 6.2.0
+appVersion: 6.2.1
 home: https://activemq.apache.org/
 icon: https://activemq.apache.org/assets/img/activemq_logo_icon.png
 sources:
