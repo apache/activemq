@@ -72,14 +72,14 @@ public class TwoBrokerVirtualTopicSelectorAwareForwardingTest extends
 
         final BrokerService brokerA = brokers.get("BrokerA").broker;
 
-        String testQueue = "queue://Consumer.B.VirtualTopic.tempTopic";
-        VirtualDestinationSelectorCacheViewMBean cache = getVirtualDestinationSelectorCacheMBean(brokerA);
+        final String testQueue = "queue://Consumer.B.VirtualTopic.tempTopic";
+        final VirtualDestinationSelectorCacheViewMBean cache = getVirtualDestinationSelectorCacheMBean(brokerA);
         Set<String> selectors = cache.selectorsForDestination(testQueue);
 
         assertEquals(1, selectors.size());
         assertTrue(selectors.contains("foo = 'bar'"));
 
-        boolean removed = cache.deleteSelectorForDestination(testQueue, "foo = 'bar'");
+        final boolean removed = cache.deleteSelectorForDestination(testQueue, "foo = 'bar'");
         assertTrue(removed);
 
         selectors = cache.selectorsForDestination(testQueue);
@@ -88,10 +88,12 @@ public class TwoBrokerVirtualTopicSelectorAwareForwardingTest extends
         createConsumer("BrokerB", createDestination("Consumer.B.VirtualTopic.tempTopic", false),
                 "ceposta = 'redhat'");
 
-
-        final Destination destA0 = brokerA.getDestination(new ActiveMQQueue("Consumer.B.VirtualTopic.tempTopic"));
+        final ActiveMQQueue consumerQueue = new ActiveMQQueue("Consumer.B.VirtualTopic.tempTopic");
         assertTrue("advisories should propagate: 2 consumers on BrokerA",
-                Wait.waitFor(() -> destA0.getConsumers().size() == 2, 5000, 100));
+                Wait.waitFor(() -> {
+                    final Destination d = brokerA.getBroker().getDestinationMap().get(consumerQueue);
+                    return d != null && d.getConsumers().size() == 2;
+                }, 15000, 100));
 
         selectors = cache.selectorsForDestination(testQueue);
         assertEquals(1, selectors.size());
@@ -135,13 +137,8 @@ public class TwoBrokerVirtualTopicSelectorAwareForwardingTest extends
         consumer1 = createConsumer("BrokerA", consumerQueue, "SYMBOL = 'VIX'");
 
         // wait till new consumer is on board
-        Wait.waitFor(new Wait.Condition() {
-            @Override
-            public boolean isSatisified() throws Exception {
-                return brokerA.getDestination(new ActiveMQQueue("Consumer.B.VirtualTopic.tempTopic"))
-                        .getConsumers().size() == 2;
-            }
-        });
+        final ActiveMQQueue leakTestQueue = new ActiveMQQueue("Consumer.B.VirtualTopic.tempTopic");
+        Wait.waitFor(() -> brokerA.getDestination(leakTestQueue).getConsumers().size() == 2);
 
         currentCount = producerTester.getSentCount();
         LOG.info(">>>> currently sent: total=" + currentCount + ", AAPL=" + producerTester.getCountForProperty("AAPL") + ", VIX=" + producerTester.getCountForProperty("VIX"));
@@ -154,13 +151,7 @@ public class TwoBrokerVirtualTopicSelectorAwareForwardingTest extends
         consumer2 = createConsumer("BrokerA", consumerQueue, "SYMBOL = 'VIX'");
 
         // wait till new consumer is on board
-        Wait.waitFor(new Wait.Condition() {
-            @Override
-            public boolean isSatisified() throws Exception {
-                return brokerA.getDestination(new ActiveMQQueue("Consumer.B.VirtualTopic.tempTopic"))
-                        .getConsumers().size() == 2;
-            }
-        });
+        Wait.waitFor(() -> brokerA.getDestination(leakTestQueue).getConsumers().size() == 2);
 
         currentCount = producerTester.getSentCount();
         LOG.info(">>>> currently sent: total=" + currentCount + ", AAPL=" + producerTester.getCountForProperty("AAPL") + ", VIX=" + producerTester.getCountForProperty("VIX"));
@@ -174,29 +165,23 @@ public class TwoBrokerVirtualTopicSelectorAwareForwardingTest extends
 
         // make sure if there are messages that are orphaned in the queue that this number doesn't
         // grow...
-        final long currentDepth = brokerA.getDestination(new ActiveMQQueue("Consumer.B.VirtualTopic.tempTopic"))
+        final long currentDepth = brokerA.getDestination(leakTestQueue)
                 .getDestinationStatistics().getMessages().getCount();
 
         LOG.info(">>>>> Orphaned messages? " + currentDepth);
 
         // wait 5s to see if we can get a growth in the depth of the queue
-        Wait.waitFor(new Wait.Condition() {
-            @Override
-            public boolean isSatisified() throws Exception {
-                return brokerA.getDestination(new ActiveMQQueue("Consumer.B.VirtualTopic.tempTopic"))
-                        .getDestinationStatistics().getMessages().getCount() > currentDepth;
-            }
-        }, 5000);
+        Wait.waitFor(() -> brokerA.getDestination(leakTestQueue)
+                .getDestinationStatistics().getMessages().getCount() > currentDepth, 5000);
 
         // stop producers
         producerTester.setRunning(false);
         producerTester.join();
 
-        // pause to let consumers catch up
-        Thread.sleep(1000);
-
-        assertTrue(brokerA.getDestination(new ActiveMQQueue("Consumer.B.VirtualTopic.tempTopic"))
-                .getDestinationStatistics().getMessages().getCount() <= currentDepth);
+        // wait for consumers to catch up and drain remaining messages
+        assertTrue("queue depth should not grow beyond snapshot",
+                Wait.waitFor(() -> brokerA.getDestination(leakTestQueue)
+                        .getDestinationStatistics().getMessages().getCount() <= currentDepth, 5000, 100));
 
 
     }
@@ -283,12 +268,15 @@ public class TwoBrokerVirtualTopicSelectorAwareForwardingTest extends
         MessageConsumer nonSelectingConsumer = createConsumer("BrokerB", consumerBQueue);
 
         // let advisories propogate
-        final Destination destA1 = brokerA.getDestination(new ActiveMQQueue("Consumer.B.VirtualTopic.tempTopic"));
+        final ActiveMQQueue consumerBQueueInternal = new ActiveMQQueue("Consumer.B.VirtualTopic.tempTopic");
         assertTrue("advisories should propagate: 2 consumers on BrokerA",
-                Wait.waitFor(() -> destA1.getConsumers().size() == 2, 5000, 100));
+                Wait.waitFor(() -> {
+                    final Destination d = brokerA.getBroker().getDestinationMap().get(consumerBQueueInternal);
+                    return d != null && d.getConsumers().size() == 2;
+                }, 15000, 100));
 
 
-        Destination destination = getDestination(brokerB, consumerBQueue);
+        final Destination destination = getDestination(brokerB, consumerBQueue);
         assertEquals(2, destination.getConsumers().size());
 
         // publisher publishes to this
@@ -333,9 +321,8 @@ public class TwoBrokerVirtualTopicSelectorAwareForwardingTest extends
 
 
         // let advisories propogate
-        final Destination destA2 = brokerA.getDestination(new ActiveMQQueue("Consumer.B.VirtualTopic.tempTopic"));
         assertTrue("advisories should propagate: 1 consumer on BrokerA",
-                Wait.waitFor(() -> destA2.getConsumers().size() == 1, 5000, 100));
+                Wait.waitFor(() -> brokerA.getDestination(consumerBQueueInternal).getConsumers().size() == 1, 15000, 100));
 
         // and let's send messages with a selector that doesnt' match
         selectingConsumerMessages.flushMessages();
@@ -368,9 +355,8 @@ public class TwoBrokerVirtualTopicSelectorAwareForwardingTest extends
         selectingConsumer.close();
 
         // let advisories propogate
-        final Destination destA3 = brokerA.getDestination(new ActiveMQQueue("Consumer.B.VirtualTopic.tempTopic"));
         assertTrue("advisories should propagate: 0 consumers on BrokerA",
-                Wait.waitFor(() -> destA3.getConsumers().isEmpty(), 5000, 100));
+                Wait.waitFor(() -> brokerA.getDestination(consumerBQueueInternal).getConsumers().isEmpty(), 15000, 100));
 
         selectingConsumerMessages.flushMessages();
 
@@ -401,9 +387,8 @@ public class TwoBrokerVirtualTopicSelectorAwareForwardingTest extends
         assertEquals(10, selectingConsumerMessages.getMessageCount());
 
         // let advisories propogate
-        final Destination destA4 = brokerA.getDestination(new ActiveMQQueue("Consumer.B.VirtualTopic.tempTopic"));
         assertTrue("advisories should propagate: 1 consumer on BrokerA",
-                Wait.waitFor(() -> destA4.getConsumers().size() == 1, 5000, 100));
+                Wait.waitFor(() -> brokerA.getDestination(consumerBQueueInternal).getConsumers().size() == 1, 15000, 100));
 
         // assert broker A stats
         waitForMessagesToBeConsumed(brokerA, "Consumer.B.VirtualTopic.tempTopic", false, 30, 30, 5000);
@@ -451,20 +436,17 @@ public class TwoBrokerVirtualTopicSelectorAwareForwardingTest extends
 
 
         // let advisories propogate
-        Wait.waitFor(new Wait.Condition() {
-            Destination dest = brokerA.getDestination(new ActiveMQQueue("Consumer.B.VirtualTopic.tempTopic"));
+        final ActiveMQQueue selectorAwareQueue = new ActiveMQQueue("Consumer.B.VirtualTopic.tempTopic");
+        assertTrue("advisory should propagate: 1 consumer on BrokerA",
+                Wait.waitFor(() -> {
+                    final Destination d = brokerA.getBroker().getDestinationMap().get(selectorAwareQueue);
+                    return d != null && d.getConsumers().size() == 1;
+                }, 15000, 100));
 
-            @Override
-            public boolean isSatisified() throws Exception {
-                return dest.getConsumers().size() == 1;
-            }
-        }, 500);
-
-        ActiveMQQueue queueB = new ActiveMQQueue("Consumer.B.VirtualTopic.tempTopic");
-        Destination destination = getDestination(brokers.get("BrokerB").broker, queueB);
+        final Destination destination = getDestination(brokers.get("BrokerB").broker, selectorAwareQueue);
         assertEquals(1, destination.getConsumers().size());
 
-        ActiveMQTopic virtualTopic = new ActiveMQTopic("VirtualTopic.tempTopic");
+        final ActiveMQTopic virtualTopic = new ActiveMQTopic("VirtualTopic.tempTopic");
         assertNull(getDestination(brokers.get("BrokerA").broker, virtualTopic));
         assertNull(getDestination(brokers.get("BrokerB").broker, virtualTopic));
 
@@ -512,16 +494,12 @@ public class TwoBrokerVirtualTopicSelectorAwareForwardingTest extends
 
         System.out.println(brokerA.getNetworkConnectors());
 
-        // give a sec to let advisories propogate
         // let advisories propogate
-        Wait.waitFor(new Wait.Condition() {
-            Destination dest = brokerA.getDestination(new ActiveMQQueue("Consumer.B.VirtualTopic.tempTopic"));
-
-            @Override
-            public boolean isSatisified() throws Exception {
-                return dest.getConsumers().size() == 1;
-            }
-        }, 500);
+        assertTrue("advisory should propagate after restart: 1 consumer on BrokerA",
+                Wait.waitFor(() -> {
+                    final Destination d = brokerA.getBroker().getDestinationMap().get(selectorAwareQueue);
+                    return d != null && d.getConsumers().size() == 1;
+                }, 15000, 100));
 
 
         // send two types of messages, one unwanted and the other wanted
@@ -586,12 +564,11 @@ public class TwoBrokerVirtualTopicSelectorAwareForwardingTest extends
     public void setUp() throws Exception {
         super.setAutoFail(true);
         super.setUp();
-        String options = new String(
-                "?useJmx=false&deleteAllMessagesOnStartup=true");
+        final String options = "?useJmx=false&deleteAllMessagesOnStartup=true";
         createAndConfigureBroker(new URI(
-                "broker:(tcp://localhost:61616)/BrokerA" + options));
+                "broker:(tcp://localhost:0)/BrokerA" + options));
         createAndConfigureBroker(new URI(
-                "broker:(tcp://localhost:61617)/BrokerB" + options));
+                "broker:(tcp://localhost:0)/BrokerB" + options));
     }
 
     private void clearSelectorCacheFiles() {

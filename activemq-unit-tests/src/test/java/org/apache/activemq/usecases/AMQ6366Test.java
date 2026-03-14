@@ -97,6 +97,20 @@ public class AMQ6366Test extends JmsMultipleBrokersTestSupport {
         networkConnector.start();
         waitForBridgeFormation();
 
+        // Wait for the network bridge to re-establish its demand subscription on the
+        // publishing broker. waitForBridgeFormation() only verifies the bridge is connected,
+        // but setupStaticDestinations() (which creates the durable demand subscription)
+        // runs asynchronously after bridge connection. Without this wait, sendMessages()
+        // can fire before the demand subscription is set up, causing the message to be
+        // published with no subscriber to forward it to the consumer broker.
+        // We check for an active durable subscription because the durable sub may already
+        // exist (inactive) from the previous bridge; we need it to be reactivated.
+        final Topic pubBrokerDest = (Topic) brokers.get(pubBroker).broker.getDestination(dest);
+        assertTrue("Network durable subscription should be active on " + pubBroker,
+                Wait.waitFor(() -> pubBrokerDest.getDurableTopicSubs().values().stream()
+                                .anyMatch(DurableTopicSubscription::isActive),
+                        10000, 100));
+
         // Send messages
         sendMessages(pubBroker, dest, 1);
 
