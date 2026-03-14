@@ -29,12 +29,18 @@ on:
   pull_request:
     branches: [ "main", "activemq-6.1.x", "activemq-5.19.x" ]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     name: build
 
     permissions:
       contents: read
+
+    timeout-minutes: 60
 
     strategy:
       matrix:
@@ -50,6 +56,7 @@ jobs:
         with:
           java-version: ${{ matrix.java-version }}
           distribution: temurin
+          cache: 'maven'
       - name: Build
         run: mvn -U -B -e clean install -DskipTests
       - name: Verify
@@ -57,11 +64,14 @@ jobs:
 
   test:
     name: test
+    needs: build
 
     permissions:
       contents: read
       checks: write
       pull-requests: write
+
+    timeout-minutes: 180
 
     runs-on: ubuntu-24.04
 
@@ -72,6 +82,7 @@ jobs:
         with:
           java-version: 17
           distribution: temurin
+          cache: 'maven'
       - name: Test
         run: mvn -B -e -fae verify -Pactivemq.tests-quick
       - name: Upload Test Results

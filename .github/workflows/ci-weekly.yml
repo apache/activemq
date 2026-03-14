@@ -33,7 +33,10 @@ jobs:
     permissions:
       contents: read
 
+    timeout-minutes: 60
+
     strategy:
+      fail-fast: false
       matrix:
         os: [ ubuntu-24.04, macos-26, windows-2025 ]
         java-version: [ 17, 21, 25 ]
@@ -47,6 +50,7 @@ jobs:
         with:
           java-version: ${{ matrix.java-version }}
           distribution: temurin
+          cache: 'maven'
       - name: Build
         run: mvn -U -B -e clean install -DskipTests
       - name: Verify
@@ -54,6 +58,7 @@ jobs:
 
   test:
     name: test
+    needs: build
 
     permissions:
       contents: read
@@ -70,6 +75,7 @@ jobs:
         with:
           java-version: 17
           distribution: temurin
+          cache: 'maven'
       - name: Test
         run: mvn -B -e -fae verify -Dsurefire.rerunFailingTestsCount=3
       - name: Upload Test Results
