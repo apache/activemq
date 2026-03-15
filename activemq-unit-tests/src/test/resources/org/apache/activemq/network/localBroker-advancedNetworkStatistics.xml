@@ -42,7 +42,11 @@
          dynamicOnly = "false"
          conduitSubscriptions = "true"
          decreaseNetworkConsumerPriority = "false"
-         name="networkConnector">
+         name="local-to-remote"
+         userName="localAdmin"
+         password="passwordA"
+         remoteUserName="remoteAdmin"
+         remotePassword="passwordB">
          <dynamicallyIncludedDestinations>
             <queue physicalName="include.test.foo"/>
             <topic physicalName="include.test.durable"/>
@@ -56,10 +60,32 @@
       </networkConnector>
     </networkConnectors>
 
+    <plugins>
+      <authorizationPlugin>
+        <map>
+          <authorizationMap>
+            <authorizationEntries>
+              <authorizationEntry queue=">" read="admins" write="admins" admin="admins" />
+              <authorizationEntry topic="ActiveMQ.Advisory.>" read="*" write="*" admin="*"/>
+            </authorizationEntries>
+            <tempDestinationAuthorizationEntry>
+              <tempDestinationAuthorizationEntry read="admins" write="admins" admin="admins"/>
+            </tempDestinationAuthorizationEntry>
+          </authorizationMap>
+        </map>
+      </authorizationPlugin>
+      <simpleAuthenticationPlugin>
+        <users>
+          <authenticationUser username="localAdmin" password="passwordA" groups="admins"/>
+          <authenticationUser username="remoteAdmin" password="passwordB" groups="admins"/>
+        </users>
+      </simpleAuthenticationPlugin>
+    </plugins>
+
     <transportConnectors>
       <transportConnector uri="tcp://localhost:61616"/>
     </transportConnectors>
-    
+
   </broker>
 </beans>
 
