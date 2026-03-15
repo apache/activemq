@@ -100,6 +100,7 @@ public class UsageBlockedDispatchTest extends TestSupport {
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(connectionUri);
         ActiveMQPrefetchPolicy prefetch = new ActiveMQPrefetchPolicy();
         prefetch.setTopicPrefetch(10);
+        prefetch.setQueuePrefetch(1);
         factory.setPrefetchPolicy(prefetch);
 
         final Connection producerConnection = factory.createConnection();
