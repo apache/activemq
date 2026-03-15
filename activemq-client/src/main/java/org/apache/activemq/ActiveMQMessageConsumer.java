@@ -35,6 +35,7 @@ import jakarta.jms.InvalidDestinationException;
 import jakarta.jms.JMSException;
 import jakarta.jms.Message;
 import jakarta.jms.MessageConsumer;
+import jakarta.jms.MessageFormatException;
 import jakarta.jms.MessageListener;
 import jakarta.jms.TransactionRolledBackException;
 
@@ -711,6 +712,192 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         beforeMessageIsConsumed(md);
         afterMessageIsConsumed(md, false);
         return createActiveMQMessage(md);
+    }
+
+    /**
+     * Receives the next message produced for this message consumer and returns
+     * its body as an object of the specified type. This call blocks
+     * indefinitely until a message is produced or until this message consumer
+     * is closed.
+     * <p>
+     * If the message body cannot be assigned to the specified type, a
+     * {@code MessageFormatException} is thrown.  The outcome depends on the
+     * session's acknowledgement mode:
+     * <ul>
+     *   <li>{@code AUTO_ACKNOWLEDGE} / {@code DUPS_OK_ACKNOWLEDGE} &ndash; the
+     *       message is returned to the head of the prefetch queue and will be
+     *       delivered again before any subsequent messages.</li>
+     *   <li>{@code CLIENT_ACKNOWLEDGE} &ndash; the message is treated as
+     *       delivered; the application may call {@code session.recover()} to
+     *       redeliver or {@code message.acknowledge()} to retire it.</li>
+     *   <li>Transacted session &ndash; the message is treated as delivered
+     *       within the current transaction; the application may call
+     *       {@code session.rollback()} to redeliver or
+     *       {@code session.commit()} to retire it.</li>
+     * </ul>
+     *
+     * @param c the type to which the body of the next message should be
+     *          assigned
+     * @return the body of the next message, or null if this message consumer
+     *         is concurrently closed
+     * @throws MessageFormatException if the message body cannot be assigned to
+     *         the specified type
+     * @throws JMSException if the JMS provider fails to receive the next
+     *         message due to some internal error
+     */
+    public <T> T receiveBody(Class<T> c) throws JMSException {
+        checkClosed();
+        checkMessageListener();
+
+        sendPullCommand(0);
+        MessageDispatch md = dequeue(-1);
+        if (md == null) {
+            return null;
+        }
+
+        return doReceiveBody(md, c);
+    }
+
+    /**
+     * Receives the next message produced for this message consumer and returns
+     * its body as an object of the specified type, blocking up to the
+     * specified timeout. A {@code timeout} of zero never expires and the call
+     * blocks indefinitely.
+     * <p>
+     * If the message body cannot be assigned to the specified type, a
+     * {@code MessageFormatException} is thrown.  The outcome depends on the
+     * session's acknowledgement mode:
+     * <ul>
+     *   <li>{@code AUTO_ACKNOWLEDGE} / {@code DUPS_OK_ACKNOWLEDGE} &ndash; the
+     *       message is returned to the head of the prefetch queue and will be
+     *       delivered again before any subsequent messages.</li>
+     *   <li>{@code CLIENT_ACKNOWLEDGE} &ndash; the message is treated as
+     *       delivered; the application may call {@code session.recover()} to
+     *       redeliver or {@code message.acknowledge()} to retire it.</li>
+     *   <li>Transacted session &ndash; the message is treated as delivered
+     *       within the current transaction; the application may call
+     *       {@code session.rollback()} to redeliver or
+     *       {@code session.commit()} to retire it.</li>
+     * </ul>
+     *
+     * @param c       the type to which the body of the next message should be
+     *                assigned
+     * @param timeout the timeout value (in milliseconds), a timeout of zero
+     *                never expires
+     * @return the body of the next message, or null if the timeout expires or
+     *         this message consumer is concurrently closed
+     * @throws MessageFormatException if the message body cannot be assigned to
+     *         the specified type
+     * @throws JMSException if the JMS provider fails to receive the next
+     *         message due to some internal error
+     */
+    public <T> T receiveBody(Class<T> c, long timeout) throws JMSException {
+        checkClosed();
+        checkMessageListener();
+        if (timeout == 0) {
+            return this.receiveBody(c);
+        }
+
+        sendPullCommand(timeout);
+        while (timeout > 0) {
+            MessageDispatch md;
+            if (info.getPrefetchSize() == 0) {
+                md = dequeue(-1);
+            } else {
+                md = dequeue(timeout);
+            }
+
+            if (md == null) {
+                return null;
+            }
+
+            return doReceiveBody(md, c);
+        }
+        return null;
+    }
+
+    /**
+     * Receives the next message produced for this message consumer and returns
+     * its body as an object of the specified type if one is immediately
+     * available.
+     * <p>
+     * If the message body cannot be assigned to the specified type, a
+     * {@code MessageFormatException} is thrown.  The outcome depends on the
+     * session's acknowledgement mode:
+     * <ul>
+     *   <li>{@code AUTO_ACKNOWLEDGE} / {@code DUPS_OK_ACKNOWLEDGE} &ndash; the
+     *       message is returned to the head of the prefetch queue and will be
+     *       delivered again before any subsequent messages.</li>
+     *   <li>{@code CLIENT_ACKNOWLEDGE} &ndash; the message is treated as
+     *       delivered; the application may call {@code session.recover()} to
+     *       redeliver or {@code message.acknowledge()} to retire it.</li>
+     *   <li>Transacted session &ndash; the message is treated as delivered
+     *       within the current transaction; the application may call
+     *       {@code session.rollback()} to redeliver or
+     *       {@code session.commit()} to retire it.</li>
+     * </ul>
+     *
+     * @param c the type to which the body of the next message should be
+     *          assigned
+     * @return the body of the next message, or null if one is not immediately
+     *         available
+     * @throws MessageFormatException if the message body cannot be assigned to
+     *         the specified type
+     * @throws JMSException if the JMS provider fails to receive the next
+     *         message due to some internal error
+     */
+    public <T> T receiveBodyNoWait(Class<T> c) throws JMSException {
+        checkClosed();
+        checkMessageListener();
+        sendPullCommand(-1);
+
+        MessageDispatch md;
+        if (info.getPrefetchSize() == 0) {
+            md = dequeue(-1);
+        } else {
+            md = dequeue(0);
+        }
+
+        if (md == null) {
+            return null;
+        }
+
+        return doReceiveBody(md, c);
+    }
+
+    /**
+     * Checks that the message body can be assigned to the requested type,
+     * acknowledges the message, and returns its body.
+     * <p>
+     * On type mismatch the behaviour depends on the session mode:
+     * AUTO/DUPS_OK re-enqueue the message for immediate re-read;
+     * CLIENT_ACKNOWLEDGE and transacted sessions treat the message as
+     * delivered so that the application can recover or commit as appropriate.
+     */
+    private <T> T doReceiveBody(MessageDispatch md, Class<T> c) throws JMSException {
+        ActiveMQMessage message = createActiveMQMessage(md);
+        if (message.getDataStructureType() == CommandTypes.ACTIVEMQ_MESSAGE
+                || !message.isBodyAssignableTo(c)) {
+            if (session.getTransacted() || session.isClientAcknowledge() || session.isIndividualAcknowledge()) {
+                // Jakarta Messaging 3.1 spec: in TRANSACTED and CLIENT_ACKNOWLEDGE modes the
+                // message is considered delivered. The application can use session.rollback()
+                // / session.recover() to redeliver, or session.commit() / message.acknowledge()
+                // to retire it.  Calling beforeMessageIsConsumed and afterMessageIsConsumed
+                // tracks the message as delivered and expands the consumer credit window so
+                // that subsequent receive calls do not stall.
+                beforeMessageIsConsumed(md);
+                afterMessageIsConsumed(md, false);
+            } else {
+                // AUTO_ACKNOWLEDGE / DUPS_OK_ACKNOWLEDGE: put the message back on the
+                // prefetch queue so the caller can retrieve it again with the correct type.
+                unconsumedMessages.enqueueFirst(md);
+            }
+            throw new MessageFormatException("Message body cannot be read as type: " + c);
+        }
+
+        beforeMessageIsConsumed(md);
+        afterMessageIsConsumed(md, false);
+        return message.getBody(c);
     }
 
     /**
