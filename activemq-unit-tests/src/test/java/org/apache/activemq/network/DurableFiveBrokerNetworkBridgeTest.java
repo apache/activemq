@@ -803,11 +803,11 @@ public class DurableFiveBrokerNetworkBridgeTest extends JmsMultipleBrokersTestSu
 
     protected void assertNCDurableSubsCount(final BrokerService brokerService, final ActiveMQTopic dest,
             final int count) throws Exception {
+        final boolean result = Wait.waitFor(() -> count == getNCDurableSubs(brokerService, dest).size(),
+                TimeUnit.SECONDS.toMillis(30), 500);
         assertTrue("Expected " + count + " NC durable sub(s) on " + brokerService.getBrokerName()
                 + " for " + dest.getTopicName() + ", but got "
-                + getNCDurableSubs(brokerService, dest).size(),
-            Wait.waitFor(() -> count == getNCDurableSubs(brokerService, dest).size(),
-                TimeUnit.SECONDS.toMillis(30), 500));
+                + getNCDurableSubs(brokerService, dest).size(), result);
     }
 
     protected List<DurableTopicSubscription> getNCDurableSubs(final BrokerService brokerService,
@@ -824,7 +824,7 @@ public class DurableFiveBrokerNetworkBridgeTest extends JmsMultipleBrokersTestSu
         for (final SubscriptionKey key : destination.getDurableTopicSubs().keySet()) {
             if (key.getSubscriptionName().startsWith(DemandForwardingBridge.DURABLE_SUB_PREFIX)) {
                 final DurableTopicSubscription sub = destination.getDurableTopicSubs().get(key);
-                if (sub != null && sub.isActive()) {
+                if (sub != null) {
                     subs.add(sub);
                 }
             }
