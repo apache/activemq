@@ -17,9 +17,13 @@
 package org.apache.activemq.network;
 
 import java.io.File;
+import java.lang.reflect.Field;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import jakarta.jms.Connection;
@@ -30,6 +34,8 @@ import junit.framework.AssertionFailedError;
 import junit.framework.Test;
 import org.apache.activemq.JmsMultipleBrokersTestSupport;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.TransportConnection;
+import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.DestinationFilter;
 import org.apache.activemq.broker.region.DurableTopicSubscription;
@@ -143,6 +149,13 @@ public class DurableFiveBrokerNetworkBridgeTest extends JmsMultipleBrokersTestSu
         assertNCDurableSubsCount(brokers.get("Broker_D_D").broker, dest, 2);
         assertNCDurableSubsCount(brokers.get("Broker_E_E").broker, dest, 1);
         assertNCDurableSubsCount(brokers.get("Broker_A_A").broker, dest, 1);
+
+        // Wait for all bridge sync executors to finish populating durableRemoteSubs.
+        // setupStaticDestinations() creates DemandSubscriptions with empty durableRemoteSubs,
+        // and the syncExecutor populates them asynchronously. Without this wait, unsubscribe
+        // advisories may race with the sync executor: the advisory finds nothing to remove
+        // (durableRemoteSubs is empty), then the sync populates it, leaving a stale NC durable sub.
+        waitForAllBridgeSyncCompletion();
 
         conn = brokers.get("Broker_A_A").factory.createConnection();
         conn.setClientID("clientId1");
@@ -862,6 +875,59 @@ public class DurableFiveBrokerNetworkBridgeTest extends JmsMultipleBrokersTestSu
         broker.setBrokerId(broker.getBrokerName());
         broker.setDeleteAllMessagesOnStartup(deletePersistentMessagesOnStartup);
         broker.setDataDirectory("target" + File.separator + "test-data" + File.separator + "DurableFiveBrokerNetworkBridgeTest");
+    }
+
+    /**
+     * Wait for all bridge sync executors (both initiator and duplex bridges) to complete
+     * processing their BrokerSubscriptionInfo tasks on all brokers.
+     * Uses reflection to access the private syncExecutor, following the same pattern
+     * as {@link DynamicNetworkTestSupport#findDuplexBridge}.
+     */
+    private void waitForAllBridgeSyncCompletion() throws Exception {
+        final Field syncExecutorField = DemandForwardingBridgeSupport.class.getDeclaredField("syncExecutor");
+        syncExecutorField.setAccessible(true);
+        final Field duplexBridgeField = TransportConnection.class.getDeclaredField("duplexBridge");
+        duplexBridgeField.setAccessible(true);
+
+        for (final BrokerItem item : brokers.values()) {
+            final BrokerService broker = item.broker;
+            // Initiator bridges (accessible via network connectors)
+            for (final NetworkConnector nc : broker.getNetworkConnectors()) {
+                for (final NetworkBridge bridge : nc.activeBridges()) {
+                    if (bridge instanceof DemandForwardingBridgeSupport) {
+                        flushSyncExecutor(syncExecutorField, (DemandForwardingBridgeSupport) bridge);
+                    }
+                }
+            }
+            // Duplex bridges (accessible via transport connections)
+            for (final TransportConnector tc : broker.getTransportConnectors()) {
+                for (final TransportConnection conn : tc.getConnections()) {
+                    if (conn.getConnectionId() != null && conn.getConnectionId().startsWith("networkConnector_")) {
+                        final DemandForwardingBridgeSupport duplexBridge =
+                            (DemandForwardingBridgeSupport) duplexBridgeField.get(conn);
+                        if (duplexBridge != null) {
+                            flushSyncExecutor(syncExecutorField, duplexBridge);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private void flushSyncExecutor(final Field syncExecutorField,
+            final DemandForwardingBridgeSupport bridge) throws Exception {
+        final ExecutorService syncExecutor = (ExecutorService) syncExecutorField.get(bridge);
+        if (syncExecutor.isShutdown()) {
+            return;
+        }
+        final CountDownLatch latch = new CountDownLatch(1);
+        try {
+            syncExecutor.execute(latch::countDown);
+        } catch (final RejectedExecutionException e) {
+            return;
+        }
+        assertTrue("Sync executor should complete on " + bridge,
+            latch.await(30, TimeUnit.SECONDS));
     }
 
     protected void startNetworkConnectors(NetworkConnector... connectors) throws Exception {
