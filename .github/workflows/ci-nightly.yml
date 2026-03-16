@@ -90,7 +90,7 @@ jobs:
         run: mvn -B -e -fae verify -Pactivemq.tests-quick -Dsurefire.rerunFailingTestsCount=3
       - name: Upload Test Results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: test-results-${{ matrix.os }}-java${{ matrix.java-version }}
           path: '**/target/surefire-reports/*.xml'
