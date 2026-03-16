@@ -48,6 +48,9 @@ import jakarta.jms.TextMessage;
 
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.broker.region.DurableTopicSubscription;
+import org.apache.activemq.broker.region.RegionBroker;
+import org.apache.activemq.broker.region.TopicRegion;
 import org.apache.activemq.broker.region.policy.LastImageSubscriptionRecoveryPolicy;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
@@ -1736,15 +1739,37 @@ public class MQTTTest extends MQTTTestSupport {
 
     private boolean isSubscriptionActive(Topic topic, String clientId) throws Exception {
         if (isVirtualTopicSubscriptionStrategy()) {
-            String queueName = buildVirtualTopicQueueName(topic, clientId);
+            final String queueName = buildVirtualTopicQueueName(topic, clientId);
             try {
                 return getProxyToQueue(queueName).getConsumerCount() > 0;
             } catch (Exception ignore) {
                 return false;
             }
         } else {
-            return brokerService.getAdminView().getDurableTopicSubscribers().length >= 1 &&
-                   brokerService.getAdminView().getInactiveDurableTopicSubscribers().length == 0;
+            final int activeSubs = brokerService.getAdminView().getDurableTopicSubscribers().length;
+            final int inactiveSubs = brokerService.getAdminView().getInactiveDurableTopicSubscribers().length;
+            final boolean jmxActive = activeSubs >= 1 && inactiveSubs == 0;
+
+            // Diagnostic: also check the actual broker-level subscription state
+            // to determine if the flakiness is a JMX registration issue or a real broker bug
+            boolean brokerLevelActive = false;
+            try {
+                final RegionBroker regionBroker = (RegionBroker) brokerService.getBroker().getAdaptor(RegionBroker.class);
+                final TopicRegion topicRegion = (TopicRegion) regionBroker.getTopicRegion();
+                final String subName = QoS.values()[topic.qos().ordinal()] + ":" + topic.name().toString();
+                final DurableTopicSubscription sub = topicRegion.lookupSubscription(subName, clientId);
+                brokerLevelActive = sub != null && sub.isActive();
+            } catch (Exception e) {
+                LOG.debug("Could not check broker-level subscription state", e);
+            }
+
+            if (jmxActive != brokerLevelActive) {
+                LOG.warn("MQTT subscription state MISMATCH: JMX says active={} (active={}, inactive={}), " +
+                        "broker-level says active={} for clientId={}, topic={}",
+                        jmxActive, activeSubs, inactiveSubs, brokerLevelActive, clientId, topic.name());
+            }
+
+            return jmxActive;
         }
     }
 

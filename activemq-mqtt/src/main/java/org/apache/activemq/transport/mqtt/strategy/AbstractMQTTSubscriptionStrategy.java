@@ -274,15 +274,21 @@ public abstract class AbstractMQTTSubscriptionStrategy implements MQTTSubscripti
     }
 
     protected void restoreDurableSubs(List<SubscriptionInfo> subs) {
+        LOG.info("Restoring {} MQTT durable subscription(s) for clientId={}",
+                subs.size(), protocol.getClientId());
         try {
             for (SubscriptionInfo sub : subs) {
-                String name = sub.getSubcriptionName();
-                String[] split = name.split(":", 2);
-                QoS qoS = QoS.valueOf(split[0]);
+                final String name = sub.getSubcriptionName();
+                final String[] split = name.split(":", 2);
+                final QoS qoS = QoS.valueOf(split[0]);
+                LOG.debug("Restoring MQTT durable sub: name={}, qos={}, topic={}",
+                        name, qoS, split[1]);
                 onSubscribe(new Topic(split[1], qoS));
                 // mark this durable subscription as restored by Broker
                 restoredDurableSubs.add(MQTTProtocolSupport.convertMQTTToActiveMQ(split[1]));
+                LOG.debug("Successfully restored MQTT durable sub: {}", name);
             }
+            LOG.info("All {} MQTT durable subscription(s) restored successfully", subs.size());
         } catch (IOException e) {
             LOG.warn("Could not restore the MQTT durable subs.", e);
         }
