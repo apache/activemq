@@ -1357,11 +1357,8 @@ public class VirtualConsumerDemandTest extends DynamicNetworkTestSupport {
         includedProducer.send(test);
         assertNotNull(bridgeConsumer.receive(5000));
 
-        assertTrue("dequeues not updated",
-                Wait.waitFor(() -> 1 == destinationStatistics.getDequeues().getCount()));
-
-        assertEquals("broker dest stat dispatched", 1, destinationStatistics.getDispatched().getCount());
-        assertEquals("broker dest stat dequeues", 1, destinationStatistics.getDequeues().getCount());
+        waitForDispatchFromLocalBroker(destinationStatistics, 1);
+        assertLocalBrokerStatistics(destinationStatistics, 1);
 
         assertRemoteAdvisoryCount(advisoryConsumer, 1);
         assertAdvisoryBrokerCounts(1,1,0);
