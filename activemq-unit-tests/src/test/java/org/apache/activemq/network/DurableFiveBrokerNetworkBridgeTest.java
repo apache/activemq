@@ -134,6 +134,16 @@ public class DurableFiveBrokerNetworkBridgeTest extends JmsMultipleBrokersTestSu
         startAllBrokers();
         waitForBridgeFormation();
 
+        // Wait for the async durable sync (syncDurableSubs=true) to complete across all bridges.
+        // After restart with persistent data, NC durable subs must re-establish to match Phase 1
+        // counts before we proceed with unsubscribes, otherwise the sync can re-create NC durable
+        // subs AFTER the unsubscribe advisory has already propagated.
+        assertNCDurableSubsCount(brokers.get("Broker_B_B").broker, dest, 2);
+        assertNCDurableSubsCount(brokers.get("Broker_C_C").broker, dest, 2);
+        assertNCDurableSubsCount(brokers.get("Broker_D_D").broker, dest, 2);
+        assertNCDurableSubsCount(brokers.get("Broker_E_E").broker, dest, 1);
+        assertNCDurableSubsCount(brokers.get("Broker_A_A").broker, dest, 1);
+
         conn = brokers.get("Broker_A_A").factory.createConnection();
         conn.setClientID("clientId1");
         conn.start();
