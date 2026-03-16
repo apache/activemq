@@ -270,6 +270,27 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
             } else if (ack.isDeliveredAck()) {
                 // Message was delivered but not acknowledged: update pre-fetch
                 // counters.
+
+                boolean inAckRange = false;
+                for (final MessageReference node : dispatched) {
+                    MessageId messageId = node.getMessageId();
+                    if (ack.getFirstMessageId() == null
+                            || ack.getFirstMessageId().equals(messageId)) {
+                        inAckRange = true;
+                    }
+                    if (inAckRange) {
+                        if (node instanceof QueueMessageReference) {
+                            ((QueueMessageReference) node).setDelivered(true);
+                        }
+
+                        if (ack.getLastMessageId().equals(messageId)) {
+                            destination = (Destination) node.getRegionDestination();
+                            callDispatchMatched = true;
+                            break;
+                        }
+                    }
+                }
+
                 int index = 0;
                 for (Iterator<MessageReference> iter = dispatched.iterator(); iter.hasNext(); index++) {
                     final MessageReference node = iter.next();
@@ -396,7 +417,7 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
     }
 
     protected void processExpiredAck(final ConnectionContext context, final Destination dest,
-        final MessageReference node) {
+                                     final MessageReference node) {
         dest.messageExpired(context, this, node);
     }
 

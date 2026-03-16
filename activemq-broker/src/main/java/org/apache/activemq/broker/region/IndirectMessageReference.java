@@ -35,6 +35,8 @@ public class IndirectMessageReference implements QueueMessageReference {
     private boolean dropped;
     /** Has the message been acked? */
     private boolean acked;
+    /** Has the message been acked? */
+    private boolean delivered;
     /** Direct reference to the message */
     private final Message message;
     private final MessageId messageId;
@@ -197,16 +199,25 @@ public class IndirectMessageReference implements QueueMessageReference {
 
     @Override
     public synchronized int getSize() {
-       return message.getSize();
+        return message.getSize();
     }
 
     @Override
     public boolean isAdvisory() {
-       return message.isAdvisory();
+        return message.isAdvisory();
     }
 
     @Override
     public boolean canProcessAsExpired() {
         return message.canProcessAsExpired();
+    }
+
+    @Override
+    public boolean isDelivered() {
+        return delivered;
+    }
+
+    public void setDelivered(final boolean delivered) {
+        this.delivered = delivered;
     }
 }
