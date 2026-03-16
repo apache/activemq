@@ -1,0 +1,74 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+
+# Example production values file.
+# Usage: helm install activemq ./helm/activemq -f ./helm/activemq/examples/production.yaml
+
+broker:
+  credentials:
+    # Use an existing Kubernetes secret for production
+    existingSecret: "activemq-credentials"
+  web:
+    existingSecret: "activemq-web-credentials"
+  jvmMemory: "-Xms512M -Xmx2G"
+
+resources:
+  requests:
+    cpu: "1"
+    memory: 2Gi
+  limits:
+    cpu: "4"
+    memory: 4Gi
+
+persistence:
+  enabled: true
+  size: 50Gi
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/auth-type: basic
+    nginx.ingress.kubernetes.io/auth-realm: "ActiveMQ Web Console"
+  hosts:
+    - host: activemq.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: activemq-tls
+      hosts:
+        - activemq.example.com
+
+affinity:
+  podAntiAffinity:
+    preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+              - key: app.kubernetes.io/name
+                operator: In
+                values:
+                  - activemq
+          topologyKey: kubernetes.io/hostname
+
+terminationGracePeriodSeconds: 120
