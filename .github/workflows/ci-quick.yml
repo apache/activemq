@@ -87,7 +87,7 @@ jobs:
         run: mvn -B -e -fae verify -Pactivemq.tests-quick
       - name: Upload Test Results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: test-results
           path: '**/target/surefire-reports/*.xml'
