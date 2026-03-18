@@ -27,9 +27,7 @@ import org.apache.activemq.util.FactoryFinder;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
-@Category(ParallelTest.class)
 public class ProtocolConverterTest {
 
     private final StompTransport transport = mock(StompTransport.class);
