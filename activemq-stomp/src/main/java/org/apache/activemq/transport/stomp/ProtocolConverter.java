@@ -84,6 +84,10 @@ public class ProtocolConverter {
     private static final String BROKER_VERSION;
     private static final StompFrame ping = new StompFrame(Stomp.Commands.KEEPALIVE);
 
+    public static final String DEFAULT_ALLOWED_TRANSLATORS = FactoryFinder.buildAllowedImpls(
+            JmsFrameTranslator.class, LegacyFrameTranslator.class);
+    public static final String FRAME_TRANSLATOR_CLASSES_PROP = "org.apache.activemq.stomp.FRAME_TRANSLATOR_CLASSES";
+
     static {
         String version = "5.6.0";
         try(InputStream in = ProtocolConverter.class.getResourceAsStream("/org/apache/activemq/version.txt")) {
@@ -108,7 +112,7 @@ public class ProtocolConverter {
     private final LongSequenceGenerator transactionIdGenerator = new LongSequenceGenerator();
     private final LongSequenceGenerator tempDestinationGenerator = new LongSequenceGenerator();
 
-    private final ConcurrentMap<Integer, ResponseHandler> resposeHandlers = new ConcurrentHashMap<>();
+    private final ConcurrentMap<Integer, ResponseHandler> responseHandlers = new ConcurrentHashMap<>();
     private final ConcurrentMap<ConsumerId, StompSubscription> subscriptionsByConsumerId = new ConcurrentHashMap<>();
     private final ConcurrentMap<String, StompSubscription> subscriptions = new ConcurrentHashMap<>();
     private final ConcurrentMap<String, ActiveMQDestination> tempDestinations = new ConcurrentHashMap<>();
@@ -121,13 +125,13 @@ public class ProtocolConverter {
     // Read-Only view used in this class to enforce the separation of read vs update of the global index.
     private final Map<String, StompAckEntry> pendingAcks = Collections.unmodifiableMap(pendingAcksTracker);
 
-    private final Object commnadIdMutex = new Object();
+    private final Object commandIdMutex = new Object();
     private int lastCommandId;
     private final AtomicBoolean connected = new AtomicBoolean(false);
-    private final FrameTranslator frameTranslator = new LegacyFrameTranslator();
-    private ConcurrentMap<String, FrameTranslator> jmsFrameTranslators=new ConcurrentHashMap<String,FrameTranslator>();
-  
-    private final FactoryFinder FRAME_TRANSLATOR_FINDER = new FactoryFinder("META-INF/services/org/apache/activemq/transport/frametranslator/");
+    private final FrameTranslator defaultFrameTranslator = new LegacyFrameTranslator();
+    private final Map<String, FrameTranslator> jmsFrameTranslators = new ConcurrentHashMap<>();
+
+    private final FactoryFinder<FrameTranslator> frameTranslatorFinder;
     private final BrokerContext brokerContext;
     private String version = "1.0";
     private long hbReadInterval;
@@ -138,10 +142,12 @@ public class ProtocolConverter {
     public ProtocolConverter(StompTransport stompTransport, BrokerContext brokerContext) {
         this.stompTransport = stompTransport;
         this.brokerContext = brokerContext;
+        this.frameTranslatorFinder = new FactoryFinder<>("META-INF/services/org/apache/activemq/transport/frametranslator/",
+                FrameTranslator.class, System.getProperty(FRAME_TRANSLATOR_CLASSES_PROP, DEFAULT_ALLOWED_TRANSLATORS));
     }
 
     protected int generateCommandId() {
-        synchronized (commnadIdMutex) {
+        synchronized (commandIdMutex) {
             return lastCommandId++;
         }
     }
@@ -174,7 +180,7 @@ public class ProtocolConverter {
         command.setCommandId(generateCommandId());
         if (handler != null) {
             command.setResponseRequired(true);
-            resposeHandlers.put(Integer.valueOf(command.getCommandId()), handler);
+            responseHandlers.put(command.getCommandId(), handler);
         }
         stompTransport.sendToActiveMQ(command);
     }
@@ -188,35 +194,44 @@ public class ProtocolConverter {
     }
 
     protected FrameTranslator findTranslator(String header, ActiveMQDestination destination, boolean advisory) {
-        FrameTranslator translator = frameTranslator;
+        FrameTranslator translator = null;
         try {
             if (header != null) {
-               translator=jmsFrameTranslators.get(header);
-            	if(translator==null) {
-            		LOG.info("Creating a new FrameTranslator to convert "+header);
-            		translator = (FrameTranslator) FRAME_TRANSLATOR_FINDER.newInstance(header);
-            		if(translator!=null) {
-            			LOG.info("Created a new FrameTranslator to convert "+header);
-            			jmsFrameTranslators.put(header,translator);
-            		}else {
-            			LOG.error("Failed in creating FrameTranslator to convert "+header);
-            		}            			
-            	}
-            } else {
-                if (destination != null && (advisory || AdvisorySupport.isAdvisoryTopic(destination))) {
-                    translator = new JmsFrameTranslator();
-                }
+               translator = loadTranslator(header);
+            } else if (destination != null && (advisory || AdvisorySupport.isAdvisoryTopic(destination))) {
+                translator = new JmsFrameTranslator();
             }
         } catch (Exception ignore) {
             // if anything goes wrong use the default translator
 			LOG.debug("Failed in getting a FrameTranslator to convert ", ignore);
-           	translator = frameTranslator;
+        }
+
+        // fallback to default if we can't find/load one
+        if (translator == null) {
+            translator = defaultFrameTranslator;
         }
 
         if (translator instanceof BrokerContextAware) {
             ((BrokerContextAware)translator).setBrokerContext(brokerContext);
         }
 
+        return translator;
+    }
+    
+    protected FrameTranslator loadTranslator(String header) throws Exception {
+        FrameTranslator translator = jmsFrameTranslators.get(header);
+
+        if (translator == null) {
+            LOG.info("Creating a new FrameTranslator to convert {}", header);
+            translator = frameTranslatorFinder.newInstance(header);
+            if (translator != null) {
+                LOG.info("Created a new FrameTranslator to convert {}", header);
+                jmsFrameTranslators.put(header, translator);
+            } else {
+                LOG.error("Failed in creating FrameTranslator to convert {}", header);
+            }
+        }
+        
         return translator;
     }
 
@@ -617,9 +632,11 @@ public class ProtocolConverter {
 
         StompSubscription stompSubscription;
         if (!consumerInfo.isBrowser()) {
-            stompSubscription = new StompSubscription(this, subscriptionId, consumerInfo, headers.get(Stomp.Headers.TRANSFORMATION), pendingAcksTracker);
+            stompSubscription = new StompSubscription(this, subscriptionId, consumerInfo, headers.get(
+                    Stomp.Headers.TRANSFORMATION), pendingAcksTracker);
         } else {
-            stompSubscription = new StompQueueBrowserSubscription(this, subscriptionId, consumerInfo, headers.get(Stomp.Headers.TRANSFORMATION), pendingAcksTracker);
+            stompSubscription = new StompQueueBrowserSubscription(this, subscriptionId, consumerInfo, headers.get(
+                    Stomp.Headers.TRANSFORMATION), pendingAcksTracker);
         }
         stompSubscription.setDestination(actualDest);
 
@@ -863,7 +880,7 @@ public class ProtocolConverter {
     public void onActiveMQCommand(Command command) throws IOException, JMSException {
         if (command.isResponse()) {
             Response response = (Response)command;
-            ResponseHandler rh = resposeHandlers.remove(Integer.valueOf(response.getCorrelationId()));
+            ResponseHandler rh = responseHandlers.remove(response.getCorrelationId());
             if (rh != null) {
                 rh.onResponse(this, response);
             } else {
@@ -895,7 +912,7 @@ public class ProtocolConverter {
 
     public StompFrame convertMessage(ActiveMQMessage message, boolean ignoreTransformation) throws IOException, JMSException {
         if (ignoreTransformation == true) {
-            return frameTranslator.convertMessage(this, message);
+            return defaultFrameTranslator.convertMessage(this, message);
         } else {
             FrameTranslator translator = findTranslator(
                 message.getStringProperty(Stomp.Headers.TRANSFORMATION), message.getDestination(), message.isAdvisory());

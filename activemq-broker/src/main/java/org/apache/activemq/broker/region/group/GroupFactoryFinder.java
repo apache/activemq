@@ -25,7 +25,9 @@ import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.URISupport;
 
 public class GroupFactoryFinder {
-    private static final FactoryFinder GROUP_FACTORY_FINDER = new FactoryFinder("META-INF/services/org/apache/activemq/groups/");
+    private static final FactoryFinder<MessageGroupMapFactory> GROUP_FACTORY_FINDER =
+            new FactoryFinder<>("META-INF/services/org/apache/activemq/groups/", MessageGroupMapFactory.class,
+                    null);
 
     private GroupFactoryFinder() {
     }
@@ -40,7 +42,7 @@ public class GroupFactoryFinder {
                 factoryType = factoryType.substring(0,p);
                 properties = URISupport.parseQuery(propertiesString);
             }
-            MessageGroupMapFactory result =  (MessageGroupMapFactory)GROUP_FACTORY_FINDER.newInstance(factoryType);
+            MessageGroupMapFactory result = GROUP_FACTORY_FINDER.newInstance(factoryType);
             if (properties != null && result != null){
                 IntrospectionSupport.setProperties(result,properties);
             }
