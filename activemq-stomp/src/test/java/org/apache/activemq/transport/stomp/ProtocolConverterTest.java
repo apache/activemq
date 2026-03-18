@@ -27,7 +27,6 @@ import org.apache.activemq.util.FactoryFinder;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 public class ProtocolConverterTest {
 
