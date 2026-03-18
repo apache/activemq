@@ -215,7 +215,7 @@
               <schema>${basedir}/target/classes/activemq.xsd</schema>
               <outputDir>${basedir}/target/classes</outputDir>
               <generateSpringSchemasFile>false</generateSpringSchemasFile>
-              <excludedClasses>org.apache.activemq.broker.jmx.AnnotatedMBean,org.apache.activemq.broker.jmx.DestinationViewMBean</excludedClasses>
+              <excludedClasses>org.apache.activemq.broker.jmx.AnnotatedMBean,org.apache.activemq.broker.jmx.DestinationViewMBean,org.apache.activemq.util.FactoryFinder</excludedClasses>
             </configuration>
             <goals>
               <goal>mapping</goal>

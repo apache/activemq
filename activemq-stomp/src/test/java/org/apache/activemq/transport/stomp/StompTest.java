@@ -23,6 +23,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import jakarta.jms.Destination;
 import java.io.IOException;
 import java.io.StringReader;
 import java.net.SocketTimeoutException;
@@ -32,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -56,6 +58,7 @@ import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTextMessage;
 import org.apache.activemq.util.Wait;
@@ -63,6 +66,9 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.thoughtworks.xstream.XStream;
 import com.thoughtworks.xstream.io.HierarchicalStreamReader;
 import com.thoughtworks.xstream.io.json.JettisonMappedXmlDriver;
@@ -1230,7 +1236,109 @@ public class StompTest extends StompTestSupport {
 
         frame = stompConnection.receiveFrame();
 
-        assertTrue(frame.trim().endsWith(xmlObject));
+
+
+        compareFrameXML(frame, xmlObject);
+    }
+
+    @Test(timeout = 60000)
+    public void testTransformationSuccess() throws Exception {
+        // transformation is allowed, use default configured transformers
+        assertStompTransformation(null,
+                Stomp.Transformations.JMS_OBJECT_XML.toString(),
+                frame -> assertTrue(frame.contains("<pojo>")));
+
+        // transformation is allowed
+        assertStompTransformation(ProtocolConverter.DEFAULT_ALLOWED_TRANSLATORS,
+                Stomp.Transformations.JMS_OBJECT_XML.toString(),
+                frame -> assertTrue(frame.contains("<pojo>")));
+
+        // transformation is allowed with wildcard, xml tag should exist
+        assertStompTransformation("*",
+                Stomp.Transformations.JMS_OBJECT_XML.toString(),
+                frame -> assertTrue(frame.contains("<pojo>")));
+
+        // verify TestTranslator was used and appended header
+        assertStompTransformation(TestTranslator.class.getName(),
+                "stomp-test",
+                frame -> assertTrue(frame.contains("stomp-test-translator-header")));
+    }
+
+    @Test(timeout = 60000)
+    public void testTransformationFailuresFallbackToDefault() throws Exception {
+        // path traversal is not allowed so given translator should fail
+        assertStompTransformation(ProtocolConverter.DEFAULT_ALLOWED_TRANSLATORS,
+                "../" + Stomp.Transformations.JMS_OBJECT_XML,
+                frame -> assertEquals(-1, frame.indexOf("<pojo>")));
+
+        // xml translator maps to JmsFrameTranslator.class which is not allowed
+        assertStompTransformation(LegacyFrameTranslator.class.getName(),
+                Stomp.Transformations.JMS_OBJECT_XML.toString(),
+                frame -> assertEquals(-1, frame.indexOf("<pojo>")));
+
+        // Allowed translators are set to none so translator should fail
+        assertStompTransformation("", Stomp.Transformations.JMS_OBJECT_XML.toString(),
+                frame -> assertEquals(-1, frame.indexOf("<pojo>")));
+
+        // TestTranslator is not allowed so won't have our header is it will fall back to
+        // the legacy default translator
+        assertStompTransformation(ProtocolConverter.DEFAULT_ALLOWED_TRANSLATORS,
+                "stomp-test",
+                frame -> assertFalse(frame.contains("stomp-test-translator-header")));
+    }
+
+    private void assertStompTransformation(String allowedTranslators,
+            String transformation, Consumer<String> verifier) throws Exception {
+        try {
+            if (allowedTranslators != null) {
+                tearDown();
+                System.setProperty(ProtocolConverter.FRAME_TRANSLATOR_CLASSES_PROP,
+                        allowedTranslators);
+                setUp();
+            }
+
+            MessageProducer producer = session.createProducer(
+                    new ActiveMQQueue("USERS." + getQueueName()));
+            ObjectMessage message = session.createObjectMessage(
+                    new SamplePojo("Dejan", "Belgrade"));
+            producer.send(message);
+
+            String frame = "CONNECT\n" + "login:system\n" + "passcode:manager\n\n" + Stomp.NULL;
+            stompConnection.sendFrame(frame);
+
+            frame = stompConnection.receiveFrame();
+            assertTrue(frame.startsWith("CONNECTED"));
+
+            frame = "SUBSCRIBE\n" + "destination:/queue/USERS." + getQueueName() + "\n" + "ack:auto"
+                    + "\n" + "transformation:" + transformation + "\n\n"
+                    + Stomp.NULL;
+            stompConnection.sendFrame(frame);
+            frame = stompConnection.receiveFrame();
+
+            verifier.accept(frame);
+        } finally {
+            tearDown();
+            System.setProperty(ProtocolConverter.FRAME_TRANSLATOR_CLASSES_PROP,
+                    ProtocolConverter.DEFAULT_ALLOWED_TRANSLATORS);
+            setUp();
+        }
+    }
+
+    private void compareFrameXML(String frame, String xmlObject) {
+
+        String xmlReceived = frame.trim().substring(frame.indexOf("<pojo>"));
+
+        try {
+            //use jackson xml to compare
+            XmlMapper xmlMapper = new XmlMapper();
+            SamplePojo pojoReceived = xmlMapper.readValue(xmlReceived, SamplePojo.class);
+            SamplePojo pojoObject = xmlMapper.readValue(xmlObject, SamplePojo.class);
+
+            assertEquals(pojoReceived, pojoObject);
+        } catch (Exception e) {
+            fail("Exception while comparing XML: " + e.getMessage());
+        }
+
     }
 
     @Test(timeout = 60000)
@@ -2507,4 +2615,35 @@ public class StompTest extends StompTestSupport {
         Map<String, String> map = (Map<String, String>)xstream.unmarshal(in);
         return map;
     }
+
+    public static class TestTranslator implements FrameTranslator {
+        private final JmsFrameTranslator translator = new JmsFrameTranslator();
+
+        @Override
+        public ActiveMQMessage convertFrame(ProtocolConverter converter, StompFrame command)
+                throws JMSException, ProtocolException {
+            return translator.convertFrame(converter, command);
+        }
+
+        @Override
+        public StompFrame convertMessage(ProtocolConverter converter, ActiveMQMessage message)
+                throws IOException, JMSException {
+            StompFrame frame = translator.convertMessage(converter, message);
+            // add a header to make it easy to detect if translator was used
+            frame.getHeaders().put("stomp-test-translator-header", "header-value");
+            return frame;
+        }
+
+        @Override
+        public String convertDestination(ProtocolConverter converter, Destination d) {
+            return translator.convertDestination(converter, d);
+        }
+
+        @Override
+        public ActiveMQDestination convertDestination(ProtocolConverter converter, String name,
+                boolean forceFallback) throws ProtocolException {
+            return translator.convertDestination(converter, name, forceFallback);
+        }
+    }
+
 }
