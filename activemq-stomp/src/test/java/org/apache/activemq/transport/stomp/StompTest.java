@@ -24,11 +24,9 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import jakarta.jms.Destination;
-import java.awt.Frame;
 import java.io.IOException;
 import java.io.StringReader;
 import java.net.SocketTimeoutException;
-import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
