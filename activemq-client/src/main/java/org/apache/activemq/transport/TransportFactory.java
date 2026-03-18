@@ -36,8 +36,12 @@ import org.apache.activemq.wireformat.WireFormatFactory;
 
 public abstract class TransportFactory {
 
-    private static final FactoryFinder TRANSPORT_FACTORY_FINDER = new FactoryFinder("META-INF/services/org/apache/activemq/transport/");
-    private static final FactoryFinder WIREFORMAT_FACTORY_FINDER = new FactoryFinder("META-INF/services/org/apache/activemq/wireformat/");
+    private static final FactoryFinder<TransportFactory> TRANSPORT_FACTORY_FINDER
+            = new FactoryFinder<>("META-INF/services/org/apache/activemq/transport/", TransportFactory.class,
+            null);
+    private static final FactoryFinder<WireFormatFactory> WIREFORMAT_FACTORY_FINDER
+            = new FactoryFinder<>("META-INF/services/org/apache/activemq/wireformat/", WireFormatFactory.class,
+            null);
     private static final ConcurrentMap<String, TransportFactory> TRANSPORT_FACTORYS = new ConcurrentHashMap<String, TransportFactory>();
 
     private static final String WRITE_TIMEOUT_FILTER = "soWriteTimeout";
@@ -179,7 +183,7 @@ public abstract class TransportFactory {
         if (tf == null) {
             // Try to load if from a META-INF property.
             try {
-                tf = (TransportFactory)TRANSPORT_FACTORY_FINDER.newInstance(scheme);
+                tf = TRANSPORT_FACTORY_FINDER.newInstance(scheme);
                 TRANSPORT_FACTORYS.put(scheme, tf);
             } catch (Throwable e) {
                 throw IOExceptionSupport.create("Transport scheme NOT recognized: [" + scheme + "]", e);
@@ -201,7 +205,7 @@ public abstract class TransportFactory {
         }
 
         try {
-            WireFormatFactory wff = (WireFormatFactory)WIREFORMAT_FACTORY_FINDER.newInstance(wireFormat);
+            WireFormatFactory wff = WIREFORMAT_FACTORY_FINDER.newInstance(wireFormat);
             IntrospectionSupport.setProperties(wff, options, "wireFormat.");
             return wff;
         } catch (Throwable e) {

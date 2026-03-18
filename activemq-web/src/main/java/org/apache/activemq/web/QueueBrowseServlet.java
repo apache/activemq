@@ -35,6 +35,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.apache.activemq.util.FactoryFinder;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.web.view.MessageRenderer;
+import org.apache.activemq.web.view.RssMessageRenderer;
+import org.apache.activemq.web.view.SimpleMessageRenderer;
 import org.apache.activemq.web.view.XmlMessageRenderer;
 
 /**
@@ -46,10 +48,20 @@ import org.apache.activemq.web.view.XmlMessageRenderer;
  * <li>selector - specifies the SQL 92 selector to apply to the queue</li>
  * </ul>
  *
- * 
+ *
  */
 public class QueueBrowseServlet extends HttpServlet {
-    private static FactoryFinder factoryFinder = new FactoryFinder("META-INF/services/org/apache/activemq/web/view/");
+
+    public static final String QUEUE_BROWSE_VIEWS_PROP = "org.apache.activemq.web.view.QUEUE_BROWSE_CLASSES";
+    public static final String DEFAULT_ALLOWED_VIEWS = FactoryFinder.buildAllowedImpls(
+            RssMessageRenderer.class, XmlMessageRenderer.class, SimpleMessageRenderer.class);
+
+    private final  FactoryFinder<MessageRenderer> factoryFinder;
+
+    public QueueBrowseServlet() {
+        this.factoryFinder = new FactoryFinder<>("META-INF/services/org/apache/activemq/web/view/",
+                MessageRenderer.class, System.getProperty(QUEUE_BROWSE_VIEWS_PROP, DEFAULT_ALLOWED_VIEWS));
+    }
 
     // Implementation methods
     // -------------------------------------------------------------------------
@@ -96,24 +108,17 @@ public class QueueBrowseServlet extends HttpServlet {
             style = "simple";
         }
         try {
-            return (MessageRenderer) factoryFinder.newInstance(style);
+            return factoryFinder.newInstance(style);
         }
-        catch (IllegalAccessException e) {
-            throw new NoSuchViewStyleException(style, e);
-        }
-        catch (InstantiationException e) {
-            throw new NoSuchViewStyleException(style, e);
-        }
-        catch (ClassNotFoundException e) {
+        catch (IllegalAccessException | InstantiationException | ClassNotFoundException e) {
             throw new NoSuchViewStyleException(style, e);
         }
     }
 
-    @SuppressWarnings("unchecked")
     protected void configureRenderer(HttpServletRequest request, MessageRenderer renderer) {
-        Map<String, String> properties = new HashMap<String, String>();
+        Map<String, String> properties = new HashMap<>();
         for (Enumeration<String> iter = request.getParameterNames(); iter.hasMoreElements();) {
-            String name = (String) iter.nextElement();
+            String name = iter.nextElement();
             properties.put(name, request.getParameter(name));
         }
         IntrospectionSupport.setProperties(renderer, properties);

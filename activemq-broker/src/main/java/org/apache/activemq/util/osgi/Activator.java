@@ -172,7 +172,15 @@ public class Activator implements BundleActivator, SynchronousBundleListener, Ob
     // ================================================================
 
     @Override
-    public Object create(String path) throws IllegalAccessException, InstantiationException, IOException, ClassNotFoundException {
+    public Object create(String path)
+            throws IllegalAccessException, InstantiationException, IOException, ClassNotFoundException {
+        throw new UnsupportedOperationException("Create is not supported without requiredType and allowed impls");
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public <T> T create(String path, Class<T> requiredType, Set<Class<? extends T>> allowedImpls)
+            throws IllegalAccessException, InstantiationException, IOException, ClassNotFoundException {
         Class<?> clazz = serviceCache.get(path);
         if (clazz == null) {
             StringBuilder warnings = new StringBuilder();
@@ -199,6 +207,10 @@ public class Activator implements BundleActivator, SynchronousBundleListener, Ob
                     continue;
                 }
 
+                // no reason to cache if invalid so validate before caching
+                // the class inside of serviceCache
+                FactoryFinder.validateClass(clazz, requiredType, allowedImpls);
+
                 // Yay.. the class was found.  Now cache it.
                 serviceCache.put(path, clazz);
                 wrapper.cachedServices.add(path);
@@ -214,10 +226,17 @@ public class Activator implements BundleActivator, SynchronousBundleListener, Ob
                 }
                 throw new IOException(msg);
             }
+        } else {
+            // Validate again (even for previously cached classes) in case
+            // a path is re-used with a different requiredType.
+            // This object factory is shared by all factory finder instances, so it would be
+            // possible (although probably a mistake) to use the same
+            // path again with a different requiredType in a different FactoryFinder
+            FactoryFinder.validateClass(clazz, requiredType, allowedImpls);
         }
         
         try {
-            return clazz.getConstructor().newInstance();
+            return (T) clazz.getConstructor().newInstance();
         } catch (InvocationTargetException | NoSuchMethodException e) {
         	throw new InstantiationException(e.getMessage());
         }
