@@ -76,9 +76,9 @@ public class JDBCPersistenceAdapter extends DataSourceServiceSupport implements 
 
     private static final Logger LOG = LoggerFactory.getLogger(JDBCPersistenceAdapter.class);
     private static final FactoryFinder<JDBCAdapter> adapterFactoryFinder = new FactoryFinder<>(
-        "META-INF/services/org/apache/activemq/store/jdbc/", JDBCAdapter.class);
+        "META-INF/services/org/apache/activemq/store/jdbc/", JDBCAdapter.class, null);
     private static final FactoryFinder<Locker> lockFactoryFinder = new FactoryFinder<>(
-        "META-INF/services/org/apache/activemq/store/jdbc/lock/", Locker.class);
+        "META-INF/services/org/apache/activemq/store/jdbc/lock/", Locker.class, null);
 
     public static final long DEFAULT_LOCK_KEEP_ALIVE_PERIOD = 30 * 1000;
 

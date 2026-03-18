@@ -27,7 +27,8 @@ import org.apache.activemq.util.IOExceptionSupport;
 public abstract class DiscoveryAgentFactory {
 
     private static final FactoryFinder<DiscoveryAgentFactory> DISCOVERY_AGENT_FINDER =
-            new FactoryFinder<>("META-INF/services/org/apache/activemq/transport/discoveryagent/", DiscoveryAgentFactory.class);
+            new FactoryFinder<>("META-INF/services/org/apache/activemq/transport/discoveryagent/",
+                    DiscoveryAgentFactory.class, null);
     private static final ConcurrentMap<String, DiscoveryAgentFactory> DISCOVERY_AGENT_FACTORYS = new ConcurrentHashMap<String, DiscoveryAgentFactory>();
 
     /**

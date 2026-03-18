@@ -26,7 +26,8 @@ import org.apache.activemq.util.URISupport;
 
 public class GroupFactoryFinder {
     private static final FactoryFinder<MessageGroupMapFactory> GROUP_FACTORY_FINDER =
-            new FactoryFinder<>("META-INF/services/org/apache/activemq/groups/", MessageGroupMapFactory.class);
+            new FactoryFinder<>("META-INF/services/org/apache/activemq/groups/", MessageGroupMapFactory.class,
+                    null);
 
     private GroupFactoryFinder() {
     }

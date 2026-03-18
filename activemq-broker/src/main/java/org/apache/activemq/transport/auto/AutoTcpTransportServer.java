@@ -81,11 +81,13 @@ public class AutoTcpTransportServer extends TcpTransportServer {
     protected int protocolDetectionTimeOut = 30000;
 
     private static final FactoryFinder<TransportFactory> TRANSPORT_FACTORY_FINDER =
-            new FactoryFinder<>("META-INF/services/org/apache/activemq/transport/", TransportFactory.class);
+            new FactoryFinder<>("META-INF/services/org/apache/activemq/transport/", TransportFactory.class,
+                    null);
     private final ConcurrentMap<String, TransportFactory> transportFactories = new ConcurrentHashMap<String, TransportFactory>();
 
     private static final FactoryFinder<WireFormatFactory> WIREFORMAT_FACTORY_FINDER =
-            new FactoryFinder<>("META-INF/services/org/apache/activemq/wireformat/", WireFormatFactory.class);
+            new FactoryFinder<>("META-INF/services/org/apache/activemq/wireformat/", WireFormatFactory.class,
+                    null);
 
     public WireFormatFactory findWireFormatFactory(String scheme, Map<String, Map<String, Object>> options) throws IOException {
         WireFormatFactory wff = null;

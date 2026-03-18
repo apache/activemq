@@ -54,6 +54,18 @@ public class FactoryFinder<T> {
          */
         Object create(String path) throws IllegalAccessException, InstantiationException, IOException, ClassNotFoundException;
 
+        /**
+         * This method loads objects by searching for classes in the given path.
+         * A requiredType and Set of allowed implementations are provided for
+         * implementations to use for validation. Note is up to the actual implementations
+         * that implement {@link ObjectFactory} to decide how to use both parameters.
+         * By default, the method just delegates to {@link #create(String)}
+         *
+         * @param path the full service path
+         * @param requiredType the requiredType any objects must implement
+         * @param allowedImpls The set of allowed impls
+         * @return
+         */
         @SuppressWarnings("unchecked")
         default <T> T create(String path, Class<T> requiredType, Set<Class<? extends T>> allowedImpls)
                 throws IllegalAccessException, InstantiationException, IOException, ClassNotFoundException {
@@ -152,10 +164,13 @@ public class FactoryFinder<T> {
     private final Class<T> requiredType;
     private final Set<Class<? extends T>> allowedImpls;
 
-    public FactoryFinder(String path, Class<T> requiredType) {
-        this(path, requiredType, null);
-    }
-
+    /**
+     *
+     * @param path The path to search for impls
+     * @param requiredType Required interface type that any impl must implement
+     * @param allowedImpls The list of allowed implementations. If null or asterisk
+     * then all impls of the requiredType are allowed.
+     */
     public FactoryFinder(String path, Class<T> requiredType, String allowedImpls) {
         this.path = Objects.requireNonNull(path);
         this.requiredType = Objects.requireNonNull(requiredType);
@@ -210,7 +225,7 @@ public class FactoryFinder<T> {
         // Example: "/dir1/dir2/dir3/../file" becomes "/dir1/dir2/file"
         final Path resolvedPath = Path.of(path).resolve(key).normalize();
 
-        // Validate the resoled path is still within the original defined
+        // Validate the resolved path is still within the original defined
         // root path and throw an error of it is not.
         if (!resolvedPath.startsWith(path)) {
             throw new InstantiationException("Provided key escapes the FactoryFinder configured directory");

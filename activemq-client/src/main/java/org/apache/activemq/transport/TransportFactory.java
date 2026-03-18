@@ -37,9 +37,11 @@ import org.apache.activemq.wireformat.WireFormatFactory;
 public abstract class TransportFactory {
 
     private static final FactoryFinder<TransportFactory> TRANSPORT_FACTORY_FINDER
-            = new FactoryFinder<>("META-INF/services/org/apache/activemq/transport/", TransportFactory.class);
+            = new FactoryFinder<>("META-INF/services/org/apache/activemq/transport/", TransportFactory.class,
+            null);
     private static final FactoryFinder<WireFormatFactory> WIREFORMAT_FACTORY_FINDER
-            = new FactoryFinder<>("META-INF/services/org/apache/activemq/wireformat/", WireFormatFactory.class);
+            = new FactoryFinder<>("META-INF/services/org/apache/activemq/wireformat/", WireFormatFactory.class,
+            null);
     private static final ConcurrentMap<String, TransportFactory> TRANSPORT_FACTORYS = new ConcurrentHashMap<String, TransportFactory>();
 
     private static final String WRITE_TIMEOUT_FILTER = "soWriteTimeout";

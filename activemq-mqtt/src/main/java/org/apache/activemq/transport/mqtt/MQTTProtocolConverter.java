@@ -127,7 +127,8 @@ public class MQTTProtocolConverter {
     public int version;
 
     private final FactoryFinder<MQTTSubscriptionStrategy> STRATEGY_FINDER =
-            new FactoryFinder<>("META-INF/services/org/apache/activemq/transport/strategies/", MQTTSubscriptionStrategy.class);
+            new FactoryFinder<>("META-INF/services/org/apache/activemq/transport/strategies/",
+                    MQTTSubscriptionStrategy.class, null);
 
     /*
      * Subscription strategy configuration element.

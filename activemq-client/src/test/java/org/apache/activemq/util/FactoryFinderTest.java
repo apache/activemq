@@ -44,7 +44,7 @@ public class FactoryFinderTest {
     @Test
     public void testPathTraversal() throws Exception {
         FactoryFinder<TransportFactory> finder
-                = new FactoryFinder<>(TRANSPORT_FACTORY_PATH, TransportFactory.class);
+                = new FactoryFinder<>(TRANSPORT_FACTORY_PATH, TransportFactory.class, null);
         assertNull(finder.getAllowedImpls());
 
         try {
@@ -105,7 +105,8 @@ public class FactoryFinderTest {
     public void testInterfaceMismatch() throws Exception {
         // use wrong interface type, WIREFORMAT_FACTORY_PATH should be of type WireFormatFactory
         // and not TransportFactory
-        FactoryFinder<TransportFactory> factory = new FactoryFinder<>(WIREFORMAT_FACTORY_PATH, TransportFactory.class);
+        FactoryFinder<TransportFactory> factory = new FactoryFinder<>(WIREFORMAT_FACTORY_PATH, TransportFactory.class,
+                null);
         // This is a valid impl in the wireformat directory, but it isn't a TransportFactory type
         try {
             factory.newInstance("default");
@@ -157,7 +158,7 @@ public class FactoryFinderTest {
     public void testAllowedImplsFilterAllowAll() throws Exception {
         // check with constructor that should default to null
         FactoryFinder<TransportFactory> finder = new FactoryFinder<>(TRANSPORT_FACTORY_PATH,
-                TransportFactory.class);
+                TransportFactory.class, null);
         assertNull(finder.getAllowedImpls());
         assertNotNull(finder.newInstance("tcp"));
         assertNotNull(finder.newInstance("ssl"));
