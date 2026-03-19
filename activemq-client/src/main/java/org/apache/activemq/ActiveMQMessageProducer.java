@@ -84,6 +84,8 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
     private MessageTransformer transformer;
     private MemoryUsage producerWindow;
 
+    protected long deliveryDelay = 0;
+
     protected ActiveMQMessageProducer(ActiveMQSession session, ProducerId producerId, ActiveMQDestination destination, int sendTimeout) throws JMSException {
         super(session);
         this.info = new ProducerInfo(producerId);
@@ -219,6 +221,25 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
      * @see jakarta.jms.Session#createProducer
      * @since 1.1
      */
+
+    @Override
+    public void setDeliveryDelay(long deliveryDelay) throws JMSException {
+        checkClosed();
+
+        // Jakarta 3.1 Compliance Guard
+        if (deliveryDelay < 0 && session.connection.isStrictCompliance()) {
+            throw new jakarta.jms.MessageFormatException("Delivery delay cannot be negative in strictCompliance mode.");
+        }
+
+        this.deliveryDelay = deliveryDelay;
+    }
+
+    @Override
+    public long getDeliveryDelay() throws JMSException {
+        checkClosed();
+        return this.deliveryDelay;
+    }
+
     @Override
     public void send(Destination destination, Message message, int deliveryMode, int priority, long timeToLive) throws JMSException {
         this.send(destination, message, deliveryMode, priority, timeToLive, (AsyncCallback)null);
