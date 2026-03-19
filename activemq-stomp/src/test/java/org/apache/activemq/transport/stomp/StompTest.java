@@ -23,7 +23,6 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import jakarta.jms.Destination;
 import java.io.IOException;
 import java.io.StringReader;
 import java.net.SocketTimeoutException;
@@ -39,6 +38,7 @@ import java.util.regex.Pattern;
 
 import javax.jms.BytesMessage;
 import javax.jms.Connection;
+import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.MapMessage;
 import javax.jms.Message;
