@@ -35,7 +35,7 @@ public class IndirectMessageReference implements QueueMessageReference {
     private boolean dropped;
     /** Has the message been acked? */
     private boolean acked;
-    /** Has the message been acked? */
+    /** Has the message been delivered? */
     private boolean delivered;
     /** Direct reference to the message */
     private final Message message;
@@ -213,11 +213,12 @@ public class IndirectMessageReference implements QueueMessageReference {
     }
 
     @Override
-    public boolean isDelivered() {
+    public synchronized boolean isDelivered() {
         return delivered;
     }
 
-    public void setDelivered(final boolean delivered) {
+    @Override
+    public synchronized void setDelivered(final boolean delivered) {
         this.delivered = delivered;
     }
 }

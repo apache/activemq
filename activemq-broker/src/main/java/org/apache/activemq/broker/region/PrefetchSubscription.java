@@ -271,33 +271,14 @@ public abstract class PrefetchSubscription extends AbstractSubscription {
                 // Message was delivered but not acknowledged: update pre-fetch
                 // counters.
 
-                boolean inAckRange = false;
                 for (final MessageReference node : dispatched) {
-                    MessageId messageId = node.getMessageId();
-                    if (ack.getFirstMessageId() == null
-                            || ack.getFirstMessageId().equals(messageId)) {
-                        inAckRange = true;
+                    final MessageId messageId = node.getMessageId();
+                    if (node instanceof QueueMessageReference) {
+                        ((QueueMessageReference) node).setDelivered(true);
                     }
-                    if (inAckRange) {
-                        if (node instanceof QueueMessageReference) {
-                            ((QueueMessageReference) node).setDelivered(true);
-                        }
-
-                        if (ack.getLastMessageId().equals(messageId)) {
-                            destination = (Destination) node.getRegionDestination();
-                            callDispatchMatched = true;
-                            break;
-                        }
-                    }
-                }
-
-                int index = 0;
-                for (Iterator<MessageReference> iter = dispatched.iterator(); iter.hasNext(); index++) {
-                    final MessageReference node = iter.next();
-                    Destination nodeDest = (Destination) node.getRegionDestination();
-                    if (ack.getLastMessageId().equals(node.getMessageId())) {
+                    if (ack.getLastMessageId().equals(messageId)) {
                         expandPrefetchExtension(ack.getMessageCount());
-                        destination = nodeDest;
+                        destination = (Destination) node.getRegionDestination();
                         callDispatchMatched = true;
                         break;
                     }
