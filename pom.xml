@@ -61,19 +61,15 @@
     <commons-pool2-version>2.13.1</commons-pool2-version>
     <directory-version>2.0.0.AM25</directory-version>
     <ecj.version>3.45.0</ecj.version>
-    <ftpserver-version>1.1.1</ftpserver-version>
-    <hadoop-version>1.2.1</hadoop-version>
     <hawtbuf-version>1.11</hawtbuf-version>
     <hawtdispatch-version>1.22</hawtdispatch-version>
     <httpclient-version>4.5.14</httpclient-version>
     <httpcore-version>4.4.16</httpcore-version>
-    <insight-version>1.2.0.Beta4</insight-version>
     <jackson-version>2.21.1</jackson-version>
     <jackson-annotations-version>2.21</jackson-annotations-version>
     <jakarta-jms-api-version>3.1.0</jakarta-jms-api-version>
     <jasypt-version>1.9.3</jasypt-version>
     <jaxb-version>4.0.7</jaxb-version>
-    <jaxb-bundle-version>2.3.2_1</jaxb-bundle-version>
     <jetty-version>11.0.26</jetty-version>
     <jetty-version-range>[11,13)</jetty-version-range>
     <jmdns-version>3.6.3</jmdns-version>
@@ -97,7 +93,6 @@
     <rome-version>2.1.0</rome-version>
     <shiro-version>2.1.0</shiro-version>
     <slf4j-version>2.0.17</slf4j-version>
-    <snappy-version>1.1.2</snappy-version>
     <spring-version>6.2.17</spring-version>
     <spring-version-range>[6,7)</spring-version-range>
     <taglibs-version>1.2.5</taglibs-version>
@@ -256,11 +251,6 @@
         <version>${project.version}</version>
       </dependency>
 
-      <dependency>
-        <groupId>org.apache.activemq</groupId>
-        <artifactId>activemq-amq-store</artifactId>
-        <version>${project.version}</version>
-      </dependency>
       <dependency>
         <groupId>org.apache.activemq</groupId>
         <artifactId>activemq-kahadb-store</artifactId>
