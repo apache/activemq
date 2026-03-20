@@ -309,6 +309,7 @@
         <include>org.jdom:jdom2</include>
 
         <!-- REST API -->
+        <include>org.jolokia:jolokia-core</include>
         <include>org.jolokia:jolokia-server-core</include>
         <include>org.jolokia:jolokia-json</include>
         <include>org.jolokia:jolokia-service-jmx</include>
