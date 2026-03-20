@@ -35,6 +35,7 @@
 
     <surefire.argLine></surefire.argLine>
     <maven.surefire.allow.securitymanager></maven.surefire.allow.securitymanager>
+    <javadoc.options>-Xdoclint:none</javadoc.options>
     <!-- Per-class JVM timeout (reuseForks=false means one JVM per test class).
          Kills a forked JVM that has been running longer than this many seconds,
          preventing CI from hanging indefinitely on Windows file-lock issues or
@@ -131,7 +132,6 @@
     <docker-maven-plugin-version>0.48.1</docker-maven-plugin-version>
     <docker-java-version>17</docker-java-version>
     <maven-project-info-reports-plugin-version>3.9.0</maven-project-info-reports-plugin-version>
-    <maven-graph-plugin-version>1.45</maven-graph-plugin-version>
     <maven-core-version>3.9.14</maven-core-version>
     <maven-surefire-plugin-version>3.5.3</maven-surefire-plugin-version>
     <maven-surefire-junit5-tree-reporter-version>1.5.1</maven-surefire-junit5-tree-reporter-version>
@@ -1275,30 +1275,6 @@
 
   <profiles>
 
-    <!-- If you enable this profile, the console message will have a timestamp -->
-    <profile>
-      <id>consolets</id>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.fusesource.mvnplugins</groupId>
-            <artifactId>maven-consolets-plugin</artifactId>
-            <version>1.45</version>
-            <configuration>
-              <enabled>true</enabled>
-            </configuration>
-            <executions>
-              <execution>
-                <phase>validate</phase>
-                <goals>
-                  <goal>install</goal>
-                </goals>
-              </execution>
-            </executions>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
     <profile>
       <id>apache-release</id>
       <activation>
@@ -1387,22 +1363,6 @@
         </plugins>
       </build>
     </profile>
-    <!--
-      To generate a graph of the project dependencies, run:
-      mvn -P graph graph:reactor -Dhide-scope=test -Dhide-transitive=true -Dhide-external=true -Dgraph.label= -Dhide-version=true -Dhide-group-id=true -Dhide-type=true
-    -->
-    <profile>
-      <id>graph</id>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.fusesource.mvnplugins</groupId>
-            <artifactId>maven-graph-plugin</artifactId>
-            <version>${maven-graph-plugin-version}</version>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
 
     <!-- Execute owasp dependency check plugin -->
     <profile>
@@ -1429,17 +1389,6 @@
         </plugins>
       </build>
     </profile>
-
-    <!-- Need to disable doclint for JDK 8 builds so Javadocs work -->
-    <profile>
-      <id>jdk8-disable-doclint</id>
-      <activation>
-        <jdk>[1.8,)</jdk>
-      </activation>
-      <properties>
-        <javadoc.options>-Xdoclint:none</javadoc.options>
-     </properties>
-   </profile>
 
     <profile>
       <id>allow-securitymanager</id>
