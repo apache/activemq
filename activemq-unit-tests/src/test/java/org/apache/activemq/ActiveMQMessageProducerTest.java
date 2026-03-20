@@ -18,8 +18,6 @@ package org.apache.activemq;
 
 import jakarta.jms.Connection;
 import jakarta.jms.MessageProducer;
-import jakarta.jms.Session;
-import jakarta.jms.Topic;
 import org.junit.Test;
 
 import org.slf4j.Logger;
@@ -34,35 +32,26 @@ public class ActiveMQMessageProducerTest {
 
     @Test
     public void testStrictComplianceDeliveryDelay() throws Exception {
-        // Use vm transport for fast testing
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory("vm://localhost?broker.persistent=false");
 
-        // Test WITH Strict Compliance
+        // Strict Mode ON (Should block negative values)
         factory.setStrictCompliance(true);
-        try (Connection connection = factory.createConnection()) {
-            Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-            Topic topic = session.createTopic("Test.Topic");
-            MessageProducer producer = session.createProducer(topic);
-
+        try (Connection conn = factory.createConnection()) {
+            MessageProducer producer = conn.createSession(false, 1).createProducer(null);
             try {
-                producer.setDeliveryDelay(-500);
-                fail("Should have thrown MessageFormatException for negative delay");
+                producer.setDeliveryDelay(-100);
+                fail("Should have thrown MessageFormatException");
             } catch (jakarta.jms.MessageFormatException e) {
-                LOG.debug("Caught expected exception: {}", e.getMessage());
+                LOG.debug("Caught expected strict compliance exception");
             }
         }
 
-        // Test WITHOUT Strict Compliance (Should allow negative for legacy/non-strict)
+        // Strict Mode OFF (Should allow negative values (Legacy behavior))
         factory.setStrictCompliance(false);
-        try (Connection connection = factory.createConnection()) {
-            Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-            Topic topic = session.createTopic("Test.Topic");
-            MessageProducer producer = session.createProducer(topic);
-
-            // This should NOT throw an exception now
-            producer.setDeliveryDelay(-500);
-            assertEquals(-500, producer.getDeliveryDelay());
+        try (Connection conn = factory.createConnection()) {
+            MessageProducer producer = conn.createSession(false, 1).createProducer(null);
+            producer.setDeliveryDelay(-100);
+            assertEquals(-100, producer.getDeliveryDelay());
         }
     }
-
 }

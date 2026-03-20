@@ -228,7 +228,7 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
 
         // Jakarta 3.1 Compliance Guard
         if (deliveryDelay < 0 && session.connection.isStrictCompliance()) {
-            throw new jakarta.jms.MessageFormatException("Delivery delay cannot be negative in strictCompliance mode.");
+            throw new jakarta.jms.MessageFormatException("Delivery delay cannot be negative when strictCompliance is enabled.");
         }
 
         this.deliveryDelay = deliveryDelay;
