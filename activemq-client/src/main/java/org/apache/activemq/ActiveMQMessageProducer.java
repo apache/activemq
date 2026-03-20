@@ -27,6 +27,7 @@ import jakarta.jms.InvalidDestinationException;
 import jakarta.jms.JMSException;
 import jakarta.jms.Message;
 
+import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ProducerAck;
 import org.apache.activemq.command.ProducerId;
@@ -324,6 +325,13 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
             } catch (InterruptedException e) {
                 throw new JMSException("Send aborted due to thread interrupt.");
             }
+        }
+
+        long delay = getDeliveryDelay();
+        if (delay > 0) {
+            message.setLongProperty("AMQ_SCHEDULED_DELAY", delay);
+            long deliveryTime = System.currentTimeMillis() + delay;
+            message.setLongProperty(ActiveMQMessage.JMS_DELIVERY_TIME_PROPERTY, deliveryTime);
         }
 
         this.session.send(this, dest, message, deliveryMode, priority, timeToLive, disableMessageID, disableMessageTimestamp, producerWindow, sendTimeout, onComplete);

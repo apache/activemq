@@ -255,7 +255,17 @@ public class ActiveMQProducer implements JMSProducer {
 
     @Override
     public JMSProducer setDeliveryDelay(long deliveryDelay) {
-        this.deliveryDelay = deliveryDelay;
+        try {
+            // Tell the internal core producer about the delay
+            this.activemqMessageProducer.setDeliveryDelay(deliveryDelay);
+
+            // Update the local field in this wrapper for consistency
+            this.deliveryDelay = deliveryDelay;
+
+        } catch (JMSException e) {
+            // JMS 2.0 requires converting checked exceptions to RuntimeExceptions
+            throw JMSExceptionSupport.convertToJMSRuntimeException(e);
+        }
         return this;
     }
 

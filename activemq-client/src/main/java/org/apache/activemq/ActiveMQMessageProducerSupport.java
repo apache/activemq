@@ -41,6 +41,8 @@ public abstract class ActiveMQMessageProducerSupport implements MessageProducer,
     protected long defaultTimeToLive;
     protected int sendTimeout=0;
 
+    private long deliveryDelay = 0;
+
     public ActiveMQMessageProducerSupport(ActiveMQSession session) {
         this.session = session;
         disableMessageTimestamp = session.connection.isDisableTimeStampsByDefault();
@@ -56,7 +58,12 @@ public abstract class ActiveMQMessageProducerSupport implements MessageProducer,
      */
     @Override
     public void setDeliveryDelay(long deliveryDelay) throws JMSException {
-        throw new UnsupportedOperationException("setDeliveryDelay() is not supported");
+        checkClosed();
+        // This should now compile after the rebase!
+        if (deliveryDelay < 0 && session.connection.isStrictCompliance()) {
+            throw new jakarta.jms.JMSException("Delivery delay cannot be negative.");
+        }
+        this.deliveryDelay = deliveryDelay;
     }
 
     /**
@@ -68,7 +75,8 @@ public abstract class ActiveMQMessageProducerSupport implements MessageProducer,
      */
     @Override
     public long getDeliveryDelay() throws JMSException {
-        throw new UnsupportedOperationException("getDeliveryDelay() is not supported");
+        checkClosed();
+        return this.deliveryDelay;
     }
     
     /**
