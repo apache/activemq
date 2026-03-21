@@ -29,7 +29,7 @@ import java.util.HashMap;
 public class TcpTransportServerTest extends TestCase{
 
     public void testDefaultPropertiesSetOnTransport() throws Exception {
-        TcpTransportServer server = (TcpTransportServer) TransportFactory.bind(new URI("tcp://localhost:61616?trace=true"));
+        TcpTransportServer server = (TcpTransportServer) TransportFactory.bind(new URI("tcp://localhost:0?trace=true"));
         server.setTransportOption(new HashMap<String, Object>());
 
         server.setAcceptListener(new TransportAcceptListener() {
@@ -46,8 +46,8 @@ public class TcpTransportServerTest extends TestCase{
 
         server.start();
 
-
-        Socket socket = new Socket("localhost", 61616);
+        int port = server.getConnectURI().getPort();
+        Socket socket = new Socket("localhost", port);
         server.handleSocket(socket);
         server.stop();
 

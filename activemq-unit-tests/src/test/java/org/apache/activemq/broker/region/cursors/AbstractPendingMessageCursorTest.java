@@ -94,6 +94,7 @@ public abstract class AbstractPendingMessageCursorTest extends AbstractStoreStat
     protected void setUpBroker(boolean clearDataDir) throws Exception {
 
         broker = new BrokerService();
+        broker.setUseJmx(false);
         this.initPersistence(broker);
         //set up a transport
         TransportConnector connector = broker
