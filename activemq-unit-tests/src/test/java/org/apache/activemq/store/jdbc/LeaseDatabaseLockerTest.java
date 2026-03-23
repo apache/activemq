@@ -32,9 +32,6 @@ import org.apache.activemq.broker.AbstractLocker;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.store.jdbc.adapter.DefaultJDBCAdapter;
 import org.apache.activemq.util.Wait;
-import org.jmock.Expectations;
-import org.jmock.Mockery;
-import org.jmock.lib.legacy.ClassImposteriser;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -46,6 +43,9 @@ import org.slf4j.LoggerFactory;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 import org.junit.experimental.categories.Category;
 import org.apache.activemq.test.annotations.ParallelTest;
 
@@ -239,35 +239,19 @@ public class LeaseDatabaseLockerTest {
 
     public long callDiffOffset(LeaseDatabaseLocker underTest, final long dbTime) throws Exception {
 
-        Mockery context = new Mockery() {{
-            setImposteriser(ClassImposteriser.INSTANCE);
-        }};
-        final Statements statements = context.mock(Statements.class);
-        final JDBCPersistenceAdapter jdbcPersistenceAdapter = context.mock(JDBCPersistenceAdapter.class);
-        final Connection connection = context.mock(Connection.class);
-        final PreparedStatement preparedStatement = context.mock(PreparedStatement.class);
-        final ResultSet resultSet = context.mock(ResultSet.class);
-        final Timestamp timestamp = context.mock(Timestamp.class);
+        Statements statements = mock(Statements.class);
+        JDBCPersistenceAdapter jdbcPersistenceAdapter = mock(JDBCPersistenceAdapter.class);
+        Connection connection = mock(Connection.class);
+        PreparedStatement preparedStatement = mock(PreparedStatement.class);
+        ResultSet resultSet = mock(ResultSet.class);
+        Timestamp timestamp = mock(Timestamp.class);
 
-        context.checking(new Expectations() {{
-            allowing(jdbcPersistenceAdapter).getStatements();
-            will(returnValue(statements));
-            allowing(jdbcPersistenceAdapter);
-            allowing(statements);
-            allowing(connection).prepareStatement(with(any(String.class)));
-            will(returnValue(preparedStatement));
-            allowing(connection);
-            allowing(preparedStatement).executeQuery();
-            will(returnValue(resultSet));
-            allowing(resultSet).next();
-            will(returnValue(true));
-            allowing(resultSet).getTimestamp(1);
-            will(returnValue(timestamp));
-            allowing(timestamp).getTime();
-            will(returnValue(dbTime));
-            allowing(resultSet).close();
-            allowing(preparedStatement).close();
-        }});
+        when(jdbcPersistenceAdapter.getStatements()).thenReturn(statements);
+        when(connection.prepareStatement(anyString())).thenReturn(preparedStatement);
+        when(preparedStatement.executeQuery()).thenReturn(resultSet);
+        when(resultSet.next()).thenReturn(true);
+        when(resultSet.getTimestamp(1)).thenReturn(timestamp);
+        when(timestamp.getTime()).thenReturn(dbTime);
 
         underTest.configure(jdbcPersistenceAdapter);
         underTest.setLockable(jdbcPersistenceAdapter);

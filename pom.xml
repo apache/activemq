@@ -76,7 +76,6 @@
     <jmdns-version>3.6.3</jmdns-version>
     <javassist-version>3.30.2-GA</javassist-version>
     <jettison-version>1.5.5</jettison-version>
-    <jmock-version>2.13.1</jmock-version>
     <jolokia-version>2.5.1</jolokia-version>
     <junit-version>4.13.2</junit-version>
     <h2-version>2.4.240</h2-version>
@@ -871,18 +870,6 @@
         <groupId>org.mockito</groupId>
         <artifactId>mockito-core</artifactId>
         <version>${mockito-version}</version>
-        <scope>test</scope>
-      </dependency>
-      <dependency>
-        <groupId>org.jmock</groupId>
-        <artifactId>jmock-junit4</artifactId>
-        <version>${jmock-version}</version>
-        <scope>test</scope>
-      </dependency>
-      <dependency>
-        <groupId>org.jmock</groupId>
-        <artifactId>jmock-legacy</artifactId>
-        <version>${jmock-version}</version>
         <scope>test</scope>
       </dependency>
       <dependency>

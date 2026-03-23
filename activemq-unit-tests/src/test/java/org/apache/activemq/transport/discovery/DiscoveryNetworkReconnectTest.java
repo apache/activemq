@@ -21,19 +21,10 @@ import org.apache.activemq.broker.jmx.ManagementContext;
 import org.apache.activemq.transport.discovery.multicast.MulticastDiscoveryAgentFactory;
 import org.apache.activemq.util.SocketProxy;
 import org.apache.activemq.util.Wait;
-import org.hamcrest.BaseMatcher;
-import org.hamcrest.Description;
-import org.jmock.Expectations;
-import org.jmock.Mockery;
-import org.jmock.api.Invocation;
-import org.jmock.integration.junit4.JMock;
-import org.jmock.integration.junit4.JUnit4Mockery;
-import org.jmock.lib.action.CustomAction;
-import org.jmock.lib.legacy.ClassImposteriser;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.mockito.ArgumentMatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,9 +35,10 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.*;
 
 
-@RunWith(JMock.class)
 public class DiscoveryNetworkReconnectTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(DiscoveryNetworkReconnectTest.class);
@@ -56,42 +48,32 @@ public class DiscoveryNetworkReconnectTest {
     final Semaphore mbeanRegistered = new Semaphore(0);
     final Semaphore mbeanUnregistered = new Semaphore(0);
     BrokerService brokerA, brokerB;
-    Mockery context;
     ManagementContext managementContext;
     DiscoveryAgent agent;
     SocketProxy proxy;
 
-    // ignore the hostname resolution component as this is machine dependent
-    class NetworkBridgeObjectNameMatcher<T> extends BaseMatcher<T> {
-        T name;
-        NetworkBridgeObjectNameMatcher(T o) {
+    // ArgumentMatcher for network bridge ObjectNames
+    class NetworkBridgeObjectNameMatcher implements ArgumentMatcher<ObjectName> {
+        ObjectName name;
+        NetworkBridgeObjectNameMatcher(ObjectName o) {
             name = o;
         }
 
         @Override
-        public boolean matches(Object arg0) {
-            ObjectName other = (ObjectName) arg0;
-            ObjectName mine = (ObjectName) name;
-            LOG.info("Match: " + mine + " vs: " + other);
+        public boolean matches(ObjectName other) {
+            if (other == null) return false;
+            LOG.info("Match: " + name + " vs: " + other);
 
             if (!"networkConnectors".equals(other.getKeyProperty("connector"))) {
                 return false;
             }
-            return other.getKeyProperty("connector").equals(mine.getKeyProperty("connector")) &&
-                   other.getKeyProperty("networkBridge") != null && mine.getKeyProperty("networkBridge") != null;
-        }
-
-        @Override
-        public void describeTo(Description arg0) {
-            arg0.appendText(this.getClass().getName());
+            return other.getKeyProperty("connector").equals(name.getKeyProperty("connector")) &&
+                   other.getKeyProperty("networkBridge") != null && name.getKeyProperty("networkBridge") != null;
         }
     }
 
     @Before
     public void setUp() throws Exception {
-        context = new JUnit4Mockery() {{
-            setImposteriser(ClassImposteriser.INSTANCE);
-        }};
         brokerA = new BrokerService();
         brokerA.setBrokerName("BrokerA");
         configure(brokerA);
@@ -100,73 +82,53 @@ public class DiscoveryNetworkReconnectTest {
         brokerA.waitUntilStarted();
 
         proxy = new SocketProxy(brokerA.getTransportConnectors().get(0).getConnectUri());
-        managementContext = context.mock(ManagementContext.class);
+        managementContext = mock(ManagementContext.class);
 
-        context.checking(new Expectations(){{
-            allowing(managementContext).getJmxDomainName(); will (returnValue("Test"));
-            allowing(managementContext).setBrokerName("BrokerNC");
-            allowing(managementContext).start();
-            allowing(managementContext).isCreateConnector();
-            allowing(managementContext).stop();
-            allowing(managementContext).isConnectorStarted();
+        // Default lenient stubs for ManagementContext
+        lenient().when(managementContext.getJmxDomainName()).thenReturn("Test");
+        lenient().doNothing().when(managementContext).setBrokerName("BrokerNC");
+        lenient().doNothing().when(managementContext).start();
+        lenient().when(managementContext.isCreateConnector()).thenReturn(false);
+        lenient().doNothing().when(managementContext).stop();
+        lenient().when(managementContext.isConnectorStarted()).thenReturn(false);
 
-            // expected MBeans
-            allowing(managementContext).registerMBean(with(any(Object.class)), with(equal(
-                    new ObjectName("Test:type=Broker,brokerName=BrokerNC"))));
-            allowing(managementContext).registerMBean(with(any(Object.class)), with(equal(
-                    new ObjectName("Test:type=Broker,brokerName=BrokerNC,service=Health"))));
-            allowing(managementContext).registerMBean(with(any(Object.class)), with(equal(
-                    new ObjectName("Test:type=Broker,brokerName=BrokerNC,connector=networkConnectors,networkConnectorName=NC"))));
-            allowing(managementContext).registerMBean(with(any(Object.class)), with(equal(
-                    new ObjectName("Test:type=Broker,brokerName=BrokerNC,service=Log4JConfiguration"))));
-            allowing(managementContext).registerMBean(with(any(Object.class)), with(equal(
-                    new ObjectName("Test:type=Broker,brokerName=BrokerNC,destinationType=Topic,destinationName=ActiveMQ.Advisory.Connection"))));
-            allowing(managementContext).registerMBean(with(any(Object.class)), with(equal(
-                    new ObjectName("Test:type=Broker,brokerName=BrokerNC,destinationType=Topic,destinationName=ActiveMQ.Advisory.NetworkBridge"))));
-            allowing(managementContext).registerMBean(with(any(Object.class)), with(equal(
-                    new ObjectName("Test:type=Broker,brokerName=BrokerNC,destinationType=Topic,destinationName=ActiveMQ.Advisory.MasterBroker"))));
-            allowing(managementContext).registerMBean(with(any(Object.class)), with(equal(
-                    new ObjectName("Test:type=Broker,brokerName=BrokerNC,service=jobScheduler,jobSchedulerName=JMS"))));
-            allowing(managementContext).getObjectInstance(with(equal(
-                    new ObjectName("Test:type=Broker,brokerName=BrokerNC,connector=networkConnectors,networkConnectorName=NC"))));
+        // Expected MBean registrations
+        lenient().when(managementContext.registerMBean(any(),
+                eq(new ObjectName("Test:type=Broker,brokerName=BrokerNC")))).thenReturn(null);
+        lenient().when(managementContext.registerMBean(any(),
+                eq(new ObjectName("Test:type=Broker,brokerName=BrokerNC,service=Health")))).thenReturn(null);
+        lenient().when(managementContext.registerMBean(any(),
+                eq(new ObjectName("Test:type=Broker,brokerName=BrokerNC,connector=networkConnectors,networkConnectorName=NC")))).thenReturn(null);
+        lenient().when(managementContext.registerMBean(any(),
+                eq(new ObjectName("Test:type=Broker,brokerName=BrokerNC,service=Log4JConfiguration")))).thenReturn(null);
+        lenient().when(managementContext.registerMBean(any(),
+                eq(new ObjectName("Test:type=Broker,brokerName=BrokerNC,destinationType=Topic,destinationName=ActiveMQ.Advisory.Connection")))).thenReturn(null);
+        lenient().when(managementContext.registerMBean(any(),
+                eq(new ObjectName("Test:type=Broker,brokerName=BrokerNC,destinationType=Topic,destinationName=ActiveMQ.Advisory.NetworkBridge")))).thenReturn(null);
+        lenient().when(managementContext.registerMBean(any(),
+                eq(new ObjectName("Test:type=Broker,brokerName=BrokerNC,destinationType=Topic,destinationName=ActiveMQ.Advisory.MasterBroker")))).thenReturn(null);
+        lenient().when(managementContext.registerMBean(any(),
+                eq(new ObjectName("Test:type=Broker,brokerName=BrokerNC,service=jobScheduler,jobSchedulerName=JMS")))).thenReturn(null);
+        lenient().when(managementContext.getObjectInstance(
+                eq(new ObjectName("Test:type=Broker,brokerName=BrokerNC,connector=networkConnectors,networkConnectorName=NC")))).thenReturn(null);
 
+        // Network bridge MBean register - signal semaphore
+        lenient().when(managementContext.registerMBean(any(), argThat(new NetworkBridgeObjectNameMatcher(
+                new ObjectName("Test:type=Broker,brokerName=BrokerNC,connector=networkConnectors,networkConnectorName=NC,networkBridge=localhost/127.0.0.1_"
+                    + proxy.getUrl().getPort()))))).thenAnswer(invocation -> {
+                        LOG.info("Mbean Registered: " + invocation.getArgument(0));
+                        mbeanRegistered.release();
+                        return new ObjectInstance((ObjectName)invocation.getArgument(1), "discription");
+                    });
 
-            atLeast(maxReconnects - 1).of (managementContext).registerMBean(with(any(Object.class)), with(new NetworkBridgeObjectNameMatcher<ObjectName>(
-                        new ObjectName("Test:type=Broker,brokerName=BrokerNC,connector=networkConnectors,networkConnectorName=NC,networkBridge=localhost/127.0.0.1_"
-                            + proxy.getUrl().getPort())))); will(new CustomAction("signal register network mbean") {
-                                @Override
-                                public Object invoke(Invocation invocation) throws Throwable {
-                                    LOG.info("Mbean Registered: " + invocation.getParameter(0));
-                                    mbeanRegistered.release();
-                                    return new ObjectInstance((ObjectName)invocation.getParameter(1), "discription");
-                                }
-                            });
-            atLeast(maxReconnects - 1).of (managementContext).unregisterMBean(with(new NetworkBridgeObjectNameMatcher<ObjectName>(
-                    new ObjectName("Test:type=Broker,brokerName=BrokerNC,connector=networkConnectors,networkConnectorName=NC,networkBridge=localhost/127.0.0.1_"
-                            + proxy.getUrl().getPort())))); will(new CustomAction("signal unregister network mbean") {
-                                @Override
-                                public Object invoke(Invocation invocation) throws Throwable {
-                                    LOG.info("Mbean Unregistered: " + invocation.getParameter(0));
-                                    mbeanUnregistered.release();
-                                    return null;
-                                }
-                            });
-
-            allowing(managementContext).unregisterMBean(with(equal(
-                    new ObjectName("Test:type=Broker,brokerName=BrokerNC"))));
-            allowing(managementContext).unregisterMBean(with(equal(
-                    new ObjectName("Test:type=Broker,brokerName=BrokerNC,service=Health"))));
-            allowing(managementContext).unregisterMBean(with(equal(
-                    new ObjectName("Test:type=Broker,brokerName=BrokerNC,connector=networkConnectors,networkConnectorName=NC"))));
-            allowing(managementContext).unregisterMBean(with(equal(
-                    new ObjectName("Test:type=Broker,brokerName=BrokerNC,service=Log4JConfiguration"))));
-            allowing(managementContext).unregisterMBean(with(equal(
-                    new ObjectName("Test:type=Broker,brokerName=BrokerNC,destinationType=Topic,destinationName=ActiveMQ.Advisory.Connection"))));
-            allowing(managementContext).unregisterMBean(with(equal(
-                    new ObjectName("Test:type=Broker,brokerName=BrokerNC,destinationType=Topic,destinationName=ActiveMQ.Advisory.NetworkBridge"))));
-            allowing(managementContext).unregisterMBean(with(equal(
-                    new ObjectName("Test:type=Broker,brokerName=BrokerNC,destinationType=Topic,destinationName=ActiveMQ.Advisory.MasterBroker"))));
-        }});
+        // Network bridge MBean unregister - signal semaphore
+        lenient().doAnswer(invocation -> {
+            LOG.info("Mbean Unregistered: " + invocation.getArgument(0));
+            mbeanUnregistered.release();
+            return null;
+        }).when(managementContext).unregisterMBean(argThat(new NetworkBridgeObjectNameMatcher(
+                new ObjectName("Test:type=Broker,brokerName=BrokerNC,connector=networkConnectors,networkConnectorName=NC,networkBridge=localhost/127.0.0.1_"
+                        + proxy.getUrl().getPort()))));
 
         brokerB = new BrokerService();
         brokerB.setManagementContext(managementContext);

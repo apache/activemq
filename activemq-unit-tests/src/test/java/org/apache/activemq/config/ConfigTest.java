@@ -20,6 +20,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.sql.Connection;
@@ -54,8 +56,6 @@ import org.apache.activemq.store.memory.MemoryPersistenceAdapter;
 import org.apache.activemq.transport.tcp.TcpTransportServer;
 import org.apache.activemq.usage.SystemUsage;
 import org.apache.activemq.xbean.BrokerFactoryBean;
-import org.jmock.Expectations;
-import org.jmock.Mockery;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -90,25 +90,15 @@ public class ConfigTest {
     public void testJdbcLockConfigOverride() throws Exception {
 
         JDBCPersistenceAdapter adapter = new JDBCPersistenceAdapter();
-        Mockery context = new Mockery();
-        final DataSource dataSource = context.mock(DataSource.class);
-        final Connection connection = context.mock(Connection.class);
-        final DatabaseMetaData metadata = context.mock(DatabaseMetaData.class);
-        final ResultSet result = context.mock(ResultSet.class);
+        DataSource dataSource = mock(DataSource.class);
+        Connection connection = mock(Connection.class);
+        DatabaseMetaData metadata = mock(DatabaseMetaData.class);
         adapter.setDataSource(dataSource);
         adapter.setCreateTablesOnStartup(false);
 
-        context.checking(new Expectations() {{
-            allowing(dataSource).getConnection();
-            will(returnValue(connection));
-            allowing(connection).getMetaData();
-            will(returnValue(metadata));
-            allowing(connection);
-            allowing(metadata).getDriverName();
-            will(returnValue("Microsoft_SQL_Server_2005_jdbc_driver"));
-            allowing(result).next();
-            will(returnValue(true));
-        }});
+        when(dataSource.getConnection()).thenReturn(connection);
+        when(connection.getMetaData()).thenReturn(metadata);
+        when(metadata.getDriverName()).thenReturn("Microsoft_SQL_Server_2005_jdbc_driver");
 
         adapter.start();
         assertTrue("has the locker override", adapter.getLocker() instanceof TransactDatabaseLocker);
@@ -118,25 +108,15 @@ public class ConfigTest {
     public void testJdbcLockConfigDefault() throws Exception {
 
         JDBCPersistenceAdapter adapter = new JDBCPersistenceAdapter();
-        Mockery context = new Mockery();
-        final DataSource dataSource = context.mock(DataSource.class);
-        final Connection connection = context.mock(Connection.class);
-        final DatabaseMetaData metadata = context.mock(DatabaseMetaData.class);
-        final ResultSet result = context.mock(ResultSet.class);
+        DataSource dataSource = mock(DataSource.class);
+        Connection connection = mock(Connection.class);
+        DatabaseMetaData metadata = mock(DatabaseMetaData.class);
         adapter.setDataSource(dataSource);
         adapter.setCreateTablesOnStartup(false);
 
-        context.checking(new Expectations() {{
-            allowing(dataSource).getConnection();
-            will(returnValue(connection));
-            allowing(connection).getMetaData();
-            will(returnValue(metadata));
-            allowing(connection);
-            allowing(metadata).getDriverName();
-            will(returnValue("Some_Unknown_driver"));
-            allowing(result).next();
-            will(returnValue(true));
-        }});
+        when(dataSource.getConnection()).thenReturn(connection);
+        when(connection.getMetaData()).thenReturn(metadata);
+        when(metadata.getDriverName()).thenReturn("Some_Unknown_driver");
 
         adapter.start();
         assertEquals("has the default locker", adapter.getLocker().getClass(), DefaultDatabaseLocker.class);

@@ -25,21 +25,10 @@ import org.apache.activemq.command.MessageDispatch;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.TransactionInfo;
 import org.apache.activemq.util.Wait;
-import org.hamcrest.Description;
-import org.hamcrest.Matchers;
-import org.jmock.Expectations;
-import org.jmock.Mockery;
-import org.jmock.api.Action;
-import org.jmock.api.Invocation;
-import org.jmock.imposters.ByteBuddyClassImposteriser;
-import org.jmock.integration.junit4.JMock;
-import org.jmock.integration.junit4.JUnitRuleMockery;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,7 +40,6 @@ import jakarta.resource.spi.work.ExecutionContext;
 import jakarta.resource.spi.work.Work;
 import jakarta.resource.spi.work.WorkListener;
 import jakarta.resource.spi.work.WorkManager;
-import javax.transaction.xa.XAResource;
 import java.lang.reflect.Method;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -60,20 +48,13 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
-import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.*;
 
 @Ignore
-@RunWith(JMock.class)
 public class ServerSessionImplTest {
-
-    @Rule
-    public JUnitRuleMockery context = new JUnitRuleMockery() {
-        {
-            setImposteriser(ByteBuddyClassImposteriser.INSTANCE);
-        }
-    };
 
     private static final Logger LOG = LoggerFactory.getLogger(ServerSessionImplTest.class);
     private static final String BROKER_URL = "vm://localhost?broker.persistent=false";
@@ -86,12 +67,41 @@ public class ServerSessionImplTest {
     private ActiveMQSession session;
     private ActiveMQEndpointWorker endpointWorker;
 
+    private MessageEndpointFactory messageEndpointFactory;
+    private MessageResourceAdapter resourceAdapter;
+    private ActiveMQEndpointActivationKey key;
+    private MessageActivationSpec messageActivationSpec;
+    private BootstrapContext bootstrapContext;
+
     @Before
     public void setUp() throws Exception {
         org.apache.activemq.ActiveMQConnectionFactory factory = new org.apache.activemq.ActiveMQConnectionFactory(BROKER_URL);
         con = (ActiveMQConnection) factory.createConnection();
         con.start();
         session = (ActiveMQSession) con.createSession(false, Session.AUTO_ACKNOWLEDGE);
+    }
+
+    private void setupCommonMocks() throws Exception {
+        messageEndpointFactory = mock(MessageEndpointFactory.class);
+        resourceAdapter = mock(MessageResourceAdapter.class);
+        key = mock(ActiveMQEndpointActivationKey.class);
+        messageEndpoint = mock(MessageEndpointProxy.class);
+        workManager = mock(WorkManager.class);
+        messageActivationSpec = mock(MessageActivationSpec.class);
+        bootstrapContext = mock(BootstrapContext.class);
+
+        lenient().when(bootstrapContext.getWorkManager()).thenReturn(workManager);
+        lenient().when(resourceAdapter.getBootstrapContext()).thenReturn(bootstrapContext);
+        lenient().when(messageEndpointFactory.isDeliveryTransacted(any(Method.class))).thenReturn(Boolean.FALSE);
+        lenient().when(key.getMessageEndpointFactory()).thenReturn(messageEndpointFactory);
+        lenient().when(key.getActivationSpec()).thenReturn(messageActivationSpec);
+        lenient().when(messageActivationSpec.isUseJndi()).thenReturn(Boolean.FALSE);
+        lenient().when(messageActivationSpec.getDestinationType()).thenReturn("jakarta.jms.Queue");
+        lenient().when(messageActivationSpec.getDestination()).thenReturn("Queue");
+        lenient().when(messageActivationSpec.getAcknowledgeModeForSession()).thenReturn(1);
+        lenient().when(messageActivationSpec.getEnableBatchBooleanValue()).thenReturn(Boolean.FALSE);
+        lenient().when(messageActivationSpec.isUseRAManagedTransactionEnabled()).thenReturn(Boolean.TRUE);
+        lenient().when(messageEndpointFactory.createEndpoint(isNull())).thenReturn(messageEndpoint);
     }
 
     @After
@@ -104,19 +114,16 @@ public class ServerSessionImplTest {
     @Test
     public void testRunDetectsStoppedSession() throws Exception {
 
-        pool = context.mock(ServerSessionPoolImpl.class);
-        workManager = context.mock(WorkManager.class);
-        messageEndpoint = context.mock(MessageEndpointProxy.class);
+        pool = mock(ServerSessionPoolImpl.class);
+        workManager = mock(WorkManager.class);
+        messageEndpoint = mock(MessageEndpointProxy.class);
 
         serverSession = new ServerSessionImpl(pool, session, workManager, messageEndpoint, false, 10);
 
         con.close();
-        context.checking(new Expectations() {
-            {
-                oneOf(pool).removeFromPool(with(same(serverSession)));
-            }
-        });
         serverSession.run();
+
+        verify(pool).removeFromPool(same(serverSession));
     }
 
     @Test
@@ -125,83 +132,22 @@ public class ServerSessionImplTest {
         final int maxMessages = 4000;
         final CountDownLatch messageCount = new CountDownLatch(maxMessages);
 
-        final MessageEndpointFactory messageEndpointFactory = context.mock(MessageEndpointFactory.class);
-        final MessageResourceAdapter resourceAdapter = context.mock(MessageResourceAdapter.class);
-        final ActiveMQEndpointActivationKey key = context.mock(ActiveMQEndpointActivationKey.class);
-        messageEndpoint = context.mock(MessageEndpointProxy.class);
-        workManager = context.mock(WorkManager.class);
-        final MessageActivationSpec messageActivationSpec = context.mock(MessageActivationSpec.class);
-        final BootstrapContext boostrapContext = context.mock(BootstrapContext.class);
-        context.checking(new Expectations() {
-            {
-                allowing(boostrapContext).getWorkManager();
-                will(returnValue(workManager));
-                allowing(resourceAdapter).getBootstrapContext();
-                will(returnValue(boostrapContext));
-                allowing(messageEndpointFactory).isDeliveryTransacted(with(any(Method.class)));
-                will(returnValue(Boolean.FALSE));
-                allowing(key).getMessageEndpointFactory();
-                will(returnValue(messageEndpointFactory));
-                allowing(key).getActivationSpec();
-                will(returnValue(messageActivationSpec));
-                allowing(messageActivationSpec).isUseJndi();
-                will(returnValue(Boolean.FALSE));
-                allowing(messageActivationSpec).getDestinationType();
-                will(returnValue("jakarta.jms.Queue"));
-                allowing(messageActivationSpec).getDestination();
-                will(returnValue("Queue"));
-                allowing(messageActivationSpec).getAcknowledgeModeForSession();
-                will(returnValue(1));
-                allowing(messageActivationSpec).getMaxSessionsIntValue();
-                will(returnValue(1));
-                allowing(messageActivationSpec).getEnableBatchBooleanValue();
-                will(returnValue(Boolean.FALSE));
-                allowing(messageActivationSpec).isUseRAManagedTransactionEnabled();
-                will(returnValue(Boolean.TRUE));
-                allowing(messageEndpointFactory).createEndpoint(with(nullValue(XAResource.class)));
-                will(returnValue(messageEndpoint));
+        setupCommonMocks();
+        lenient().when(messageActivationSpec.getMaxSessionsIntValue()).thenReturn(1);
 
-                allowing(workManager).scheduleWork((Work) with(any(Work.class)), with(any(long.class)), with(any(ExecutionContext.class)),
-                    with(any(WorkListener.class)));
-                will(new Action() {
-                    @Override
-                    public Object invoke(Invocation invocation) throws Throwable {
-                        return null;
-                    }
+        lenient().doAnswer(invocation -> null).when(workManager).scheduleWork(
+            any(Work.class), anyLong(), any(ExecutionContext.class), any(WorkListener.class));
 
-                    @Override
-                    public void describeTo(Description description) {
-                    }
-                });
-
-                allowing(messageEndpoint).beforeDelivery((Method) with(any(Method.class)));
-                allowing(messageEndpoint).onMessage(with(any(jakarta.jms.Message.class)));
-                will(new Action() {
-                    @Override
-                    public Object invoke(Invocation invocation) throws Throwable {
-                        messageCount.countDown();
-                        if (messageCount.getCount() < maxMessages - 11) {
-                            TimeUnit.MILLISECONDS.sleep(200);
-                        }
-                        return null;
-                    }
-
-                    @Override
-                    public void describeTo(Description description) {
-                        description.appendText("Keep message count");
-                    }
-                });
-                allowing(messageEndpoint).afterDelivery();
-                allowing(messageEndpoint).release();
-
-                allowing(workManager).scheduleWork(
-                    with(any(Work.class)),
-                    with(any(Long.TYPE)),
-                    with(nullValue(ExecutionContext.class)),
-                    with(nullValue(WorkListener.class)));
-
+        lenient().doNothing().when(messageEndpoint).beforeDelivery(any(Method.class));
+        lenient().doAnswer(invocation -> {
+            messageCount.countDown();
+            if (messageCount.getCount() < maxMessages - 11) {
+                TimeUnit.MILLISECONDS.sleep(200);
             }
-        });
+            return null;
+        }).when(messageEndpoint).onMessage(any(jakarta.jms.Message.class));
+        lenient().doNothing().when(messageEndpoint).afterDelivery();
+        lenient().doNothing().when(messageEndpoint).release();
 
         endpointWorker = new ActiveMQEndpointWorker(resourceAdapter, key);
         endpointWorker.setConnection(con);
@@ -258,111 +204,41 @@ public class ServerSessionImplTest {
 
         ExecutorService executorService = Executors.newCachedThreadPool();
 
+        setupCommonMocks();
+        lenient().when(messageActivationSpec.getMaxSessionsIntValue()).thenReturn(10);
 
-        final MessageEndpointFactory messageEndpointFactory = context.mock(MessageEndpointFactory.class);
-        final MessageResourceAdapter resourceAdapter = context.mock(MessageResourceAdapter.class);
-        final ActiveMQEndpointActivationKey key = context.mock(ActiveMQEndpointActivationKey.class);
-        messageEndpoint = context.mock(MessageEndpointProxy.class);
-        workManager = context.mock(WorkManager.class);
-        final MessageActivationSpec messageActivationSpec = context.mock(MessageActivationSpec.class);
-        final BootstrapContext boostrapContext = context.mock(BootstrapContext.class);
-        context.checking(new Expectations() {
-            {
-                allowing(boostrapContext).getWorkManager();
-                will(returnValue(workManager));
-                allowing(resourceAdapter).getBootstrapContext();
-                will(returnValue(boostrapContext));
-                allowing(messageEndpointFactory).isDeliveryTransacted(with(any(Method.class)));
-                will(returnValue(Boolean.FALSE));
-                allowing(key).getMessageEndpointFactory();
-                will(returnValue(messageEndpointFactory));
-                allowing(key).getActivationSpec();
-                will(returnValue(messageActivationSpec));
-                allowing(messageActivationSpec).isUseJndi();
-                will(returnValue(Boolean.FALSE));
-                allowing(messageActivationSpec).getDestinationType();
-                will(returnValue("jakarta.jms.Queue"));
-                allowing(messageActivationSpec).getDestination();
-                will(returnValue("Queue"));
-                allowing(messageActivationSpec).getAcknowledgeModeForSession();
-                will(returnValue(1));
-                allowing(messageActivationSpec).getMaxSessionsIntValue();
-                will(returnValue(10));
-                allowing(messageActivationSpec).getEnableBatchBooleanValue();
-                will(returnValue(Boolean.FALSE));
-                allowing(messageActivationSpec).isUseRAManagedTransactionEnabled();
-                will(returnValue(Boolean.TRUE));
-                allowing(messageEndpointFactory).createEndpoint(with(nullValue(XAResource.class)));
-                will(returnValue(messageEndpoint));
+        lenient().doAnswer(invocation -> {
+            LOG.info("Work manager invocation: " + invocation);
 
-                allowing(workManager).scheduleWork((Work) with(any(Work.class)), with(any(long.class)), with(any(ExecutionContext.class)),
-                        with(any(WorkListener.class)));
-                will(new Action() {
+            if (invocation.getArgument(0) instanceof ServerSessionImpl) {
+                final ServerSessionImpl serverSession1 = (ServerSessionImpl) invocation.getArgument(0);
+                executorService.execute(new Runnable() {
                     @Override
-                    public Object invoke(Invocation invocation) throws Throwable {
-                        LOG.info("Wok manager invocation: " + invocation);
-
-                        if (invocation.getParameter(0) instanceof ServerSessionImpl) {
-                            final ServerSessionImpl serverSession1 = (ServerSessionImpl)invocation.getParameter(0);
-                            executorService.execute(new Runnable() {
-                                @Override
-                                public void run() {
-                                    try {
-                                        serverSession1.run();
-                                    } catch (Exception e) {
-                                        LOG.error("Error on Work run: {}", serverSession1, e);
-                                        e.printStackTrace();
-                                    }
-                                }
-                            });
+                    public void run() {
+                        try {
+                            serverSession1.run();
+                        } catch (Exception e) {
+                            LOG.error("Error on Work run: {}", serverSession1, e);
+                            e.printStackTrace();
                         }
-                        return null;
-                    }
-
-                    @Override
-                    public void describeTo(Description description) {
                     }
                 });
-
-                allowing(messageEndpoint).beforeDelivery((Method) with(any(Method.class)));
-                allowing(messageEndpoint).onMessage(with(any(jakarta.jms.Message.class)));
-                will(new Action() {
-                    @Override
-                    public Object invoke(Invocation invocation) throws Throwable {
-                        messageCountRef.get().countDown();
-                        return null;
-                    }
-
-                    @Override
-                    public void describeTo(Description description) {
-                        description.appendText("Keep message count");
-                    }
-                });
-                allowing(messageEndpoint).afterDelivery();
-                will(new Action() {
-                    @Override
-                    public void describeTo(Description description) {
-                        description.appendText("do sync work on broker");
-                    }
-
-                    @Override
-                    public Object invoke(Invocation invocation) throws Throwable {
-                        TransactionInfo transactionInfo = new TransactionInfo();
-                        transactionInfo.setType(TransactionInfo.END);
-                        LOG.info("AfterDelivery on: " + messageCountRef.get().getCount());
-                        return null;
-                    }
-                });
-                allowing(messageEndpoint).release();
-
-                allowing(workManager).scheduleWork(
-                    with(any(Work.class)),
-                    with(any(Long.TYPE)),
-                    with(nullValue(ExecutionContext.class)),
-                    with(nullValue(WorkListener.class)));
-
             }
-        });
+            return null;
+        }).when(workManager).scheduleWork(any(Work.class), anyLong(), any(ExecutionContext.class), any(WorkListener.class));
+
+        lenient().doNothing().when(messageEndpoint).beforeDelivery(any(Method.class));
+        lenient().doAnswer(invocation -> {
+            messageCountRef.get().countDown();
+            return null;
+        }).when(messageEndpoint).onMessage(any(jakarta.jms.Message.class));
+        lenient().doAnswer(invocation -> {
+            TransactionInfo transactionInfo = new TransactionInfo();
+            transactionInfo.setType(TransactionInfo.END);
+            LOG.info("AfterDelivery on: " + messageCountRef.get().getCount());
+            return null;
+        }).when(messageEndpoint).afterDelivery();
+        lenient().doNothing().when(messageEndpoint).release();
 
         endpointWorker = new ActiveMQEndpointWorker(resourceAdapter, key);
         endpointWorker.setConnection(con);
@@ -456,53 +332,9 @@ public class ServerSessionImplTest {
     @Test
     public void testSessionReusedByPool() throws Exception {
 
-        final MessageEndpointFactory messageEndpointFactory = context.mock(MessageEndpointFactory.class);
-        final MessageResourceAdapter resourceAdapter = context.mock(MessageResourceAdapter.class);
-        final ActiveMQEndpointActivationKey key = context.mock(ActiveMQEndpointActivationKey.class);
-        messageEndpoint = context.mock(MessageEndpointProxy.class);
-        workManager = context.mock(WorkManager.class);
-        final MessageActivationSpec messageActivationSpec = context.mock(MessageActivationSpec.class);
-        final BootstrapContext bootstrapContext = context.mock(BootstrapContext.class);
-        context.checking(new Expectations() {
-            {
-                allowing(bootstrapContext).getWorkManager();
-                will(returnValue(workManager));
-                allowing(resourceAdapter).getBootstrapContext();
-                will(returnValue(bootstrapContext));
-                allowing(messageEndpointFactory).isDeliveryTransacted(with(any(Method.class)));
-                will(returnValue(Boolean.FALSE));
-                allowing(key).getMessageEndpointFactory();
-                will(returnValue(messageEndpointFactory));
-                allowing(key).getActivationSpec();
-                will(returnValue(messageActivationSpec));
-                allowing(messageActivationSpec).isUseJndi();
-                will(returnValue(Boolean.FALSE));
-                allowing(messageActivationSpec).getDestinationType();
-                will(returnValue("jakarta.jms.Queue"));
-                allowing(messageActivationSpec).getDestination();
-                will(returnValue("Queue"));
-                allowing(messageActivationSpec).getAcknowledgeModeForSession();
-                will(returnValue(1));
-                allowing(messageActivationSpec).getMaxSessionsIntValue();
-                will(returnValue(10));
-                allowing(messageActivationSpec).getEnableBatchBooleanValue();
-                will(returnValue(Boolean.FALSE));
-                allowing(messageActivationSpec).isUseRAManagedTransactionEnabled();
-                will(returnValue(Boolean.TRUE));
-                allowing(messageEndpointFactory).createEndpoint(with(nullValue(XAResource.class)));
-                will(returnValue(messageEndpoint));
-
-                allowing(workManager).scheduleWork((Work) with(any(Work.class)), with(any(long.class)), with(any(ExecutionContext.class)),
-                        with(any(WorkListener.class)));
-                allowing(messageEndpoint).release();
-
-                allowing(workManager).scheduleWork(
-                    with(any(Work.class)),
-                    with(any(Long.TYPE)),
-                    with(nullValue(ExecutionContext.class)),
-                    with(nullValue(WorkListener.class)));
-            }
-        });
+        setupCommonMocks();
+        lenient().when(messageActivationSpec.getMaxSessionsIntValue()).thenReturn(10);
+        lenient().doNothing().when(messageEndpoint).release();
 
         endpointWorker = new ActiveMQEndpointWorker(resourceAdapter, key);
         endpointWorker.setConnection(con);

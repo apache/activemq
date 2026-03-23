@@ -18,6 +18,12 @@ package org.apache.activemq.ra;
 
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.same;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 
 import java.lang.reflect.Method;
 
@@ -26,31 +32,23 @@ import jakarta.jms.MessageListener;
 import jakarta.resource.ResourceException;
 import jakarta.resource.spi.endpoint.MessageEndpoint;
 
-import org.jmock.Expectations;
-import org.jmock.Mockery;
-import org.jmock.integration.junit4.JMock;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 @Ignore
-@RunWith(JMock.class)
 public class MessageEndpointProxyTest {
 
     private MessageEndpoint mockEndpoint;
     private EndpointAndListener mockEndpointAndListener;
     private Message stubMessage;
     private MessageEndpointProxy endpointProxy;
-    private Mockery context;
 
     @Before
     public void setUp() {
-        context = new Mockery();
-        mockEndpoint = context.mock(MessageEndpoint.class);
-        context.mock(MessageListener.class);
-        mockEndpointAndListener = context.mock(EndpointAndListener.class);
-        stubMessage = context.mock(Message.class);
+        mockEndpoint = mock(MessageEndpoint.class);
+        mockEndpointAndListener = mock(EndpointAndListener.class);
+        stubMessage = mock(Message.class);
         endpointProxy = new MessageEndpointProxy(mockEndpointAndListener);
     }
 
@@ -66,27 +64,18 @@ public class MessageEndpointProxyTest {
 
     @Test(timeout = 60000)
     public void testSuccessfulCallSequence() throws Exception {
-        setupBeforeDeliverySuccessful();
-        setupOnMessageSuccessful();
-        setupAfterDeliverySuccessful();
-
         doBeforeDeliveryExpectSuccess();
         doOnMessageExpectSuccess();
         doAfterDeliveryExpectSuccess();
+
+        verify(mockEndpointAndListener).beforeDelivery(any(Method.class));
+        verify(mockEndpointAndListener).onMessage(stubMessage);
+        verify(mockEndpointAndListener).afterDelivery();
     }
 
     @Test(timeout = 60000)
     public void testBeforeDeliveryFailure() throws Exception {
-        context.checking(new Expectations() {{
-            oneOf (mockEndpointAndListener).beforeDelivery(with(any(Method.class)));
-            will(throwException(new ResourceException()));
-        }});
-        context.checking(new Expectations() {{
-            never (mockEndpointAndListener).onMessage(null);
-            never (mockEndpointAndListener).afterDelivery();
-        }});
-
-        setupExpectRelease();
+        doThrow(new ResourceException()).when(mockEndpointAndListener).beforeDelivery(any(Method.class));
 
         try {
             endpointProxy.beforeDelivery(ActiveMQEndpointWorker.ON_MESSAGE_METHOD);
@@ -97,21 +86,19 @@ public class MessageEndpointProxyTest {
         doOnMessageExpectInvalidMessageEndpointException();
         doAfterDeliveryExpectInvalidMessageEndpointException();
 
+        verify(mockEndpointAndListener, never()).onMessage(any());
+        verify(mockEndpointAndListener, never()).afterDelivery();
+        verify(mockEndpointAndListener).release();
+
         doFullyDeadCheck();
     }
 
     @Test(timeout = 60000)
     public void testOnMessageFailure() throws Exception {
-        setupBeforeDeliverySuccessful();
-
-        context.checking(new Expectations() {{
-            oneOf (mockEndpointAndListener).onMessage(with(same(stubMessage)));
-            will(throwException(new RuntimeException()));
-        }});
-
-        setupAfterDeliverySuccessful();
-
         doBeforeDeliveryExpectSuccess();
+
+        doThrow(new RuntimeException()).when(mockEndpointAndListener).onMessage(same(stubMessage));
+
         try {
             endpointProxy.onMessage(stubMessage);
             fail("An exception should have been thrown");
@@ -120,27 +107,29 @@ public class MessageEndpointProxyTest {
         }
         doAfterDeliveryExpectSuccess();
 
+        verify(mockEndpointAndListener).beforeDelivery(any(Method.class));
+        verify(mockEndpointAndListener).onMessage(same(stubMessage));
+        verify(mockEndpointAndListener).afterDelivery();
     }
 
     @Test(timeout = 60000)
     public void testAfterDeliveryFailure() throws Exception {
-        setupBeforeDeliverySuccessful();
-        setupOnMessageSuccessful();
-
-        context.checking(new Expectations() {{
-            oneOf (mockEndpointAndListener).afterDelivery(); will(throwException(new ResourceException()));
-        }});
-
-        setupExpectRelease();
-
         doBeforeDeliveryExpectSuccess();
         doOnMessageExpectSuccess();
+
+        doThrow(new ResourceException()).when(mockEndpointAndListener).afterDelivery();
+
         try {
             endpointProxy.afterDelivery();
             fail("An exception should have been thrown");
         } catch (Exception e) {
             assertTrue(true);
         }
+
+        verify(mockEndpointAndListener).beforeDelivery(any(Method.class));
+        verify(mockEndpointAndListener).onMessage(stubMessage);
+        verify(mockEndpointAndListener).afterDelivery();
+        verify(mockEndpointAndListener).release();
 
         doFullyDeadCheck();
     }
@@ -150,30 +139,6 @@ public class MessageEndpointProxyTest {
         doOnMessageExpectInvalidMessageEndpointException();
         doAfterDeliveryExpectInvalidMessageEndpointException();
         doReleaseExpectInvalidMessageEndpointException();
-    }
-
-    private void setupAfterDeliverySuccessful() throws Exception {
-        context.checking(new Expectations() {{
-            oneOf (mockEndpointAndListener).afterDelivery();
-        }});
-    }
-
-    private void setupOnMessageSuccessful() {
-        context.checking(new Expectations() {{
-            oneOf (mockEndpointAndListener).onMessage(with(stubMessage));
-        }});
-    }
-
-    private void setupBeforeDeliverySuccessful() throws Exception {
-        context.checking(new Expectations() {{
-            oneOf (mockEndpointAndListener).beforeDelivery(with(any(Method.class)));
-        }});
-    }
-
-    private void setupExpectRelease() {
-        context.checking(new Expectations() {{
-            oneOf (mockEndpointAndListener).release();
-        }});
     }
 
     private void doBeforeDeliveryExpectSuccess() {
