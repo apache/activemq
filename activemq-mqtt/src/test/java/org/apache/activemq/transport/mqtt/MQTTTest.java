@@ -25,6 +25,9 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.io.IOException;
+import java.lang.reflect.Field;
+import java.net.InetSocketAddress;
 import java.net.ProtocolException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -46,8 +49,11 @@ import javax.jms.Queue;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 
+import javax.net.ssl.SSLEngine;
+import javax.net.ssl.SSLSocket;
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.broker.region.policy.LastImageSubscriptionRecoveryPolicy;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
@@ -55,8 +61,12 @@ import org.apache.activemq.broker.region.policy.RetainedMessageSubscriptionRecov
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.util.ByteSequence;
+import org.apache.activemq.util.NioSslTestUtil;
 import org.apache.activemq.util.Wait;
+import org.fusesource.hawtdispatch.transport.SslTransport;
 import org.fusesource.mqtt.client.BlockingConnection;
+import org.fusesource.mqtt.client.CallbackConnection;
+import org.fusesource.mqtt.client.FutureConnection;
 import org.fusesource.mqtt.client.MQTT;
 import org.fusesource.mqtt.client.Message;
 import org.fusesource.mqtt.client.QoS;
@@ -64,6 +74,7 @@ import org.fusesource.mqtt.client.Topic;
 import org.fusesource.mqtt.client.Tracer;
 import org.fusesource.mqtt.codec.MQTTFrame;
 import org.fusesource.mqtt.codec.PUBLISH;
+import org.junit.Assume;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -1993,4 +2004,64 @@ public class MQTTTest extends MQTTTestSupport {
           }
        }
     }
+
+    protected void testHandshakeRenegotiation(String protocol) throws Exception {
+        MQTT mqtt = createMQTTSslConnection(null, true, protocol);
+        mqtt.setClientId("");
+        mqtt.setCleanSession(true);
+
+        CallbackConnection callbackConnection = mqtt.callbackConnection();
+        BlockingConnection connection = new BlockingConnection(new FutureConnection(callbackConnection));
+        connection.connect();
+
+        SslTransport transport = getSslTransport(callbackConnection);
+        SSLEngine engine = getSslTransport(transport);
+        assertEquals(protocol, engine.getSession().getProtocol());
+
+        // Run 100 key updates in a loop so that we can
+        // verify that the transport correctly processes them
+        // and that we are not stuck in NEED_WRAP state. This
+        // only applies to NIO, for regular SSL the state is not
+        // handled by the transport
+        for (int i = 0; i < 100; i++) {
+            try {
+                engine.beginHandshake();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        // give some time for the handshake updates
+        Thread.sleep(100);
+
+        // Wait to get past NEED_WRAP as that indicates we correctly handled
+        // the key updates issued for TLSv1.3 renegotiation
+        checkHandshakeStatusAdvances(((InetSocketAddress)transport.getLocalAddress()).getPort());
+
+        // Make sure we can still subscribe and receive
+        connection.subscribe(new Topic[] { new Topic("topic1", QoS.AT_LEAST_ONCE) });
+        connection.publish("topic1", "topic".getBytes(), QoS.AT_LEAST_ONCE, false);
+        assertNotNull(connection.receive(2000, TimeUnit.MILLISECONDS));
+
+        connection.disconnect();
+    }
+
+    private void checkHandshakeStatusAdvances(int port) throws Exception {
+        TransportConnector connector = brokerService.getTransportConnectorByScheme(
+                getProtocolScheme());
+        NioSslTestUtil.checkHandshakeStatusAdvances(connector, port);
+    }
+
+    private static SslTransport getSslTransport(CallbackConnection callbackConnection) throws Exception {
+        Field transportField = CallbackConnection.class.getDeclaredField("transport");
+        transportField.setAccessible(true);
+        return (SslTransport) transportField.get(callbackConnection);
+    }
+
+    private static SSLEngine getSslTransport(SslTransport transport) throws Exception {
+        Field engineField =  SslTransport.class.getDeclaredField("engine");
+        engineField.setAccessible(true);
+        return (SSLEngine) engineField.get(transport);
+    }
+
 }

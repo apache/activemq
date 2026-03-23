@@ -16,8 +16,12 @@
  */
 package org.apache.activemq.transport.amqp;
 
+import jakarta.jms.Connection;
+import jakarta.jms.JMSException;
 import java.net.URI;
 
+import java.net.URISyntaxException;
+import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,6 +34,13 @@ public class JMSClientNioPlusSslTest extends JMSClientSslTest {
     @Override
     protected URI getBrokerURI() {
         return amqpNioPlusSslURI;
+    }
+
+    protected Connection createConnection(String clientId, boolean syncPublish) throws JMSException {
+        Connection connection = JMSClientContext.INSTANCE.createConnection(getBrokerURI(), "admin", "password", clientId, syncPublish,
+                enabledProtocols);
+        connection.start();
+        return connection;
     }
 
     @Override
@@ -46,4 +57,15 @@ public class JMSClientNioPlusSslTest extends JMSClientSslTest {
     protected String getTargetConnectorName() {
         return "amqp+nio+ssl";
     }
+
+    @Test(timeout=30000)
+    public void testSslHandshakeRenegotiationTlsv12() throws Exception {
+        testSslHandshakeRenegotiation("TLSv1.2");
+    }
+
+    @Test(timeout=30000)
+    public void testSslHandshakeRenegotiationTlsv13() throws Exception {
+        testSslHandshakeRenegotiation("TLSv1.3");
+    }
+
 }

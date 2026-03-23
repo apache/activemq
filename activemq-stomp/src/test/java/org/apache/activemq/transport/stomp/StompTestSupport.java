@@ -21,6 +21,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.Socket;
 import java.security.ProtectionDomain;
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
@@ -29,6 +30,7 @@ import javax.jms.JMSException;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 
+import javax.net.ssl.SSLContext;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerPlugin;
 import org.apache.activemq.broker.BrokerService;
@@ -70,6 +72,7 @@ public class StompTestSupport {
     protected StompConnection stompConnection;
     protected ActiveMQConnectionFactory cf;
     protected Vector<Throwable> exceptions = new Vector<Throwable>();
+    protected String transportConnectorName = null;
 
     @Rule public TestName name = new TestName();
 
@@ -118,6 +121,30 @@ public class StompTestSupport {
         LOG.info("========== finished " + getName() + " ==========");
     }
 
+    protected Socket createSslSocket(String host, int port, String protocol) throws IOException {
+        try {
+            final SSLContext context;
+            if (protocol != null) {
+                File keyStore = new File(basedir(), "src/test/resources/server.keystore");
+                File trustStore = new File(basedir(), "src/test/resources/client.keystore");
+
+                final ResourceLoadingSslContext sslContext = new ResourceLoadingSslContext();
+                sslContext.setKeyStore(keyStore.getCanonicalPath());
+                sslContext.setKeyStorePassword("password");
+                sslContext.setTrustStore(trustStore.getCanonicalPath());
+                sslContext.setTrustStorePassword("password");
+                sslContext.setProtocol(protocol);
+                sslContext.afterPropertiesSet();
+                context = sslContext.getSSLContext();
+            } else {
+                context = SSLContext.getDefault();
+            }
+            return context.getSocketFactory().createSocket(host, port);
+        } catch (Exception e) {
+            throw new IOException(e);
+        }
+    }
+
     public void startBroker() throws Exception {
         if (brokerService != null) {
             stopBroker();
@@ -151,7 +178,7 @@ public class StompTestSupport {
 
         ArrayList<BrokerPlugin> plugins = new ArrayList<BrokerPlugin>();
 
-        addTranportConnectors();
+        transportConnectorName = addTranportConnectors();
         addOpenWireConnector();
 
         BrokerPlugin authenticationPlugin = configureAuthentication();
@@ -291,7 +318,7 @@ public class StompTestSupport {
         cf = new ActiveMQConnectionFactory(jmsUri);
     }
 
-    protected void addTranportConnectors() throws Exception {
+    protected String addTranportConnectors() throws Exception {
         TransportConnector connector = null;
 
         if (isUseTcpConnector()) {
@@ -342,6 +369,8 @@ public class StompTestSupport {
             autoNioSslPort = connector.getConnectUri().getPort();
             LOG.debug("Using auto+nio+ssl port " + autoNioSslPort);
         }
+
+        return connector.getName();
     }
 
     protected boolean isPersistent() {

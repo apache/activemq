@@ -36,7 +36,9 @@ public class AutoSslTransportBrokerTest extends TransportBrokerTestSupport {
 
     @Override
     protected URI getBindURI() throws URISyntaxException {
-        return new URI("auto+ssl://localhost:0?soWriteTimeout=20000");
+        String uri = super.getBindURI().toString() + "?soWriteTimeout=20000";
+        uri = enabledProtocols != null ? uri + "&socket.enabledProtocols=" + enabledProtocols : uri;
+        return new URI(uri);
     }
 
     @Override
@@ -51,6 +53,14 @@ public class AutoSslTransportBrokerTest extends TransportBrokerTestSupport {
 
         maxWait = 10000;
         super.setUp();
+    }
+
+    public void testSslHandshakeRenegotiationTlsv12() throws Exception {
+        testSslHandshakeRenegotiation("TLSv1.2");
+    }
+
+    public void testSslHandshakeRenegotiationTlsv13() throws Exception {
+        testSslHandshakeRenegotiation("TLSv1.3");
     }
 
     public static Test suite() {
