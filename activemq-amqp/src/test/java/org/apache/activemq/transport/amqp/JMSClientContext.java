@@ -59,7 +59,12 @@ public class JMSClientContext {
     }
 
     public Connection createConnection(URI remoteURI, String username, String password, String clientId, boolean syncPublish) throws JMSException {
-        ConnectionFactory factory = createConnectionFactory(remoteURI, username, password, syncPublish);
+        return createConnection(remoteURI, username, password, clientId, syncPublish, null);
+    }
+
+    public Connection createConnection(URI remoteURI, String username, String password, String clientId, boolean syncPublish,
+            String sslProtocol) throws JMSException {
+        ConnectionFactory factory = createConnectionFactory(remoteURI, username, password, syncPublish, sslProtocol);
 
         Connection connection = factory.createConnection();
         connection.setExceptionListener(new ExceptionListener() {
@@ -166,7 +171,12 @@ public class JMSClientContext {
     }
 
     private ConnectionFactory createConnectionFactory(
-        URI remoteURI, String username, String password, boolean syncPublish) {
+            URI remoteURI, String username, String password, boolean syncPublish) {
+        return createConnectionFactory(remoteURI, username, password, syncPublish, null);
+    }
+
+    private ConnectionFactory createConnectionFactory(
+        URI remoteURI, String username, String password, boolean syncPublish, String sslProtocol) {
 
         String clientScheme;
         boolean useSSL = false;
@@ -204,6 +214,9 @@ public class JMSClientContext {
 
         if (useSSL) {
             amqpURI += "?transport.verifyHost=false";
+            if (sslProtocol != null) {
+                amqpURI += "&transport.enabledProtocols=" + sslProtocol;
+            }
         }
 
         LOG.debug("In createConnectionFactory using URI: {}", amqpURI);

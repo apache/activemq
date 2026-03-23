@@ -171,7 +171,24 @@ public class AutoInitNioSSLTransport extends NIOSSLTransport {
                 if (!plain.hasRemaining()) {
                     int readCount = secureRead(plain);
 
-                    if (readCount == 0) {
+                    /*
+                     * 1) If data is read, continue below to the processCommand() call
+                     *    and handle processing the data in the buffer. This takes priority
+                     *    and some handshake status updates (like NEED_WRAP) can be handled
+                     *    concurrently with application data (like TLSv1.3 key updates)
+                     *    when the broker sends data to a client.
+                     *
+                     * 2) If no data is read, it's possible that the connection is waiting
+                     *    for us to process a handshake update (either KeyUpdate for
+                     *    TLS1.3 or renegotiation for TLSv1.2) so we need to check and process
+                     *    any handshake updates. If the handshake status was updated,
+                     *    we want to continue and loop again to recheck if we can now read new
+                     *    application data into the buffer after processing the updates.
+                     *
+                     * 3) If no data is read, and no handshake update is needed, then we
+                     *    are finished and can break.
+                     */
+                    if (readCount == 0 && !handleHandshakeUpdate()) {
                         break;
                     }
 
@@ -184,7 +201,11 @@ public class AutoInitNioSSLTransport extends NIOSSLTransport {
                     receiveCounter.addAndGet(readCount);
                 }
 
-                if (status == SSLEngineResult.Status.OK && handshakeStatus != SSLEngineResult.HandshakeStatus.NEED_UNWRAP) {
+                // Try and process commands if there is any data in plain if status is OK
+                // Handshake renegotiation can happen concurrently with application data reads
+                // so it's possible to have read data that needs processing even if the
+                // handshake status indicates NEED_UNWRAP
+                if (status == SSLEngineResult.Status.OK && plain.hasRemaining()) {
                     processCommand(plain);
                     //we have received enough bytes to detect the protocol
                     if (receiveCounter.get() >= 8) {
