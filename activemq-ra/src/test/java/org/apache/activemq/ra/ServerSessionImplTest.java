@@ -40,7 +40,6 @@ import jakarta.resource.spi.work.ExecutionContext;
 import jakarta.resource.spi.work.Work;
 import jakarta.resource.spi.work.WorkListener;
 import jakarta.resource.spi.work.WorkManager;
-import javax.transaction.xa.XAResource;
 import java.lang.reflect.Method;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -68,12 +67,41 @@ public class ServerSessionImplTest {
     private ActiveMQSession session;
     private ActiveMQEndpointWorker endpointWorker;
 
+    private MessageEndpointFactory messageEndpointFactory;
+    private MessageResourceAdapter resourceAdapter;
+    private ActiveMQEndpointActivationKey key;
+    private MessageActivationSpec messageActivationSpec;
+    private BootstrapContext bootstrapContext;
+
     @Before
     public void setUp() throws Exception {
         org.apache.activemq.ActiveMQConnectionFactory factory = new org.apache.activemq.ActiveMQConnectionFactory(BROKER_URL);
         con = (ActiveMQConnection) factory.createConnection();
         con.start();
         session = (ActiveMQSession) con.createSession(false, Session.AUTO_ACKNOWLEDGE);
+    }
+
+    private void setupCommonMocks() throws Exception {
+        messageEndpointFactory = mock(MessageEndpointFactory.class);
+        resourceAdapter = mock(MessageResourceAdapter.class);
+        key = mock(ActiveMQEndpointActivationKey.class);
+        messageEndpoint = mock(MessageEndpointProxy.class);
+        workManager = mock(WorkManager.class);
+        messageActivationSpec = mock(MessageActivationSpec.class);
+        bootstrapContext = mock(BootstrapContext.class);
+
+        lenient().when(bootstrapContext.getWorkManager()).thenReturn(workManager);
+        lenient().when(resourceAdapter.getBootstrapContext()).thenReturn(bootstrapContext);
+        lenient().when(messageEndpointFactory.isDeliveryTransacted(any(Method.class))).thenReturn(Boolean.FALSE);
+        lenient().when(key.getMessageEndpointFactory()).thenReturn(messageEndpointFactory);
+        lenient().when(key.getActivationSpec()).thenReturn(messageActivationSpec);
+        lenient().when(messageActivationSpec.isUseJndi()).thenReturn(Boolean.FALSE);
+        lenient().when(messageActivationSpec.getDestinationType()).thenReturn("jakarta.jms.Queue");
+        lenient().when(messageActivationSpec.getDestination()).thenReturn("Queue");
+        lenient().when(messageActivationSpec.getAcknowledgeModeForSession()).thenReturn(1);
+        lenient().when(messageActivationSpec.getEnableBatchBooleanValue()).thenReturn(Boolean.FALSE);
+        lenient().when(messageActivationSpec.isUseRAManagedTransactionEnabled()).thenReturn(Boolean.TRUE);
+        lenient().when(messageEndpointFactory.createEndpoint(isNull())).thenReturn(messageEndpoint);
     }
 
     @After
@@ -104,27 +132,8 @@ public class ServerSessionImplTest {
         final int maxMessages = 4000;
         final CountDownLatch messageCount = new CountDownLatch(maxMessages);
 
-        final MessageEndpointFactory messageEndpointFactory = mock(MessageEndpointFactory.class);
-        final MessageResourceAdapter resourceAdapter = mock(MessageResourceAdapter.class);
-        final ActiveMQEndpointActivationKey key = mock(ActiveMQEndpointActivationKey.class);
-        messageEndpoint = mock(MessageEndpointProxy.class);
-        workManager = mock(WorkManager.class);
-        final MessageActivationSpec messageActivationSpec = mock(MessageActivationSpec.class);
-        final BootstrapContext boostrapContext = mock(BootstrapContext.class);
-
-        lenient().when(boostrapContext.getWorkManager()).thenReturn(workManager);
-        lenient().when(resourceAdapter.getBootstrapContext()).thenReturn(boostrapContext);
-        lenient().when(messageEndpointFactory.isDeliveryTransacted(any(Method.class))).thenReturn(Boolean.FALSE);
-        lenient().when(key.getMessageEndpointFactory()).thenReturn(messageEndpointFactory);
-        lenient().when(key.getActivationSpec()).thenReturn(messageActivationSpec);
-        lenient().when(messageActivationSpec.isUseJndi()).thenReturn(Boolean.FALSE);
-        lenient().when(messageActivationSpec.getDestinationType()).thenReturn("jakarta.jms.Queue");
-        lenient().when(messageActivationSpec.getDestination()).thenReturn("Queue");
-        lenient().when(messageActivationSpec.getAcknowledgeModeForSession()).thenReturn(1);
+        setupCommonMocks();
         lenient().when(messageActivationSpec.getMaxSessionsIntValue()).thenReturn(1);
-        lenient().when(messageActivationSpec.getEnableBatchBooleanValue()).thenReturn(Boolean.FALSE);
-        lenient().when(messageActivationSpec.isUseRAManagedTransactionEnabled()).thenReturn(Boolean.TRUE);
-        lenient().when(messageEndpointFactory.createEndpoint(isNull())).thenReturn(messageEndpoint);
 
         lenient().doAnswer(invocation -> null).when(workManager).scheduleWork(
             any(Work.class), anyLong(), any(ExecutionContext.class), any(WorkListener.class));
@@ -195,27 +204,8 @@ public class ServerSessionImplTest {
 
         ExecutorService executorService = Executors.newCachedThreadPool();
 
-        final MessageEndpointFactory messageEndpointFactory = mock(MessageEndpointFactory.class);
-        final MessageResourceAdapter resourceAdapter = mock(MessageResourceAdapter.class);
-        final ActiveMQEndpointActivationKey key = mock(ActiveMQEndpointActivationKey.class);
-        messageEndpoint = mock(MessageEndpointProxy.class);
-        workManager = mock(WorkManager.class);
-        final MessageActivationSpec messageActivationSpec = mock(MessageActivationSpec.class);
-        final BootstrapContext boostrapContext = mock(BootstrapContext.class);
-
-        lenient().when(boostrapContext.getWorkManager()).thenReturn(workManager);
-        lenient().when(resourceAdapter.getBootstrapContext()).thenReturn(boostrapContext);
-        lenient().when(messageEndpointFactory.isDeliveryTransacted(any(Method.class))).thenReturn(Boolean.FALSE);
-        lenient().when(key.getMessageEndpointFactory()).thenReturn(messageEndpointFactory);
-        lenient().when(key.getActivationSpec()).thenReturn(messageActivationSpec);
-        lenient().when(messageActivationSpec.isUseJndi()).thenReturn(Boolean.FALSE);
-        lenient().when(messageActivationSpec.getDestinationType()).thenReturn("jakarta.jms.Queue");
-        lenient().when(messageActivationSpec.getDestination()).thenReturn("Queue");
-        lenient().when(messageActivationSpec.getAcknowledgeModeForSession()).thenReturn(1);
+        setupCommonMocks();
         lenient().when(messageActivationSpec.getMaxSessionsIntValue()).thenReturn(10);
-        lenient().when(messageActivationSpec.getEnableBatchBooleanValue()).thenReturn(Boolean.FALSE);
-        lenient().when(messageActivationSpec.isUseRAManagedTransactionEnabled()).thenReturn(Boolean.TRUE);
-        lenient().when(messageEndpointFactory.createEndpoint(isNull())).thenReturn(messageEndpoint);
 
         lenient().doAnswer(invocation -> {
             LOG.info("Work manager invocation: " + invocation);
@@ -342,27 +332,8 @@ public class ServerSessionImplTest {
     @Test
     public void testSessionReusedByPool() throws Exception {
 
-        final MessageEndpointFactory messageEndpointFactory = mock(MessageEndpointFactory.class);
-        final MessageResourceAdapter resourceAdapter = mock(MessageResourceAdapter.class);
-        final ActiveMQEndpointActivationKey key = mock(ActiveMQEndpointActivationKey.class);
-        messageEndpoint = mock(MessageEndpointProxy.class);
-        workManager = mock(WorkManager.class);
-        final MessageActivationSpec messageActivationSpec = mock(MessageActivationSpec.class);
-        final BootstrapContext bootstrapContext = mock(BootstrapContext.class);
-
-        lenient().when(bootstrapContext.getWorkManager()).thenReturn(workManager);
-        lenient().when(resourceAdapter.getBootstrapContext()).thenReturn(bootstrapContext);
-        lenient().when(messageEndpointFactory.isDeliveryTransacted(any(Method.class))).thenReturn(Boolean.FALSE);
-        lenient().when(key.getMessageEndpointFactory()).thenReturn(messageEndpointFactory);
-        lenient().when(key.getActivationSpec()).thenReturn(messageActivationSpec);
-        lenient().when(messageActivationSpec.isUseJndi()).thenReturn(Boolean.FALSE);
-        lenient().when(messageActivationSpec.getDestinationType()).thenReturn("jakarta.jms.Queue");
-        lenient().when(messageActivationSpec.getDestination()).thenReturn("Queue");
-        lenient().when(messageActivationSpec.getAcknowledgeModeForSession()).thenReturn(1);
+        setupCommonMocks();
         lenient().when(messageActivationSpec.getMaxSessionsIntValue()).thenReturn(10);
-        lenient().when(messageActivationSpec.getEnableBatchBooleanValue()).thenReturn(Boolean.FALSE);
-        lenient().when(messageActivationSpec.isUseRAManagedTransactionEnabled()).thenReturn(Boolean.TRUE);
-        lenient().when(messageEndpointFactory.createEndpoint(isNull())).thenReturn(messageEndpoint);
         lenient().doNothing().when(messageEndpoint).release();
 
         endpointWorker = new ActiveMQEndpointWorker(resourceAdapter, key);

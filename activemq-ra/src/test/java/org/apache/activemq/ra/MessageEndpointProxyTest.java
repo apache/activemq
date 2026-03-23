@@ -18,8 +18,12 @@ package org.apache.activemq.ra;
 
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import static org.mockito.Mockito.*;
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.same;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 
 import java.lang.reflect.Method;
 
@@ -63,6 +67,10 @@ public class MessageEndpointProxyTest {
         doBeforeDeliveryExpectSuccess();
         doOnMessageExpectSuccess();
         doAfterDeliveryExpectSuccess();
+
+        verify(mockEndpointAndListener).beforeDelivery(any(Method.class));
+        verify(mockEndpointAndListener).onMessage(stubMessage);
+        verify(mockEndpointAndListener).afterDelivery();
     }
 
     @Test(timeout = 60000)
@@ -77,6 +85,10 @@ public class MessageEndpointProxyTest {
         }
         doOnMessageExpectInvalidMessageEndpointException();
         doAfterDeliveryExpectInvalidMessageEndpointException();
+
+        verify(mockEndpointAndListener, never()).onMessage(any());
+        verify(mockEndpointAndListener, never()).afterDelivery();
+        verify(mockEndpointAndListener).release();
 
         doFullyDeadCheck();
     }
@@ -95,6 +107,9 @@ public class MessageEndpointProxyTest {
         }
         doAfterDeliveryExpectSuccess();
 
+        verify(mockEndpointAndListener).beforeDelivery(any(Method.class));
+        verify(mockEndpointAndListener).onMessage(same(stubMessage));
+        verify(mockEndpointAndListener).afterDelivery();
     }
 
     @Test(timeout = 60000)
@@ -110,6 +125,11 @@ public class MessageEndpointProxyTest {
         } catch (Exception e) {
             assertTrue(true);
         }
+
+        verify(mockEndpointAndListener).beforeDelivery(any(Method.class));
+        verify(mockEndpointAndListener).onMessage(stubMessage);
+        verify(mockEndpointAndListener).afterDelivery();
+        verify(mockEndpointAndListener).release();
 
         doFullyDeadCheck();
     }
