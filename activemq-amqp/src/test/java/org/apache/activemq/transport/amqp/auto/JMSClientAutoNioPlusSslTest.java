@@ -16,9 +16,13 @@
  */
 package org.apache.activemq.transport.amqp.auto;
 
+import jakarta.jms.Connection;
+import jakarta.jms.JMSException;
 import java.net.URI;
 
+import org.apache.activemq.transport.amqp.JMSClientContext;
 import org.apache.activemq.transport.amqp.JMSClientSslTest;
+import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,6 +35,13 @@ public class JMSClientAutoNioPlusSslTest extends JMSClientSslTest {
     @Override
     protected URI getBrokerURI() {
         return autoNioPlusSslURI;
+    }
+
+    protected Connection createConnection(String clientId, boolean syncPublish) throws JMSException {
+        Connection connection = JMSClientContext.INSTANCE.createConnection(getBrokerURI(), "admin", "password", clientId, syncPublish,
+                enabledProtocols);
+        connection.start();
+        return connection;
     }
 
     @Override
@@ -47,4 +58,15 @@ public class JMSClientAutoNioPlusSslTest extends JMSClientSslTest {
     protected String getTargetConnectorName() {
         return "auto+nio+ssl";
     }
+
+    @Test(timeout=30000)
+    public void testSslHandshakeRenegotiationTlsv12() throws Exception {
+        testSslHandshakeRenegotiation("TLSv1.2");
+    }
+
+    @Test(timeout=30000)
+    public void testSslHandshakeRenegotiationTlsv13() throws Exception {
+        testSslHandshakeRenegotiation("TLSv1.3");
+    }
+
 }

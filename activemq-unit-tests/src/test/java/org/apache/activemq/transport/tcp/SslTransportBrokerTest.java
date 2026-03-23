@@ -38,7 +38,9 @@ public class SslTransportBrokerTest extends TransportBrokerTestSupport {
 
     @Override
     protected URI getBindURI() throws URISyntaxException {
-        return new URI(super.getBindURI().toString() + "?soWriteTimeout=20000");
+        String uri = super.getBindURI().toString() + "?soWriteTimeout=20000";
+        uri = enabledProtocols != null ? uri + "&socket.enabledProtocols=" + enabledProtocols : uri;
+        return new URI(uri);
     }
 
     protected void setUp() throws Exception {
@@ -54,6 +56,14 @@ public class SslTransportBrokerTest extends TransportBrokerTestSupport {
         // and a shorter timeout reduces overall test time and potential race conditions during tearDown
         maxWait = 5000;
         super.setUp();
+    }
+
+    public void testSslHandshakeRenegotiationTlsv12() throws Exception {
+        testSslHandshakeRenegotiation("TLSv1.2");
+    }
+
+    public void testSslHandshakeRenegotiationTlsv13() throws Exception {
+        testSslHandshakeRenegotiation("TLSv1.3");
     }
 
     public static Test suite() {

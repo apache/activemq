@@ -36,6 +36,7 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
 import javax.net.ssl.SSLEngineResult;
 import javax.net.ssl.SSLEngineResult.HandshakeStatus;
+import javax.net.ssl.SSLEngineResult.Status;
 import javax.net.ssl.SSLParameters;
 import javax.net.ssl.SSLPeerUnverifiedException;
 import javax.net.ssl.SSLSession;
@@ -271,10 +272,26 @@ public class NIOSSLTransport extends NIOTransport {
                 }
 
                 if (!plain.hasRemaining()) {
-
                     int readCount = secureRead(plain);
 
-                    if (readCount == 0) {
+                    /*
+                     * 1) If data is read, continue below to the processCommand() call
+                     *    and handle processing the data in the buffer. This takes priority
+                     *    and some handshake status updates (like NEED_WRAP) can be handled
+                     *    concurrently with application data (like TLSv1.3 key updates)
+                     *    when the broker sends data to a client.
+                     *
+                     * 2) If no data is read, it's possible that the connection is waiting
+                     *    for us to process a handshake update (either KeyUpdate for
+                     *    TLS1.3 or renegotiation for TLSv1.2) so we need to check and process
+                     *    any handshake updates. If the handshake status was updated,
+                     *    we want to continue and loop again to recheck if we can now read new
+                     *    application data into the buffer after processing the updates.
+                     *
+                     * 3) If no data is read, and no handshake update is needed, then we
+                     *    are finished and can break.
+                     */
+                    if (readCount == 0 && !handleHandshakeUpdate()) {
                         break;
                     }
 
@@ -288,7 +305,11 @@ public class NIOSSLTransport extends NIOTransport {
                     receiveCounter.addAndGet(readCount);
                 }
 
-                if (status == SSLEngineResult.Status.OK && handshakeStatus != SSLEngineResult.HandshakeStatus.NEED_UNWRAP) {
+                // Try and process commands if there is any data in plain if status is OK.
+                // Handshake renegotiation can happen concurrently with application data reads,
+                // so it's possible to have data in the buffer that needs processing even if the
+                // handshake status indicates NEED_UNWRAP
+                if (status == SSLEngineResult.Status.OK && plain.hasRemaining()) {
                     processCommand(plain);
                 }
             }
@@ -429,6 +450,43 @@ public class NIOSSLTransport extends NIOTransport {
         plain.flip();
 
         return plain.remaining();
+    }
+
+    /**
+     * Checks if the connection is waiting for the broker to process an update
+     * to continue with handshaking and processes the necessary updates
+     *
+     * @return True if the handshake status was updated
+     * @throws IOException if an error occurs during processing
+     */
+    protected boolean handleHandshakeUpdate() throws IOException {
+        switch (handshakeStatus) {
+            // For NEED_WRAP, call write with a 0 size buffer which will flush any
+            // pending handshaking updates even if there is no application data to write
+            case NEED_WRAP:
+                ((NIOOutputStream) buffOut).write(ByteBuffer.allocate(0));
+                handshakeStatus = sslEngine.getHandshakeStatus();
+                return true;
+            // For NEED_TASK, process any outstanding tasks needed to continue the
+            // handshake negotiation
+            case NEED_TASK:
+                Runnable task;
+                while ((task = sslEngine.getDelegatedTask()) != null) {
+                    task.run();
+                }
+                handshakeStatus = sslEngine.getHandshakeStatus();
+                return true;
+            // We need to update the session when finished, and then
+            // we can update the handshake status which will advance to
+            // NOT_HANDSHAKING before we continue and try and read
+            // more data
+            case FINISHED:
+                sslSession = sslEngine.getSession();
+                handshakeStatus = sslEngine.getHandshakeStatus();
+                return true;
+            default:
+                return false;
+        }
     }
 
     protected void doHandshake() throws Exception {
