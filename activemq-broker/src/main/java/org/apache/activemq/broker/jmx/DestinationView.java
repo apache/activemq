@@ -136,6 +136,12 @@ public class DestinationView implements DestinationViewMBean {
         return messageStore != null ? messageStore.getMessageStoreStatistics().getMessageSize().getTotalSize() : 0;
     }
 
+    @Override
+    public long getMessagesCachedCount() {
+        return destination.getDestinationStatistics().getMessagesCached().getCount();
+    }
+
+    @Deprecated(forRemoval = true) // see: getMessagesCachedCount() instead. This method name is inconsistent
     public long getMessagesCached() {
         return destination.getDestinationStatistics().getMessagesCached().getCount();
     }
@@ -437,10 +443,12 @@ public class DestinationView implements DestinationViewMBean {
         return destination.getMaxProducersToAudit();
     }
 
+    @Override
     public boolean isEnableAudit() {
         return destination.isEnableAudit();
     }
 
+    @Override
     public void setEnableAudit(boolean enableAudit) {
         destination.setEnableAudit(enableAudit);
     }
