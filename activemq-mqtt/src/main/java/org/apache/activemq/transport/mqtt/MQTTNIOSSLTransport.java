@@ -21,7 +21,6 @@ import java.net.Socket;
 import java.net.URI;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.net.SocketFactory;
 import javax.net.ssl.SSLEngine;
@@ -29,15 +28,10 @@ import javax.net.ssl.SSLEngine;
 import org.apache.activemq.transport.nio.NIOSSLTransport;
 import org.apache.activemq.wireformat.WireFormat;
 import org.fusesource.hawtbuf.DataByteArrayInputStream;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class MQTTNIOSSLTransport extends NIOSSLTransport {
 
-    private static final Logger LOG = LoggerFactory.getLogger(MQTTNIOSSLTransport.class);
-
     private MQTTCodec codec;
-    private final AtomicInteger concurrentParseCount = new AtomicInteger(0);
 
     public MQTTNIOSSLTransport(WireFormat wireFormat, SocketFactory socketFactory, URI remoteLocation, URI localLocation) throws UnknownHostException, IOException {
         super(wireFormat, socketFactory, remoteLocation, localLocation);
@@ -63,19 +57,10 @@ public class MQTTNIOSSLTransport extends NIOSSLTransport {
 
     @Override
     protected void processCommand(ByteBuffer plain) throws Exception {
-        final int concurrent = concurrentParseCount.incrementAndGet();
-        try {
-            if (concurrent > 1) {
-                LOG.error("CONCURRENT MQTT codec access detected! count={}, thread={}",
-                        concurrent, Thread.currentThread().getName());
-            }
-            final byte[] fill = new byte[plain.remaining()];
-            plain.get(fill);
-            final DataByteArrayInputStream dis = new DataByteArrayInputStream(fill);
-            codec.parse(dis, fill.length);
-        } finally {
-            concurrentParseCount.decrementAndGet();
-        }
+        byte[] fill = new byte[plain.remaining()];
+        plain.get(fill);
+        DataByteArrayInputStream dis = new DataByteArrayInputStream(fill);
+        codec.parse(dis, fill.length);
     }
 
     /* (non-Javadoc)
