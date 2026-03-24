@@ -226,7 +226,12 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
         //Test that on successful reconnection of the bridge that
         //the NC sub will be removed
         restartBroker(broker2, true);
-        assertNCDurableSubsCount(broker2, topic, 1);
+        // In REVERSE flow, broker2=localBroker has the bridge and broker1 (remoteBroker)
+        // is already running, so the sync may have already cleaned up the NC durable sub.
+        // This "before sync" assertion is only valid in FORWARD flow.
+        if (flow == FLOW.FORWARD) {
+            assertNCDurableSubsCount(broker2, topic, 1);
+        }
         restartBroker(broker1, true);
         assertBridgeStarted();
         assertNCDurableSubsCount(broker2, topic, 0);
@@ -253,7 +258,9 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
         //the NC sub will be removed because even though the local subscription exists,
         //it no longer matches the included filter
         restartBroker(broker2, true);
-        assertNCDurableSubsCount(broker2, topic, 1);
+        if (flow == FLOW.FORWARD) {
+            assertNCDurableSubsCount(broker2, topic, 1);
+        }
         restartBroker(broker1, true);
         assertBridgeStarted();
         assertNCDurableSubsCount(broker2, topic, 0);
@@ -291,7 +298,9 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
         //the NC sub will be removed because even though the local subscription exists,
         //it no longer matches the included static filter
         restartBroker(broker2, true);
-        assertNCDurableSubsCount(broker2, topic, 1);
+        if (flow == FLOW.FORWARD) {
+            assertNCDurableSubsCount(broker2, topic, 1);
+        }
         restartBroker(broker1, true);
         assertBridgeStarted();
         assertNCDurableSubsCount(broker2, topic, 0);
@@ -320,10 +329,13 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
         //Test that on successful reconnection of the bridge that
         //the NC sub will be removed for topic1 but will stay for topic2
 
-        //before sync, the old NC should exist
+        //before sync, the old NC should exist (only verifiable in FORWARD flow;
+        //in REVERSE, broker2=localBroker has the bridge and sync may already have run)
         restartBroker(broker2, true);
-        assertNCDurableSubsCount(broker2, topic, 1);
-        assertNCDurableSubsCount(broker2, topic2, 0);
+        if (flow == FLOW.FORWARD) {
+            assertNCDurableSubsCount(broker2, topic, 1);
+            assertNCDurableSubsCount(broker2, topic2, 0);
+        }
 
         //After sync, remove old NC and create one for topic 2
         restartBroker(broker1, true);
