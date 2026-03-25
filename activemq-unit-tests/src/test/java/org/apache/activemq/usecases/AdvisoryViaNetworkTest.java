@@ -311,6 +311,7 @@ public class AdvisoryViaNetworkTest extends JmsMultipleBrokersTestSupport {
         networkBridge.setDuplex(true);
         startAllBrokers();
         verifyPeerBrokerInfo(brokers.get("A"), 1);
+        verifyPeerBrokerInfo(brokers.get("B"), 1);
 
 
         MessageConsumer consumerA = createConsumer("A", advisoryTopic);
