@@ -16,6 +16,9 @@
  */
 package org.apache.activemq.broker.jmx;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.URI;
@@ -2056,5 +2059,27 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         assertTrue(subscription.isDispatchAsync());
         assertFalse(subscription.isRetroactive());
         assertTrue(subscription.isExclusive());
+    }
+
+    // Test to verify VM transport is not allowed to be added as a connector
+    // through the Broker MBean
+    public void testAddVmConnectorBlockedBrokerView() throws Exception {
+        ObjectName brokerName = assertRegisteredObjectName(domain + ":type=Broker,brokerName=localhost");
+        BrokerViewMBean brokerView = MBeanServerInvocationHandler.newProxyInstance(mbeanServer, brokerName, BrokerViewMBean.class, true);
+
+        try {
+            brokerView.addConnector("vm://localhost");
+            fail("Should have failed trying to add vm connector bridge");
+        } catch (IllegalArgumentException e) {
+            assertEquals("VM scheme is not allowed", e.getMessage());
+        }
+
+        try {
+            // verify any composite URI is blocked as well
+            brokerView.addConnector("failover:(tcp://0.0.0.0:0,vm://" + brokerName + ")");
+            fail("Should have failed trying to add vm connector bridge");
+        } catch (IllegalArgumentException e) {
+            assertEquals("VM scheme is not allowed", e.getMessage());
+        }
     }
 }
