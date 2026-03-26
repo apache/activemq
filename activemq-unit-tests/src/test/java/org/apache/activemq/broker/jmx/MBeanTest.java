@@ -68,6 +68,7 @@ import org.apache.activemq.test.annotations.ParallelTest;
 import org.apache.activemq.util.JMXSupport;
 import org.apache.activemq.util.URISupport;
 import org.apache.activemq.util.Wait;
+import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -2069,7 +2070,7 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
 
         try {
             brokerView.addConnector("vm://localhost");
-            fail("Should have failed trying to add vm connector bridge");
+            fail("Should have failed trying to add vm connector");
         } catch (IllegalArgumentException e) {
             assertEquals("VM scheme is not allowed", e.getMessage());
         }
@@ -2077,9 +2078,28 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         try {
             // verify any composite URI is blocked as well
             brokerView.addConnector("failover:(tcp://0.0.0.0:0,vm://" + brokerName + ")");
-            fail("Should have failed trying to add vm connector bridge");
+            fail("Should have failed trying to add vm connector");
         } catch (IllegalArgumentException e) {
             assertEquals("VM scheme is not allowed", e.getMessage());
         }
+
+        try {
+            // verify nested composite URI is blocked
+            brokerView.addConnector("failover:(failover:(failover:(vm://localhost)))");
+            fail("Should have failed trying to add vm connector");
+        } catch (IllegalArgumentException e) {
+            assertEquals("VM scheme is not allowed", e.getMessage());
+        }
+
+        try {
+            // verify nested composite URI with more than 5 levels is blocked
+            brokerView.addConnector(
+                    "static:(failover:(failover:(failover:(failover:(failover:(tcp://localhost:0))))))");
+            fail("Should have failed trying to add vm connector bridge");
+        } catch (IllegalArgumentException e) {
+            assertEquals("URI can't contain more than 5 nested composite URIs", e.getMessage());
+        }
+
     }
+
 }
