@@ -603,18 +603,22 @@ public class BrokerView implements BrokerViewMBean {
         return safeGetBroker().getDestinationStatistics().getMaxUncommittedExceededCount().getCount();
 	}
 
-
-    // Validate the Url does not contain VM transport
     private static void validateAllowedUrl(String uriString) throws URISyntaxException {
-        URI uri = new URI(uriString);
+        validateAllowedUri(new URI(uriString));
+    }
+
+    // Validate the URI does not contain VM transport
+    private static void validateAllowedUri(URI uri) throws URISyntaxException {
         // First check the main URI scheme
         validateAllowedScheme(uri.getScheme());
 
-        // If composite, also check all schemes for each component
+        // If composite, iterate and check each of the composite URIs
         if (URISupport.isCompositeURI(uri)) {
             URISupport.CompositeData data = URISupport.parseComposite(uri);
             for (URI component : data.getComponents()) {
-                validateAllowedScheme(component.getScheme());
+                // Each URI could be a nested composite URI so
+                // call validateAllowedUri() to validate it
+                validateAllowedUri(component);
             }
         }
     }

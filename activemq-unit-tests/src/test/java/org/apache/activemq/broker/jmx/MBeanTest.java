@@ -2069,7 +2069,7 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
 
         try {
             brokerView.addConnector("vm://localhost");
-            fail("Should have failed trying to add vm connector bridge");
+            fail("Should have failed trying to add vm connector");
         } catch (IllegalArgumentException e) {
             assertEquals("VM scheme is not allowed", e.getMessage());
         }
@@ -2077,9 +2077,18 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         try {
             // verify any composite URI is blocked as well
             brokerView.addConnector("failover:(tcp://0.0.0.0:0,vm://" + brokerName + ")");
-            fail("Should have failed trying to add vm connector bridge");
+            fail("Should have failed trying to add vm connector");
         } catch (IllegalArgumentException e) {
             assertEquals("VM scheme is not allowed", e.getMessage());
         }
+
+        try {
+            // verify nested composite URI is blocked
+            brokerView.addConnector("failover:(failover:(failover:(vm://localhost)))");
+            fail("Should have failed trying to add vm connector");
+        } catch (IllegalArgumentException e) {
+            assertEquals("VM scheme is not allowed", e.getMessage());
+        }
+
     }
 }

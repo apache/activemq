@@ -104,5 +104,13 @@ public class JmxCreateNCTest {
         } catch (IllegalArgumentException e) {
             assertEquals("VM scheme is not allowed", e.getMessage());
         }
+
+        try {
+            // verify nested composite URI is blocked
+            proxy.addNetworkConnector("static:(failover:(failover:(tcp://localhost,vm://localhost)))");
+            fail("Should have failed trying to add vm connector bridge");
+        } catch (IllegalArgumentException e) {
+            assertEquals("VM scheme is not allowed", e.getMessage());
+        }
     }
 }
