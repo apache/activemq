@@ -84,6 +84,22 @@ public class QueueBrowseServletTest {
             Throwable rootCause = e.getRootCause();
             assertTrue(rootCause instanceof InstantiationException);
             // view is in allow list but wrong interface type
+            assertEquals(rootCause.getMessage(), "Provided key may not contain path separators");
+        }
+    }
+
+    @Test
+    public void testPathTraversal2() throws Exception {
+        QueueBrowseServlet servlet = new QueueBrowseServlet();
+        // illegal path traversal
+        when(request.getParameter("view")).thenReturn("..");
+        try {
+            servlet.getMessageRenderer(request);
+            fail("Should have thrown an exception");
+        } catch (NoSuchViewStyleException e) {
+            Throwable rootCause = e.getRootCause();
+            assertTrue(rootCause instanceof InstantiationException);
+            // view is in allow list but wrong interface type
             assertEquals(rootCause.getMessage(), "Provided key escapes the FactoryFinder configured directory");
         }
     }
