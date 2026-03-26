@@ -161,7 +161,14 @@ public class ProtocolConverterTest {
             converter.loadTranslator("../stomp-test");
             fail("should have failed");
         } catch (InstantiationException e) {
-            assertTrue(e.getMessage().contains("rovided key escapes the FactoryFinder configured directory"));
+            assertTrue(e.getMessage().contains("Provided key may not contain path separators"));
+        }
+
+        try {
+            converter.loadTranslator("..");
+            fail("should have failed");
+        } catch (InstantiationException e) {
+            assertTrue(e.getMessage().contains("Provided key escapes the FactoryFinder configured directory"));
         }
 
         // fallback
