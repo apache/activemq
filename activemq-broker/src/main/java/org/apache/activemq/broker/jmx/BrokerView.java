@@ -604,21 +604,32 @@ public class BrokerView implements BrokerViewMBean {
 	}
 
     private static void validateAllowedUrl(String uriString) throws URISyntaxException {
-        validateAllowedUri(new URI(uriString));
+        validateAllowedUri(new URI(uriString), 0);
     }
 
     // Validate the URI does not contain VM transport
-    private static void validateAllowedUri(URI uri) throws URISyntaxException {
+    private static void validateAllowedUri(URI uri, int depth) throws URISyntaxException {
+        // Don't allow more than 5 nested URIs to prevent blowing the stack
+        if (depth > 5) {
+            throw new IllegalArgumentException("URI can't contain more than 5 nested composite URIs");
+        }
+
         // First check the main URI scheme
         validateAllowedScheme(uri.getScheme());
 
         // If composite, iterate and check each of the composite URIs
         if (URISupport.isCompositeURI(uri)) {
             URISupport.CompositeData data = URISupport.parseComposite(uri);
+            depth++;
             for (URI component : data.getComponents()) {
-                // Each URI could be a nested composite URI so
-                // call validateAllowedUri() to validate it
-                validateAllowedUri(component);
+                // Each URI could be a nested composite URI so call validateAllowedUri()
+                // to validate it. This check if composite first so we don't add to
+                // the recursive stack depth if there's a lot of URIs that are not composite
+                if (URISupport.isCompositeURI(uri)) {
+                    validateAllowedUri(component, depth);
+                } else {
+                    validateAllowedScheme(uri.getScheme());
+                }
             }
         }
     }

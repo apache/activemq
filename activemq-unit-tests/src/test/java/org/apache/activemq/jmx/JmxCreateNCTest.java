@@ -107,10 +107,22 @@ public class JmxCreateNCTest {
 
         try {
             // verify nested composite URI is blocked
-            proxy.addNetworkConnector("static:(failover:(failover:(tcp://localhost,vm://localhost)))");
+            proxy.addNetworkConnector("static:(failover:(failover:(tcp://localhost:0,vm://localhost)))");
             fail("Should have failed trying to add vm connector bridge");
         } catch (IllegalArgumentException e) {
             assertEquals("VM scheme is not allowed", e.getMessage());
+        }
+    }
+
+    @Test
+    public void testAddNetworkConnectorMaxComposite() throws Exception {
+        try {
+            // verify nested composite URI with more than 5 levels is blocked
+            proxy.addNetworkConnector(
+                    "static:(failover:(failover:(failover:(failover:(failover:(tcp://localhost:0))))))");
+            fail("Should have failed trying to add vm connector bridge");
+        } catch (IllegalArgumentException e) {
+            assertEquals("URI can't contain more than 5 nested composite URIs", e.getMessage());
         }
     }
 }
