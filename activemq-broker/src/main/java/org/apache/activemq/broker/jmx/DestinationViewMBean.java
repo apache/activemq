@@ -131,6 +131,13 @@ public interface DestinationViewMBean {
     @MBeanInfo("Number of producers attached to this destination")
     long getProducerCount();
 
+
+    /**
+     * @return the number of messages cached
+     */
+    @MBeanInfo("Number of messages cached")
+    public long getMessagesCachedCount();
+
     /**
      * Returns the number of messages in this destination which are yet to be
      * consumed
@@ -262,6 +269,19 @@ public interface DestinationViewMBean {
      */
     @MBeanInfo("Memory used by undelivered messages in bytes")
     long getMemoryUsageByteCount();
+
+    /**
+     * @return the EnableAudit setting for duplicate message checking
+     */
+    @MBeanInfo("Audit is enabled for duplicate message checking")
+    boolean isEnableAudit();
+
+    /**
+     * set the flag to enable or disable audit for duplicate message checking
+     * @param enableAudit
+     * enable/disable audit on the destination
+     */
+    void setEnableAudit(boolean enableAudit);
 
     /**
      * @return the amount of memory allocated to this destination
