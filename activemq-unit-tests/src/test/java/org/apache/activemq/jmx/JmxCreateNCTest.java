@@ -19,12 +19,16 @@ package org.apache.activemq.jmx;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.jmx.BrokerViewMBean;
 import org.apache.activemq.broker.jmx.NetworkConnectorViewMBean;
+import org.junit.After;
+import org.junit.AfterClass;
+import org.junit.Before;
 import org.junit.Test;
 
 import javax.management.ObjectName;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 
 /**
  * This test shows that when we create a network connector via JMX,
@@ -36,35 +40,69 @@ public class JmxCreateNCTest {
 
     private static final String BROKER_NAME = "jmx-broker";
 
-    @Test
-    public void testBridgeRegistration() throws Exception {
+    private BrokerService broker;
+    private BrokerViewMBean proxy;
 
-        System.setProperty("org.apache.activemq.audit", "all");
-
-        BrokerService broker = new BrokerService();
+    @Before
+    public void setUp() throws Exception {
+        broker = new BrokerService();
         broker.setBrokerName(BROKER_NAME);
         broker.setUseJmx(true); // explicitly set this so no funny issues
         broker.start();
         broker.waitUntilStarted();
 
-        // now create network connector over JMX
         ObjectName brokerObjectName = new ObjectName("org.apache.activemq:type=Broker,brokerName=" + BROKER_NAME);
-        BrokerViewMBean proxy = (BrokerViewMBean) broker.getManagementContext().newProxyInstance(brokerObjectName,
+        proxy = (BrokerViewMBean) broker.getManagementContext().newProxyInstance(brokerObjectName,
                 BrokerViewMBean.class, true);
+    }
 
+    @After
+    public void tearDown() throws Exception {
+        broker.stop();
+        broker.waitUntilStopped();
+    }
+
+    @Test
+    public void testBridgeRegistration() throws Exception {
         assertNotNull("We could not retrieve the broker from JMX", proxy);
 
         // let's add the NC
-        String connectoName = proxy.addNetworkConnector("static:(tcp://localhost:61617)");
-        assertEquals("NC", connectoName);
+        String connectorName = proxy.addNetworkConnector("static:(tcp://localhost:61617)");
+        assertEquals("NC", connectorName);
 
         // Make sure we can retrieve the NC through JMX
         ObjectName networkConnectorObjectName = new ObjectName("org.apache.activemq:type=Broker,brokerName=" + BROKER_NAME +
-                ",connector=networkConnectors,networkConnectorName=" + connectoName);
+                ",connector=networkConnectors,networkConnectorName=" + connectorName);
         NetworkConnectorViewMBean nc  = (NetworkConnectorViewMBean) broker.getManagementContext().newProxyInstance(networkConnectorObjectName,
                 NetworkConnectorViewMBean.class, true);
 
         assertNotNull(nc);
         assertEquals("NC", nc.getName());
+    }
+
+    @Test
+    public void testVmBridgeBlocked() throws Exception {
+        // Test composite network connector uri
+        try {
+            proxy.addNetworkConnector("static:(vm://localhost)");
+            fail("Should have failed trying to add vm connector bridge");
+        } catch (IllegalArgumentException e) {
+            assertEquals("VM scheme is not allowed", e.getMessage());
+        }
+
+        try {
+            proxy.addNetworkConnector("multicast:(vm://localhost)");
+            fail("Should have failed trying to add vm connector bridge");
+        } catch (IllegalArgumentException e) {
+            assertEquals("VM scheme is not allowed", e.getMessage());
+        }
+
+        // verify direct vm as well
+        try {
+            proxy.addNetworkConnector("vm://localhost");
+            fail("Should have failed trying to add vm connector bridge");
+        } catch (IllegalArgumentException e) {
+            assertEquals("VM scheme is not allowed", e.getMessage());
+        }
     }
 }
