@@ -219,7 +219,12 @@ public class FactoryFinder<T> {
         return requiredType;
     }
 
-    private String resolvePath(final String key) throws InstantiationException {
+    String resolvePath(final String key) throws InstantiationException {
+        // Validate the key has no path separators
+        if (containsPathSeparators(key)) {
+            throw new InstantiationException("Provided key may not contain path separators");
+        }
+
         // Normalize the base path with the given key. This
         // will resolve/remove any relative ".." sections of the path.
         // Example: "/dir1/dir2/dir3/../file" becomes "/dir1/dir2/file"
@@ -231,7 +236,13 @@ public class FactoryFinder<T> {
             throw new InstantiationException("Provided key escapes the FactoryFinder configured directory");
         }
 
-        return resolvedPath.toString();
+        // replace any backslashes with forward slashes (may happen in some Windows versions)
+        return resolvedPath.toString().replace("\\", "/");
+    }
+
+    public static boolean containsPathSeparators(String str) {
+        // Check for forward and backslash
+        return str.contains("/") || str.contains("\\");
     }
 
     public static String buildAllowedImpls(Class<?>...classes) {

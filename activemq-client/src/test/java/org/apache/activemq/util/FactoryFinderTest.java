@@ -17,18 +17,17 @@
 package org.apache.activemq.util;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.activemq.transport.TransportFactory;
 import org.apache.activemq.transport.nio.NIOTransportFactory;
-import org.apache.activemq.transport.tcp.SslTransport;
 import org.apache.activemq.transport.tcp.SslTransportFactory;
 import org.apache.activemq.transport.tcp.TcpTransportFactory;
 import org.apache.activemq.util.FactoryFinder.ObjectFactory;
@@ -51,7 +50,39 @@ public class FactoryFinderTest {
             finder.newInstance("../../tcp");
             fail("should have failed instantiation");
         } catch (InstantiationException e) {
+            assertEquals("Provided key may not contain path separators",
+                    e.getMessage());
+        }
+    }
+
+    // Test path traversal attempts will throw an error
+    @Test
+    public void testPathTraversal2() throws Exception {
+        FactoryFinder<TransportFactory> finder
+                = new FactoryFinder<>(TRANSPORT_FACTORY_PATH, TransportFactory.class, null);
+        assertNull(finder.getAllowedImpls());
+
+        try {
+            finder.newInstance("..");
+            fail("should have failed instantiation");
+        } catch (InstantiationException e) {
             assertEquals("Provided key escapes the FactoryFinder configured directory",
+                    e.getMessage());
+        }
+    }
+
+    @Test
+    public void testPathTraversal3() throws Exception {
+        FactoryFinder<TransportFactory> finder
+                = new FactoryFinder<>(TRANSPORT_FACTORY_PATH, TransportFactory.class, null);
+        assertNull(finder.getAllowedImpls());
+
+        // test backslashes as well
+        try {
+            finder.newInstance("..\\..\\tcp");
+            fail("should have failed instantiation");
+        } catch (InstantiationException e) {
+            assertEquals("Provided key may not contain path separators",
                     e.getMessage());
         }
     }
@@ -169,6 +200,8 @@ public class FactoryFinderTest {
         assertNull(finder.getAllowedImpls());
         assertNotNull(finder.newInstance("tcp"));
         assertNotNull(finder.newInstance("ssl"));
+        // should not contain backslashes, even on Windows
+        assertFalse(finder.resolvePath("tcp").contains("\\"));;
 
         try {
             // abc is allowed because we are not filtering by allowed impls but
@@ -199,4 +232,17 @@ public class FactoryFinderTest {
         assertNotNull(finder.newInstance("ssl"));
         assertNotNull(finder.newInstance("nio"));
     }
+
+    @Test
+    public void testBackslashReplace() throws Exception {
+        // Forward slashes are usually used but this test uses backslashes to
+        // test that resolvePath() will replace any backslashes
+        String backslashPath = TRANSPORT_FACTORY_PATH.replace("/", "\\");
+        FactoryFinder<TransportFactory> finder = new FactoryFinder<>(backslashPath,
+                TransportFactory.class, null);
+        assertNotNull(finder.newInstance("tcp"));
+        // should not contain backslashes
+        assertFalse(finder.resolvePath("tcp").contains("\\"));
+    }
+
 }
