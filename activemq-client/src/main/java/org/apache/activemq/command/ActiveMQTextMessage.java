@@ -55,6 +55,7 @@ public class ActiveMQTextMessage extends ActiveMQMessage implements TextMessage 
     }
 
     private void copy(ActiveMQTextMessage copy) {
+        storeContent();
         super.copy(copy);
         copy.text = text;
     }
@@ -82,8 +83,6 @@ public class ActiveMQTextMessage extends ActiveMQMessage implements TextMessage 
 
         if (text == null && content != null) {
             text = decodeContent(content);
-            setContent(null);
-            setCompressed(false);
         }
         return text;
     }
@@ -118,7 +117,7 @@ public class ActiveMQTextMessage extends ActiveMQMessage implements TextMessage 
     @Override
     public void beforeMarshall(WireFormat wireFormat) throws IOException {
         super.beforeMarshall(wireFormat);
-        storeContentAndClear();
+        storeContent();
     }
 
     @Override
@@ -182,15 +181,22 @@ public class ActiveMQTextMessage extends ActiveMQMessage implements TextMessage 
 
     @Override
     public int getSize() {
+        int minimumMessageSize = getMinimumMessageSize();
+        ByteSequence content = this.content;
         String text = this.text;
-        if (size == 0 && content == null && text != null) {
-            size = getMinimumMessageSize();
-            if (marshalledProperties != null) {
-                size += marshalledProperties.getLength();
-            }
+
+        size = minimumMessageSize;
+        if (marshalledProperties != null) {
+            size += marshalledProperties.getLength();
+        }
+        if (content != null) {
+            size += content.getLength();
+        }
+        if (text != null) {
             size += text.length() * 2;
         }
-        return super.getSize();
+
+        return size;
     }
 
     @Override

@@ -81,6 +81,64 @@ public class ActiveMQTextMessageTest extends TestCase {
         assertEquals(msg.getText(), str);
     }
 
+    public void testBeforeMarshallRetainsText() throws Exception {
+        ActiveMQTextMessage msg = new ActiveMQTextMessage();
+        String text = new String("testText");
+
+        msg.setText(text);
+        msg.beforeMarshall(null);
+
+        assertNotNull(msg.getContent());
+        assertSame(text, msg.getText());
+    }
+
+    public void testGetTextRetainsContent() throws Exception {
+        ActiveMQTextMessage msg = new ActiveMQTextMessage();
+        String text = "testText";
+
+        setContent(msg, text);
+
+        ByteSequence content = msg.getContent();
+        assertEquals(text, msg.getText());
+        assertSame(content, msg.getContent());
+    }
+
+    public void testGetSizeIncludesRetainedTextAndMarshalledContent() throws Exception {
+        ActiveMQTextMessage msg = new ActiveMQTextMessage();
+        String text = "testText";
+
+        msg.setText(text);
+
+        int sizeBeforeMarshall = msg.getSize();
+        int expectedSizeBeforeMarshall = msg.getMinimumMessageSize() + text.length() * 2;
+        assertEquals(expectedSizeBeforeMarshall, sizeBeforeMarshall);
+
+        msg.beforeMarshall(null);
+
+        int sizeAfterMarshall = msg.getSize();
+        int expectedSizeAfterMarshall = msg.getMinimumMessageSize() + text.length() * 2 + msg.getContent().getLength();
+        assertEquals(expectedSizeAfterMarshall, sizeAfterMarshall);
+        assertTrue(sizeAfterMarshall > sizeBeforeMarshall);
+    }
+
+    public void testGetSizeIncludesDecodedTextAndExistingContent() throws Exception {
+        ActiveMQTextMessage msg = new ActiveMQTextMessage();
+        String text = "testText";
+
+        setContent(msg, text);
+
+        int sizeBeforeGetText = msg.getSize();
+        int expectedSizeBeforeGetText = msg.getMinimumMessageSize() + msg.getContent().getLength();
+        assertEquals(expectedSizeBeforeGetText, sizeBeforeGetText);
+
+        assertEquals(text, msg.getText());
+
+        int sizeAfterGetText = msg.getSize();
+        int expectedSizeAfterGetText = msg.getMinimumMessageSize() + msg.getContent().getLength() + text.length() * 2;
+        assertEquals(expectedSizeAfterGetText, sizeAfterGetText);
+        assertTrue(sizeAfterGetText > sizeBeforeGetText);
+    }
+
     public void testClearBody() throws JMSException, IOException {
         ActiveMQTextMessage textMessage = new ActiveMQTextMessage();
         textMessage.setText("string");
