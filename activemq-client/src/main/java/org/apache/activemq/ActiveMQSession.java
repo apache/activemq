@@ -1998,9 +1998,9 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
                 throw new IllegalStateException("transaction marked rollback only");
             }
             TransactionId txid = transactionContext.getTransactionId();
-            long sequenceNumber = producer.getMessageSequence();
+            long sequenceNumber = producer != null ? producer.getMessageSequence() : 0;
 
-            //Set the "JMS" header fields on the original message, see 1.1 spec section 3.4.11
+            // Set the "JMS" header fields on the original message
             message.setJMSDeliveryMode(deliveryMode);
             long expiration = 0L;
             long timeStamp = System.currentTimeMillis();
@@ -2008,18 +2008,47 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
                 expiration = timeToLive + timeStamp;
             }
 
+            // Extract Delay And Calculate Delivery Time
+            long delay = 0;
+            if (producer != null) {
+                try {
+                    // Pull directly from the producer's state
+                    delay = producer.getDeliveryDelay();
+                } catch (Exception e) {
+                    // Ignore if unsupported
+                }
+            }
+            // Fallback to check if a JMS 2.0 wrapper set the property
+            if (delay <= 0) {
+                try {
+                    if (message.propertyExists(org.apache.activemq.ScheduledMessage.AMQ_SCHEDULED_DELAY)) {
+                        Object delayProp = message.getObjectProperty(org.apache.activemq.ScheduledMessage.AMQ_SCHEDULED_DELAY);
+                        if (delayProp instanceof Number) {
+                            delay = ((Number) delayProp).longValue();
+                        }
+                    }
+                } catch (Exception e) {
+                    // Ignore read errors
+                }
+            }
+
+            // This guarantees JMSDeliveryTime >= timeStamp + delay
+            long deliveryTime = timeStamp + delay;
+
             // TODO: AMQ-8500 - update this when openwire supports JMSDeliveryTime
             // ref: ActiveMQMessageTransformation#copyProperties
             if(!(message instanceof ActiveMQMessage)) {
-                setForeignMessageDeliveryTime(message, timeStamp);
+                setForeignMessageDeliveryTime(message, deliveryTime);
             } else {
-                message.setJMSDeliveryTime(timeStamp);
+                message.setJMSDeliveryTime(deliveryTime);
             }
-            if (!disableMessageTimestamp && !producer.getDisableMessageTimestamp()) {
-                message.setJMSTimestamp(timeStamp);
+
+            if (!disableMessageTimestamp && (producer == null || !producer.getDisableMessageTimestamp())) {
+                message.setJMSTimestamp(timeStamp); // Timestamp must remain the exact time of send
             } else {
-                message.setJMSTimestamp(0l);
+                message.setJMSTimestamp(0L);
             }
+
             message.setJMSExpiration(expiration);
             message.setJMSPriority(priority);
             message.setJMSRedelivered(false);
@@ -2027,7 +2056,9 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
             // transform to our own message format here
             ActiveMQMessage msg = ActiveMQMessageTransformation.transformMessage(message, connection);
             msg.setDestination(destination);
-            msg.setMessageId(new MessageId(producer.getProducerInfo().getProducerId(), sequenceNumber));
+            if (producer != null) {
+                msg.setMessageId(new MessageId(producer.getProducerInfo().getProducerId(), sequenceNumber));
+            }
 
             // Set the message id.
             if (msg != message) {
@@ -2051,13 +2082,6 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
             if (onComplete==null && sendTimeout <= 0 && !msg.isResponseRequired() && !connection.isAlwaysSyncSend() && (!msg.isPersistent() || connection.isUseAsyncSend() || txid != null)) {
                 this.connection.asyncSendPacket(msg);
                 if (producerWindow != null) {
-                    // Since we defer lots of the marshaling till we hit the
-                    // wire, this might not
-                    // provide and accurate size. We may change over to doing
-                    // more aggressive marshaling,
-                    // to get more accurate sizes.. this is more important once
-                    // users start using producer window
-                    // flow control.
                     int size = msg.getSize();
                     producerWindow.increaseUsage(size);
                 }
@@ -2068,7 +2092,6 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
                     this.connection.syncSendPacket(msg, onComplete);
                 }
             }
-
         }
     }
 

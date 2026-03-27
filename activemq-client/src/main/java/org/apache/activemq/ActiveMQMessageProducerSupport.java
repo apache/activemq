@@ -59,9 +59,11 @@ public abstract class ActiveMQMessageProducerSupport implements MessageProducer,
     @Override
     public void setDeliveryDelay(long deliveryDelay) throws JMSException {
         checkClosed();
-        // This should now compile after the rebase!
-        if (deliveryDelay < 0 && session.connection.isStrictCompliance()) {
-            throw new jakarta.jms.JMSException("Delivery delay cannot be negative.");
+        if (deliveryDelay < 0) {
+            if (session.connection.isStrictCompliance()) {
+                throw new jakarta.jms.JMSException("Delivery delay cannot be negative.");
+            }
+            deliveryDelay = 0; // Clamping for legacy
         }
         this.deliveryDelay = deliveryDelay;
     }
@@ -75,7 +77,6 @@ public abstract class ActiveMQMessageProducerSupport implements MessageProducer,
      */
     @Override
     public long getDeliveryDelay() throws JMSException {
-        checkClosed();
         return this.deliveryDelay;
     }
     

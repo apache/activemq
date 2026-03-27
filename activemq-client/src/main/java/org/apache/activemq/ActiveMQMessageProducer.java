@@ -27,9 +27,9 @@ import jakarta.jms.InvalidDestinationException;
 import jakarta.jms.JMSException;
 import jakarta.jms.Message;
 
-import org.apache.activemq.command.ActiveMQMessage;
-import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ProducerAck;
+import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ProducerId;
 import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.management.JMSProducerStatsImpl;
@@ -327,12 +327,33 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
             }
         }
 
-        long delay = getDeliveryDelay();
-        if (delay > 0) {
-            message.setLongProperty("AMQ_SCHEDULED_DELAY", delay);
-            long deliveryTime = System.currentTimeMillis() + delay;
-            message.setLongProperty(ActiveMQMessage.JMS_DELIVERY_TIME_PROPERTY, deliveryTime);
+        long timeStamp = System.currentTimeMillis();
+        long delay = 0;
+
+        // Try to get delay from message property first (set by Wrapper)
+        Object delayProp = message.getObjectProperty(ScheduledMessage.AMQ_SCHEDULED_DELAY);
+        if (delayProp instanceof Number) {
+            delay = ((Number) delayProp).longValue();
         }
+
+        // If not on message, use the Producer's own setting (set by MessageProducer API)
+        if (delay <= 0) {
+            delay = getDeliveryDelay();
+        }
+
+        // If a delay exists, make sure it's on the message so the Broker schedules it!
+        if (delay > 0) {
+            // Ensure properties are writable before injecting the broker delay
+            if (message instanceof ActiveMQMessage) {
+                ((ActiveMQMessage)message).setReadOnlyProperties(false);
+            }
+            message.setLongProperty(ScheduledMessage.AMQ_SCHEDULED_DELAY, delay);
+        }
+
+        if (!disableMessageTimestamp) {
+            message.setJMSTimestamp(timeStamp);
+        }
+        message.setJMSDeliveryTime(timeStamp + delay);
 
         this.session.send(this, dest, message, deliveryMode, priority, timeToLive, disableMessageID, disableMessageTimestamp, producerWindow, sendTimeout, onComplete);
 

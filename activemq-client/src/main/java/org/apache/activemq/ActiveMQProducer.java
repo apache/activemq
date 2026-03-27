@@ -92,11 +92,9 @@ public class ActiveMQProducer implements JMSProducer {
                 }
             }
 
-            // [AMQ-8320] Producer setting for deliveryDelay will override user-specified ActiveMQ Scheduled Delay property
             if(this.deliveryDelay != null) {
-                long deliveryTimeMillis = System.currentTimeMillis() + this.deliveryDelay;
-                message.setLongProperty(ScheduledMessage.AMQ_SCHEDULED_DELAY, this.deliveryDelay);
-                message.setLongProperty(ActiveMQMessage.JMS_DELIVERY_TIME_PROPERTY, deliveryTimeMillis);
+                // Explicitly set as long to avoid any Object/Long wrapper confusion
+                message.setLongProperty(ScheduledMessage.AMQ_SCHEDULED_DELAY, this.deliveryDelay.longValue());
             }
 
             activemqMessageProducer.send(destination, message, getDeliveryMode(), getPriority(), getTimeToLive(), getDisableMessageID(), getDisableMessageTimestamp(), null);
@@ -255,23 +253,24 @@ public class ActiveMQProducer implements JMSProducer {
 
     @Override
     public JMSProducer setDeliveryDelay(long deliveryDelay) {
+        // store it locally so the wrapper's send() method sees it
+        this.deliveryDelay = deliveryDelay;
         try {
-            // Tell the internal core producer about the delay
             this.activemqMessageProducer.setDeliveryDelay(deliveryDelay);
-
-            // Update the local field in this wrapper for consistency
-            this.deliveryDelay = deliveryDelay;
-
+            return this;
         } catch (JMSException e) {
-            // JMS 2.0 requires converting checked exceptions to RuntimeExceptions
             throw JMSExceptionSupport.convertToJMSRuntimeException(e);
         }
-        return this;
     }
 
     @Override
     public long getDeliveryDelay() {
-        return this.deliveryDelay;
+        try {
+            // Always ask the internal producer for the value
+            return this.activemqMessageProducer.getDeliveryDelay();
+        } catch (JMSException e) {
+            throw JMSExceptionSupport.convertToJMSRuntimeException(e);
+        }
     }
 
     @Override
