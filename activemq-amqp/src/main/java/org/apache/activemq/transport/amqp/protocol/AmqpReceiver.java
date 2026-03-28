@@ -205,6 +205,11 @@ public class AmqpReceiver extends AmqpAbstractReceiver {
             }
 
             message.onSend();
+            // GH-1851 - Ensure we marshal the message before passing to the broker
+            // This prevents a race condition later if the message is copyied/marshaled
+            // at this same time. This behavior is in line with how messages are received
+            // using OpenWire (when not using VM) and Stomp.
+            message.beforeMarshall(null);
 
             sendsInFlight++;
 
