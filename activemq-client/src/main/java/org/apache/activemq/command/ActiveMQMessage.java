@@ -501,6 +501,19 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
 
         checkValidObject(value);
         value = convertScheduled(name, value);
+
+        // Strict Compliance Check For Provider-Set JMSX Properties
+        ActiveMQConnection conn = getConnection();
+        if (conn != null && conn.isStrictCompliance()) {
+            if ("JMSXDeliveryCount".equals(name) ||
+                    "JMSXRcvTimestamp".equals(name) ||
+                    "JMSXState".equals(name) ||
+                    "JMSXProducerTXID".equals(name) ||
+                    "JMSXConsumerTXID".equals(name)) {
+                throw new MessageNotWriteableException("Provider-set JMSX property '" + name + "' cannot be set by a client under strict compliance.");
+            }
+        }
+
         PropertySetter setter = JMS_PROPERTY_SETERS.get(name);
 
         if (setter != null && value != null) {
