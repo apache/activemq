@@ -222,6 +222,7 @@ public class MessageInterceptorStrategyTest extends TestSupport {
                 return originalQueueEmpty && dlqHasMessage;
             }
         });
+        assertTrue("Message did not reach DLQ in time", reachedDlq);
 
         queueBrowser = session.createBrowser(queue);
         Enumeration<?> browseEnumeration = queueBrowser.getEnumeration();
