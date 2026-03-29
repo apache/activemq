@@ -38,6 +38,7 @@ import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.store.memory.MemoryPersistenceAdapter;
 import org.apache.activemq.test.TestSupport;
+import org.apache.activemq.util.Wait;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -207,7 +208,21 @@ public class MessageInterceptorStrategyTest extends TestSupport {
         Message sendMessageP = session.createTextMessage("expiration=zero-no-dlq-expiry");
         producer.send(queue, sendMessageP);
 
-        Thread.sleep(250l);
+        boolean reachedDlq = Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                boolean originalQueueEmpty;
+                boolean dlqHasMessage;
+                try (QueueBrowser originalBrowser = session.createBrowser(queue)) {
+                    originalQueueEmpty = !originalBrowser.getEnumeration().hasMoreElements();
+                }
+                try (QueueBrowser dlqBrowser = session.createBrowser(createQueue("mis.forceExpiration.zero-no-dlq-expiry.dlq"))) {
+                    dlqHasMessage = dlqBrowser.getEnumeration().hasMoreElements();
+                }
+                return originalQueueEmpty && dlqHasMessage;
+            }
+        });
+        assertTrue("Message did not reach DLQ in time", reachedDlq);
 
         queueBrowser = session.createBrowser(queue);
         Enumeration<?> browseEnumeration = queueBrowser.getEnumeration();
