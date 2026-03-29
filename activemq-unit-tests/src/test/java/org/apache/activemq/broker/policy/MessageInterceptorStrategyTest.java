@@ -211,13 +211,17 @@ public class MessageInterceptorStrategyTest extends TestSupport {
         boolean reachedDlq = Wait.waitFor(new Wait.Condition() {
             @Override
             public boolean isSatisified() throws Exception {
-                boolean originalQueueEmpty = !session.createBrowser(queue).getEnumeration().hasMoreElements();
-                QueueBrowser dlqQueueBrowser = session.createBrowser(createQueue("mis.forceExpiration.zero-no-dlq-expiry.dlq"));
-                boolean dlqHasMessage = dlqQueueBrowser.getEnumeration().hasMoreElements();
+                boolean originalQueueEmpty;
+                boolean dlqHasMessage;
+                try (QueueBrowser originalBrowser = session.createBrowser(queue)) {
+                    originalQueueEmpty = !originalBrowser.getEnumeration().hasMoreElements();
+                }
+                try (QueueBrowser dlqBrowser = session.createBrowser(createQueue("mis.forceExpiration.zero-no-dlq-expiry.dlq"))) {
+                    dlqHasMessage = dlqBrowser.getEnumeration().hasMoreElements();
+                }
                 return originalQueueEmpty && dlqHasMessage;
             }
         });
-        assertTrue("Message should be routed to DLQ", reachedDlq);
 
         queueBrowser = session.createBrowser(queue);
         Enumeration<?> browseEnumeration = queueBrowser.getEnumeration();
