@@ -510,7 +510,7 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
                     "JMSXState".equals(name) ||
                     "JMSXProducerTXID".equals(name) ||
                     "JMSXConsumerTXID".equals(name)) {
-                throw new MessageNotWriteableException("Provider-set JMSX property '" + name + "' cannot be set by a client under strict compliance.");
+                throw new JMSException("Provider-set JMSX property '" + name + "' cannot be set by a client under strict compliance.");
             }
         }
 

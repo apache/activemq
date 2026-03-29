@@ -17,7 +17,8 @@
 package org.apache.activemq;
 
 import jakarta.jms.Connection;
-import jakarta.jms.MessageNotWriteableException;
+import jakarta.jms.JMSException;
+import jakarta.jms.Message;
 import jakarta.jms.Session;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
@@ -27,7 +28,6 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
-
 public class StrictComplianceProviderJMSXPropertyTest {
 
     private BrokerService broker;
@@ -63,7 +63,7 @@ public class StrictComplianceProviderJMSXPropertyTest {
              Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE)) {
 
             connection.start();
-            Message message = (Message) session.createMessage();
+            Message message = session.createMessage();
 
             try {
                 // ActiveMQ allows clients to overwrite the delivery count
@@ -87,7 +87,7 @@ public class StrictComplianceProviderJMSXPropertyTest {
              Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE)) {
 
             connection.start();
-            Message message = (Message) session.createMessage();
+            Message message = session.createMessage();
 
             String[] providerOnlyProperties = {
                     "JMSXDeliveryCount",
@@ -102,7 +102,7 @@ public class StrictComplianceProviderJMSXPropertyTest {
                     // Attempting to set these should fail
                     message.setObjectProperty(property, 1);
                     fail("Strict mode must reject client attempt to set provider-only property: " + property);
-                } catch (MessageNotWriteableException e) {
+                } catch (JMSException e) {
                     // PASS: Expected Jakarta Messaging 3.1 behavior
                 }
             }
@@ -120,7 +120,7 @@ public class StrictComplianceProviderJMSXPropertyTest {
              Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE)) {
 
             connection.start();
-            Message message = (Message) session.createMessage();
+            Message message = session.createMessage();
 
             try {
                 // The spec explicitly allows clients to set these specific JMSX properties
@@ -130,7 +130,7 @@ public class StrictComplianceProviderJMSXPropertyTest {
                 assertEquals("Group-A", message.getStringProperty("JMSXGroupID"));
                 assertEquals(1, message.getIntProperty("JMSXGroupSeq"));
                 // PASS: Valid client-set properties succeeded
-            } catch (MessageNotWriteableException e) {
+            } catch (JMSException e) {
                 fail("Strict mode incorrectly rejected a valid client-set JMSX property");
             }
         }
