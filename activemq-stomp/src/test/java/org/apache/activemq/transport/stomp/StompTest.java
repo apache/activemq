@@ -116,27 +116,6 @@ public class StompTest extends StompTestSupport {
 
     @Override
     public void setUp() throws Exception {
-        // The order of the entries is different when using ibm jdk 5.
-        if (System.getProperty("java.vendor").equals("IBM Corporation")
-            && System.getProperty("java.version").startsWith("1.5")) {
-            xmlMap = "<map>\n"
-                + "  <entry>\n"
-                + "    <string>city</string>\n"
-                + "    <string>Belgrade</string>\n"
-                + "  </entry>\n"
-                + "  <entry>\n"
-                + "    <string>name</string>\n"
-                + "    <string>Dejan</string>\n"
-                + "  </entry>\n"
-                + "</map>\n";
-            jsonMap = "{\"map\":{"
-                + "\"entry\":["
-                + "{\"string\":[\"city\",\"Belgrade\"]},"
-                + "{\"string\":[\"name\",\"Dejan\"]}"
-                + "]"
-                + "}}";
-        }
-
         queue = new ActiveMQQueue(getQueueName());
         super.setUp();
 
