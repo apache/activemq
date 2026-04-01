@@ -19,9 +19,11 @@ package org.apache.activemq.network;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.URI;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -35,6 +37,7 @@ import jakarta.jms.TextMessage;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.transport.Transport;
 import org.apache.activemq.util.Wait;
 import org.junit.After;
 import org.junit.Test;
@@ -42,14 +45,21 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Test that verifies network bridges reconnect after the remote broker is
- * stopped abruptly during or before the broker info handshake completes.
+ * Test that verifies network bridges properly handle transport exceptions
+ * during the broker info handshake phase and recover by reconnecting
+ * to a real broker.
  *
- * This covers the bug where {@code onException()} in
- * {@link DemandForwardingBridgeSupport} returned early when
- * {@code futureBrokerInfo} was not done, preventing
- * {@code serviceLocalException()}/{@code serviceRemoteException()} from
- * firing and thus blocking the reconnection chain.
+ * <p>The bug: {@code onException()} in {@link DemandForwardingBridgeSupport}
+ * returned early when {@code futureBrokerInfo} was not done (i.e. during
+ * the handshake), preventing {@code serviceRemoteException()} from being
+ * called with the original {@code IOException}. While
+ * {@code collectBrokerInfos()} provided a fallback reconnection path
+ * (via {@code TimeoutException}), the original error was lost.</p>
+ *
+ * <p>The fix removes the early {@code return} so that
+ * {@code serviceRemoteException()} is always called with the original
+ * {@code IOException}, ensuring proper error reporting and direct
+ * exception handling in {@code onException()}.</p>
  */
 public class NetworkBridgeReconnectOnHandshakeFailureTest {
 
@@ -71,26 +81,62 @@ public class NetworkBridgeReconnectOnHandshakeFailureTest {
     }
 
     /**
-     * Reproduces the exact bug path: a transport exception fires while
-     * futureBrokerInfo is NOT done (during handshake).
+     * Simulates a handshake failure end-to-end and verifies recovery:
      *
-     * Strategy: Use a fake server socket that accepts connections but never
-     * sends BrokerInfo. The bridge connects, starts the handshake, but
-     * futureBrokerInfo never completes. When the fake server closes the
-     * socket, onException fires with futureBrokerInfo not done — this is
-     * the exact bug path. The bridge must still trigger reconnection so
-     * that when the real broker comes up, it connects successfully.
+     * <ol>
+     *   <li>A fake server accepts TCP connections but never sends
+     *       {@code BrokerInfo}, so {@code futureBrokerInfo} is never
+     *       completed — the bridge is stuck mid-handshake.</li>
+     *   <li>The fake server abruptly closes the socket, triggering
+     *       {@code onException()} while {@code futureBrokerInfo} is
+     *       not done — the exact bug path.</li>
+     *   <li>A real broker starts on the same port.</li>
+     *   <li>The bridge reconnects to the real broker.</li>
+     *   <li>Messages flow across the re-established bridge.</li>
+     * </ol>
+     *
+     * <p>Additionally, this test uses a custom {@link BridgeFactory} to
+     * verify that {@code serviceRemoteException()} receives the original
+     * {@code IOException} (from {@code onException()}), not only a
+     * {@code TimeoutException} (from the {@code collectBrokerInfos()}
+     * fallback). Without the fix, the early {@code return} prevents the
+     * {@code IOException} from reaching {@code serviceRemoteException()}.
+     * </p>
      */
     @Test(timeout = 60_000)
     public void testBridgeReconnectsAfterHandshakeFailure() throws Exception {
-        // Start a fake server that accepts connections but never responds
-        // This ensures futureBrokerInfo is never set when onException fires
+        // Track exceptions passed to serviceRemoteException to verify
+        // the original IOException is properly propagated
+        CopyOnWriteArrayList<Throwable> remoteExceptions = new CopyOnWriteArrayList<>();
+        CountDownLatch exceptionLatch = new CountDownLatch(1);
+
+        BridgeFactory trackingFactory = new BridgeFactory() {
+            @Override
+            public DemandForwardingBridge createNetworkBridge(
+                    NetworkBridgeConfiguration configuration,
+                    Transport localTransport, Transport remoteTransport,
+                    NetworkBridgeListener listener) {
+                DemandForwardingBridge bridge = new DemandForwardingBridge(configuration, localTransport, remoteTransport) {
+                    @Override
+                    public void serviceRemoteException(Throwable error) {
+                        LOG.info("serviceRemoteException called with: {} ({})",
+                                error.getClass().getSimpleName(), error.getMessage());
+                        remoteExceptions.add(error);
+                        exceptionLatch.countDown();
+                        super.serviceRemoteException(error);
+                    }
+                };
+                bridge.setNetworkBridgeListener(listener);
+                return bridge;
+            }
+        };
+
+        // Phase 1: Start a fake server that accepts connections but never
+        // sends BrokerInfo — this keeps futureBrokerInfo incomplete
         ServerSocket fakeServer = new ServerSocket(0);
         int port = fakeServer.getLocalPort();
         LOG.info("Fake server listening on port {}", port);
 
-        // Accept connections in background and close them after a short delay
-        // to trigger IOException on the bridge while futureBrokerInfo is pending
         CountDownLatch connectionReceived = new CountDownLatch(1);
         AtomicReference<Socket> clientSocket = new AtomicReference<>();
         Thread acceptThread = new Thread(() -> {
@@ -100,7 +146,6 @@ public class NetworkBridgeReconnectOnHandshakeFailureTest {
                     LOG.info("Fake server accepted connection from {}", s.getRemoteSocketAddress());
                     clientSocket.set(s);
                     connectionReceived.countDown();
-                    // Keep accepting — the bridge will retry
                 }
             } catch (Exception e) {
                 // Expected when we close the server socket
@@ -109,7 +154,7 @@ public class NetworkBridgeReconnectOnHandshakeFailureTest {
         acceptThread.setDaemon(true);
         acceptThread.start();
 
-        // Start local broker with network connector pointing at the fake server
+        // Start the local broker with network connector pointing at the fake server
         localBroker = new BrokerService();
         localBroker.setBrokerName("localBroker");
         localBroker.setUseJmx(false);
@@ -117,32 +162,59 @@ public class NetworkBridgeReconnectOnHandshakeFailureTest {
         localBroker.setUseShutdownHook(false);
         DiscoveryNetworkConnector nc = new DiscoveryNetworkConnector(
                 new URI("static:(tcp://localhost:" + port
-                        + "?wireFormat.maxInactivityDuration=3000"
-                        + "&wireFormat.maxInactivityDurationInitalDelay=3000"
+                        + "?wireFormat.maxInactivityDuration=0"
                         + ")?useExponentialBackOff=false&initialReconnectDelay=1000"));
         nc.setName("bridge-handshake-failure-test");
+        nc.setBridgeFactory(trackingFactory);
         localBroker.addNetworkConnector(nc);
         localBroker.start();
         localBroker.waitUntilStarted();
 
-        // Wait for the fake server to receive a connection — the bridge TCP
-        // connected but will never get BrokerInfo
+        // Wait for the bridge to TCP-connect to the fake server.
+        // At this point futureBrokerInfo is NOT done — the handshake
+        // is stuck because the fake server never sends BrokerInfo.
         assertTrue("Bridge should connect to fake server",
                 connectionReceived.await(10, TimeUnit.SECONDS));
         LOG.info("Bridge connected to fake server, futureBrokerInfo will NOT be set");
 
-        // Close the accepted socket — this fires onException while
-        // futureBrokerInfo is NOT done (the exact bug path)
+        // Phase 2: Simulate a handshake failure — close the socket to
+        // trigger onException() while futureBrokerInfo is not done
         Socket s = clientSocket.get();
         if (s != null) {
             s.close();
-            LOG.info("Fake server closed client socket — triggering onException with futureBrokerInfo not done");
+            LOG.info("Closed fake server socket — simulating handshake failure");
         }
 
-        // Wait a bit for the bridge to process the exception and attempt reconnection
-        Thread.sleep(2000);
+        // Verify serviceRemoteException is called with the original IOException.
+        // Without the fix, only a TimeoutException from collectBrokerInfos
+        // would reach serviceRemoteException.
+        assertTrue("serviceRemoteException should be called",
+                exceptionLatch.await(10, TimeUnit.SECONDS));
 
-        // Now shut down the fake server and start the real remote broker on the same port
+        // Allow time for both code paths (onException and collectBrokerInfos)
+        // to call serviceRemoteException
+        assertTrue("Should receive exception(s)", Wait.waitFor(() ->
+                !remoteExceptions.isEmpty(), 5_000, 100));
+
+        for (int i = 0; i < remoteExceptions.size(); i++) {
+            Throwable ex = remoteExceptions.get(i);
+            LOG.info("serviceRemoteException call [{}]: {} ({})",
+                    i, ex.getClass().getName(), ex.getMessage());
+        }
+
+        boolean hasIOException = remoteExceptions.stream()
+                .anyMatch(ex -> ex instanceof IOException);
+        assertTrue(
+                "serviceRemoteException should receive the original IOException "
+                        + "(from onException handler), not only TimeoutException "
+                        + "(from collectBrokerInfos fallback). Exceptions received: "
+                        + remoteExceptions.stream()
+                                .map(ex -> ex.getClass().getSimpleName())
+                                .reduce((a, b) -> a + ", " + b).orElse("none"),
+                hasIOException);
+
+        // Phase 3: Shut down the fake server and start a real broker
+        // on the same port
         fakeServer.close();
         acceptThread.interrupt();
 
@@ -156,20 +228,19 @@ public class NetworkBridgeReconnectOnHandshakeFailureTest {
         remoteBroker.waitUntilStarted();
         LOG.info("Real remote broker started on port {}", port);
 
-        // The bridge should reconnect to the real broker.
-        // WITHOUT the fix: onException returned early, serviceFailed() was never
-        // called, the bridge is permanently dead — this assertion will FAIL.
-        // WITH the fix: serviceRemoteException() fires, triggering reconnection.
+        // Phase 4: The bridge should reconnect to the real broker
         assertTrue("Bridge should reconnect to real broker after handshake failure",
                 Wait.waitFor(() -> !nc.activeBridges().isEmpty(), 30_000, 500));
-        LOG.info("Bridge reconnected to real broker successfully!");
+        LOG.info("Bridge reconnected successfully after handshake failure");
 
-        // Verify messages flow
+        // Phase 5: Verify messages flow across the re-established bridge
         verifyMessageFlow(localBroker, remoteBroker);
     }
 
     /**
-     * Basic reconnection test: verify bridge reconnects after remote broker restart.
+     * Verify that when the remote broker is abruptly stopped (causing a
+     * transport exception potentially during the broker info handshake),
+     * the network bridge reconnects once the remote broker is restarted.
      */
     @Test(timeout = 60_000)
     public void testBridgeReconnectsAfterRemoteBrokerRestart() throws Exception {
