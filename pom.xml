@@ -25,14 +25,14 @@
 
   <groupId>org.apache.activemq</groupId>
   <artifactId>activemq-parent</artifactId>
-  <version>5.19.4-SNAPSHOT</version>
+  <version>5.19.5-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>ActiveMQ</name>
   <inceptionYear>2005</inceptionYear>
 
   <properties>
     <!-- for reproducible builds -->	
-    <project.build.outputTimestamp>2026-03-26T14:08:19Z</project.build.outputTimestamp>
+    <project.build.outputTimestamp>2026-04-02T15:51:41Z</project.build.outputTimestamp>
 
     <activeio-version>3.1.4</activeio-version>
     <siteId>activemq-${project.version}</siteId>
