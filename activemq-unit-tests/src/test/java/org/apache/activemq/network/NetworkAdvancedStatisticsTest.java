@@ -165,8 +165,15 @@ public class NetworkAdvancedStatisticsTest extends BaseNetworkTest {
         assertTrue(Wait.waitFor(new Condition() {
             @Override
             public boolean isSatisified() throws Exception {
-                // The number of message that remain is due to the exclude queue
-                return receivedMessages.size() == MESSAGE_COUNT;
+                // Check if messages arrived at the consumer
+                boolean messagesReceived = receivedMessages.size() == MESSAGE_COUNT;
+
+                // Check if the asynchronous broker statistics have settled
+                long localDequeues = localBroker.getDestination(includedDestination).getDestinationStatistics().getDequeues().getCount();
+                long remoteEnqueues = remoteBroker.getDestination(includedDestination).getDestinationStatistics().getEnqueues().getCount();
+
+                // The test can only proceed when BOTH the messages are received and the stats match
+                return messagesReceived && localDequeues == MESSAGE_COUNT && remoteEnqueues == MESSAGE_COUNT;
             }
         }, 30000, 500));
 
