@@ -249,6 +249,7 @@ public class XACompletionTest extends TestSupport {
         resource.recover(XAResource.TMSTARTRSCAN);
         resource.recover(XAResource.TMNOFLAGS);
 
+        assertTrue("Timed out waiting for queue state to stabilize", Wait.waitFor(() -> proxy.getInFlightCount() == 0L && proxy.getQueueSize() == 10L && proxy.cursorSize() == 0));
         assertEquals("prefetch 0", 0, proxy.getInFlightCount());
         assertEquals("size 0", 10, proxy.getQueueSize());
         assertEquals("size 0", 0, proxy.cursorSize());
