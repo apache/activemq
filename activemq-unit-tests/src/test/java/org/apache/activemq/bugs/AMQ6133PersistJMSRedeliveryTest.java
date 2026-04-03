@@ -45,6 +45,7 @@ import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
 import org.apache.activemq.store.kahadb.MessageDatabase;
+import org.apache.activemq.util.Wait;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.TrueFileFilter;
 import org.apache.commons.io.filefilter.WildcardFileFilter;
@@ -89,11 +90,23 @@ public class AMQ6133PersistJMSRedeliveryTest {
 
         restart();
 
-        assertEquals(msgCount, getProxyToQueue(QUEUE_NAME).getQueueSize());
+        assertTrue("Queue size should match expected count: " + msgCount, Wait.waitFor(() -> {
+            try {
+                return getProxyToQueue(QUEUE_NAME).getQueueSize() == msgCount;
+            } catch (Exception e) {
+               return false;
+            }
+        }));
 
         restartWithRecovery(getPersistentDir());
 
-        assertEquals(msgCount, getProxyToQueue(QUEUE_NAME).getQueueSize());
+        assertTrue("Queue size should match expected count: " + msgCount, Wait.waitFor(() -> {
+            try {
+                return getProxyToQueue(QUEUE_NAME).getQueueSize() == msgCount;
+            } catch (Exception e) {
+                return false;
+            }
+        }));
     }
 
     @Before
