@@ -54,9 +54,8 @@ public abstract class SecurityContext {
     }
 
     public boolean isInOneOf(Set<?> allowedPrincipals) {
-        final Set<?> userPrincipals = Set.copyOf(getPrincipals());
         for (Object allowedPrincipal : allowedPrincipals) {
-            if (userPrincipals.contains(allowedPrincipal)) {
+            if (contains(allowedPrincipal)) {
                 return true;
             }
         }
@@ -64,6 +63,11 @@ public abstract class SecurityContext {
     }
 
     public abstract Set<Principal> getPrincipals();
+
+    public boolean contains(Object principal) {
+        Set<Principal> principals = getPrincipals();
+        return principals != null && principals.contains(principal);
+    }
 
     public String getUserName() {
         return userName;
