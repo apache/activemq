@@ -54,14 +54,10 @@ public abstract class SecurityContext {
     }
 
     public boolean isInOneOf(Set<?> allowedPrincipals) {
-        Iterator<?> allowedIter = allowedPrincipals.iterator();
-        HashSet<?> userPrincipals = new HashSet<Object>(getPrincipals());
-        while (allowedIter.hasNext()) {
-            Iterator<?> userIter = userPrincipals.iterator();
-            Object allowedPrincipal = allowedIter.next();
-            while (userIter.hasNext()) {
-                if (allowedPrincipal.equals(userIter.next()))
-                    return true;
+        final Set<?> userPrincipals = Set.copyOf(getPrincipals());
+        for (Object allowedPrincipal : allowedPrincipals) {
+            if (userPrincipals.contains(allowedPrincipal)) {
+                return true;
             }
         }
         return false;
