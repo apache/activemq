@@ -54,20 +54,20 @@ public abstract class SecurityContext {
     }
 
     public boolean isInOneOf(Set<?> allowedPrincipals) {
-        for (Object allowedPrincipal : allowedPrincipals) {
-            if (contains(allowedPrincipal)) {
-                return true;
+        Iterator<?> allowedIter = allowedPrincipals.iterator();
+        HashSet<?> userPrincipals = new HashSet<Object>(getPrincipals());
+        while (allowedIter.hasNext()) {
+            Iterator<?> userIter = userPrincipals.iterator();
+            Object allowedPrincipal = allowedIter.next();
+            while (userIter.hasNext()) {
+                if (allowedPrincipal.equals(userIter.next()))
+                    return true;
             }
         }
         return false;
     }
 
     public abstract Set<Principal> getPrincipals();
-
-    public boolean contains(Object principal) {
-        Set<Principal> principals = getPrincipals();
-        return principals != null && principals.contains(principal);
-    }
 
     public String getUserName() {
         return userName;
