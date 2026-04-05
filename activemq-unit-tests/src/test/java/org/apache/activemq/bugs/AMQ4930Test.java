@@ -109,18 +109,14 @@ public class AMQ4930Test extends TestCase {
         browsed = underTest.browse();
         LOG.info("Browsed: " + browsed.length);
         assertEquals("maxBrowsePageSize", maxBrowsePageSize, browsed.length);
-        Runtime.getRuntime().gc();
-        long free = Runtime.getRuntime().freeMemory()/1024;
-        LOG.info("free at start of check: " + free);
+        long memoryUsageAtStart = underTest.getMemoryUsage().getUsage();
+        LOG.info("Memory usage at start of check: " + memoryUsageAtStart);
         // check for memory growth
         for (int i=0; i<10; i++) {
-            LOG.info("free: " + Runtime.getRuntime().freeMemory()/1024);
             browsed = underTest.browse();
             LOG.info("Browsed: " + browsed.length);
             assertEquals("maxBrowsePageSize", maxBrowsePageSize, browsed.length);
-            Runtime.getRuntime().gc();
-            Runtime.getRuntime().gc();
-            assertTrue("No growth: " + Runtime.getRuntime().freeMemory()/1024 + " >= " + (free - (free * 0.2)), Runtime.getRuntime().freeMemory()/1024 >= (free - (free * 0.2)));
+            assertTrue("Memory usage is ballooning: " + underTest.getMemoryUsage().getUsage() + " > " + (memoryUsageAtStart * 1.1), underTest.getMemoryUsage().getUsage() <= (memoryUsageAtStart * 1.1));
         }
     }
 
