@@ -105,6 +105,7 @@ public class AdvisoryViaNetworkTest extends JmsMultipleBrokersTestSupport {
 
         startAllBrokers();
         verifyPeerBrokerInfo(brokers.get("A"), 1);
+        verifyPeerBrokerInfo(brokers.get("B"), 1);
 
         createConsumer("A", topic1);
         createConsumer("A", new ActiveMQTopic("A.FOO2"));
@@ -142,6 +143,7 @@ public class AdvisoryViaNetworkTest extends JmsMultipleBrokersTestSupport {
 
         startAllBrokers();
         verifyPeerBrokerInfo(brokers.get("A"), 1);
+        verifyPeerBrokerInfo(brokers.get("B"), 1);
 
         createConsumer("A", topic1);
         createConsumer("A", new ActiveMQTopic("A.FOO2"));
@@ -177,6 +179,7 @@ public class AdvisoryViaNetworkTest extends JmsMultipleBrokersTestSupport {
 
         startAllBrokers();
         verifyPeerBrokerInfo(brokers.get("A"), 1);
+        verifyPeerBrokerInfo(brokers.get("B"), 1);
 
         createConsumer("A", topic1);
         createConsumer("A", new ActiveMQTopic("A.FOO2"));
@@ -211,6 +214,7 @@ public class AdvisoryViaNetworkTest extends JmsMultipleBrokersTestSupport {
 
         startAllBrokers();
         verifyPeerBrokerInfo(brokers.get("A"), 1);
+        verifyPeerBrokerInfo(brokers.get("B"), 1);
 
         createConsumer("A", topic1);
         createConsumer("A", new ActiveMQTopic("A.FOO2"));
@@ -243,6 +247,7 @@ public class AdvisoryViaNetworkTest extends JmsMultipleBrokersTestSupport {
 
         startAllBrokers();
         verifyPeerBrokerInfo(brokers.get("A"), 1);
+        verifyPeerBrokerInfo(brokers.get("B"), 1);
 
         for (int i = 0; i < 10; i++) {
             createConsumer("A", new ActiveMQTopic("A.FOO"));
@@ -270,6 +275,7 @@ public class AdvisoryViaNetworkTest extends JmsMultipleBrokersTestSupport {
 
         startAllBrokers();
         verifyPeerBrokerInfo(brokers.get("A"), 1);
+        verifyPeerBrokerInfo(brokers.get("B"), 1);
 
         for (int i = 0; i < 10; i++) {
             createConsumer("A", new ActiveMQTopic("A.FOO"));
