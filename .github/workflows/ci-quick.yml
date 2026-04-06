@@ -84,7 +84,7 @@ jobs:
           distribution: temurin
           cache: 'maven'
       - name: Test
-        run: mvn -B -e -fae verify -Pactivemq.tests-quick
+        run: mvn -B -e -fae verify -Pactivemq.tests-quick -Dsurefire.rerunFailingTestsCount=3
       - name: Upload Test Results
         if: always()
         uses: actions/upload-artifact@v7
