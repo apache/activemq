@@ -16,9 +16,11 @@
  */
 package org.apache.activemq.security;
 
+import static org.apache.activemq.security.SecurityContext.WILDCARD_PRINCIPAL;
+import static org.apache.activemq.security.SecurityContext.isWildcardPrincipal;
+
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
-import java.security.Principal;
 import java.util.*;
 
 import org.apache.activemq.command.ActiveMQDestination;
@@ -99,8 +101,7 @@ public class DefaultAuthorizationMap extends DestinationMap implements Authoriza
         Set<Object> answer = new WildcardAwareSet<Object>();
 
         // now lets go through each entry adding individual
-        for (Iterator<AuthorizationEntry> iter = entries.iterator(); iter.hasNext();) {
-            AuthorizationEntry entry = iter.next();
+        for (AuthorizationEntry entry : entries) {
             answer.addAll(entry.getAdminACLs());
         }
         return answer;
@@ -112,8 +113,7 @@ public class DefaultAuthorizationMap extends DestinationMap implements Authoriza
         Set<Object> answer = new WildcardAwareSet<Object>();
 
         // now lets go through each entry adding individual
-        for (Iterator<AuthorizationEntry> iter = entries.iterator(); iter.hasNext();) {
-            AuthorizationEntry entry = iter.next();
+        for (AuthorizationEntry entry : entries) {
             answer.addAll(entry.getReadACLs());
         }
         return answer;
@@ -125,8 +125,7 @@ public class DefaultAuthorizationMap extends DestinationMap implements Authoriza
         Set<Object> answer = new WildcardAwareSet<Object>();
 
         // now lets go through each entry adding individual
-        for (Iterator<AuthorizationEntry> iter = entries.iterator(); iter.hasNext();) {
-            AuthorizationEntry entry = iter.next();
+        for (AuthorizationEntry entry : entries) {
             answer.addAll(entry.getWriteACLs());
         }
         return answer;
@@ -157,10 +156,9 @@ public class DefaultAuthorizationMap extends DestinationMap implements Authoriza
         if (key.isComposite()) {
             ActiveMQDestination[] destinations = key.getCompositeDestinations();
             Set answer = null;
-            for (int i = 0; i < destinations.length; i++) {
-                ActiveMQDestination childDestination = destinations[i];
+            for (ActiveMQDestination childDestination : destinations) {
                 answer = union(answer, get(childDestination));
-                if (answer == null  || answer.isEmpty()) {
+                if (answer == null || answer.isEmpty()) {
                     break;
                 }
             }
@@ -210,26 +208,14 @@ public class DefaultAuthorizationMap extends DestinationMap implements Authoriza
         this.groupClass = groupClass;
     }
 
-    final static String WILDCARD = "*";
+    static final String WILDCARD = SecurityContext.WILDCARD;
+
     public static Object createGroupPrincipal(String name, String groupClass) throws Exception {
         if (WILDCARD.equals(name)) {
             // simple match all group principal - match any name and class
-            return new Principal() {
-                @Override
-                public String getName() {
-                    return WILDCARD;
-                }
-                @Override
-                public boolean equals(Object other) {
-                    return true;
-                }
-
-                @Override
-                public int hashCode() {
-                    return WILDCARD.hashCode();
-                }
-            };
+            return WILDCARD_PRINCIPAL;
         }
+
         Object[] param = new Object[]{name};
 
         Class<?> cls = Class.forName(groupClass);
@@ -266,7 +252,7 @@ public class DefaultAuthorizationMap extends DestinationMap implements Authoriza
         return instance;
     }
 
-    class WildcardAwareSet<T> extends HashSet<T> {
+    static class WildcardAwareSet<T> extends HashSet<T> {
         boolean hasWildcard = false;
 
         @Override
@@ -281,10 +267,8 @@ public class DefaultAuthorizationMap extends DestinationMap implements Authoriza
         @Override
         public boolean addAll(Collection<? extends T> collection) {
             boolean modified = false;
-            Iterator<? extends T> e = collection.iterator();
-            while (e.hasNext()) {
-                final T item = e.next();
-                if (isWildcard(item)) {
+            for (T item : collection) {
+                if (isWildcardPrincipal(item)) {
                     hasWildcard = true;
                 }
                 if (add(item)) {
@@ -292,16 +276,6 @@ public class DefaultAuthorizationMap extends DestinationMap implements Authoriza
                 }
             }
             return modified;
-        }
-
-        private boolean isWildcard(T item) {
-            try {
-                if (item.getClass().getMethod("getName", new Class[]{}).invoke(item).equals("*")) {
-                    return true;
-                }
-            } catch (Exception ignored) {
-            }
-            return false;
         }
     }
 }

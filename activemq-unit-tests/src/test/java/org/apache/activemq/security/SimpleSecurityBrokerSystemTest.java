@@ -61,7 +61,8 @@ public class SimpleSecurityBrokerSystemTest extends SecurityTestSupport {
     public static Principal WILDCARD;
     static {
         try {
-         WILDCARD = (Principal) DefaultAuthorizationMap.createGroupPrincipal("*", GroupPrincipal.class.getName());
+         WILDCARD = (Principal) DefaultAuthorizationMap.createGroupPrincipal(
+                 SecurityContext.WILDCARD, GroupPrincipal.class.getName());
         } catch (Exception e) {
             LOG.error("Failed to make wildcard principal", e);
         }
