@@ -129,7 +129,12 @@ public class WriteTimeoutFilter extends TransportFilter {
 
     @Override
     public void start() throws Exception {
-        super.start();
+        try {
+            registerWrite(this);
+            super.start();
+        } finally {
+            deRegisterWrite(this, false, null);
+        }
     }
 
     @Override
@@ -157,8 +162,10 @@ public class WriteTimeoutFilter extends TransportFilter {
                         while (run && filters.hasNext()) {
                             WriteTimeoutFilter filter = filters.next();
                             if (filter.getWriteTimeout()<=0) continue; //no timeout set
-                            long writeStart = filter.getWriter().getWriteTimestamp();
-                            long delta = (filter.getWriter().isWriting() && writeStart>0)?System.currentTimeMillis() - writeStart:-1;
+                            TimeStampStream writer = filter.getWriter();
+                            if (writer == null) continue; //stream not yet initialized
+                            long writeStart = writer.getWriteTimestamp();
+                            long delta = (writer.isWriting() && writeStart>0)?System.currentTimeMillis() - writeStart:-1;
                             if (delta>filter.getWriteTimeout()) {
                                 WriteTimeoutFilter.deRegisterWrite(filter, true,null);
                             }//if timeout
