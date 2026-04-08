@@ -52,7 +52,6 @@ public class SamplePojo implements Serializable {
     public void setName(String name) {
         this.name = name;
     }
-    quals
 
     @Override
     public boolean equals(Object obj) {
