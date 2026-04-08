@@ -16,13 +16,37 @@
  */
 package org.apache.activemq.transport.auto;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import java.io.IOException;
+import java.lang.reflect.Field;
+import java.net.Socket;
 import java.net.URI;
 import java.net.URISyntaxException;
 
+import javax.net.ssl.SSLEngineResult;
+import javax.net.ssl.SSLEngineResult.HandshakeStatus;
+import javax.net.ssl.SSLSocket;
 import junit.framework.Test;
 import junit.textui.TestRunner;
 
+import org.apache.activemq.broker.StubConnection;
+import org.apache.activemq.broker.TransportConnection;
+import org.apache.activemq.broker.TransportConnector;
+import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.ConnectionInfo;
+import org.apache.activemq.command.ConsumerInfo;
+import org.apache.activemq.command.Message;
+import org.apache.activemq.command.ProducerInfo;
+import org.apache.activemq.command.SessionInfo;
+import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportBrokerTestSupport;
+import org.apache.activemq.transport.TransportFilter;
+import org.apache.activemq.transport.nio.NIOSSLTransport;
+import org.apache.activemq.transport.tcp.SslTransport;
+import org.apache.activemq.transport.tcp.TcpTransport;
+import org.apache.activemq.util.Wait;
 
 public class AutoNIOSslTransportBrokerTest extends TransportBrokerTestSupport {
 
@@ -38,7 +62,9 @@ public class AutoNIOSslTransportBrokerTest extends TransportBrokerTestSupport {
 
     @Override
     protected URI getBindURI() throws URISyntaxException {
-        return new URI("auto+nio+ssl://localhost:0?soWriteTimeout=20000");
+        String uri = super.getBindURI().toString() + "?soWriteTimeout=20000";
+        uri = enabledProtocols != null ? uri + "&socket.enabledProtocols=" + enabledProtocols : uri;
+        return new URI(uri);
     }
 
     @Override
@@ -54,6 +80,14 @@ public class AutoNIOSslTransportBrokerTest extends TransportBrokerTestSupport {
         super.setUp();
     }
 
+    public void testSslHandshakeRenegotiationTlsv12() throws Exception {
+        testSslHandshakeRenegotiation("TLSv1.2");
+    }
+
+    public void testSslHandshakeRenegotiationTlsv13() throws Exception {
+        testSslHandshakeRenegotiation("TLSv1.3");
+    }
+
     public static Test suite() {
         return suite(AutoNIOSslTransportBrokerTest.class);
     }
@@ -61,6 +95,5 @@ public class AutoNIOSslTransportBrokerTest extends TransportBrokerTestSupport {
     public static void main(String[] args) {
         TestRunner.run(suite());
     }
-
 
 }

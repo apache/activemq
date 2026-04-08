@@ -17,6 +17,7 @@
 package org.apache.activemq.transport.mqtt.auto;
 
 import org.apache.activemq.transport.mqtt.MQTTTest;
+import org.junit.Test;
 
 /**
  * Run the basic tests with the NIO Transport.
@@ -31,5 +32,15 @@ public class MQTTAutoNioSslTest extends MQTTTest {
     @Override
     public boolean isUseSSL() {
         return true;
+    }
+
+    @Test(timeout = 60000)
+    public void testHandshakeRenegotiationTlsv12() throws Exception {
+        testHandshakeRenegotiation("TLSv1.2");
+    }
+
+    @Test(timeout = 60000)
+    public void testHandshakeRenegotiationTlsv13() throws Exception {
+        testHandshakeRenegotiation("TLSv1.3");
     }
 }
