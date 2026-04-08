@@ -22,12 +22,12 @@ import static org.junit.Assert.assertTrue;
 
 import io.netty.channel.Channel;
 import io.netty.handler.ssl.SslHandler;
-import jakarta.jms.Message;
-import jakarta.jms.MessageConsumer;
-import jakarta.jms.MessageProducer;
-import jakarta.jms.Queue;
-import jakarta.jms.Session;
-import jakarta.jms.TextMessage;
+import javax.jms.Message;
+import javax.jms.MessageConsumer;
+import javax.jms.MessageProducer;
+import javax.jms.Queue;
+import javax.jms.Session;
+import javax.jms.TextMessage;
 import java.lang.reflect.Field;
 import java.net.InetSocketAddress;
 import java.net.URI;
