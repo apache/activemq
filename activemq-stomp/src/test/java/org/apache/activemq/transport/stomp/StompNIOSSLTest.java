@@ -19,9 +19,6 @@ package org.apache.activemq.transport.stomp;
 import java.io.IOException;
 import java.net.Socket;
 
-import javax.net.SocketFactory;
-import javax.net.ssl.SSLSocketFactory;
-
 public class StompNIOSSLTest extends StompTest {
 
     @Override
@@ -36,7 +33,6 @@ public class StompNIOSSLTest extends StompTest {
 
     @Override
     protected Socket createSocket() throws IOException {
-        SocketFactory factory = SSLSocketFactory.getDefault();
-        return factory.createSocket("127.0.0.1", this.nioSslPort);
+        return createSslSocket("127.0.0.1", this.nioSslPort, this.clientSslProtocol);
     }
 }
