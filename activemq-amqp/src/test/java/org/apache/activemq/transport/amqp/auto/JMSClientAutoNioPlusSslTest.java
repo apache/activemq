@@ -16,8 +16,8 @@
  */
 package org.apache.activemq.transport.amqp.auto;
 
-import jakarta.jms.Connection;
-import jakarta.jms.JMSException;
+import javax.jms.Connection;
+import javax.jms.JMSException;
 import java.net.URI;
 
 import org.apache.activemq.transport.amqp.JMSClientContext;
