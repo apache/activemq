@@ -102,6 +102,7 @@ public class MQTTTestSupport {
         System.setProperty("javax.net.ssl.keyStoreType", "jks");
 
         exceptions.clear();
+
         startBroker();
     }
 
@@ -412,7 +413,11 @@ public class MQTTTestSupport {
         return mqtt;
     }
 
-    private MQTT createMQTTSslConnection(String clientId, boolean clean) throws Exception {
+    protected MQTT createMQTTSslConnection(String clientId, boolean clean) throws Exception {
+        return createMQTTSslConnection(clientId, clean, null);
+    }
+
+    protected MQTT createMQTTSslConnection(String clientId, boolean clean, String sslProtocol) throws Exception {
         MQTT mqtt = new MQTT();
         mqtt.setConnectAttemptsMax(1);
         mqtt.setReconnectAttemptsMax(0);
@@ -432,6 +437,9 @@ public class MQTTTestSupport {
         sslContext.setKeyStorePassword("password");
         sslContext.setTrustStore(trustStore.getCanonicalPath());
         sslContext.setTrustStorePassword("password");
+        if (sslProtocol != null) {
+            sslContext.setProtocol(sslProtocol);
+        }
         sslContext.afterPropertiesSet();
 
         mqtt.setSslContext(sslContext.getSSLContext());
