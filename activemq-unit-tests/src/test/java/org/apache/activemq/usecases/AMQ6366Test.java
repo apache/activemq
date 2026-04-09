@@ -69,6 +69,7 @@ public class AMQ6366Test extends JmsMultipleBrokersTestSupport {
 
         startAllBrokers();
         waitForBridgeFormation();
+        waitForMinTopicRegionConsumerCount(conBroker, 1);
 
         final MessageConsumer client = createDurableSubscriber(conBroker, dest, "sub1");
         client.close();
