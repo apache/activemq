@@ -116,11 +116,16 @@ public class JmxCreateNCTest {
 
     @Test
     public void testAddNetworkConnectorMaxComposite() throws Exception {
+        // Should allow 5 nested (excludes first wrapper) so no exception thrown
+        assertNotNull(proxy.addNetworkConnector(
+                "static:(static:(static:(static:(static:(bad://localhost)))))"));
+
         try {
-            // verify nested composite URI with more than 5 levels is blocked
+            // verify nested composite URI with more than 5 levels is blocked. This has 6 nested
+            // (not including first wrapper url
             proxy.addNetworkConnector(
                     "static:(failover:(failover:(failover:(failover:(failover:(tcp://localhost:0))))))");
-            fail("Should have failed trying to add vm connector bridge");
+            fail("Should have failed trying to add more than 5 connector bridges");
         } catch (IllegalArgumentException e) {
             assertEquals("URI can't contain more than 5 nested composite URIs", e.getMessage());
         }
