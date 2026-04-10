@@ -17,14 +17,23 @@
 package org.apache.activemq.xbean;
 
 import java.beans.PropertyEditorManager;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URI;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 import org.apache.activemq.broker.BrokerContextAware;
 import org.apache.activemq.broker.BrokerFactoryHandler;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.spring.SpringBrokerContext;
 import org.apache.activemq.spring.Utils;
+import org.apache.activemq.transport.stomp.FrameTranslator;
+import org.apache.activemq.transport.stomp.JmsFrameTranslator;
+import org.apache.activemq.transport.stomp.LegacyFrameTranslator;
+import org.apache.activemq.util.FactoryFinder;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.URISupport;
 import org.apache.xbean.spring.context.ResourceXmlApplicationContext;
@@ -42,13 +51,33 @@ import org.springframework.core.io.Resource;
  * 
  */
 public class XBeanBrokerFactory implements BrokerFactoryHandler {
-    private static final transient Logger LOG = LoggerFactory.getLogger(XBeanBrokerFactory.class);
+    private static final Logger LOG = LoggerFactory.getLogger(XBeanBrokerFactory.class);
+
+    public static final String XBEAN_BROKER_FACTORY_PROTOCOLS_PROP =
+            "org.apache.activemq.xbean.XBEAN_BROKER_FACTORY_PROTOCOLS";
+    public static final String DEFAULT_ALLOWED_PROTOCOLS =
+            String.join(",", Set.of(Utils.FILE_PROTOCOL, Utils.CLASSPATH_PROTOCOL));
+
+    private final Set<String> allowedProtocols;
 
     static {
         PropertyEditorManager.registerEditor(URI.class, URIEditor.class);
     }
 
+    public XBeanBrokerFactory() {
+        final String allowedProtocols = System.getProperty(XBEAN_BROKER_FACTORY_PROTOCOLS_PROP,
+                DEFAULT_ALLOWED_PROTOCOLS);
+
+        // Asterisk will map to null which will allow all and skip checking
+        // Empty string will map to an empty set and will deny all
+        this.allowedProtocols = !allowedProtocols.equals("*") ?
+                Arrays.stream(allowedProtocols.split("\\s*,\\s*"))
+                .filter(s -> !s.isBlank())
+                .collect(Collectors.toUnmodifiableSet()) : null;
+    }
+
     private boolean validate = true;
+
     public boolean isValidate() {
         return validate;
     }
@@ -75,12 +104,10 @@ public class XBeanBrokerFactory implements BrokerFactoryHandler {
         if (broker == null) {
             // lets try find by type
             String[] names = context.getBeanNamesForType(BrokerService.class);
-            for (int i = 0; i < names.length; i++) {
-                String name = names[i];
-                broker = (BrokerService)context.getBean(name);
-                if (broker != null) {
-                    break;
-                }
+            for (String name : names) {
+                // No need to check for null, this will throw an exception if not found
+                broker = (BrokerService) context.getBean(name);
+                break;
             }
         }
         if (broker == null) {
@@ -98,8 +125,8 @@ public class XBeanBrokerFactory implements BrokerFactoryHandler {
     }
 
     protected ApplicationContext createApplicationContext(String uri) throws MalformedURLException {
-        Resource resource = Utils.resourceFromString(uri);
-        LOG.debug("Using " + resource + " from " + uri);
+        Resource resource = Utils.resourceFromString(uri, allowedProtocols);
+        LOG.debug("Using {} from {}", resource, uri);
         try {
             return new ResourceXmlApplicationContext(resource) {
                 @Override
@@ -108,9 +135,14 @@ public class XBeanBrokerFactory implements BrokerFactoryHandler {
                 }
             };
         } catch (FatalBeanException errorToLog) {
-            LOG.error("Failed to load: " + resource + ", reason: " + errorToLog.getLocalizedMessage(), errorToLog);
+            LOG.error("Failed to load: {}, reason: {}", resource, errorToLog.getLocalizedMessage(),
+                    errorToLog);
             throw errorToLog;
         }
     }
 
+    // Package scope for testing
+    Set<String> getAllowedProtocols() {
+        return allowedProtocols;
+    }
 }
