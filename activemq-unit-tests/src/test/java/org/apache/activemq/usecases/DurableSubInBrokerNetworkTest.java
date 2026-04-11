@@ -62,7 +62,7 @@ public class DurableSubInBrokerNetworkTest extends NetworkTestSupport {
         nc.start();
 
         assertTrue("Network bridge did not establish in time",
-                Wait.waitFor(() -> !nc.activeBridges().isEmpty()));
+                Wait.waitFor(() -> !nc.activeBridges().isEmpty(), 15000, 100));
     }
 
     protected void tearDown() throws Exception {
@@ -100,9 +100,9 @@ public class DurableSubInBrokerNetworkTest extends NetworkTestSupport {
         // query durable sub on local and remote broker
         // raise an error if not found
         assertTrue("Durable subscription not found in local broker",
-                Wait.waitFor(() -> foundSubInLocalBroker(subName)));
+                Wait.waitFor(() -> foundSubInLocalBroker(subName), 15000, 100));
         assertTrue("Durable subscription not propagated to remote broker",
-                Wait.waitFor(() -> foundSubInRemoteBrokerByTopicName(topicName)));
+                Wait.waitFor(() -> foundSubInRemoteBrokerByTopicName(topicName), 15000, 100));
 
         // unsubscribe from durable sub
         sub.close();
@@ -112,9 +112,9 @@ public class DurableSubInBrokerNetworkTest extends NetworkTestSupport {
         // query durable sub on local and remote broker
         // raise an error if its not removed from both brokers
         assertTrue("Durable subscription not removed from local broker",
-                Wait.waitFor(() -> !foundSubInLocalBroker(subName)));
+                Wait.waitFor(() -> !foundSubInLocalBroker(subName), 15000, 100));
         assertTrue("Durable subscription not unregistered on remote broker",
-                Wait.waitFor(() -> !foundSubInRemoteBrokerByTopicName(topicName)));
+                Wait.waitFor(() -> !foundSubInRemoteBrokerByTopicName(topicName), 15000, 100));
 
 
     }
@@ -135,11 +135,11 @@ public class DurableSubInBrokerNetworkTest extends NetworkTestSupport {
         // query durable sub on local and remote broker
         // raise an error if not found
         assertTrue("Subscription1 not found in local broker",
-                Wait.waitFor(() -> foundSubInLocalBroker(subName)));
+                Wait.waitFor(() -> foundSubInLocalBroker(subName), 15000, 100));
         assertTrue("Subscription2 not found in local broker",
-                Wait.waitFor(() -> foundSubInLocalBroker(subName2)));
+                Wait.waitFor(() -> foundSubInLocalBroker(subName2), 15000, 100));
         assertTrue("Durable subscription not propagated to remote broker",
-                Wait.waitFor(() -> foundSubInRemoteBrokerByTopicName(topicName)));
+                Wait.waitFor(() -> foundSubInRemoteBrokerByTopicName(topicName), 15000, 100));
 
         // unsubscribe from durable sub
         sub.close();
@@ -148,19 +148,19 @@ public class DurableSubInBrokerNetworkTest extends NetworkTestSupport {
 
         // query durable sub on local and remote broker
         assertTrue("Subscription1 not removed from local broker",
-                Wait.waitFor(() -> !foundSubInLocalBroker(subName)));
+                Wait.waitFor(() -> !foundSubInLocalBroker(subName), 15000, 100));
         assertTrue("Subscription2 should still be in local broker",
-                Wait.waitFor(() -> foundSubInLocalBroker(subName2)));
+                Wait.waitFor(() -> foundSubInLocalBroker(subName2), 15000, 100));
         assertTrue("Durable subscription should still be on remote broker",
-                Wait.waitFor(() -> foundSubInRemoteBrokerByTopicName(topicName)));
+                Wait.waitFor(() -> foundSubInRemoteBrokerByTopicName(topicName), 15000, 100));
 
         sub2.close();
         session.unsubscribe(subName2);
 
         assertTrue("Subscription2 not removed from local broker",
-                Wait.waitFor(() -> !foundSubInLocalBroker(subName2)));
+                Wait.waitFor(() -> !foundSubInLocalBroker(subName2), 15000, 100));
         assertTrue("Durable subscription not unregistered on remote broker",
-                Wait.waitFor(() -> !foundSubInRemoteBrokerByTopicName(topicName)));
+                Wait.waitFor(() -> !foundSubInRemoteBrokerByTopicName(topicName), 15000, 100));
 
     }
 
