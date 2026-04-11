@@ -30,6 +30,7 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.network.DiscoveryNetworkConnector;
 import org.apache.activemq.network.NetworkConnector;
 import org.apache.activemq.network.NetworkTestSupport;
+import org.apache.activemq.util.Wait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.junit.experimental.categories.Category;
@@ -59,6 +60,9 @@ public class DurableSubInBrokerNetworkTest extends NetworkTestSupport {
         nc.setDuplex(true);
         remoteBroker.addNetworkConnector(nc);
         nc.start();
+
+        assertTrue("Network bridge did not establish in time",
+                Wait.waitFor(() -> !nc.activeBridges().isEmpty()));
     }
 
     protected void tearDown() throws Exception {
@@ -92,28 +96,25 @@ public class DurableSubInBrokerNetworkTest extends NetworkTestSupport {
         Destination dest = session.createTopic(topicName);
         TopicSubscriber sub = session.createDurableSubscriber((Topic)dest, subName);
         LOG.info("Durable subscription of name " + subName + "created.");
-        Thread.sleep(100);
 
         // query durable sub on local and remote broker
         // raise an error if not found
-
-        assertTrue(foundSubInLocalBroker(subName));
-
-
-        assertTrue(foundSubInRemoteBrokerByTopicName(topicName));
+        assertTrue("Durable subscription not found in local broker",
+                Wait.waitFor(() -> foundSubInLocalBroker(subName)));
+        assertTrue("Durable subscription not propagated to remote broker",
+                Wait.waitFor(() -> foundSubInRemoteBrokerByTopicName(topicName)));
 
         // unsubscribe from durable sub
         sub.close();
         session.unsubscribe(subName);
         LOG.info("Unsubscribed from durable subscription.");
-        Thread.sleep(100);
 
         // query durable sub on local and remote broker
         // raise an error if its not removed from both brokers
-        assertFalse(foundSubInLocalBroker(subName));
-
-        assertFalse("Durable subscription not unregistered on remote broker",
-                foundSubInRemoteBrokerByTopicName(topicName));
+        assertTrue("Durable subscription not removed from local broker",
+                Wait.waitFor(() -> !foundSubInLocalBroker(subName)));
+        assertTrue("Durable subscription not unregistered on remote broker",
+                Wait.waitFor(() -> !foundSubInRemoteBrokerByTopicName(topicName)));
 
 
     }
@@ -131,39 +132,35 @@ public class DurableSubInBrokerNetworkTest extends NetworkTestSupport {
         TopicSubscriber sub2 = session.createDurableSubscriber((Topic) dest, subName2);
         LOG.info("Durable subscription of name " + subName2 + "created.");
 
-        Thread.sleep(100);
-
         // query durable sub on local and remote broker
         // raise an error if not found
-
-        assertTrue(foundSubInLocalBroker(subName));
-        assertTrue(foundSubInLocalBroker(subName2));
-
-
-        assertTrue(foundSubInRemoteBrokerByTopicName(topicName));
+        assertTrue("Subscription1 not found in local broker",
+                Wait.waitFor(() -> foundSubInLocalBroker(subName)));
+        assertTrue("Subscription2 not found in local broker",
+                Wait.waitFor(() -> foundSubInLocalBroker(subName2)));
+        assertTrue("Durable subscription not propagated to remote broker",
+                Wait.waitFor(() -> foundSubInRemoteBrokerByTopicName(topicName)));
 
         // unsubscribe from durable sub
         sub.close();
         session.unsubscribe(subName);
         LOG.info("Unsubscribed from durable subscription.");
-        Thread.sleep(100);
 
         // query durable sub on local and remote broker
-        assertFalse(foundSubInLocalBroker(subName));
-        assertTrue(foundSubInLocalBroker(subName2));
-
+        assertTrue("Subscription1 not removed from local broker",
+                Wait.waitFor(() -> !foundSubInLocalBroker(subName)));
+        assertTrue("Subscription2 should still be in local broker",
+                Wait.waitFor(() -> foundSubInLocalBroker(subName2)));
         assertTrue("Durable subscription should still be on remote broker",
-                foundSubInRemoteBrokerByTopicName(topicName));
+                Wait.waitFor(() -> foundSubInRemoteBrokerByTopicName(topicName)));
 
         sub2.close();
         session.unsubscribe(subName2);
 
-        Thread.sleep(100);
-
-        assertFalse(foundSubInLocalBroker(subName2));
-
-        assertFalse("Durable subscription not unregistered on remote broker",
-                foundSubInRemoteBrokerByTopicName(topicName));
+        assertTrue("Subscription2 not removed from local broker",
+                Wait.waitFor(() -> !foundSubInLocalBroker(subName2)));
+        assertTrue("Durable subscription not unregistered on remote broker",
+                Wait.waitFor(() -> !foundSubInRemoteBrokerByTopicName(topicName)));
 
     }
 
