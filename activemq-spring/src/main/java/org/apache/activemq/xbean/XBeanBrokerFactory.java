@@ -17,23 +17,16 @@
 package org.apache.activemq.xbean;
 
 import java.beans.PropertyEditorManager;
-import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URI;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
-import org.apache.activemq.broker.BrokerContextAware;
 import org.apache.activemq.broker.BrokerFactoryHandler;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.spring.SpringBrokerContext;
 import org.apache.activemq.spring.Utils;
-import org.apache.activemq.transport.stomp.FrameTranslator;
-import org.apache.activemq.transport.stomp.JmsFrameTranslator;
-import org.apache.activemq.transport.stomp.LegacyFrameTranslator;
-import org.apache.activemq.util.FactoryFinder;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.URISupport;
 import org.apache.xbean.spring.context.ResourceXmlApplicationContext;
@@ -44,7 +37,6 @@ import org.springframework.beans.BeansException;
 import org.springframework.beans.FatalBeanException;
 import org.springframework.beans.factory.xml.XmlBeanDefinitionReader;
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.io.Resource;
 
 /**
@@ -55,8 +47,7 @@ public class XBeanBrokerFactory implements BrokerFactoryHandler {
 
     public static final String XBEAN_BROKER_FACTORY_PROTOCOLS_PROP =
             "org.apache.activemq.xbean.XBEAN_BROKER_FACTORY_PROTOCOLS";
-    public static final String DEFAULT_ALLOWED_PROTOCOLS =
-            String.join(",", Set.of(Utils.FILE_PROTOCOL, Utils.CLASSPATH_PROTOCOL));
+    public static final String DEFAULT_ALLOWED_PROTOCOLS = Utils.FILE_PROTOCOL + "," + Utils.CLASSPATH_PROTOCOL;
 
     private final Set<String> allowedProtocols;
 

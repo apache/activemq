@@ -28,12 +28,15 @@ import java.io.FileNotFoundException;
 import java.net.UnknownHostException;
 import java.nio.file.NoSuchFileException;
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.test.annotations.ParallelTest;
 import org.apache.activemq.xbean.XBeanBrokerFactory;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.springframework.beans.FatalBeanException;
 
+@Category(ParallelTest.class)
 public class ActiveMQConnectionFactoryXBeanTest {
 
     @Before
