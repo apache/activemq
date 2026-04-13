@@ -44,6 +44,8 @@ public class BrokerView implements BrokerViewMBean {
 
     private static final Logger LOG = LoggerFactory.getLogger(BrokerView.class);
 
+    private static final Set<String> DENIED_TRANSPORT_SCHEMES = Set.of("vm", "http");
+
     ManagedRegionBroker broker;
 
     private final BrokerService brokerService;
@@ -402,7 +404,7 @@ public class BrokerView implements BrokerViewMBean {
 
     @Override
     public String addConnector(String discoveryAddress) throws Exception {
-        // Verify VM transport is not used
+        // Verify a denied transport scheme is not used
         validateAllowedUrl(discoveryAddress);
         TransportConnector connector = brokerService.addConnector(discoveryAddress);
         if (connector == null) {
@@ -414,7 +416,7 @@ public class BrokerView implements BrokerViewMBean {
 
     @Override
     public String addNetworkConnector(String discoveryAddress) throws Exception {
-        // Verify VM transport is not used
+        // Verify a denied transport scheme is not used
         validateAllowedUrl(discoveryAddress);
         NetworkConnector connector = brokerService.addNetworkConnector(discoveryAddress);
         if (connector == null) {
@@ -607,7 +609,7 @@ public class BrokerView implements BrokerViewMBean {
         validateAllowedUri(new URI(uriString), 0);
     }
 
-    // Validate the URI does not contain VM transport
+    // Validate the URI does not contain a denied transport scheme
     private static void validateAllowedUri(URI uri, int depth) throws URISyntaxException {
         // Don't allow more than 5 nested URIs to prevent blowing the stack
         // If we are greater than 4 then this is the 5th level of composite
@@ -635,10 +637,13 @@ public class BrokerView implements BrokerViewMBean {
         }
     }
 
-    // We don't allow VM transport scheme to be used
+    // Check all denied schemes
     private static void validateAllowedScheme(String scheme) {
-        if (scheme.equals("vm")) {
-            throw new IllegalArgumentException("VM scheme is not allowed");
+        for (String denied : DENIED_TRANSPORT_SCHEMES) {
+            // The schemes should be case-insensitive but ignore case as a precaution
+            if (scheme.equalsIgnoreCase(denied)) {
+                throw new IllegalArgumentException("Transport scheme '" + scheme + "' is not allowed");
+            }
         }
     }
 }
