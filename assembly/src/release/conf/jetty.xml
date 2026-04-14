@@ -15,6 +15,10 @@
         An embedded servlet engine for serving up the Admin consoles, REST and Ajax APIs and
         some demos Include this file in your configuration to enable ActiveMQ web components
         e.g. <import resource="jetty.xml"/>
+
+        Note: the broker element in your configuration must have id="broker" set so that
+        the Jetty server starts only after the broker is fully available.
+        e.g. <broker id="broker" xmlns="http://activemq.apache.org/schema/core" ...>
     -->
 <beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
@@ -208,8 +212,8 @@
         </property>
     </bean>
     
-    <bean id="invokeStart" class="org.springframework.beans.factory.config.MethodInvokingFactoryBean" 
-        depends-on="configureJetty, invokeConnectors">
+    <bean id="invokeStart" class="org.springframework.beans.factory.config.MethodInvokingFactoryBean"
+        depends-on="configureJetty, invokeConnectors, broker">
         <property name="targetObject" ref="Server" />
         <property name="targetMethod" value="start" />      
     </bean>
