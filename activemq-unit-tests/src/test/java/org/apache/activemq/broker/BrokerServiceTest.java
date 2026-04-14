@@ -95,6 +95,44 @@ public class BrokerServiceTest extends TestCase {
         assertEquals( 1024L * 1024 * 1024 * 100, service.getSystemUsage().getStoreUsage().getLimit() );
     }
 
+    public void testSetBrokerNameInvalidChars() {
+        final BrokerService brokerService = new BrokerService();
+
+        // All valid
+        brokerService.setBrokerName("valid");
+        assertEquals("valid", brokerService.getBrokerName());
+        brokerService.setBrokerName("valid123");
+        assertEquals("valid123", brokerService.getBrokerName());
+        brokerService.setBrokerName("this_is_valid");
+        assertEquals("this_is_valid", brokerService.getBrokerName());
+        brokerService.setBrokerName("this_123_valid");
+        assertEquals("this_123_valid", brokerService.getBrokerName());
+        brokerService.setBrokerName("valid-name123");
+        assertEquals("valid-name123", brokerService.getBrokerName());
+        brokerService.setBrokerName("1235.6789");
+        assertEquals("1235.6789", brokerService.getBrokerName());
+        brokerService.setBrokerName("valid:123");
+        assertEquals("valid:123", brokerService.getBrokerName());
+
+        // Test invalid names
+        brokerService.setBrokerName("abc?bad");
+        assertEquals("abc_bad", brokerService.getBrokerName());
+        brokerService.setBrokerName("#");
+        assertEquals("_", brokerService.getBrokerName());
+        brokerService.setBrokerName("?");
+        assertEquals("_", brokerService.getBrokerName());
+        brokerService.setBrokerName("invalid%");
+        assertEquals("invalid_", brokerService.getBrokerName());
+        brokerService.setBrokerName("\\");
+        assertEquals("_", brokerService.getBrokerName());
+        brokerService.setBrokerName("<>");
+        assertEquals("__", brokerService.getBrokerName());
+        brokerService.setBrokerName("abc=");
+        assertEquals("abc_", brokerService.getBrokerName());
+        brokerService.setBrokerName("name:abc=?bad");
+        assertEquals("name:abc__bad", brokerService.getBrokerName());
+    }
+
     /** // AMQ-9239 FIXME: byte-buddy module opens
     @Test
     public void testLargeFileSystem() throws Exception {
