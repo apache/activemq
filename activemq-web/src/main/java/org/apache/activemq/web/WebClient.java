@@ -60,7 +60,7 @@ import org.slf4j.LoggerFactory;
  *
  *
  */
-public class WebClient implements HttpSessionActivationListener, HttpSessionBindingListener, Externalizable {
+public class WebClient implements HttpSessionActivationListener, HttpSessionBindingListener, Externalizable, AutoCloseable {
 
     public static final String WEB_CLIENT_ATTRIBUTE = "org.apache.activemq.webclient";
     public static final String CONNECTION_FACTORY_ATTRIBUTE = "org.apache.activemq.connectionFactory";
@@ -278,7 +278,7 @@ public class WebClient implements HttpSessionActivationListener, HttpSessionBind
                 if (broker == null) {
                     throw new IllegalStateException("missing brokerURL (specified via " + BROKER_URL_INIT_PARAM + " init-Param) or embedded broker");
                 } else {
-                    brokerURL = "vm://" + broker.getBrokerName();
+                    brokerURL = broker.getVmConnectorURI().toString();
                 }
             }
 
