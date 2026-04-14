@@ -17,6 +17,7 @@
 package org.apache.activemq.broker.jmx;
 
 import java.io.IOException;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -395,7 +396,7 @@ public class DestinationView implements DestinationViewMBean {
     @Override
     public String sendTextMessage(Map<String, String> headers, String body, String userName, @Sensitive String password) throws Exception {
 
-        String brokerUrl = "vm://" + broker.getBrokerName();
+        URI brokerUrl = broker.getVmConnectorURI();
         ActiveMQDestination dest = destination.getActiveMQDestination();
 
         ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory(brokerUrl);
