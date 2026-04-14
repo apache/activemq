@@ -33,8 +33,6 @@ import static org.junit.Assert.fail;
 /**
  * This test shows that when we create a network connector via JMX,
  * the NC/bridge shows up in the MBean Server
- *
- * @author <a href="http://www.christianposta.com/blog">Christian Posta</a>
  */
 public class JmxCreateNCTest {
 
@@ -82,35 +80,44 @@ public class JmxCreateNCTest {
 
     @Test
     public void testVmBridgeBlocked() throws Exception {
+        testDeniedBridgeBlocked("vm");
+    }
+
+    @Test
+    public void testHttpBridgeBlocked() throws Exception {
+        testDeniedBridgeBlocked("http");
+    }
+
+    protected void testDeniedBridgeBlocked(String scheme) throws Exception {
         // Test composite network connector uri
         try {
-            proxy.addNetworkConnector("static:(vm://localhost)");
-            fail("Should have failed trying to add vm connector bridge");
+            proxy.addNetworkConnector("static:(" + scheme + "://localhost)");
+            fail("Should have failed trying to add connector bridge");
         } catch (IllegalArgumentException e) {
-            assertEquals("VM scheme is not allowed", e.getMessage());
+            assertEquals("Transport scheme '" + scheme + "' is not allowed", e.getMessage());
         }
 
         try {
-            proxy.addNetworkConnector("multicast:(vm://localhost)");
-            fail("Should have failed trying to add vm connector bridge");
+            proxy.addNetworkConnector("multicast:(" + scheme + "://localhost)");
+            fail("Should have failed trying to add connector bridge");
         } catch (IllegalArgumentException e) {
-            assertEquals("VM scheme is not allowed", e.getMessage());
+            assertEquals("Transport scheme '" + scheme + "' is not allowed", e.getMessage());
         }
 
-        // verify direct vm as well
+        // verify direct connector as well
         try {
-            proxy.addNetworkConnector("vm://localhost");
-            fail("Should have failed trying to add vm connector bridge");
+            proxy.addNetworkConnector(scheme + "://localhost");
+            fail("Should have failed trying to add connector bridge");
         } catch (IllegalArgumentException e) {
-            assertEquals("VM scheme is not allowed", e.getMessage());
+            assertEquals("Transport scheme '" + scheme + "' is not allowed", e.getMessage());
         }
 
         try {
             // verify nested composite URI is blocked
-            proxy.addNetworkConnector("static:(failover:(failover:(tcp://localhost:0,vm://localhost)))");
-            fail("Should have failed trying to add vm connector bridge");
+            proxy.addNetworkConnector("static:(failover:(failover:(tcp://localhost:0," + scheme + "://localhost)))");
+            fail("Should have failed trying to add connector bridge");
         } catch (IllegalArgumentException e) {
-            assertEquals("VM scheme is not allowed", e.getMessage());
+            assertEquals("Transport scheme '" + scheme + "' is not allowed", e.getMessage());
         }
     }
 
