@@ -68,6 +68,10 @@ public class RuntimeConfigurationBroker extends AbstractRuntimeConfigurationBrok
     @Override
     public void start() throws Exception {
         super.start();
+    }
+
+    @Override
+    public void nowMasterBroker() {
         try {
             BrokerContext brokerContext = next.getBrokerService().getBrokerContext();
             if (brokerContext != null) {
@@ -83,6 +87,7 @@ public class RuntimeConfigurationBroker extends AbstractRuntimeConfigurationBrok
         currentConfiguration = loadConfiguration(configToMonitor);
         monitorModification(configToMonitor);
         registerMbean();
+        super.nowMasterBroker();
     }
 
     @Override
