@@ -2060,34 +2060,50 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         assertTrue(subscription.isExclusive());
     }
 
-    // Test to verify VM transport is not allowed to be added as a connector
+    // Test to verify http transport is not allowed to be added as a connector
+    // through the Broker MBean
+    public void testAddHttpConnectorBlockedBrokerView() throws Exception {
+        testAddTransportConnectorBlockedBrokerView("http");
+    }
+
+    // Test to verify vm transport is not allowed to be added as a connector
     // through the Broker MBean
     public void testAddVmConnectorBlockedBrokerView() throws Exception {
+        testAddTransportConnectorBlockedBrokerView("vm");
+    }
+
+    protected void testAddTransportConnectorBlockedBrokerView(String scheme) throws Exception {
         ObjectName brokerName = assertRegisteredObjectName(domain + ":type=Broker,brokerName=localhost");
         BrokerViewMBean brokerView = MBeanServerInvocationHandler.newProxyInstance(mbeanServer, brokerName, BrokerViewMBean.class, true);
 
         try {
-            brokerView.addConnector("vm://localhost");
-            fail("Should have failed trying to add vm connector");
+            brokerView.addConnector(scheme + "://localhost");
+            fail("Should have failed trying to add connector");
         } catch (IllegalArgumentException e) {
-            assertEquals("VM scheme is not allowed", e.getMessage());
+            assertEquals("Transport scheme '" + scheme + "' is not allowed", e.getMessage());
         }
 
         try {
             // verify any composite URI is blocked as well
-            brokerView.addConnector("failover:(tcp://0.0.0.0:0,vm://" + brokerName + ")");
-            fail("Should have failed trying to add vm connector");
+            brokerView.addConnector("failover:(tcp://0.0.0.0:0," + scheme + "://" + brokerName + ")");
+            fail("Should have failed trying to add connector");
         } catch (IllegalArgumentException e) {
-            assertEquals("VM scheme is not allowed", e.getMessage());
+            assertEquals("Transport scheme '" + scheme + "' is not allowed", e.getMessage());
         }
 
         try {
             // verify nested composite URI is blocked
-            brokerView.addConnector("failover:(failover:(failover:(vm://localhost)))");
-            fail("Should have failed trying to add vm connector");
+            brokerView.addConnector("failover:(failover:(failover:(" + scheme + "://localhost)))");
+            fail("Should have failed trying to add connector");
         } catch (IllegalArgumentException e) {
-            assertEquals("VM scheme is not allowed", e.getMessage());
+            assertEquals("Transport scheme '" + scheme + "' is not allowed", e.getMessage());
         }
+    }
+
+    // Test too many nested URIs
+    public void testNestedAddTransportConnector() throws Exception {
+        ObjectName brokerName = assertRegisteredObjectName(domain + ":type=Broker,brokerName=localhost");
+        BrokerViewMBean brokerView = MBeanServerInvocationHandler.newProxyInstance(mbeanServer, brokerName, BrokerViewMBean.class, true);
 
         try {
             // verify nested composite URI with more than 5 levels is blocked
@@ -2097,7 +2113,6 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         } catch (IllegalArgumentException e) {
             assertEquals("URI can't contain more than 5 nested composite URIs", e.getMessage());
         }
-
     }
 
 }
