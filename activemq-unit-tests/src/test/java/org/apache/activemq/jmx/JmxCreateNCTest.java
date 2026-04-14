@@ -99,7 +99,7 @@ public class JmxCreateNCTest {
 
         try {
             proxy.addNetworkConnector("multicast:(" + scheme + "://localhost)");
-            fail("Should have failed trying to add vm connector bridge");
+            fail("Should have failed trying to add connector bridge");
         } catch (IllegalArgumentException e) {
             assertEquals("Transport scheme '" + scheme + "' is not allowed", e.getMessage());
         }
