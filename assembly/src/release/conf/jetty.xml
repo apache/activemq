@@ -202,10 +202,10 @@
 		</property>
 	</bean>
     
-    <bean id="invokeStart" class="org.springframework.beans.factory.config.MethodInvokingFactoryBean" 
-    	depends-on="configureJetty, invokeConnectors">
+    <bean id="invokeStart" class="org.springframework.beans.factory.config.MethodInvokingFactoryBean"
+    	depends-on="broker, configureJetty, invokeConnectors">
     	<property name="targetObject" ref="Server" />
-    	<property name="targetMethod" value="start" />  	
+    	<property name="targetMethod" value="start" />
     </bean>
     
     
