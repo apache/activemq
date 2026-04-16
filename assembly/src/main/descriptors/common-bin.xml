@@ -308,6 +308,10 @@
         <include>com.rometools:rome-utils</include>
         <include>org.jdom:jdom2</include>
 
+        <!-- String text utils -->
+        <include>org.apache.commons:commons-text</include>
+        <include>org.apache.commons:commons-lang3</include>
+
         <!-- REST API -->
         <include>org.jolokia:jolokia-core</include>
         <include>org.jolokia:jolokia-server-core</include>

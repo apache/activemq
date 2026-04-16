@@ -40,6 +40,8 @@
         <bundle dependency="true">mvn:org.apache.geronimo.specs/geronimo-annotation_1.3_spec/1.0</bundle>
         <bundle dependency="true">mvn:org.apache.geronimo.specs/geronimo-jta_1.1_spec/1.1.1</bundle>
         <bundle>mvn:org.apache.commons/commons-pool2/${commons-pool2-version}</bundle>
+        <bundle>mvn:org.apache.commons/commons-lang3/${commons-lang3-version}</bundle>
+        <bundle>mvn:org.apache.commons/commons-text/${commons-text-version}</bundle>
         <!-- uber osgi bundle means client is not that lean, todo: introduce client osgi bundle -->
         <bundle>mvn:org.apache.activemq/activemq-osgi/${project.version}</bundle>
     </feature>
