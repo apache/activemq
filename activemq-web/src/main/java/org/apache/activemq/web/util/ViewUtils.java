@@ -42,7 +42,7 @@ public class ViewUtils {
         Map<String,String> mappings = new LinkedHashMap<>();
         mappings.put(AMP, XML_ESCAPED_AMP);
         mappings.put(LT, XML_ESCAPED_LT);
-        mappings.put(GT, XMl_ESCAPED_GT);
+        mappings.put(GT, XML_ESCAPED_GT);
         mappings.put(QUOTE, XML_ESCAPED_QUOTE);
         mappings.put(APOS, XML_ESCAPED_APOS);
 
