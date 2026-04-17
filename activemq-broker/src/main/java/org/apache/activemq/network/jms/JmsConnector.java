@@ -484,7 +484,7 @@ public abstract class JmsConnector implements Service {
      * during normal bridging operations.
      *
      * @param connection
-     * 		The connection that was in use when the failure occured.
+     * 		The connection that was in use when the failure occurred.
      */
     void handleConnectionFailure(Connection connection) {
 
