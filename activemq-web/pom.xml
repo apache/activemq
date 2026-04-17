@@ -91,6 +91,13 @@
       <artifactId>websocket-server</artifactId>
     </dependency>
 
+    <!-- Just used for testing -->
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-text</artifactId>
+      <scope>test</scope>
+    </dependency>
+
     <!-- Rome RSS Reader -->
     <dependency>
       <groupId>com.rometools</groupId>
