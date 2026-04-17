@@ -131,7 +131,7 @@
     <docker-maven-plugin-version>0.48.1</docker-maven-plugin-version>
     <docker-java-version>17</docker-java-version>
     <maven-project-info-reports-plugin-version>3.9.0</maven-project-info-reports-plugin-version>
-    <maven-core-version>3.9.14</maven-core-version>
+    <maven-core-version>3.9.15</maven-core-version>
     <maven-surefire-plugin-version>3.5.3</maven-surefire-plugin-version>
     <maven-surefire-junit5-tree-reporter-version>1.5.1</maven-surefire-junit5-tree-reporter-version>
     <!-- OSGi bundles properties -->
