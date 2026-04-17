@@ -66,6 +66,7 @@ public class ApplicationContextFilter implements Filter {
     private String applicationContextName = "applicationContext";
     private String requestContextName = "requestContext";
     private String requestName = "request";
+    private String slavePage = "slave.jsp";
 
     public void init(FilterConfig config) throws ServletException {
         this.servletContext = config.getServletContext();
@@ -84,19 +85,22 @@ public class ApplicationContextFilter implements Filter {
         Map requestContextWrapper = createRequestContextWrapper(request);
         String path = ((HttpServletRequest)request).getRequestURI();
         // handle slave brokers
-//        try {
-//            if ( !(path.endsWith("css") || path.endsWith("png") || path.endsWith("ico") || path.endsWith(slavePage))
-//                    && ((BrokerFacade)requestContextWrapper.get("brokerQuery")).isSlave()) {
-//                ((HttpServletResponse)response).sendRedirect(slavePage);
-//                return;
-//            }
-//        } catch (Exception e) {
-//            LOG.warn(path + ", failed to access BrokerFacade: reason: " + e.getLocalizedMessage());
-//            if (LOG.isDebugEnabled()) {
-//                LOG.debug(request.toString(), e);
-//            }
-//            throw new IOException(e);
-//        }
+        try {
+            boolean isSlave = ((BrokerFacade) requestContextWrapper.get("brokerQuery")).getBrokerAdmin().isSlave();
+            if (isSlave && !(path.endsWith("css") || path.endsWith("png") || path.endsWith("ico") || path.endsWith(slavePage))) {
+                ((HttpServletResponse) response).sendRedirect(slavePage);
+                return;
+            } else if (!isSlave && path.endsWith(slavePage)) {
+                ((HttpServletResponse) response).sendRedirect(((HttpServletRequest) request).getContextPath() + "/index.jsp");
+                return;
+            }
+        } catch (Exception e) {
+            LOG.warn(path + ", failed to access BrokerFacade: reason: " + e.getLocalizedMessage());
+            if (LOG.isDebugEnabled()) {
+                LOG.debug(request.toString(), e);
+            }
+            throw new IOException(e);
+        }
         request.setAttribute(requestContextName, requestContextWrapper);
         request.setAttribute(requestName, request);
         chain.doFilter(request, response);
