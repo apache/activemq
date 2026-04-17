@@ -58,12 +58,12 @@ public class SimpleConnectionManager implements ConnectionManager, ConnectionEve
         try {
             ((ManagedConnection)event.getSource()).cleanup();
         } catch (ResourceException e) {
-            LOG.warn("Error occured during the cleanup of a managed connection: ", e);
+            LOG.warn("Error occurred during the cleanup of a managed connection: ", e);
         }
         try {
             ((ManagedConnection)event.getSource()).destroy();
         } catch (ResourceException e) {
-            LOG.warn("Error occured during the destruction of a managed connection: ", e);
+            LOG.warn("Error occurred during the destruction of a managed connection: ", e);
         }
     }
 
@@ -93,12 +93,12 @@ public class SimpleConnectionManager implements ConnectionManager, ConnectionEve
         try {
             ((ManagedConnection)event.getSource()).cleanup();
         } catch (ResourceException e) {
-            LOG.warn("Error occured during the cleanup of a managed connection: ", e);
+            LOG.warn("Error occurred during the cleanup of a managed connection: ", e);
         }
         try {
             ((ManagedConnection)event.getSource()).destroy();
         } catch (ResourceException e) {
-            LOG.warn("Error occured during the destruction of a managed connection: ", e);
+            LOG.warn("Error occurred during the destruction of a managed connection: ", e);
         }
     }
 
