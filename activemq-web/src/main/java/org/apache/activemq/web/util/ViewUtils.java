@@ -16,7 +16,6 @@
  */
 package org.apache.activemq.web.util;
 
-import com.rometools.rome.feed.atom.Link;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -33,7 +32,7 @@ public class ViewUtils {
     public static final String XML_ESCAPED_AMP = "&amp;";
     public static final String XML_ESCAPED_QUOTE = "&quot;";
     public static final String XML_ESCAPED_LT = "&lt;";
-    public static final String XMl_ESCAPED_GT = "&gt;";
+    public static final String XML_ESCAPED_GT = "&gt;";
     public static final String XML_ESCAPED_APOS = "&apos;";
 
     public static final Map<String, String> XML_ESCAPE_MAPPINGS;
