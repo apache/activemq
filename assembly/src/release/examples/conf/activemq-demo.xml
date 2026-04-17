@@ -47,7 +47,7 @@
           - Change the brokerName attribute to something unique
     -->
 
-    <broker xmlns="http://activemq.apache.org/schema/core" brokerName="amq-broker" useJmx="true">
+    <broker xmlns="http://activemq.apache.org/schema/core" brokerName="amq-broker" useJmx="true" id="broker">
 
         <!--
             Examples of destination-specific policies using destination
