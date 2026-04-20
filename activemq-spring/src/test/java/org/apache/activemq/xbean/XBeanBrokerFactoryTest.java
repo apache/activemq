@@ -99,6 +99,8 @@ public class XBeanBrokerFactoryTest {
         startBrokerNotAllowedError("xbean:ftp:bad/xbean-test.xml");
         // should get illegal state exception, we are not allowed to use the jar protocol
         startBrokerNotAllowedError("xbean:jar:file:invalid.jar!/");
+        // remote file is blocked
+        startBrokerNotAllowedError("xbean:file://remote/xbean-test.xml");
 
         // custom is not a known protocol so this is detected as invalid protocol
         // and not a URI, so it fallsback and tries classpath which is allowed
@@ -120,7 +122,11 @@ public class XBeanBrokerFactoryTest {
                 "No protocols are allowed for loading resources");
         startBrokerNotAllowedError("xbean:src/test/resources/spring/xbean-test.xml",
                 "No protocols are allowed for loading resources");
+        startBrokerNotAllowedError("xbean://src/test/resources/spring/xbean-test.xml",
+                "No protocols are allowed for loading resources");
         startBrokerNotAllowedError("xbean:file:src/test/resources/spring/xbean-test.xml",
+                "No protocols are allowed for loading resources");
+        startBrokerNotAllowedError("xbean:file://src/test/resources/spring/xbean-test.xml",
                 "No protocols are allowed for loading resources");
         startBrokerNotAllowedError("xbean:classpath:src/test/resources/spring/xbean-test.xml",
                 "No protocols are allowed for loading resources");
@@ -141,6 +147,8 @@ public class XBeanBrokerFactoryTest {
         startBrokerBeanError("xbean:jar:file:invalid.jar!/", NoSuchFileException.class);
         startBrokerBeanError("xbean:ftp://invalid", UnknownHostException.class);
         startBrokerBeanError("xbean:http://invalid", UnknownHostException.class);
+        // check remote file too
+        startBrokerBeanError("xbean:file://invalid", UnknownHostException.class);
     }
 
     @Test
@@ -156,10 +164,13 @@ public class XBeanBrokerFactoryTest {
         startBrokerBeanError("xbean:ftp://invalid", UnknownHostException.class);
         startBrokerBeanError("xbean:http://invalid", UnknownHostException.class);
 
-        // file and classpath are all blocked
+        // file, remote file and classpath are all blocked
         startBrokerNotAllowedError("xbean:src/test/resources/spring/xbean-test.xml",
                 "can't be found or is not allowed");
+        startBrokerNotAllowedError("xbean://remote/spring/xbean-test.xml",
+                "can't be found or is not allowed");
         startBrokerNotAllowedError("xbean:file:src/test/resources/spring/xbean-test.xml");
+        startBrokerNotAllowedError("xbean:file://remote/spring/xbean-test.xml");
         startBrokerNotAllowedError("xbean:spring/xbean-test.xml",
                 "can't be found or is not allowed");
         startBrokerNotAllowedError("xbean:classpath:spring/xbean-test.xml");
@@ -207,7 +218,7 @@ public class XBeanBrokerFactoryTest {
     }
 
     private void startBrokerNotAllowedError(String url) throws Exception {
-        startBrokerNotAllowedError(url, "does not use an allowed protocol for loading URL resources");
+        startBrokerNotAllowedError(url, "which is not allowed for loading URL resources");
     }
 
     private void startBrokerNotAllowedError(String url, String expected) throws Exception {

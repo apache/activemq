@@ -61,6 +61,12 @@ public class ActiveMQConnectionFactoryXBeanTest {
         assertBrokerCreated("vm://localhost?brokerConfig=xbean:activemq.xml");
         assertBrokerCreated("vm://localhost?brokerConfig=xbean:classpath:activemq.xml");
 
+        // Remote file not allowed by default, falls back to classpath as it isn't fully qualified
+        assertBrokerStartError("vm://localhost?brokerConfig=xbean://activemq.xml",
+                FileNotFoundException.class);
+        // Remote file not allowed by default
+        assertUrlNotAllowed("vm://localhost?brokerConfig=xbean:file://activemq.xml");
+
         // other URL types blocked
         assertUrlNotAllowed("vm://localhost?brokerConfig=xbean:http://activemq.xml");
         assertUrlNotAllowed("vm://localhost?brokerConfig=xbean:ftp://activemq.xml");
@@ -82,6 +88,12 @@ public class ActiveMQConnectionFactoryXBeanTest {
         assertUrlNotAllowed("vm://localhost?brokerConfig=xbean:src/test/resources/activemq.xml",
                 "No protocols are allowed for loading resources");
         assertUrlNotAllowed("vm://localhost?brokerConfig=xbean:file:src/test/resources/activemq.xml",
+                "No protocols are allowed for loading resources");
+
+        // Remote file resources blocked
+        assertUrlNotAllowed("vm://localhost?brokerConfig=xbean://remote/resources/activemq.xml",
+                "No protocols are allowed for loading resources");
+        assertUrlNotAllowed("vm://localhost?brokerConfig=xbean:file://remote/resources/activemq.xml",
                 "No protocols are allowed for loading resources");
 
         // Classpath resources blocked
@@ -129,6 +141,11 @@ public class ActiveMQConnectionFactoryXBeanTest {
         assertBrokerCreated("vm://localhost?brokerConfig=xbean:src/test/resources/activemq.xml");
         assertBrokerCreated("vm://localhost?brokerConfig=xbean:file:src/test/resources/activemq.xml");
 
+        // Remote file resources - not allowed
+        assertUrlNotAllowed("vm://localhost?brokerConfig=xbean://activemq.xml",
+                "can't be found or is not allowed");
+        assertUrlNotAllowed("vm://localhost?brokerConfig=xbean:file://activemq.xml");
+
         // Classpath resources - not allowed
         assertUrlNotAllowed("vm://localhost?brokerConfig=xbean:activemq.xml",
                 "can't be found or is not allowed");
@@ -143,6 +160,11 @@ public class ActiveMQConnectionFactoryXBeanTest {
 
         // jar is now allowed but file doesn't exist
         assertBrokerStartError("vm://localhost?brokerConfig=xbean:jar:file:invalid.jar!/", NoSuchFileException.class);
+
+        System.setProperty(XBeanBrokerFactory.XBEAN_BROKER_FACTORY_PROTOCOLS_PROP, "remote-file,jar,ftp");
+        // remote file is now allowed, but can't be found with bad host
+        assertBrokerStartError("vm://localhost?brokerConfig=xbean:file://invalid",
+                UnknownHostException.class);
     }
 
     private void assertBrokerCreated(String url) throws JMSException {
@@ -153,7 +175,7 @@ public class ActiveMQConnectionFactoryXBeanTest {
     }
 
     private void assertUrlNotAllowed(String url) {
-        assertUrlNotAllowed(url, "does not use an allowed protocol for loading URL resources");
+        assertUrlNotAllowed(url, " which is not allowed for loading URL resources");
     }
 
     private void assertUrlNotAllowed(String url, String error) {
