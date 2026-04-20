@@ -16,8 +16,7 @@
  */
 package org.apache.activemq.broker.jmx;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.apache.activemq.broker.jmx.BrokerView.DENIED_TRANSPORT_SCHEMES;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -68,7 +67,6 @@ import org.apache.activemq.test.annotations.ParallelTest;
 import org.apache.activemq.util.JMXSupport;
 import org.apache.activemq.util.URISupport;
 import org.apache.activemq.util.Wait;
-import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -2058,16 +2056,13 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         assertTrue(subscription.isExclusive());
     }
 
-    // Test to verify http transport is not allowed to be added as a connector
+    // Test to verify blocked transport schemes are not allowed to be added as a connector
     // through the Broker MBean
-    public void testAddHttpConnectorBlockedBrokerView() throws Exception {
-        testAddTransportConnectorBlockedBrokerView("http");
-    }
-
-    // Test to verify vm transport is not allowed to be added as a connector
-    // through the Broker MBean
-    public void testAddVmConnectorBlockedBrokerView() throws Exception {
-        testAddTransportConnectorBlockedBrokerView("vm");
+    public void testAddConnectorBlockedBrokerView() throws Exception {
+        for (String deniedScheme : DENIED_TRANSPORT_SCHEMES) {
+            LOG.info("verify testAddConnectorBlockedBrokerView scheme: {}", deniedScheme);
+            testAddTransportConnectorBlockedBrokerView(deniedScheme);
+        }
     }
 
     protected void testAddTransportConnectorBlockedBrokerView(String scheme) throws Exception {
@@ -2076,7 +2071,7 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
 
         try {
             brokerView.addConnector(scheme + "://localhost");
-            fail("Should have failed trying to add connector");
+            fail("Should have failed trying to add connector with scheme: " + scheme);
         } catch (IllegalArgumentException e) {
             assertEquals("Transport scheme '" + scheme + "' is not allowed", e.getMessage());
         }
@@ -2084,7 +2079,7 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         try {
             // verify any composite URI is blocked as well
             brokerView.addConnector("failover:(tcp://0.0.0.0:0," + scheme + "://" + brokerName + ")");
-            fail("Should have failed trying to add connector");
+            fail("Should have failed trying to add connector with scheme: " + scheme);
         } catch (IllegalArgumentException e) {
             assertEquals("Transport scheme '" + scheme + "' is not allowed", e.getMessage());
         }
@@ -2092,7 +2087,7 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         try {
             // verify nested composite URI is blocked
             brokerView.addConnector("failover:(failover:(failover:(" + scheme + "://localhost)))");
-            fail("Should have failed trying to add connector");
+            fail("Should have failed trying to add connector with scheme: " + scheme);
         } catch (IllegalArgumentException e) {
             assertEquals("Transport scheme '" + scheme + "' is not allowed", e.getMessage());
         }
