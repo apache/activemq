@@ -520,10 +520,11 @@ public class TwoBrokerVirtualTopicSelectorAwareForwardingTest extends
         assertEquals(2, msgsB.getMessageCount());
 
 
-        // queue should be drained
-        assertEquals(0, brokerB.getDestination(new ActiveMQQueue("Consumer.B.VirtualTopic.tempTopic"))
-                .getDestinationStatistics().getMessages().getCount());
-        // and the enqueue count for the remote queue should only be 1
+        // queue should be drained - use Wait.waitFor to allow broker ACK processing to complete
+        assertTrue("queue should be drained after consumer ACKs", Wait.waitFor(() ->
+                brokerB.getDestination(new ActiveMQQueue("Consumer.B.VirtualTopic.tempTopic"))
+                        .getDestinationStatistics().getMessages().getCount() == 0, 5000, 100));
+        // and the enqueue count for the remote queue should only be 3
         assertEquals(3, brokerB.getDestination(new ActiveMQQueue("Consumer.B.VirtualTopic.tempTopic"))
                 .getDestinationStatistics().getEnqueues().getCount());
 
