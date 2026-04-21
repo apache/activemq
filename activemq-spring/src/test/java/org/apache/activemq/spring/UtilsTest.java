@@ -59,12 +59,10 @@ public class UtilsTest {
             assertFalse(Utils.isAllowFile(Set.of(FILE_PROTOCOL), remoteFileName));
             assertFalse(Utils.isAllowFile(Set.of(FILE_PROTOCOL, "ftp", "ssl"), remoteFileName));
         }
-
     }
 
     @Test
     public void testIsAllowRemoteFile() {
-
         // Test a remote file
         Set<String> remoteFileExamples = Set.of("//some/remote/file", "\\\\remote\\file");
         for (String remoteFileName : remoteFileExamples) {
@@ -75,7 +73,6 @@ public class UtilsTest {
             assertFalse(Utils.isAllowFile(Set.of(), remoteFileName));
             assertFalse(Utils.isAllowFile(Set.of(""), remoteFileName));
         }
-
     }
 
     @Test
@@ -112,6 +109,8 @@ public class UtilsTest {
         assertValidateUrlAllowedThrows("file://somefile.txt", Set.of());
         assertValidateUrlAllowedThrows("file://some/other/file.txt", Set.of(""));
         assertValidateUrlAllowedThrows("file://some/other/file.txt", Set.of(FILE_PROTOCOL));
+        // Test extra slash, we consider everything with more than one slash to be remote to simplify
+        assertValidateUrlAllowedThrows("file:///some/other/file.txt", Set.of(FILE_PROTOCOL));
 
         // Test http - Allowed
         Utils.validateUrlAllowed("http://somefile.txt", Set.of("http"));
@@ -149,7 +148,7 @@ public class UtilsTest {
         Resource resource;
 
         // file not allowed, only jar
-        assertNotAllowed("URL [" + url + "] can't be found or is not allowed for loading resources",
+        assertNotAllowed("URL [" + url + "] can't be found or the protocol is not allowed for loading resources",
                 () -> Utils.resourceFromString(url, Set.of("jar")));
         // if classpath is allowed and not fully qualified, it will not find the file and fallback
         resource = Utils.resourceFromString(url, Set.of(CLASSPATH_PROTOCOL));
@@ -192,7 +191,7 @@ public class UtilsTest {
         assertTrue(resource instanceof ClassPathResource);
         assertFalse(resource.exists());
         // classpath not allowed so we get an exception as we can't find it
-        assertNotAllowed("URL [" + url + "] can't be found or is not allowed for loading resources",
+        assertNotAllowed("URL [" + url + "] can't be found or the protocol is not allowed for loading resources",
                 () -> Utils.resourceFromString(url, Set.of(protocol)));
         resource = Utils.resourceFromString(fqUrl, Set.of(protocol));
         assertNotNull(resource);
@@ -205,7 +204,7 @@ public class UtilsTest {
         Resource resource;
 
         // Test using "jar" as allowed so we don't fallback
-        assertNotAllowed("URL [src/test/resources/activemq.xml] can't be found or is not allowed for loading resources",
+        assertNotAllowed("URL [src/test/resources/activemq.xml] can't be found or the protocol is not allowed for loading resources",
                 () -> Utils.resourceFromString("src/test/resources/activemq.xml", Set.of("jar")));
         // classpath is allowed so it won't find the file and fallback to classpath
         resource = Utils.resourceFromString("src/test/resources/activemq.xml", Set.of(CLASSPATH_PROTOCOL));
@@ -238,7 +237,7 @@ public class UtilsTest {
     @Test
     public void tetsResourceFromStringClasspath1() {
         // Check classpath is NOT allowed to load, and does NOT exist
-        assertNotAllowed("URL [doesNotExist] can't be found or is not allowed for loading resources",
+        assertNotAllowed("URL [doesNotExist] can't be found or the protocol is not allowed for loading resources",
                 () -> Utils.resourceFromString("doesNotExist", Set.of(FILE_PROTOCOL)));
         assertNotAllowed("URL [classpath:doesNotExist] uses protocol 'classpath' which is not allowed for loading URL resources",
                 () -> Utils.resourceFromString("classpath:doesNotExist", Set.of(FILE_PROTOCOL)));
@@ -273,7 +272,7 @@ public class UtilsTest {
     @Test
     public void testResourceFromStringClasspath3() {
         // This exists on the classpath but not allowed, only file is allowed
-        assertNotAllowed("URL [activemq.xml] can't be found or is not allowed for loading resources",
+        assertNotAllowed("URL [activemq.xml] can't be found or the protocol is not allowed for loading resources",
                 () -> Utils.resourceFromString("activemq.xml", Set.of(FILE_PROTOCOL)));
         // empty allow list
         assertNotAllowed("No protocols are allowed for loading resources.",
@@ -335,7 +334,7 @@ public class UtilsTest {
         assertFalse(resource.exists());
 
         // classpath is now not allowed either so it fails
-        assertNotAllowed("URL [bad://invalid] can't be found or is not allowed for loading resources",
+        assertNotAllowed("URL [bad://invalid] can't be found or the protocol is not allowed for loading resources",
                 () -> Utils.resourceFromString("bad://invalid", Set.of(FILE_PROTOCOL)));
     }
 

@@ -74,8 +74,8 @@ public class Utils {
         // Catch all fail-safe if nothing else matches. This could happen if file is allowed
         // but not classpath but the file doesn't exist
         } else {
-            throw new IllegalArgumentException("URL [" + uri + "] can't be found or is not allowed"
-                    + " for loading resources");
+            throw new IllegalArgumentException("URL [" + uri + "] can't be found or the protocol"
+                    + " is not allowed for loading resources");
         }
         return resource;
     }

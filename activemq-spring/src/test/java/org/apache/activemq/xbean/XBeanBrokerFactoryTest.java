@@ -166,13 +166,13 @@ public class XBeanBrokerFactoryTest {
 
         // file, remote file and classpath are all blocked
         startBrokerNotAllowedError("xbean:src/test/resources/spring/xbean-test.xml",
-                "can't be found or is not allowed");
+                "can't be found or the protocol is not allowed");
         startBrokerNotAllowedError("xbean://remote/spring/xbean-test.xml",
-                "can't be found or is not allowed");
+                "can't be found or the protocol is not allowed");
         startBrokerNotAllowedError("xbean:file:src/test/resources/spring/xbean-test.xml");
         startBrokerNotAllowedError("xbean:file://remote/spring/xbean-test.xml");
         startBrokerNotAllowedError("xbean:spring/xbean-test.xml",
-                "can't be found or is not allowed");
+                "can't be found or the protocol is not allowed");
         startBrokerNotAllowedError("xbean:classpath:spring/xbean-test.xml");
     }
 
@@ -187,7 +187,7 @@ public class XBeanBrokerFactoryTest {
 
         // Classpath entries won't work
         // not a URI and classpath isn't allowed so errors out
-        startBrokerNotAllowedError("xbean:spring/xbean-test.xml", "can't be found or is not allowed");
+        startBrokerNotAllowedError("xbean:spring/xbean-test.xml", "can't be found or the protocol is not allowed");
         startBrokerNotAllowedError("xbean:classpath:spring/xbean-test.xml");
 
         // block files, allow classpath

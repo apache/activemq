@@ -143,12 +143,12 @@ public class ActiveMQConnectionFactoryXBeanTest {
 
         // Remote file resources - not allowed
         assertUrlNotAllowed("vm://localhost?brokerConfig=xbean://activemq.xml",
-                "can't be found or is not allowed");
+                "can't be found or the protocol is not allowed");
         assertUrlNotAllowed("vm://localhost?brokerConfig=xbean:file://activemq.xml");
 
         // Classpath resources - not allowed
         assertUrlNotAllowed("vm://localhost?brokerConfig=xbean:activemq.xml",
-                "can't be found or is not allowed");
+                "can't be found or the protocol is not allowed");
         assertUrlNotAllowed("vm://localhost?brokerConfig=xbean:classpath:activemq.xml");
 
         // http not allowed
