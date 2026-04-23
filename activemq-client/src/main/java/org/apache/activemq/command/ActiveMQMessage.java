@@ -18,11 +18,7 @@ package org.apache.activemq.command;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Vector;
+import java.util.*;
 
 import jakarta.jms.DeliveryMode;
 import jakarta.jms.Destination;
@@ -50,6 +46,15 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
     public static final String BROKER_PATH_PROPERTY = "JMSActiveMQBrokerPath";
 
     private static final Map<String, PropertySetter> JMS_PROPERTY_SETERS = new HashMap<String, PropertySetter>();
+
+    public static final Set<String> STRICT_PROVIDER_JMSX_PROPERTIES =
+            Collections.unmodifiableSet(new HashSet<String>(Arrays.asList(
+                    "JMSXDeliveryCount",
+                    "JMSXRcvTimestamp",
+                    "JMSXState",
+                    "JMSXProducerTXID",
+                    "JMSXConsumerTXID"
+            )));
 
     protected transient Callback acknowledgeCallback;
 
@@ -505,11 +510,7 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
         // Strict Compliance Check For Provider-Set JMSX Properties
         ActiveMQConnection conn = getConnection();
         if (conn != null && conn.isStrictCompliance()) {
-            if ("JMSXDeliveryCount".equals(name) ||
-                    "JMSXRcvTimestamp".equals(name) ||
-                    "JMSXState".equals(name) ||
-                    "JMSXProducerTXID".equals(name) ||
-                    "JMSXConsumerTXID".equals(name)) {
+            if (STRICT_PROVIDER_JMSX_PROPERTIES.contains(name)) {
                 throw new JMSException("Provider-set JMSX property '" + name + "' cannot be set by a client under strict compliance.");
             }
         }
