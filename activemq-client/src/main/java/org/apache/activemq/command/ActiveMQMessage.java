@@ -18,7 +18,16 @@ package org.apache.activemq.command;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.util.*;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.Vector;
 
 import jakarta.jms.DeliveryMode;
 import jakarta.jms.Destination;
