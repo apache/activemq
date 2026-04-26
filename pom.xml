@@ -41,6 +41,8 @@
          preventing CI from hanging indefinitely on Windows file-lock issues or
          any other test that never terminates. Override per-module if needed. -->
     <surefire.forkedProcessTimeout>300</surefire.forkedProcessTimeout>
+    <!-- Set to 'ping' on Windows 11+ where wmic is unavailable: -Dsurefire.enableProcessChecker=ping -->
+    <surefire.enableProcessChecker>all</surefire.enableProcessChecker>
 
     <siteId>activemq-${project.version}</siteId>
     <projectName>Apache ActiveMQ</projectName>
@@ -967,7 +969,7 @@
             <forkCount>1</forkCount>
             <reuseForks>false</reuseForks>
             <forkedProcessTimeoutInSeconds>${surefire.forkedProcessTimeout}</forkedProcessTimeoutInSeconds>
-            <enableProcessChecker>all</enableProcessChecker>
+            <enableProcessChecker>${surefire.enableProcessChecker}</enableProcessChecker>
             <failIfNoTests>false</failIfNoTests>
             <systemPropertyVariables>
                 <java.awt.headless>true</java.awt.headless>
