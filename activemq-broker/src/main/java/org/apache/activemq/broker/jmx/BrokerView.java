@@ -46,7 +46,7 @@ public class BrokerView implements BrokerViewMBean {
 
     public static final Set<String> DENIED_TRANSPORT_SCHEMES = Set.of("vm", "http",
             "multicast", "zeroconf", "discovery", "fanout", "mock", "peer", "failover",
-            "proxy", "reliable", "simple", "udp");
+            "proxy", "reliable", "simple", "udp", "masterslave");
 
     ManagedRegionBroker broker;
 
