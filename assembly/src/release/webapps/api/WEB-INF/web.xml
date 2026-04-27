@@ -22,11 +22,14 @@
 
     <display-name>Apache ActiveMQ REST API</display-name>
 
+    <!--
+    Uncomment to enable the MessageServlet
     <servlet>
         <servlet-name>MessageServlet</servlet-name>
         <servlet-class>org.apache.activemq.web.MessageServlet</servlet-class>
         <load-on-startup>1</load-on-startup>
         <async-supported>true</async-supported>
+        -->
         <!--
         Uncomment this parameter if you plan to use multiple consumers over REST
         <init-param>
@@ -43,7 +46,13 @@
             <param-value>-1</param-value>
         </init-param>
         -->
-    </servlet>
+    <!--</servlet>
+
+    <servlet-mapping>
+        <servlet-name>MessageServlet</servlet-name>
+        <url-pattern>/message/*</url-pattern>
+    </servlet-mapping>
+    -->
 
     <servlet>
         <servlet-name>jolokia-agent</servlet-name>
@@ -73,11 +82,6 @@
         </init-param>
         <load-on-startup>1</load-on-startup> 
     </servlet>
-
-    <servlet-mapping>
-        <servlet-name>MessageServlet</servlet-name>
-        <url-pattern>/message/*</url-pattern>
-    </servlet-mapping>
 
     <servlet-mapping>
         <servlet-name>jolokia-agent</servlet-name>
