@@ -77,6 +77,11 @@ public class MulticastNetworkConnector extends NetworkConnector {
         this.remoteTransport = remoteTransport;
     }
 
+    @Override
+    public URI getUri() {
+        return remoteURI;
+    }
+
     public URI getRemoteURI() {
         return remoteURI;
     }

@@ -16,6 +16,8 @@
  */
 package org.apache.activemq.broker.jmx;
 
+import java.net.URISyntaxException;
+
 import org.apache.activemq.network.NetworkConnector;
 
 public class NetworkConnectorView implements NetworkConnectorViewMBean {
@@ -35,6 +37,20 @@ public class NetworkConnectorView implements NetworkConnectorViewMBean {
     @Override
     public void stop() throws Exception {
         connector.stop();
+    }
+
+    @Override
+    public String getUri() {
+        return connector.getUri() != null ? connector.getUri().toString() : "";
+    }
+
+    @Override
+    public String getLocalUri() {
+        try {
+            return connector.getLocalUri() != null ? connector.getLocalUri().toString() : "";
+        } catch (URISyntaxException e) {
+            return "";
+        }
     }
 
     @Override
