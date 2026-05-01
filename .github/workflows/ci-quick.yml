@@ -25,9 +25,9 @@ name: CI Quick
 
 on:
   push:
-    branches: [ "main", "activemq-6.1.x", "activemq-5.19.x" ]
+    branches: [ "main", "activemq-6.2.x", "activemq-5.19.x" ]
   pull_request:
-    branches: [ "main", "activemq-6.1.x", "activemq-5.19.x" ]
+    branches: [ "main", "activemq-6.2.x", "activemq-5.19.x" ]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
