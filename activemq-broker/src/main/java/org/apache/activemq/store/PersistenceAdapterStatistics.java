@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.store;
 
+import java.util.Set;
 import org.apache.activemq.management.StatsImpl;
 import org.apache.activemq.management.TimeStatisticImpl;
 
@@ -31,14 +32,11 @@ public class PersistenceAdapterStatistics extends StatsImpl {
     	slowCleanupTime = new TimeStatisticImpl("slowCleanupTime", "Slow time to cleanup data in the PersistentAdapter.");
     	slowWriteTime = new TimeStatisticImpl("slowWriteTime", "Slow time to write data to the PersistentAdapter.");
         slowReadTime = new TimeStatisticImpl("slowReadTime", "Slow time to read data from the PersistentAdapter.");
-        addStatistic("slowCleanupTime", slowCleanupTime);
-        addStatistic("slowWriteTime", slowWriteTime);
-        addStatistic("slowReadTime", slowReadTime);
-        
+
         writeTime = new TimeStatisticImpl("writeTime", "Time to write data to the PersistentAdapter.");
         readTime = new TimeStatisticImpl("readTime", "Time to read data from the PersistentAdapter.");
-        addStatistic("writeTime", writeTime);
-        addStatistic("readTime", readTime);
+
+        addStatistics(Set.of(slowCleanupTime, slowWriteTime, slowReadTime, writeTime, readTime));
     }
 
     public void addSlowCleanupTime(final long time) {

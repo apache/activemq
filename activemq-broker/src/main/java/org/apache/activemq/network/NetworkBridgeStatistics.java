@@ -14,11 +14,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.activemq.network;
 
 import org.apache.activemq.management.CountStatisticImpl;
 import org.apache.activemq.management.StatsImpl;
+
+import java.util.Set;
 
 /**
  * The Statistics for a NetworkBridge.
@@ -34,9 +35,7 @@ public class NetworkBridgeStatistics extends StatsImpl {
         dequeues = new CountStatisticImpl("dequeues", "The current number of dequeues this bridge has, which is the number of messages received by the remote broker.");
         receivedCount = new CountStatisticImpl("receivedCount", "The number of messages that have been received by the NetworkBridge from the remote broker.  Only applies for Duplex bridges.");
 
-        addStatistic("enqueues", enqueues);
-        addStatistic("dequeues", dequeues);
-        addStatistic("receivedCount", receivedCount);
+        addStatistics(Set.of(enqueues, dequeues, receivedCount));
     }
 
     /**
