@@ -52,6 +52,7 @@ import org.apache.activemq.openwire.OpenWireFormatFactory;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFactory;
 import org.apache.activemq.transport.TransportServer;
+import org.apache.activemq.transport.TransportConnectorPolicy;
 import org.apache.activemq.transport.TransportServerThreadSupport;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.InetAddressUtil;
@@ -124,7 +125,13 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
      * The maximum number of sockets allowed for this server
      */
     protected int maximumConnections = Integer.MAX_VALUE;
-    protected final AtomicLong maximumConnectionsExceededCount = new AtomicLong(0l);
+    protected final AtomicLong maximumConnectionsExceededCount = new AtomicLong(0L);
+
+    /**
+     * Optional admission policy applied to every accepted socket before any
+     * other processing. Null means every socket is admitted.
+     */
+    protected volatile TransportConnectorPolicy transportConnectorPolicy;
     protected final AtomicInteger currentTransportCount = new AtomicInteger();
 
     public TcpTransportServer(TcpTransportFactory transportFactory, URI location, ServerSocketFactory serverSocketFactory) throws IOException,
@@ -577,6 +584,24 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
         boolean closeSocket = true;
         boolean countIncremented = false;
         try {
+
+            // A refused socket is policy at work, not an accept error: close it without
+            // writing anything and stay out of the accept error path. One line per
+            // attempt is kept at DEBUG so a scanner cannot flood the log.
+            var policy = transportConnectorPolicy;
+            if (policy != null) {
+                try {
+                    policy.process(socket);
+                } catch (SecurityException refused) {
+                    LOG.debug("Refused connection from {}: {}", socket.getRemoteSocketAddress(), refused.getMessage());
+                    try {
+                        socket.close();
+                    } catch (IOException ignore) {
+                    }
+                    return;
+                }
+            }
+
             int currentCount;
             do {
                 currentCount = currentTransportCount.get();
@@ -735,8 +760,16 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
         return this.maximumConnectionsExceededCount.get();
     }
 
+    public TransportConnectorPolicy getTransportConnectorPolicy() {
+        return transportConnectorPolicy;
+    }
+
+    public void setTransportConnectorPolicy(TransportConnectorPolicy transportConnectorPolicy) {
+        this.transportConnectorPolicy = transportConnectorPolicy;
+    }
+
     @Override
     public void resetStatistics() {
-        this.maximumConnectionsExceededCount.set(0l);
+        this.maximumConnectionsExceededCount.set(0L);
     }
 }
