@@ -21,12 +21,13 @@ import org.apache.activemq.management.CountStatisticImpl;
 import org.apache.activemq.management.SizeStatisticImpl;
 import org.apache.activemq.management.StatsImpl;
 
+import java.util.Set;
+
 
 public abstract class AbstractMessageStoreStatistics extends StatsImpl {
 
     protected final CountStatisticImpl messageCount;
     protected final SizeStatisticImpl messageSize;
-
 
     protected AbstractMessageStoreStatistics(String countDescription, String sizeDescription) {
         this(true, countDescription, sizeDescription);
@@ -37,9 +38,7 @@ public abstract class AbstractMessageStoreStatistics extends StatsImpl {
         messageCount = new CountStatisticImpl("messageCount", countDescription);
         messageSize = new SizeStatisticImpl("messageSize", sizeDescription);
 
-        addStatistic("messageCount", messageCount);
-        addStatistic("messageSize", messageSize);
-
+        addStatistics(Set.of(messageCount, messageSize));
         this.setEnabled(enabled);
     }
 

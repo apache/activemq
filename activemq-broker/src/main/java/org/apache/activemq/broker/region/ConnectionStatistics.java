@@ -14,11 +14,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.activemq.broker.region;
 
 import org.apache.activemq.management.CountStatisticImpl;
 import org.apache.activemq.management.StatsImpl;
+
+import java.util.Set;
 
 /**
  * The J2EE Statistics for the Connection.
@@ -35,8 +36,7 @@ public class ConnectionStatistics extends StatsImpl {
         enqueues = new CountStatisticImpl("enqueues", "The number of messages that have been sent to the connection");
         dequeues = new CountStatisticImpl("dequeues", "The number of messages that have been dispatched from the connection");
 
-        addStatistic("enqueues", enqueues);
-        addStatistic("dequeues", dequeues);
+        addStatistics(Set.of(enqueues, dequeues));
     }
 
     public CountStatisticImpl getEnqueues() {

@@ -14,11 +14,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.activemq.broker.region;
 
 import org.apache.activemq.management.CountStatisticImpl;
 import org.apache.activemq.management.StatsImpl;
+
+import java.util.Set;
 
 /**
  * The J2EE Statistics for the Connection.
@@ -41,10 +42,7 @@ public class RegionStatistics extends StatsImpl {
         destinations = new CountStatisticImpl("destinations", "The number of regular (non-adivsory) destinations in the region");
         allDestinations = new CountStatisticImpl("allDestinations", "The total number of destinations, including advisory destinations, in the region");
 
-        addStatistic("advisoryDestinations", advisoryDestinations);
-        addStatistic("destinations", destinations);
-        addStatistic("allDestinations", allDestinations);
-
+        addStatistics(Set.of(advisoryDestinations, destinations, allDestinations));
         this.setEnabled(enabled);
     }
 

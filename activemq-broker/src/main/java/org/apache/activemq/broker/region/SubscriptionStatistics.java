@@ -14,12 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.activemq.broker.region;
 
 import org.apache.activemq.management.CountStatisticImpl;
 import org.apache.activemq.management.SizeStatisticImpl;
 import org.apache.activemq.management.StatsImpl;
+
+import java.util.Set;
 
 /**
  * The J2EE Statistics for a Subsription.
@@ -31,7 +32,6 @@ public class SubscriptionStatistics extends StatsImpl {
     protected CountStatisticImpl dequeues;
     protected CountStatisticImpl dispatched;
     protected SizeStatisticImpl inflightMessageSize;
-
 
     public SubscriptionStatistics() {
         this(true);
@@ -45,12 +45,7 @@ public class SubscriptionStatistics extends StatsImpl {
         dequeues = new CountStatisticImpl("dequeues", "The number of messages that have been acknowledged from the subscription");
         inflightMessageSize = new SizeStatisticImpl("inflightMessageSize", "The size in bytes of messages dispatched but awaiting acknowledgement");
 
-        addStatistic("consumedCount", consumedCount);
-        addStatistic("enqueues", enqueues);
-        addStatistic("dispatched", dispatched);
-        addStatistic("dequeues", dequeues);
-        addStatistic("inflightMessageSize", inflightMessageSize);
-
+        addStatistics(Set.of(consumedCount, enqueues, dispatched, dequeues, inflightMessageSize));
         this.setEnabled(enabled);
     }
 
