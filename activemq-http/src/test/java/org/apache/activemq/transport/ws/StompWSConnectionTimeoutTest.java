@@ -66,7 +66,7 @@ public class StompWSConnectionTimeoutTest extends WSTransportTestSupport {
         assertTrue("one connection", Wait.waitFor(new Wait.Condition() {
              @Override
              public boolean isSatisified() throws Exception {
-                 return 1 == broker.getTransportConnectorByScheme(getConnectorScheme()).connectionCount();
+                 return 1 == broker.getTransportConnectorByScheme(getConnectorScheme()).getConnectionCount();
              }
         }, TimeUnit.SECONDS.toMillis(15), TimeUnit.MILLISECONDS.toMillis(250)));
 
@@ -74,7 +74,7 @@ public class StompWSConnectionTimeoutTest extends WSTransportTestSupport {
         assertTrue("no dangling connections", Wait.waitFor(new Wait.Condition() {
             @Override
             public boolean isSatisified() throws Exception {
-                return 0 == broker.getTransportConnectorByScheme(getConnectorScheme()).connectionCount();
+                return 0 == broker.getTransportConnectorByScheme(getConnectorScheme()).getConnectionCount();
             }
         }, TimeUnit.SECONDS.toMillis(60), TimeUnit.MILLISECONDS.toMillis(500)));
 
