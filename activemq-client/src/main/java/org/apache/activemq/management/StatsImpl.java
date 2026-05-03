@@ -59,11 +59,11 @@ public class StatsImpl extends StatisticImpl implements Stats, Resettable {
         this.set.add(statistic);
     }
 
-    protected void addStatistics(Collection<StatisticImpl> statistics) {
+    protected void addStatistics(final Collection<StatisticImpl> statistics) {
         this.set.addAll(statistics);
     }
 
-    protected void removeStatistics(Collection<StatisticImpl> statistics) {
+    protected void removeStatistics(final Collection<StatisticImpl> statistics) {
         this.set.removeAll(statistics); 
     }
 }

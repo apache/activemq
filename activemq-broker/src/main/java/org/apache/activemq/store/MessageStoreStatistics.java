@@ -14,12 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.activemq.store;
 
 import org.apache.activemq.management.CountStatisticImpl;
 import org.apache.activemq.management.SizeStatisticImpl;
 import org.apache.activemq.management.StatsImpl;
+
+import java.util.Set;
 
 /**
  * The J2EE Statistics for a Message Sore
@@ -39,9 +40,7 @@ public class MessageStoreStatistics extends StatsImpl {
         messageCount = new CountStatisticImpl("messageCount", "The number of messages in the store passing through the destination");
         messageSize = new SizeStatisticImpl("messageSize","Size of messages in the store passing through the destination");
 
-        addStatistic("messageCount", messageCount);
-        addStatistic("messageSize", messageSize);
-
+        addStatistics(Set.of(messageCount, messageSize));
         this.setEnabled(enabled);
     }
 
