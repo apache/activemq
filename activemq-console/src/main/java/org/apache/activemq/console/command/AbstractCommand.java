@@ -162,13 +162,9 @@ public abstract class AbstractCommand implements Command {
     }
 
     protected void handleException(Exception exception, String serviceUrl) throws Exception {
-        Throwable cause = exception.getCause();
-        while (true) {
-            Throwable next = cause.getCause();
-            if (next == null) {
-                break;
-            }
-            cause = next;
+        Throwable cause = exception;
+        while (cause.getCause() != null) {
+            cause = cause.getCause();
         }
         if (cause instanceof ConnectException) {
             context.printInfo("Broker not available at: " + serviceUrl);
