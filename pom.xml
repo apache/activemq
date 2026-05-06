@@ -454,7 +454,7 @@
      <dependency>
        <groupId>jakarta.servlet.jsp</groupId>
        <artifactId>jakarta.servlet.jsp-api</artifactId>
-       <version>3.1.1</version>
+       <version>4.0.0</version>
      </dependency>
      <dependency>
        <groupId>jakarta.servlet</groupId>
