@@ -80,7 +80,7 @@ public class OpenTypeSupportTest {
             BytesMessage toSend = session.createBytesMessage();
             toSend.writeBytes(BYTESMESSAGE_TEXT.getBytes());
             MessageProducer producer = session.createProducer(queue);
-            producer.send(queue, toSend);
+            producer.send(toSend);
         } finally {
             conn.close();
         }
