@@ -42,4 +42,8 @@ public interface QueueMessageReference extends MessageReference {
     boolean unlock();
 
     LockOwner getLockOwner();
+
+    boolean isDelivered();
+
+    void setDelivered(boolean delivered);
 }
