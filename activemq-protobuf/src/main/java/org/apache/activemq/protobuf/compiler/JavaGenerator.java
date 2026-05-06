@@ -563,11 +563,11 @@ public class JavaGenerator {
 	            } else if( field.isInteger32Type() ) {
 	                p("rc ^= ( "+uname.hashCode()+"^"+getterMethod+" );");
 	            } else if( field.isInteger64Type() ) {
-	                p("rc ^= ( "+uname.hashCode()+"^(new Long("+getterMethod+")).hashCode() );");
+	                p("rc ^= ( "+uname.hashCode()+"^(Long.valueOf("+getterMethod+")).hashCode() );");
 	            } else if( field.getType()==FieldDescriptor.DOUBLE_TYPE ) {
-	                p("rc ^= ( "+uname.hashCode()+"^(new Double("+getterMethod+")).hashCode() );");
+	                p("rc ^= ( "+uname.hashCode()+"^(Double.valueOf("+getterMethod+")).hashCode() );");
 	            } else if( field.getType()==FieldDescriptor.FLOAT_TYPE ) {
-	                p("rc ^= ( "+uname.hashCode()+"^(new Double("+getterMethod+")).hashCode() );");
+	                p("rc ^= ( "+uname.hashCode()+"^(Double.valueOf("+getterMethod+")).hashCode() );");
 	            } else if( field.getType()==FieldDescriptor.BOOL_TYPE ) {
 	                p("rc ^= ( "+uname.hashCode()+"^ ("+getterMethod+"? "+counter+":-"+counter+") );");
 	            } else {
