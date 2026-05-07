@@ -39,6 +39,12 @@
     <filter-class>org.apache.activemq.web.filter.CSRFFilter</filter-class>
   </filter>
 
+  <filter>
+    <filter-name>standByBroker</filter-name>
+    <filter-class>org.apache.activemq.web.filter.StandByBrokerFilter</filter-class>
+  </filter>
+
+  <!-- Must be the first one in the chain -->
   <filter-mapping>
     <filter-name>spring</filter-name>
     <url-pattern>/*</url-pattern>
@@ -47,6 +53,11 @@
   <filter-mapping>
     <filter-name>csrf</filter-name>
     <url-pattern>*.action</url-pattern>
+  </filter-mapping>
+
+  <filter-mapping>
+    <filter-name>standByBroker</filter-name>
+    <url-pattern>/*</url-pattern>
   </filter-mapping>
 
   <!-- the queue browse servlet -->

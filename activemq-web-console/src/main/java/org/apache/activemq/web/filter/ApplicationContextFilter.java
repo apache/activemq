@@ -57,12 +57,12 @@ import org.springframework.web.context.support.WebApplicationContextUtils;
  * 
  */
 public class ApplicationContextFilter implements Filter {
+    public static final String CONTEXT_NAME_ATTR = "requestContextName";
+
     private static final Logger LOG = LoggerFactory.getLogger(ApplicationContextFilter.class);
 
     private ServletContext servletContext;
     private String requestContextName = "requestContext";
-    private String requestName = "request";
-    private String slavePage = "slave.jsp";
 
     public void init(FilterConfig config) throws ServletException {
         this.servletContext = config.getServletContext();
@@ -78,33 +78,9 @@ public class ApplicationContextFilter implements Filter {
 
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
         // lets register a requestContext in the requestScope
-        /*
-        lemoss@
+        request.setAttribute(CONTEXT_NAME_ATTR, requestContextName);
         request.setAttribute(requestContextName, createRequestContextWrapper(request));
-        chain.doFilter(request, response);
-         */
-
-        Map requestContextWrapper = createRequestContextWrapper(request);
-        String path = ((HttpServletRequest)request).getRequestURI();
-        // handle slave brokers
-        try {
-            boolean isSlave = ((BrokerFacade) requestContextWrapper.get("brokerQuery")).getBrokerAdmin().isSlave();
-            if (isSlave && !(path.endsWith("css") || path.endsWith("png") || path.endsWith("ico") || path.endsWith(slavePage))) {
-                ((HttpServletResponse) response).sendRedirect(slavePage);
-                return;
-            } else if (!isSlave && path.endsWith(slavePage)) {
-                ((HttpServletResponse) response).sendRedirect(((HttpServletRequest) request).getContextPath() + "/index.jsp");
-                return;
-            }
-        } catch (Exception e) {
-            LOG.warn(path + ", failed to access BrokerFacade: reason: " + e.getLocalizedMessage());
-            if (LOG.isDebugEnabled()) {
-                LOG.debug(request.toString(), e);
-            }
-            throw new IOException(e);
-        }
-        request.setAttribute(requestContextName, requestContextWrapper);
-        request.setAttribute(requestName, request);
+        request.setAttribute("request", request);
         chain.doFilter(request, response);
     }
 
@@ -136,7 +112,7 @@ public class ApplicationContextFilter implements Filter {
      * useful for POJOs which are configurable via request parameters such as
      * for query/view POJOs
      */
-    protected Object bindRequestBean(Object bean, ServletRequest request) {
+    private Object bindRequestBean(Object bean, ServletRequest request) {
         ServletRequestDataBinder binder = new ServletRequestDataBinder(bean, null);
         binder.bind(request);
         return bean;
