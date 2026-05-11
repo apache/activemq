@@ -100,7 +100,7 @@
     <xstream-version>1.4.21</xstream-version>
     <xbean-version>4.30</xbean-version>
     <xerces-version>2.12.2</xerces-version>
-    <jaxb-tools-version>4.0.13</jaxb-tools-version>
+    <jaxb-tools-version>4.0.14</jaxb-tools-version>
     <stompjms-version>3.1.0</stompjms-version>
 
     <pax-logging-version>2.1.3</pax-logging-version>
