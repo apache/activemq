@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.spring;
 
+import static org.apache.activemq.util.VmTransportTestUtils.resetVmTransportFactory;
 import static org.apache.activemq.xbean.XBeanBrokerFactory.DEFAULT_ALLOWED_PROTOCOLS;
 import static org.apache.activemq.xbean.XBeanBrokerFactory.XBEAN_BROKER_FACTORY_PROTOCOLS_PROP;
 import static org.junit.Assert.assertNotNull;
@@ -29,15 +30,23 @@ import java.net.UnknownHostException;
 import java.nio.file.NoSuchFileException;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.test.annotations.ParallelTest;
+import org.apache.activemq.transport.vm.VMTransportFactory;
 import org.apache.activemq.xbean.XBeanBrokerFactory;
 import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.springframework.beans.FatalBeanException;
 
 @Category(ParallelTest.class)
 public class ActiveMQConnectionFactoryXBeanTest {
+
+    @BeforeClass
+    public static void beforeClass() throws Exception {
+        // enable xbean for the vm transport factory
+        resetVmTransportFactory("xbean");
+    }
 
     @Before
     public void setUp() throws Exception {
@@ -48,6 +57,8 @@ public class ActiveMQConnectionFactoryXBeanTest {
     @AfterClass
     public static void tearDown() throws Exception {
         System.setProperty(XBEAN_BROKER_FACTORY_PROTOCOLS_PROP, DEFAULT_ALLOWED_PROTOCOLS);
+        // reset defaults
+        resetVmTransportFactory();
     }
 
     // File and classpath are allowed by default
