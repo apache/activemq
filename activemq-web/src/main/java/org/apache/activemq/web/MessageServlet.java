@@ -48,7 +48,13 @@ import org.slf4j.LoggerFactory;
  * there will always be a chance of losing messages. Consider what happens when
  * a message is retrieved from the broker but the web call is interrupted before
  * the client receives the message in the response - the message is lost.
+ *
+ * @deprecated - WARNING: The MessageServlet should be used with caution as it is unmaintained
+ * and there are multiple security related issues. This servlet is primarily meant for demo
+ * purposes only and will be removed entirely in a future release. It is recommended to
+ * keep it disabled.
  */
+@Deprecated
 public class MessageServlet extends MessageServletSupport {
 
     // its a bit pita that this servlet got intermixed with asyncRequest/rest

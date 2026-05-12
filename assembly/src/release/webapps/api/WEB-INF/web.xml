@@ -23,7 +23,12 @@
     <display-name>Apache ActiveMQ REST API</display-name>
 
     <!--
-    Uncomment to enable the MessageServlet
+
+    WARNING: The MessageServlet should be used with caution as it is deprecated and unmaintained
+    and there are multiple security related issues. This servlet is primarily meant for demo
+    purposes only and will be removed entirely in a future release. It is recommended to
+    keep it disabled.
+
     <servlet>
         <servlet-name>MessageServlet</servlet-name>
         <servlet-class>org.apache.activemq.web.MessageServlet</servlet-class>
