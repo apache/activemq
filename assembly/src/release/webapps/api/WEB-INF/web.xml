@@ -22,11 +22,19 @@
 
     <display-name>Apache ActiveMQ REST API</display-name>
 
+    <!--
+
+    WARNING: The MessageServlet should be used with caution as it is deprecated and unmaintained
+    and there are multiple security related issues. This servlet is primarily meant for demo
+    purposes only and will be removed entirely in a future release. It is recommended to
+    keep it disabled.
+
     <servlet>
         <servlet-name>MessageServlet</servlet-name>
         <servlet-class>org.apache.activemq.web.MessageServlet</servlet-class>
         <load-on-startup>1</load-on-startup>
         <async-supported>true</async-supported>
+        -->
         <!--
         Uncomment this parameter if you plan to use multiple consumers over REST
         <init-param>
@@ -43,7 +51,13 @@
             <param-value>-1</param-value>
         </init-param>
         -->
-    </servlet>
+    <!--</servlet>
+
+    <servlet-mapping>
+        <servlet-name>MessageServlet</servlet-name>
+        <url-pattern>/message/*</url-pattern>
+    </servlet-mapping>
+    -->
 
     <servlet>
         <servlet-name>jolokia-agent</servlet-name>
@@ -73,11 +87,6 @@
         </init-param>
         <load-on-startup>1</load-on-startup> 
     </servlet>
-
-    <servlet-mapping>
-        <servlet-name>MessageServlet</servlet-name>
-        <url-pattern>/message/*</url-pattern>
-    </servlet-mapping>
 
     <servlet-mapping>
         <servlet-name>jolokia-agent</servlet-name>
