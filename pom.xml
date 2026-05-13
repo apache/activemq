@@ -92,7 +92,7 @@
     <netty-version>4.2.13.Final</netty-version>
     <rome-version>2.1.0</rome-version>
     <shiro-version>2.1.0</shiro-version>
-    <slf4j-version>2.0.17</slf4j-version>
+    <slf4j-version>2.0.18</slf4j-version>
     <spring-version>6.2.17</spring-version>
     <spring-version-range>[6,7)</spring-version-range>
     <taglibs-version>1.2.5</taglibs-version>
