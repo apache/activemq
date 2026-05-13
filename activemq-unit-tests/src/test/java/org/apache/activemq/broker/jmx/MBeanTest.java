@@ -2087,6 +2087,14 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         }
 
         try {
+            // verify any composite URI is blocked as well without parens
+            brokerView.addConnector("static:tcp://0.0.0.0:0," + scheme + "://" + brokerName);
+            fail("Should have failed trying to add connector with scheme: " + scheme);
+        } catch (IllegalArgumentException e) {
+            assertEquals("Transport scheme '" + scheme + "' is not allowed", e.getMessage());
+        }
+
+        try {
             // verify nested composite URI is blocked
             brokerView.addConnector("static:(static:(static:(" + scheme + "://localhost)))");
             fail("Should have failed trying to add connector with scheme: " + scheme);
@@ -2104,6 +2112,15 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
             // verify nested composite URI with more than 5 levels is blocked
             brokerView.addConnector(
                     "static:(static:(static:(static:(static:(static:(tcp://localhost:0))))))");
+            fail("Should have failed trying to add vm connector bridge");
+        } catch (IllegalArgumentException e) {
+            assertEquals("URI can't contain more than 5 nested composite URIs", e.getMessage());
+        }
+
+        try {
+            // verify nested composite URI with more than 5 levels is blocked without parens
+            brokerView.addConnector(
+                    "static:static:static:static:static:static:tcp://localhost:0");
             fail("Should have failed trying to add vm connector bridge");
         } catch (IllegalArgumentException e) {
             assertEquals("URI can't contain more than 5 nested composite URIs", e.getMessage());
