@@ -75,12 +75,21 @@ public class AuthorizationBroker extends BrokerFilter implements SecurityAdminMB
         return securityContext;
     }
 
-    protected boolean checkDestinationAdmin(SecurityContext securityContext, ActiveMQDestination destination) {
-        Destination existing = this.getDestinationMap(destination).get(destination);
-        if (existing != null) {
+    protected boolean checkDestinationAdminAdd(SecurityContext securityContext, ActiveMQDestination destination) {
+        if (this.getDestinationMap(destination).get(destination) != null) {
             return true;
         }
+        return checkDestinationAdmin(securityContext, destination);
+    }
 
+    protected boolean checkDestinationAdminRemove(SecurityContext securityContext, ActiveMQDestination destination) {
+        if (this.getDestinationMap(destination).get(destination) == null) {
+            return true;
+        }
+        return checkDestinationAdmin(securityContext, destination);
+    }
+
+    protected boolean checkDestinationAdmin(SecurityContext securityContext, ActiveMQDestination destination) {
         if (!securityContext.isBrokerContext()) {
             Set<?> allowedACLs = null;
             if (!destination.isTemporary()) {
@@ -100,7 +109,7 @@ public class AuthorizationBroker extends BrokerFilter implements SecurityAdminMB
     public void addDestinationInfo(ConnectionContext context, DestinationInfo info) throws Exception {
         final SecurityContext securityContext = checkSecurityContext(context);
 
-        if (!checkDestinationAdmin(securityContext, info.getDestination())) {
+        if (!checkDestinationAdminAdd(securityContext, info.getDestination())) {
             throw new SecurityException("User " + securityContext.getUserName() + " is not authorized to create: " + info.getDestination());
         }
 
@@ -108,10 +117,10 @@ public class AuthorizationBroker extends BrokerFilter implements SecurityAdminMB
     }
 
     @Override
-    public Destination addDestination(ConnectionContext context, ActiveMQDestination destination,boolean create) throws Exception {
+    public Destination addDestination(ConnectionContext context, ActiveMQDestination destination, boolean create) throws Exception {
         final SecurityContext securityContext = checkSecurityContext(context);
 
-        if (!checkDestinationAdmin(securityContext, destination)) {
+        if (!checkDestinationAdminAdd(securityContext, destination)) {
             throw new SecurityException("User " + securityContext.getUserName() + " is not authorized to create: " + destination);
         }
 
@@ -122,7 +131,7 @@ public class AuthorizationBroker extends BrokerFilter implements SecurityAdminMB
     public void removeDestination(ConnectionContext context, ActiveMQDestination destination, long timeout) throws Exception {
         final SecurityContext securityContext = checkSecurityContext(context);
 
-        if (!checkDestinationAdmin(securityContext, destination)) {
+        if (!checkDestinationAdminRemove(securityContext, destination)) {
             throw new SecurityException("User " + securityContext.getUserName() + " is not authorized to remove: " + destination);
         }
 
@@ -135,7 +144,7 @@ public class AuthorizationBroker extends BrokerFilter implements SecurityAdminMB
     public void removeDestinationInfo(ConnectionContext context, DestinationInfo info) throws Exception {
         final SecurityContext securityContext = checkSecurityContext(context);
 
-        if (!checkDestinationAdmin(securityContext, info.getDestination())) {
+        if (!checkDestinationAdminRemove(securityContext, info.getDestination())) {
             throw new SecurityException("User " + securityContext.getUserName() + " is not authorized to remove: " + info.getDestination());
         }
 
