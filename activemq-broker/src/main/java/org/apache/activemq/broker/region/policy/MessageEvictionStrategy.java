@@ -42,4 +42,18 @@ public interface MessageEvictionStrategy {
      */
     int getEvictExpiredMessagesHighWatermark();
 
+    /**
+     * Returns whether the eager expired-message scan is enabled.
+     * <p>
+     * When {@code false}, the O(n) scan inside
+     * {@link org.apache.activemq.broker.region.TopicSubscription#add} is skipped entirely.
+     * Set to {@code false} when messages carry no TTL, or when the scan cost outweighs
+     * the benefit of eagerly evicting expired messages from slow-consumer buffers.
+     * <p>
+     * See {@link MessageEvictionStrategySupport} for the default implementation that returns {@code true}.
+     *
+     * @return {@code true} if the expiry scan is enabled (default), {@code false} if skipped
+     */
+    boolean isExpiryCheckEnabled();
+
 }
