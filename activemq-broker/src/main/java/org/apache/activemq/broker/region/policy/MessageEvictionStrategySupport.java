@@ -24,6 +24,7 @@ package org.apache.activemq.broker.region.policy;
 public abstract class MessageEvictionStrategySupport implements MessageEvictionStrategy {
 
     private int evictExpiredMessagesHighWatermark = 1000;
+    private boolean expiryCheckEnabled = true;
 
     public int getEvictExpiredMessagesHighWatermark() {
         return evictExpiredMessagesHighWatermark;
@@ -35,6 +36,27 @@ public abstract class MessageEvictionStrategySupport implements MessageEvictionS
     public void setEvictExpiredMessagesHighWatermark(int evictExpiredMessagesHighWaterMark) {
         this.evictExpiredMessagesHighWatermark = evictExpiredMessagesHighWaterMark;
     }
-    
-    
+
+    @Override
+    public boolean isExpiryCheckEnabled() {
+        return expiryCheckEnabled;
+    }
+
+    /**
+     * Controls whether the broker performs an eager expired-message scan when a
+     * non-durable topic subscription's pending slow-consumer buffer exceeds
+     * {@link #getEvictExpiredMessagesHighWatermark()}.
+     * <p>
+     * Set to {@code false} when messages carry no TTL, or when the O(n) scan cost
+     * outweighs the benefit of eagerly evicting expired messages from slow-consumer
+     * buffers. When messages have no TTL, every scan iterates the full buffer without
+     * removing anything, adding latency to every enqueue once the buffer exceeds the
+     * high-water mark.
+     *
+     * @param expiryCheckEnabled {@code false} to skip the scan; {@code true} to enable it (default)
+     */
+    public void setExpiryCheckEnabled(boolean expiryCheckEnabled) {
+        this.expiryCheckEnabled = expiryCheckEnabled;
+    }
+
 }

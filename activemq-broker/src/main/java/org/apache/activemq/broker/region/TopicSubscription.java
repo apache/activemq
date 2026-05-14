@@ -25,7 +25,6 @@ import org.apache.activemq.broker.region.cursors.VMPendingMessageCursor;
 import org.apache.activemq.broker.region.policy.MessageEvictionStrategy;
 import org.apache.activemq.broker.region.policy.OldestMessageEvictionStrategy;
 import org.apache.activemq.command.*;
-import org.apache.activemq.management.MessageFlowStats;
 import org.apache.activemq.thread.Scheduler;
 import org.apache.activemq.transaction.Synchronization;
 import org.apache.activemq.transport.TransmitCallback;
@@ -166,7 +165,7 @@ public class TopicSubscription extends AbstractSubscription {
                         if (maximumPendingMessages > 0 && maximumPendingMessages < max) {
                             max = maximumPendingMessages;
                         }
-                        if (!matched.isEmpty() && matched.size() > max) {
+                        if (messageEvictionStrategy.isExpiryCheckEnabled() && !matched.isEmpty() && matched.size() > max) {
                             removeExpiredMessages();
                         }
                         // lets discard old messages as we are a slow consumer
