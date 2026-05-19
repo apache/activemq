@@ -1149,6 +1149,62 @@ public class StompTest extends StompTestSupport {
         assertEquals("Dejan", object.getName());
     }
 
+
+    @Test(timeout = 60000)
+    public void testTransformationReceiveXMLObjectDouble() throws Exception {
+        MessageConsumer consumer = session.createConsumer(queue);
+
+        String frame = "CONNECT\n" + "login:system\n" + "passcode:manager\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+
+        frame = stompConnection.receiveFrame();
+        assertTrue(frame.startsWith("CONNECTED"));
+
+        // Double should be allowed by default
+        frame = "SEND\n" + "destination:/queue/" + getQueueName() + "\n" +
+                "transformation:" + Stomp.Transformations.JMS_OBJECT_XML + "\n\n" +
+                "<java.lang.Double>1.1</java.lang.Double>" + Stomp.NULL;
+
+        stompConnection.sendFrame(frame);
+
+        Message message = consumer.receive(2500);
+        assertNotNull(message);
+
+        LOG.info("Broker sent: {}", message);
+
+        assertTrue(message instanceof ObjectMessage);
+        ObjectMessage objectMessage = (ObjectMessage)message;
+        Double object = (Double)objectMessage.getObject();
+        assertEquals(Double.valueOf(1.1), object);
+    }
+
+    @Test(timeout = 60000)
+    public void testTransformationSendXMLObjectNotAllowed() throws Exception {
+        MessageConsumer consumer = session.createConsumer(queue);
+
+        String frame = "CONNECT\n" + "login:system\n" + "passcode:manager\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+
+        frame = stompConnection.receiveFrame();
+        assertTrue(frame.startsWith("CONNECTED"));
+
+        // ProcessBuilder is not allowed by default so the conversion should fail and
+        // then fall back to using a TextMessage, as well as setting an error header
+        frame = "SEND\n" + "destination:/queue/" + getQueueName() + "\n" +
+                "transformation:" + Stomp.Transformations.JMS_OBJECT_XML + "\n\n" +
+                "<java.lang.ProcessBuilder><command><string>id</string></command></java.lang.ProcessBuilder>" + Stomp.NULL;
+
+        stompConnection.sendFrame(frame);
+
+        Message message = consumer.receive(2500);
+        assertNotNull(message);
+        LOG.info("Broker sent: {}", message);
+
+        // The message should be Text and marked with a transformation error header
+        assertTrue(message instanceof TextMessage);
+        assertEquals("java.lang.ProcessBuilder", message.getStringProperty("transformation-error"));
+    }
+
     @Test(timeout = 60000)
     public void testTransformationSubscribeXML() throws Exception {
 
