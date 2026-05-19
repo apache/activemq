@@ -21,6 +21,31 @@
 
     <bean id="httpConfig" class="org.eclipse.jetty.server.HttpConfiguration">
         <property name="sendServerVersion" value="false"/>
+        <!--
+            When the web console sits behind a reverse proxy or load balancer,
+            uncomment the customizer below so Jetty honors X-Forwarded-* (or
+            RFC 7239 Forwarded) headers when populating request.getRemoteAddr(),
+            request.getScheme(), etc. This is what gets the real client IP into
+            access logs and audit trails.
+
+            WARNING: ForwardedRequestCustomizer trusts these headers from any
+            client. Only enable it when the upstream proxy strips inbound
+            X-Forwarded-* headers, otherwise a remote client can spoof its
+            source IP and apparent scheme.
+
+            Note: this does NOT change InetAccessHandler's filtering — that
+            handler always evaluates the socket peer (the proxy itself) and
+            ignores forwarded headers. In a proxied deployment either keep the
+            allow list scoped to the proxy address and rely on the proxy for
+            client-IP filtering, or remove InetAccessHandler entirely.
+        -->
+        <!--
+        <property name="customizers">
+            <list>
+                <bean class="org.eclipse.jetty.server.ForwardedRequestCustomizer"/>
+            </list>
+        </property>
+        -->
     </bean>
 
     <bean id="jaasLoginService" class="org.eclipse.jetty.jaas.JAASLoginService">
@@ -90,6 +115,24 @@
                     <property name="name" value="Content-Security-Policy"/>
                     <property name="value" value="style-src-elem 'self' 'unsafe-inline'; style-src 'self'; img-src 'self' data:; script-src-elem 'self'; default-src 'none'; object-src 'none'; frame-ancestors 'none'; base-uri 'none';" />
                 </bean>
+                <bean id="header" class="org.eclipse.jetty.rewrite.handler.HeaderPatternRule">
+                    <property name="pattern" value="*"/>
+                    <property name="name" value="Referrer-Policy"/>
+                    <property name="value" value="no-referrer"/>
+                </bean>
+                <bean id="header" class="org.eclipse.jetty.rewrite.handler.HeaderPatternRule">
+                    <property name="pattern" value="*"/>
+                    <property name="name" value="Permissions-Policy"/>
+                    <property name="value" value="accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()"/>
+                </bean>
+                <!-- Uncomment when serving the console over HTTPS only -->
+                <!--
+                <bean id="header" class="org.eclipse.jetty.rewrite.handler.HeaderPatternRule">
+                    <property name="pattern" value="*"/>
+                    <property name="name" value="Strict-Transport-Security"/>
+                    <property name="value" value="max-age=31536000; includeSubDomains"/>
+                </bean>
+                -->
             </list>
         </property>
     </bean>
@@ -147,19 +190,94 @@
         <property name="port" value="8161"/>
     </bean>
 
+    <bean id="handlers" class="org.eclipse.jetty.server.handler.HandlerCollection">
+        <property name="handlers">
+            <list>
+                <ref bean="contexts" />
+                <ref bean="securityHandler" />
+            </list>
+        </property>
+    </bean>
+
+    <!--
+        IP-based access control for the web console.
+        Patterns accept: exact IP (192.168.1.1), CIDR (10.0.0.0/8),
+        range (10.0.0.0-10.255.255.255), or qualified with path/connector
+        using '|' (e.g. 192.168.1.0/24|/api).
+        Exclude rules take precedence over include rules.
+        With the default host binding of 127.0.0.1, only localhost is reachable;
+        if the bind address is broadened (e.g. 0.0.0.0), add explicit include
+        entries below for the networks that should reach the console.
+    -->
+    <bean id="inetAccessHandler" class="org.eclipse.jetty.server.handler.InetAccessHandler">
+        <property name="handler" ref="handlers"/>
+    </bean>
+
+    <!-- Allowed clients (include rules) -->
+    <bean id="inetAccessIncludeLoopbackV4" class="org.springframework.beans.factory.config.MethodInvokingFactoryBean">
+        <property name="targetObject" ref="inetAccessHandler"/>
+        <property name="targetMethod" value="include"/>
+        <property name="arguments">
+            <list><value>127.0.0.1</value></list>
+        </property>
+    </bean>
+    <bean id="inetAccessIncludeLoopbackV6" class="org.springframework.beans.factory.config.MethodInvokingFactoryBean"
+          depends-on="inetAccessIncludeLoopbackV4">
+        <property name="targetObject" ref="inetAccessHandler"/>
+        <property name="targetMethod" value="include"/>
+        <property name="arguments">
+            <list><value>::1</value></list>
+        </property>
+    </bean>
+    <!--
+        Example: allow standard private network ranges. Copy a block and
+        chain depends-on to enforce ordering on container startup.
+
+    <bean id="inetAccessIncludeRfc1918Class10" class="org.springframework.beans.factory.config.MethodInvokingFactoryBean"
+          depends-on="inetAccessIncludeLoopbackV6">
+        <property name="targetObject" ref="inetAccessHandler"/>
+        <property name="targetMethod" value="include"/>
+        <property name="arguments">
+            <list><value>10.0.0.0/8</value></list>
+        </property>
+    </bean>
+    <bean id="inetAccessIncludeRfc1918Class172" class="org.springframework.beans.factory.config.MethodInvokingFactoryBean"
+          depends-on="inetAccessIncludeRfc1918Class10">
+        <property name="targetObject" ref="inetAccessHandler"/>
+        <property name="targetMethod" value="include"/>
+        <property name="arguments">
+            <list><value>172.16.0.0/12</value></list>
+        </property>
+    </bean>
+    <bean id="inetAccessIncludeRfc1918Class192" class="org.springframework.beans.factory.config.MethodInvokingFactoryBean"
+          depends-on="inetAccessIncludeRfc1918Class172">
+        <property name="targetObject" ref="inetAccessHandler"/>
+        <property name="targetMethod" value="include"/>
+        <property name="arguments">
+            <list><value>192.168.0.0/16</value></list>
+        </property>
+    </bean>
+    -->
+
+    <!--
+        Denied clients (exclude rules). Exclude rules take precedence over
+        include rules. Empty by default; add entries below to block specific
+        addresses or networks.
+
+    <bean id="inetAccessExcludeExample" class="org.springframework.beans.factory.config.MethodInvokingFactoryBean"
+          depends-on="inetAccessIncludeLoopbackV6">
+        <property name="targetObject" ref="inetAccessHandler"/>
+        <property name="targetMethod" value="exclude"/>
+        <property name="arguments">
+            <list><value>1.2.3.4</value></list>
+        </property>
+    </bean>
+    -->
+
     <bean id="Server" depends-on="jettyPort" class="org.eclipse.jetty.server.Server"
         destroy-method="stop">
 
-        <property name="handler">
-            <bean id="handlers" class="org.eclipse.jetty.server.handler.HandlerCollection">
-                <property name="handlers">
-                    <list>
-                        <ref bean="contexts" />
-                        <ref bean="securityHandler" />
-                    </list>
-                </property>
-            </bean>
-        </property>
+        <property name="handler" ref="inetAccessHandler"/>
 
     </bean>
 
@@ -208,10 +326,10 @@
         </property>
     </bean>
     
-    <bean id="invokeStart" class="org.springframework.beans.factory.config.MethodInvokingFactoryBean" 
-        depends-on="broker, configureJetty, invokeConnectors">
+    <bean id="invokeStart" class="org.springframework.beans.factory.config.MethodInvokingFactoryBean"
+        depends-on="broker, configureJetty, invokeConnectors, inetAccessIncludeLoopbackV6">
         <property name="targetObject" ref="Server" />
-        <property name="targetMethod" value="start" />      
+        <property name="targetMethod" value="start" />
     </bean>
     
     
