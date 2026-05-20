@@ -21,6 +21,8 @@
 
     <bean id="httpConfig" class="org.eclipse.jetty.server.HttpConfiguration">
         <property name="sendServerVersion" value="false"/>
+        <property name="sendXPoweredBy" value="false"/>
+        <property name="sendDateHeader" value="false"/>
         <!--
             When the web console sits behind a reverse proxy or load balancer,
             uncomment the customizer below so Jetty honors X-Forwarded-* (or
@@ -112,6 +114,26 @@
                     <property name="pattern" value="*"/>
                     <property name="name" value="Content-Security-Policy"/>
                     <property name="value" value="style-src-elem 'self'; style-src 'self'; img-src 'self'; script-src-elem 'self'; default-src 'none'; object-src 'none'; frame-ancestors 'none'; base-uri 'none';" />
+                </bean>
+                <bean id="header" class="org.eclipse.jetty.rewrite.handler.HeaderPatternRule">
+                    <property name="pattern" value="*"/>
+                    <property name="name" value="Referrer-Policy"/>
+                    <property name="value" value="no-referrer"/>
+                </bean>
+                <bean id="header" class="org.eclipse.jetty.rewrite.handler.HeaderPatternRule">
+                    <property name="pattern" value="*"/>
+                    <property name="name" value="Permissions-Policy"/>
+                    <property name="value" value="accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()"/>
+                </bean>
+                <bean id="header" class="org.eclipse.jetty.rewrite.handler.HeaderPatternRule">
+                    <property name="pattern" value="*"/>
+                    <property name="name" value="Cross-Origin-Opener-Policy"/>
+                    <property name="value" value="same-origin"/>
+                </bean>
+                <bean id="header" class="org.eclipse.jetty.rewrite.handler.HeaderPatternRule">
+                    <property name="pattern" value="*"/>
+                    <property name="name" value="Cross-Origin-Resource-Policy"/>
+                    <property name="value" value="same-origin"/>
                 </bean>
                 <!-- More relaxed rules to allow browsers to properly render XML -->
                 <bean id="header" class="org.eclipse.jetty.rewrite.handler.HeaderPatternRule">
