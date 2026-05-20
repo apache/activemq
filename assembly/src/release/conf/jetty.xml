@@ -82,6 +82,10 @@
         <property name="constraint" ref="adminSecurityConstraint" />
         <property name="pathSpec" value="*.action" />
     </bean>
+    <bean id="jolokiaSecurityConstraintMapping" class="org.eclipse.jetty.security.ConstraintMapping">
+        <property name="constraint" ref="adminSecurityConstraint" />
+        <property name="pathSpec" value="/api/jolokia/*" />
+    </bean>
     
     <bean id="rewriteHandler" class="org.eclipse.jetty.rewrite.handler.RewriteHandler">
         <property name="rules">
@@ -187,6 +191,7 @@
         <property name="constraintMappings">
             <list>
                 <ref bean="adminSecurityConstraintMapping" />
+                <ref bean="jolokiaSecurityConstraintMapping" />
                 <ref bean="securityConstraintMapping" />
             </list>
         </property>
