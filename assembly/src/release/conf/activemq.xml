@@ -55,6 +55,50 @@
 
 
         <!--
+            Security hardening (disabled by default so the sample broker starts
+            out-of-the-box). Uncomment the <plugins> block below to enforce:
+              * JAAS authentication using the 'activemq' realm in conf/login.config
+              * Destination-level authorization based on conf/groups.properties
+              * Broker-side audit logging of connections, producers and consumers
+
+            BEFORE ENABLING IN PRODUCTION:
+              1. ROTATE the credentials in conf/users.properties. The default
+                 'admin=admin' user is well-known and MUST NOT be used as-is.
+              2. Tighten the authorizationMap below to match the destinations
+                 you actually use; the defaults grant access only to 'admins'.
+              3. Confirm every enabled transport requires credentials and that
+                 clients are configured to send them.
+              4. To also restrict ObjectMessage deserialization, set
+                   ACTIVEMQ_OPTS="-Dorg.apache.activemq.SERIALIZABLE_PACKAGES=<csv>"
+                 in bin/env (an empty value blocks ObjectMessage deserialization
+                 entirely; specify only packages you explicitly trust).
+
+            For more information, see:
+              https://activemq.apache.org/security
+        -->
+        <!--
+        <plugins>
+            <jaasAuthenticationPlugin configuration="activemq" />
+
+            <authorizationPlugin>
+                <map>
+                    <authorizationMap>
+                        <authorizationEntries>
+                            <authorizationEntry queue=">" read="admins" write="admins" admin="admins" />
+                            <authorizationEntry topic=">" read="admins" write="admins" admin="admins" />
+                            <authorizationEntry topic="ActiveMQ.Advisory.>" read="admins,users" write="admins,users" admin="admins,users" />
+                        </authorizationEntries>
+                    </authorizationMap>
+                </map>
+            </authorizationPlugin>
+
+            <loggingBrokerPlugin logConnectionEvents="true"
+                                 logProducerEvents="true"
+                                 logConsumerEvents="true" />
+        </plugins>
+        -->
+
+        <!--
             The managementContext is used to configure how ActiveMQ is exposed in
             JMX. By default, ActiveMQ uses the MBean server that is started by
             the JVM. For more information, see:
@@ -105,10 +149,15 @@
         <transportConnectors>
             <!-- DOS protection, limit concurrent connections to 1000 and frame size to 100MB -->
             <transportConnector name="openwire" uri="tcp://0.0.0.0:61616?maximumConnections=1000&amp;wireFormat.maxFrameSize=104857600"/>
-            <transportConnector name="amqp" uri="amqp://0.0.0.0:5672?maximumConnections=1000&amp;wireFormat.maxFrameSize=104857600"/>
-            <transportConnector name="stomp" uri="stomp://0.0.0.0:61613?maximumConnections=1000&amp;wireFormat.maxFrameSize=104857600"/>
-            <transportConnector name="mqtt" uri="mqtt://0.0.0.0:1883?maximumConnections=1000&amp;wireFormat.maxFrameSize=104857600"/>
-            <transportConnector name="ws" uri="ws://0.0.0.0:61614?maximumConnections=1000&amp;wireFormat.maxFrameSize=104857600"/>
+            <!--
+                Additional transports are disabled by default to reduce the exposed attack surface.
+                Uncomment only the protocols you actually need, and prefer the secured variants
+                (amqp+ssl, stomp+ssl, mqtt+nio+ssl, wss) in production deployments.
+            -->
+            <!-- <transportConnector name="amqp" uri="amqp://0.0.0.0:5672?maximumConnections=1000&amp;wireFormat.maxFrameSize=104857600"/> -->
+            <!-- <transportConnector name="stomp" uri="stomp://0.0.0.0:61613?maximumConnections=1000&amp;wireFormat.maxFrameSize=104857600"/> -->
+            <!-- <transportConnector name="mqtt" uri="mqtt://0.0.0.0:1883?maximumConnections=1000&amp;wireFormat.maxFrameSize=104857600"/> -->
+            <!-- <transportConnector name="ws" uri="ws://0.0.0.0:61614?maximumConnections=1000&amp;wireFormat.maxFrameSize=104857600"/> -->
         </transportConnectors>
 
         <!-- destroy the spring context on shutdown to stop jetty -->
