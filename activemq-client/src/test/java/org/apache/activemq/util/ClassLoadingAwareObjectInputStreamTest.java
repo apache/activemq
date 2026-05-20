@@ -26,6 +26,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.util.Arrays;
+import java.util.Set;
 import java.util.UUID;
 import java.util.Vector;
 
@@ -206,8 +207,23 @@ public class ClassLoadingAwareObjectInputStreamTest {
     }
 
     @Test
-    public void testReadObjectStringNotFiltered() throws Exception {
-        doTestReadObject(new String(name.getMethodName()), ACCEPTS_NONE_FILTER);
+    public void testReadObjectJdkTypesNotFiltered() throws Exception {
+        for (String filter : Set.of(ACCEPTS_ALL_FILTER, ACCEPTS_NONE_FILTER,
+                ClassLoadingAwareObjectInputStream.DEFAULT_SERIALIZABLE_PACKAGES)) {
+            doTestReadObject(Boolean.TRUE, filter);
+            doTestReadObject("test", filter);
+            doTestReadObject(Byte.valueOf("0"), filter);
+            doTestReadObject(Character.valueOf('a'), filter);
+            doTestReadObject(Integer.valueOf(100), filter);
+            doTestReadObject(Long.valueOf(0), filter);
+            doTestReadObject(Float.valueOf(0), filter);
+            doTestReadObject(Double.valueOf(0), filter);
+        }
+
+        // these also require collections classes in java util as well as StackTraceElement
+        // they also can't be compared for equality as they don't implement equals
+        doTestReadObject(new Exception(), "java.util", false);
+        doTestReadObject(new Throwable(), "java.util", false);
     }
 
     //----- Test that primitive arrays get past filters ----------------------//
@@ -429,6 +445,10 @@ public class ClassLoadingAwareObjectInputStreamTest {
     //----- Internal methods -------------------------------------------------//
 
     private void doTestReadObject(Object value, String filter) throws Exception {
+        doTestReadObject(value, filter, true);
+    }
+
+    private void doTestReadObject(Object value, String filter, boolean equalityCheck) throws Exception {
         byte[] serialized = serializeObject(value);
 
         try (ByteArrayInputStream input = new ByteArrayInputStream(serialized);
@@ -441,10 +461,12 @@ public class ClassLoadingAwareObjectInputStreamTest {
             Object result = reader.readObject();
             assertNotNull(result);
             assertEquals(value.getClass(), result.getClass());
-            if (result.getClass().isArray()) {
-                assertTrue(Arrays.deepEquals((Object[]) value, (Object[]) result));
-            } else {
-                assertEquals(value, result);
+            if (equalityCheck) {
+                if (result.getClass().isArray()) {
+                    assertTrue(Arrays.deepEquals((Object[]) value, (Object[]) result));
+                } else {
+                    assertEquals(value, result);
+                }
             }
         }
     }

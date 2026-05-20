@@ -32,15 +32,21 @@ public class ClassLoadingAwareObjectInputStream extends ObjectInputStream {
     private static final ClassLoader FALLBACK_CLASS_LOADER =
         ClassLoadingAwareObjectInputStream.class.getClassLoader();
 
+    public static final Set<Class<?>> ALLOWED_JDK_TYPES = Set.of(
+            Boolean.class, Short.class, Integer.class, Long.class,
+            Float.class, Double.class, String.class, Character.class, Byte.class,
+            Throwable.class, Exception.class, StackTraceElement.class);
+
+    public static final String DEFAULT_SERIALIZABLE_PACKAGES = "org.apache.activemq,org.fusesource.hawtbuf,com.thoughtworks.xstream.mapper";
     public static final String[] serializablePackages;
 
-    private List<String> trustedPackages = new ArrayList<String>();
+    private List<String> trustedPackages = new ArrayList<>();
     private boolean trustAllPackages = false;
 
     private final ClassLoader inLoader;
 
     static {
-        serializablePackages = System.getProperty("org.apache.activemq.SERIALIZABLE_PACKAGES","java.lang,org.apache.activemq,org.fusesource.hawtbuf,com.thoughtworks.xstream.mapper").split(",");
+        serializablePackages = System.getProperty("org.apache.activemq.SERIALIZABLE_PACKAGES", DEFAULT_SERIALIZABLE_PACKAGES).split(",");
     }
 
     public ClassLoadingAwareObjectInputStream(InputStream in) throws IOException {
@@ -98,7 +104,7 @@ public class ClassLoadingAwareObjectInputStream extends ObjectInputStream {
     }
 
     private void checkSecurity(Class clazz) throws ClassNotFoundException {
-        if (trustAllPackages() || clazz.isPrimitive()) {
+        if (trustAllPackages() || clazz.isPrimitive() || ALLOWED_JDK_TYPES.contains(clazz)) {
             return;
         }
 
