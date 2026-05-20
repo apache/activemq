@@ -27,13 +27,16 @@ import java.util.Map;
 
 public class XStreamSupport {
 
+    private static final Class<?>[] ALLOWED_JDK_TYPES =
+            ClassLoadingAwareObjectInputStream.ALLOWED_JDK_TYPES.toArray(new Class[0]);
+
     public static XStream createXStream() {
         XStream stream = new XStream();
         stream.addPermission(NoTypePermission.NONE);
         stream.addPermission(PrimitiveTypePermission.PRIMITIVES);
         stream.allowTypeHierarchy(Collection.class);
         stream.allowTypeHierarchy(Map.class);
-        stream.allowTypes(new Class[]{String.class});
+        stream.allowTypes(ALLOWED_JDK_TYPES);
         if (ClassLoadingAwareObjectInputStream.isAllAllowed()) {
             stream.addPermission(AnyTypePermission.ANY);
         } else {
