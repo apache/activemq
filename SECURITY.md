@@ -2,13 +2,13 @@
 
 ## Supported Versions
 
-| Version | Supported          |
-| ------- | ------------------ |
-| 6.2.x   | :white_check_mark: |
-| 6.1.x   | :x: |
-| 6.0.x   | :x: |
-| 5.19.x   | :white_check_mark: |
-| <= 5.18.x | :x:                |
+| Version | Supported          | Note |
+| ------- | ------------------ | ---- |
+| 6.2.x   | :white_check_mark: |      |
+| 6.1.x   | :x: | |
+| 6.0.x   | :x: | | 
+| 5.19.x   | :white_check_mark: | Except for EOL dependencies: Spring and Jetty |
+| <= 5.18.x | :x:                | |
 
 ## Reporting a Vulnerability
 
@@ -33,6 +33,10 @@ Apache ActiveMQ's flexibility and wide ranging set of capabilities and features 
 itself to being exposed to security vulnerabilities, especially ones from third-party
 projects such as Spring and Jolokia.
 
+Apache ActiveMQ project recommends applying defense-in-depth and security-first to provide layers of security to environments running production workloads.
+
+Layers of security provide valuable options to prevent attacks, and to provide a buffer for when vulnerabilities at any layer are reported to provide reasonable time to test and apply fixes without impacting business-critical messaging traffic.
+
 Users are advised to secure their environments
 
 1. The web console is not designed to be exposed to the public Internet.
@@ -51,11 +55,9 @@ Users are advised to secure their environments
 
 8. Limit inbound and outbound network connectivity to and from an ActiveMQ server.
 
-## Upcoming ActiveMQ Security Improvements
+## ActiveMQ Security Improvement Project
 
-Apache ActiveMQ projects recommends applying defense-in-depth and security-first to provide layers of security to environments running production workloads.
-
-Layers of security provide valuable options to prevent attacks, and to provide a buffer for when vulnerabilities at any layer are reported to provide reasonable time to test and apply fixes without impacting business-critical messaging traffic.
+The Apache ActiveMQ team has initiated a security hardening project to move from a default configuration that is geared for developer testing and learning to a secured-by-default stance.
 
 1. Enhancements to the SSL authentication plugin to fix wantAuth mode
 
@@ -70,3 +72,13 @@ Layers of security provide valuable options to prevent attacks, and to provide a
 6. Add allow/deny lists to transport connectors to limit IP addresses
 
 7. [Done] VM Transport creation blocks the XBean factory by default
+
+## Security vs Features
+
+AI code scanning tools often mistaken designed features as a security issue.
+
+1. JMS Selectors - An optional query parameter designed to filter messages on a queue or topic that is not security related
+
+2. ClientId - A non-secret unique identifier used to provide once-and-only-once delivery that are designed to be used between connections and be deleted
+
+3. BlobMessages - Blob message support is a side-channel for moving large messages with the JMS API by routing the large message through a different endpoint such as http, sftp or scp. Clients using BlobMessages are responsible for validating the authenticity and validity of the uri provided by the broker. ActiveMQ recommends using SSL secured transports, with two-way SSL as the most preferred.
