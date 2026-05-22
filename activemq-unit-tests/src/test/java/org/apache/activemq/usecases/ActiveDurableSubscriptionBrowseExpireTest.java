@@ -18,6 +18,7 @@ package org.apache.activemq.usecases;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -40,6 +41,7 @@ import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.TopicMessageStore;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.command.MessageId;
+import org.apache.activemq.util.Wait;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -144,8 +146,13 @@ public class ActiveDurableSubscriptionBrowseExpireTest extends DurableSubscripti
         // browse (should | should not) expire the messages on the destination if expiration is (enabled | not enabled)
         data = sub.browse();
         assertNotNull(data);
-        assertEquals(enableExpiration ? messagesToExpire.size() : 0, dest.getDestinationStatistics().getExpired().getCount());
-        
+
+        if (enableExpiration) {
+            assertTrue(Wait.waitFor(() -> dest.getDestinationStatistics().getExpired().getCount() == messagesToExpire.size(), 5_000, 100));
+        } else {
+            assertEquals(0L, dest.getDestinationStatistics().getExpired().getCount());
+        }
+
         session.close();
         con.close();
     }
