@@ -79,7 +79,7 @@ AI code scanning tools often mistaken designed features as a security issue. It 
 
 Some of the most common reported examples:
 
-1. JMS Selectors - An optional query parameter designed to filter messages on a queue or topic that is not security related
+1. JMS Selectors - An optional query parameter designed to filter messages on a queue or topic that is not security related. It is used by clients to consume a subset of messages on the destination instead of all messages. However, if a client is authorized for a destination it is always free to consume all the messages if it chooses so by simply not setting the selector. Therefore any reports showing issues with selectors allowing the consumption of extra messages would be considered a bug and not a security issue as long as it doesn't escape the destination the client is authorized for.
 
 2. ClientId - A non-secret unique identifier used to provide once-and-only-once delivery that are designed to be used between connections and be deleted
 
