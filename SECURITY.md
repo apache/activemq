@@ -81,6 +81,8 @@ Some of the most common reported examples:
 
 1. JMS Selectors - An optional query parameter designed to filter messages on a queue or topic that is not security related. It is used by clients to consume a subset of messages on the destination instead of all messages. However, if a client is authorized for a destination it is always free to consume all the messages if it chooses so by simply not setting the selector. Therefore any reports showing issues with selectors allowing the consumption of extra messages would be considered a bug and not a security issue as long as it doesn't escape the destination the client is authorized for.
 
-2. ClientId - A non-secret unique identifier used to provide once-and-only-once delivery that are designed to be used between connections and be deleted
+2. ClientId - A non-secret unique identifier used to provide once-and-only-once delivery that are designed to be used between connections and be deleted. The JMS spec specifically allows any authorized connection to use the same clientid as long as it isn't currently in use. Some protocols, such as MQTT, also allow link stealing and taking over if in use.
+
+3. Durable Subscriptions - The JMS spec allows authorized connections to connect to any existing durable subscription (combination of client id and subscription name) as long as it is offline. Authorized clients are allowed to delete the durable subscriptions as well even if they didn't create it.
 
 3. BlobMessages - Blob message support is a side-channel for moving large messages with the JMS API by routing the large message through a different endpoint such as http, sftp or scp. Clients using BlobMessages are responsible for validating the authenticity and validity of the uri provided by the broker. ActiveMQ recommends using SSL secured transports, with two-way SSL as the most preferred.
