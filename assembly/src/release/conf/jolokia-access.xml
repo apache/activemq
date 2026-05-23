@@ -17,7 +17,14 @@
 -->
 <restrict>
 
-  <!-- Enforce that an Origin/Referer header is present to prevent CSRF -->
+  <!-- Restrict HTTP methods to POST only (mitigates GET-based CSRF/SSRF vectors) -->
+  <http>
+    <method>post</method>
+  </http>
+
+  <!-- Enforce that an Origin/Referer header is present to prevent CSRF.
+       Add explicit <allow-origin> entries below if the console is served from
+       a different host. -->
   <cors>
     <strict-checking/>
   </cors>
@@ -46,9 +53,141 @@
 
   <!-- deny all operations or getting attributes from these mbeans -->
   <deny>
+    <!-- ActiveMQ broker: deny destructive / privileged operations.
+         Safe read-only getters, browse*, and statistics queries remain allowed
+         via the org.apache.activemq:* entry in <allow> above. -->
+    <mbean>
+      <name>org.apache.activemq:type=Broker,brokerName=*</name>
+      <!-- JVM and broker lifecycle -->
+      <operation>terminateJVM</operation>
+      <operation>stop</operation>
+      <operation>stopGracefully</operation>
+      <operation>restart</operation>
+      <operation>gc</operation>
+      <!-- Topology and destination management -->
+      <operation>addConnector</operation>
+      <operation>removeConnector</operation>
+      <operation>addNetworkConnector</operation>
+      <operation>removeNetworkConnector</operation>
+      <operation>addQueue</operation>
+      <operation>removeQueue</operation>
+      <operation>addTopic</operation>
+      <operation>removeTopic</operation>
+      <operation>createDurableSubscriber</operation>
+      <operation>destroyDurableSubscriber</operation>
+      <!-- Runtime configuration mutation -->
+      <operation>reloadLog4jProperties</operation>
+      <operation>setMemoryLimit</operation>
+      <operation>setStoreLimit</operation>
+      <operation>setTempLimit</operation>
+      <operation>setJobSchedulerStoreLimit</operation>
+      <operation>setMaxUncommittedCount</operation>
+    </mbean>
+
+    <!-- Destinations: deny message data manipulation and injection.
+         browse / browseAsTable / counters remain allowed. -->
+    <mbean>
+      <name>org.apache.activemq:type=Broker,brokerName=*,destinationType=*,destinationName=*</name>
+      <operation>purge</operation>
+      <operation>removeMessage</operation>
+      <operation>removeMatchingMessages</operation>
+      <operation>copyMessageTo</operation>
+      <operation>copyMatchingMessagesTo</operation>
+      <operation>moveMessageTo</operation>
+      <operation>moveMatchingMessagesTo</operation>
+      <operation>retryMessage</operation>
+      <operation>retryMessages</operation>
+      <operation>removeMessageGroup</operation>
+      <operation>removeAllMessageGroups</operation>
+      <operation>sendTextMessage</operation>
+      <operation>sendTextMessageWithProperties</operation>
+      <operation>pause</operation>
+      <operation>resume</operation>
+    </mbean>
+
+    <!-- Durable subscriptions: deny destroy and selector tampering -->
+    <mbean>
+      <name>org.apache.activemq:type=Broker,brokerName=*,destinationType=*,destinationName=*,endpoint=Consumer,clientId=*,consumerId=*</name>
+      <operation>destroy</operation>
+      <operation>removeMessage</operation>
+      <operation>setSelector</operation>
+    </mbean>
+
+    <!-- JobScheduler: deny job removal -->
+    <mbean>
+      <name>org.apache.activemq:type=Broker,brokerName=*,service=JobScheduler,name=*</name>
+      <operation>removeJob</operation>
+      <operation>removeAllJobs</operation>
+      <operation>removeAllJobsAtScheduledTime</operation>
+    </mbean>
+
+    <!-- Log4JConfiguration MBean: deny runtime log level / config changes -->
+    <mbean>
+      <name>org.apache.activemq:type=Broker,brokerName=*,service=Log4JConfiguration</name>
+      <operation>setRootLogLevel</operation>
+      <operation>setLogLevel</operation>
+      <operation>reloadLog4jProperties</operation>
+    </mbean>
+
+    <!-- NetworkConnector: deny credential exposure and config mutation -->
+    <mbean>
+      <name>org.apache.activemq:type=Broker,brokerName=*,connector=networkConnectors,networkConnectorName=*</name>
+      <attribute>Password</attribute>
+      <attribute>RemotePassword</attribute>
+      <operation>setUserName</operation>
+      <operation>setPassword</operation>
+      <operation>setRemoteUserName</operation>
+      <operation>setRemotePassword</operation>
+      <operation>setBridgeTempDestinations</operation>
+      <operation>setConduitSubscriptions</operation>
+      <operation>setDispatchAsync</operation>
+      <operation>setDynamicOnly</operation>
+      <operation>setMessageTTL</operation>
+      <operation>setConsumerTTL</operation>
+      <operation>setPrefetchSize</operation>
+      <operation>setAdvisoryPrefetchSize</operation>
+      <operation>setDecreaseNetworkConsumerPriority</operation>
+      <operation>setSuppressDuplicateQueueSubscriptions</operation>
+      <operation>setSuppressDuplicateTopicSubscriptions</operation>
+    </mbean>
+
+    <!-- MLet allows remote class loading: well-known JMX/Jolokia RCE vector -->
+    <mbean>
+      <name>javax.management.loading:type=MLet</name>
+      <attribute>*</attribute>
+      <operation>*</operation>
+    </mbean>
+    <mbean>
+      <name>JMImplementation:*</name>
+      <attribute>*</attribute>
+      <operation>*</operation>
+    </mbean>
     <mbean>
       <name>org.apache.logging.log4j2:*</name>
       <attribute>*</attribute>
+      <operation>*</operation>
+    </mbean>
+    <mbean>
+      <name>java.util.logging:*</name>
+      <attribute>*</attribute>
+      <operation>*</operation>
+    </mbean>
+    <!-- Forces GC, toggles verbose, etc. -->
+    <mbean>
+      <name>java.lang:type=Memory</name>
+      <attribute>*</attribute>
+      <operation>*</operation>
+    </mbean>
+    <mbean>
+      <name>java.lang:type=ClassLoading</name>
+      <attribute>*</attribute>
+      <operation>*</operation>
+    </mbean>
+    <!-- Exposes system properties and JVM input arguments -->
+    <mbean>
+      <name>java.lang:type=Runtime</name>
+      <attribute>SystemProperties</attribute>
+      <attribute>InputArguments</attribute>
       <operation>*</operation>
     </mbean>
     <mbean>
