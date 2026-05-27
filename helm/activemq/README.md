@@ -65,7 +65,7 @@ helm uninstall my-activemq
 | Parameter | Description | Default |
 |-----------|-------------|---------|
 | `replicaCount` | Number of broker replicas | `1` |
-| `image.repository` | Container image repository | `apache/activemq-classic` |
+| `image.repository` | Container image repository | `apache/activemq` |
 | `image.tag` | Image tag (defaults to chart `appVersion`) | `""` |
 | `image.pullPolicy` | Image pull policy | `IfNotPresent` |
 | `imagePullSecrets` | Image pull secrets for private registries | `[]` |
