@@ -26,6 +26,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
@@ -164,6 +165,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
     private final ReentrantReadWriteLock serviceLock = new ReentrantReadWriteLock();
     private String duplexNetworkConnectorId;
     private final long connectedTimestamp;
+    private final CompletableFuture<ConnectionId> initialConnectionId = new CompletableFuture<>();
 
     /**
      * @param taskRunnerFactory - can be null if you want direct dispatch to the transport
@@ -852,11 +854,16 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
 
         try {
             broker.addConnection(context, info);
+            // Complete the future with the connectionId if we completed
+            // the broker.addConnection() chain successfully
+            initialConnectionId.complete(info.getConnectionId());
         } catch (Exception e) {
             synchronized (brokerConnectionStates) {
                 brokerConnectionStates.remove(info.getConnectionId());
             }
             unregisterConnectionState(info.getConnectionId());
+            // complete with the exception
+            initialConnectionId.completeExceptionally(e);
             LOG.warn("Failed to add Connection id={}, clientId={}, clientIP={} due to {}",
                     info.getConnectionId(), clientId, info.getClientIp(), e.getLocalizedMessage());
             //AMQ-6561 - stop for all exceptions on addConnection
@@ -1390,13 +1397,10 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
             LOG.error(" Slave Brokers are no longer supported - slave trying to attach is: {}", info.getBrokerName());
         } else if (info.isNetworkConnection() && !info.isDuplexConnection()) {
             try {
-                NetworkBridgeConfiguration config = getNetworkConfiguration(info);
-                if (config.isSyncDurableSubs() && protocolVersion.get() >= CommandTypes.PROTOCOL_VERSION_DURABLE_SYNC) {
-                    LOG.debug("SyncDurableSubs is enabled, Sending BrokerSubscriptionInfo");
-                    dispatchSync(NetworkBridgeUtils.getBrokerSubscriptionInfo(this.broker.getBrokerService(), config));
-                }
+                // register durable sync to be sent after ConnectionInfo has been handled
+                registerDurableSync(getNetworkConfiguration(info), info);
             } catch (Exception e) {
-                LOG.error("Failed to respond to network bridge creation from broker {}", info.getBrokerId(), e);
+                LOG.error("Failed to register durable sync for network bridge creation from broker {}", info.getBrokerId(), e);
                 return null;
             }
         } else if (info.isNetworkConnection() && info.isDuplexConnection()) {
@@ -1406,10 +1410,8 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                 NetworkBridgeConfiguration config = getNetworkConfiguration(info);
                 config.setBrokerName(broker.getBrokerName());
 
-                if (config.isSyncDurableSubs() && protocolVersion.get() >= CommandTypes.PROTOCOL_VERSION_DURABLE_SYNC) {
-                    LOG.debug("SyncDurableSubs is enabled, Sending BrokerSubscriptionInfo");
-                    dispatchSync(NetworkBridgeUtils.getBrokerSubscriptionInfo(this.broker.getBrokerService(), config));
-                }
+                // register durable sync to be sent after ConnectionInfo has been handled
+                registerDurableSync(config, info);
 
                 // check for existing duplex connection hanging about
 
@@ -1473,6 +1475,30 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
             cs.getContext().setNetworkConnection(true);
         }
         return null;
+    }
+
+    private void registerDurableSync(final NetworkBridgeConfiguration config, final BrokerInfo info) {
+        if (config.isSyncDurableSubs() && protocolVersion.get() >= CommandTypes.PROTOCOL_VERSION_DURABLE_SYNC) {
+            // this will complete when the connection id has been set, or immediately if already set
+            initialConnectionId.whenComplete((connectionId, t) -> {
+                try {
+                    if (t != null) {
+                        LOG.warn("SyncDurableSubs will be skipped due to error {}",
+                                t.getMessage());
+                        return;
+                    }
+                    // check connection still registered
+                    if (lookupConnectionState(connectionId) != null) {
+                        LOG.debug("SyncDurableSubs is enabled, Sending BrokerSubscriptionInfo");
+                        dispatchSync(NetworkBridgeUtils.getBrokerSubscriptionInfo(
+                                this.broker.getBrokerService(), config));
+                    }
+                } catch (Exception e) {
+                    LOG.error("Failed to respond to network bridge creation from broker {}",
+                            info.getBrokerId(), e);
+                }
+            });
+        }
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
