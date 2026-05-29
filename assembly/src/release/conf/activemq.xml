@@ -73,6 +73,17 @@
                  in bin/env (an empty value blocks ObjectMessage deserialization
                  entirely; specify only packages you explicitly trust).
 
+            NOTE ABOUT ADVISORY TOPICS:
+              1. All users need permission to create ActiveMQ.Advisory destinations,
+                 which is given by the "admin" acl. However, normal users should
+                 generally NOT be given access to read/write for advisories (except temp)
+                 as those messages are meant for admin users.
+              2. A notable exception to number 1 is regular users should be given access to
+                 advisories for temporary destinations because ActiveMQConnection uses those advisories.
+              3. In addition, dynamic network connectors use advisories to determine
+                 consumer demand so the users that will be used to create bridges need access
+                 consumer and virtual destination consumer advisories.
+
             For more information, see:
               https://activemq.apache.org/security
         -->
@@ -86,7 +97,9 @@
                         <authorizationEntries>
                             <authorizationEntry queue=">" read="admins" write="admins" admin="admins" />
                             <authorizationEntry topic=">" read="admins" write="admins" admin="admins" />
-                            <authorizationEntry topic="ActiveMQ.Advisory.>" read="admins,users" write="admins,users" admin="admins,users" />
+                            <authorizationEntry topic="ActiveMQ.Advisory.>" read="admins" write="admins" admin="admins,users" />
+                            <authorizationEntry topic="ActiveMQ.Advisory.TempQueue" read="admins,users" write="admins,users" admin="admins,users"/>
+                            <authorizationEntry topic="ActiveMQ.Advisory.TempTopic" read="admins,users" write="admins,users" admin="admins,users"/>
                         </authorizationEntries>
                     </authorizationMap>
                 </map>
