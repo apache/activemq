@@ -28,6 +28,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.activemq.transport.stomp.Stomp;
 import org.apache.activemq.transport.stomp.StompFrame;
 import org.apache.activemq.util.Wait;
+import org.apache.activemq.util.Wait.Condition;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.dynamic.HttpClientTransportDynamic;
 import org.eclipse.jetty.io.ClientConnector;
@@ -120,6 +121,105 @@ public class StompWSTransportTest extends WSTransportTestSupport {
                 return getProxyToBroker().getCurrentConnectionsCount() == 0;
             }
         }));
+    }
+
+    @Test(timeout = 60000)
+    public void testMissingStompConnect() throws Exception {
+        // Send a frame without first sending a CONNECT frame, which is a protocol violation
+        String message = "SEND\n" + "destination:/queue/" + getTestName() + "\n\n" + "Hello World" + Stomp.NULL;
+        wsStompConnection.sendRawFrame(message);
+
+        String incoming = wsStompConnection.receive(5, TimeUnit.SECONDS);
+        assertNotNull(incoming);
+        assertTrue(incoming.startsWith("ERROR"));
+        assertTrue(incoming.contains("Invalid frame received before CONNECT or STOMP frame: SEND"));
+
+        assertTrue("Connection should close", Wait.waitFor(
+                (Condition) () -> wsStompConnection.isNotConnected()));
+    }
+
+    @Test(timeout = 60000)
+    public void testNegativeContentLength() throws Exception {
+        String connectFrame = "STOMP\n" +
+                "login:system\n" +
+                "passcode:manager\n" +
+                "accept-version:1.2\n" +
+                "host:localhost\n" +
+                "\n" + Stomp.NULL;
+
+        wsStompConnection.sendRawFrame(connectFrame);
+
+        String incoming = wsStompConnection.receive(30, TimeUnit.SECONDS);
+        assertNotNull(incoming);
+        assertTrue(incoming.startsWith("CONNECTED"));
+
+        String message = "SEND\n" + "destination:/queue/" + getTestName() + "\ncontent-length:-1" + " \n\n" + "body" + Stomp.NULL;
+        wsStompConnection.sendRawFrame(message);
+
+        // Negative content length is a protocol error and should return
+        // an error and close the connection
+        incoming = wsStompConnection.receive(5, TimeUnit.SECONDS);
+        assertNotNull(incoming);
+        assertTrue(incoming.startsWith("ERROR"));
+        assertTrue(incoming.contains("Specified content-length may not be negative"));
+
+        assertTrue("Connection should close", Wait.waitFor(
+                (Condition) () -> wsStompConnection.isNotConnected()));
+    }
+
+    @Test(timeout = 60000)
+    public void testDuplicateConnect() throws Exception {
+        String connectFrame = "STOMP\n" +
+                "login:system\n" +
+                "passcode:manager\n" +
+                "accept-version:1.2\n" +
+                "host:localhost\n" +
+                "\n" + Stomp.NULL;
+
+        wsStompConnection.sendRawFrame(connectFrame);
+
+        String incoming = wsStompConnection.receive(30, TimeUnit.SECONDS);
+        assertNotNull(incoming);
+        assertTrue(incoming.startsWith("CONNECTED"));
+
+        // Sending a second CONNECT frame is not allowed and should error
+        wsStompConnection.sendRawFrame(connectFrame);
+
+        incoming = wsStompConnection.receive(5, TimeUnit.SECONDS);
+        assertNotNull(incoming);
+        assertTrue(incoming.startsWith("ERROR"));
+        assertTrue(incoming.contains("Duplicate CONNECT or STOMP packet received"));
+
+        assertTrue("Connection should close", Wait.waitFor(
+                (Condition) () -> wsStompConnection.isNotConnected()));
+    }
+
+    @Test(timeout = 60000)
+    public void testInvalidServerResponseReceived() throws Exception {
+        String connectFrame = "STOMP\n" +
+                "login:system\n" +
+                "passcode:manager\n" +
+                "accept-version:1.2\n" +
+                "host:localhost\n" +
+                "\n" + Stomp.NULL;
+
+        wsStompConnection.sendRawFrame(connectFrame);
+
+        String incoming = wsStompConnection.receive(30, TimeUnit.SECONDS);
+        assertNotNull(incoming);
+        assertTrue(incoming.startsWith("CONNECTED"));
+
+        // Sending a server response to the server, which is invalid
+        String invalidFrame = "RECEIPT\n" + "receipt-id:message-12345\n\n" + Stomp.NULL;
+        wsStompConnection.sendRawFrame(invalidFrame);
+        incoming = wsStompConnection.receive(5, TimeUnit.SECONDS);
+        assertNotNull(incoming);
+        assertTrue(incoming.startsWith("ERROR"));
+        assertTrue(incoming.contains("Invalid response frame received from Client: RECEIPT"));
+
+        // make sure the connection was closed by the server
+        assertTrue("Connection should close", Wait.waitFor(
+                (Condition) () -> wsStompConnection.isNotConnected()));
     }
 
     @Test(timeout = 60000)

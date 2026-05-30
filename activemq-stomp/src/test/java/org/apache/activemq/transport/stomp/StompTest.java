@@ -26,7 +26,6 @@ import static org.junit.Assert.fail;
 import jakarta.jms.Destination;
 import java.io.IOException;
 import java.io.StringReader;
-import java.lang.reflect.Field;
 import java.net.SocketTimeoutException;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -53,11 +52,8 @@ import jakarta.jms.Session;
 import jakarta.jms.TextMessage;
 import javax.management.ObjectName;
 
-import javax.net.ssl.SSLEngineResult;
-import javax.net.ssl.SSLEngineResult.HandshakeStatus;
 import javax.net.ssl.SSLSocket;
 import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.broker.TransportConnection;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.broker.jmx.BrokerViewMBean;
 import org.apache.activemq.broker.jmx.QueueViewMBean;
@@ -70,7 +66,8 @@ import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTextMessage;
-import org.apache.activemq.transport.nio.NIOSSLTransport;
+import org.apache.activemq.transport.stomp.Stomp.Commands;
+import org.apache.activemq.transport.stomp.Stomp.Responses;
 import org.apache.activemq.util.NioSslTestUtil;
 import org.apache.activemq.util.Wait;
 import org.junit.Assume;
@@ -2646,6 +2643,108 @@ public class StompTest extends StompTestSupport {
 
         // Make sure we can still subscribe and receive
         receiveForSslHandshakeTest();
+    }
+
+    @Test(timeout = 60000)
+    public void testMissingConnectFrame() throws Exception {
+        final boolean isAutoTransport = transportConnectorName.contains("auto");
+
+        // Send a frame without first sending a CONNECT frame, which is a protocol violation
+        String frame = "SEND\n" + "destination:/queue/" + getQueueName() + " \n\n" + "body" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+
+        // The auto transport will just disconnect because it can't detect the protocol
+        // without the CONNECT frame
+        if (isAutoTransport) {
+            try {
+                stompConnection.receive();
+            } catch (IOException e) {
+               // Expected, the connection should be closed because the transport
+               // can't detect the wire protocol without the initial packet
+            }
+        } else {
+            // For the other stomp transports we should get an error back first
+            StompFrame message = stompConnection.receive();
+            assertEquals(Responses.ERROR, message.getAction());
+            assertTrue(message.getBody().contains(
+                    "Invalid frame received before CONNECT or STOMP frame: SEND"));
+            // make sure the connection was closed by the server
+            assertConnectionClosed(5000);
+        }
+    }
+
+    @Test(timeout = 60000)
+    public void testNegativeContentLength() throws Exception {
+        String frame = "CONNECT\n" + "login:system\n" + "passcode:manager\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+
+        frame = stompConnection.receiveFrame();
+        assertTrue(frame.startsWith("CONNECTED"));
+
+        frame = "SEND\n" + "destination:/queue/" + getQueueName() + "\ncontent-length:-1" + " \n\n" + "body" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+
+        // Negative content length is a protocol error and should return
+        // an error and close the connection
+        StompFrame message = stompConnection.receive();
+        assertEquals(Responses.ERROR, message.getAction());
+        assertTrue(message.getBody().contains("Specified content-length may not be negative"));
+
+        // make sure the connection was closed by the server
+        assertConnectionClosed(5000);
+    }
+
+    @Test(timeout = 60000)
+    public void testDuplicateConnect() throws Exception {
+        testDuplicateConnect(Commands.CONNECT);
+    }
+
+    @Test(timeout = 60000)
+    public void testDuplicateStomp() throws Exception {
+        testDuplicateConnect(Commands.STOMP);
+    }
+
+    private void testDuplicateConnect(String connectPacket) throws Exception {
+        String frame = connectPacket + "\n" + "login:system\n" + "passcode:manager\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+
+        String received = stompConnection.receiveFrame();
+        assertTrue(received.startsWith("CONNECTED"));
+
+        // Sending a second CONNECT frame is not allowed and should error
+        stompConnection.sendFrame(frame);
+        StompFrame message = stompConnection.receive();
+        assertEquals(Responses.ERROR, message.getAction());
+        assertTrue(message.getBody().contains("Duplicate CONNECT or STOMP packet received"));
+
+        // make sure the connection was closed by the server
+        assertConnectionClosed(5000);
+    }
+
+    @Test(timeout = 60000)
+    public void testInvalidServerResponseReceived() throws Exception {
+        String frame = "CONNECT\n" + "login:system\n" + "passcode:manager\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+
+        String received = stompConnection.receiveFrame();
+        assertTrue(received.startsWith("CONNECTED"));
+
+        // Sending a server response to the server, which is invalid
+        frame = "RECEIPT\n" + "receipt-id:message-12345\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+        StompFrame message = stompConnection.receive();
+        assertEquals(Responses.ERROR, message.getAction());
+        assertTrue(message.getBody().contains("Invalid response frame received from Client: RECEIPT"));
+
+        // make sure the connection was closed by the server
+        assertConnectionClosed(5000);
+    }
+
+    protected void assertConnectionClosed(int timeout) throws Exception {
+        stompConnection.getStompSocket().setSoTimeout(timeout);
+        // -1 read means the socket was closed by the server
+        assertTrue("Should drop connection", Wait.waitFor(
+                () -> stompConnection.getStompSocket().getInputStream().read() == -1, timeout, 10));
     }
 
     private void checkHandshakeStatusAdvances(SSLSocket socket) throws Exception {
