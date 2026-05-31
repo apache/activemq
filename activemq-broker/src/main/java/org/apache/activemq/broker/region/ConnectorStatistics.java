@@ -17,6 +17,8 @@
 
 package org.apache.activemq.broker.region;
 
+import java.util.Set;
+
 import org.apache.activemq.management.CountStatisticImpl;
 import org.apache.activemq.management.PollCountStatisticImpl;
 import org.apache.activemq.management.StatsImpl;
@@ -42,11 +44,7 @@ public class ConnectorStatistics extends StatsImpl {
         messages = new CountStatisticImpl("messages", "The number of messages that that are being held by the destination");
         messagesCached = new PollCountStatisticImpl("messagesCached", "The number of messages that are held in the destination's memory cache");
 
-        addStatistic("enqueues", enqueues);
-        addStatistic("dequeues", dequeues);
-        addStatistic("consumers", consumers);
-        addStatistic("messages", messages);
-        addStatistic("messagesCached", messagesCached);
+        addStatistics(Set.of(enqueues, dequeues, consumers, messages, messagesCached));
     }
 
     public CountStatisticImpl getEnqueues() {

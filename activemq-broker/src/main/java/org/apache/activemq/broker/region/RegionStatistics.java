@@ -17,6 +17,8 @@
 
 package org.apache.activemq.broker.region;
 
+import java.util.Set;
+
 import org.apache.activemq.management.CountStatisticImpl;
 import org.apache.activemq.management.StatsImpl;
 
@@ -41,9 +43,7 @@ public class RegionStatistics extends StatsImpl {
         destinations = new CountStatisticImpl("destinations", "The number of regular (non-adivsory) destinations in the region");
         allDestinations = new CountStatisticImpl("allDestinations", "The total number of destinations, including advisory destinations, in the region");
 
-        addStatistic("advisoryDestinations", advisoryDestinations);
-        addStatistic("destinations", destinations);
-        addStatistic("allDestinations", allDestinations);
+        addStatistics(Set.of(advisoryDestinations, destinations, allDestinations));
 
         this.setEnabled(enabled);
     }

@@ -17,6 +17,8 @@
 
 package org.apache.activemq.broker.region;
 
+import java.util.Set;
+
 import org.apache.activemq.management.CountStatisticImpl;
 import org.apache.activemq.management.StatsImpl;
 
@@ -35,8 +37,7 @@ public class ConnectionStatistics extends StatsImpl {
         enqueues = new CountStatisticImpl("enqueues", "The number of messages that have been sent to the connection");
         dequeues = new CountStatisticImpl("dequeues", "The number of messages that have been dispatched from the connection");
 
-        addStatistic("enqueues", enqueues);
-        addStatistic("dequeues", dequeues);
+        addStatistics(Set.of(enqueues, dequeues));
     }
 
     public CountStatisticImpl getEnqueues() {
