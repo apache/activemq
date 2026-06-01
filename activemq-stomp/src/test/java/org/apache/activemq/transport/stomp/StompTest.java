@@ -2736,7 +2736,7 @@ public class StompTest extends StompTestSupport {
         StompFrame message = stompConnection.receive();
         assertEquals(Responses.ERROR, message.getAction());
         assertTrue(message.getBody().contains("StompWireFormat is configured for 'server' mode and received a"
-                + " frame that is only excepted when configured for 'client' mode: RECEIPT"));
+                + " frame that is only expected when configured for 'client' mode: RECEIPT"));
 
         // make sure the connection was closed by the server
         assertConnectionClosed(5000);

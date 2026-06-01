@@ -217,7 +217,7 @@ public class StompWSTransportTest extends WSTransportTestSupport {
         assertNotNull(incoming);
         assertTrue(incoming.startsWith("ERROR"));
         assertTrue(incoming.contains("StompWireFormat is configured for 'server' mode and received a"
-                + " frame that is only excepted when configured for 'client' mode: RECEIPT"));
+                + " frame that is only expected when configured for 'client' mode: RECEIPT"));
 
         // make sure the connection was closed by the server
         assertTrue("Connection should close", Wait.waitFor(

@@ -276,7 +276,7 @@ public class StompWireFormat implements WireFormat {
                 case Responses.RECEIPT:
                     throw new ProtocolException(
                             "StompWireFormat is configured for 'server' mode and received a"
-                                    + " frame that is only excepted when configured for 'client' mode: " + action, true);
+                                    + " frame that is only expected when configured for 'client' mode: " + action, true);
                 default:
                     // Any other frame received before CONNECT/STOMP is an error
                     if (!processedConnect) {
