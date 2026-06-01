@@ -23,10 +23,12 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PushbackInputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicLong;
 
+import org.apache.activemq.transport.stomp.Stomp.Commands;
+import org.apache.activemq.transport.stomp.Stomp.Responses;
 import org.apache.activemq.util.ByteArrayInputStream;
 import org.apache.activemq.util.ByteArrayOutputStream;
 import org.apache.activemq.util.ByteSequence;
@@ -48,15 +50,24 @@ public class StompWireFormat implements WireFormat {
     public static final int MAX_DATA_LENGTH = 1024 * 1024 * 100;
     public static final long DEFAULT_MAX_FRAME_SIZE = Long.MAX_VALUE;
     public static final long DEFAULT_CONNECTION_TIMEOUT = 30000;
+    public static final boolean DEFAULT_SERVER_MODE = true;
 
     private int version = 1;
     private int maxDataLength = MAX_DATA_LENGTH;
     private long maxFrameSize = DEFAULT_MAX_FRAME_SIZE;
     private String stompVersion = Stomp.DEFAULT_VERSION;
     private long connectionAttemptTimeout = DEFAULT_CONNECTION_TIMEOUT;
+    // Track if this wireformat is used on the server or a client
+    // This will generally be set to true, client mode is normally
+    // used for testing
+    private boolean serverMode = DEFAULT_SERVER_MODE;
 
     //The current frame size as it is unmarshalled from the stream
-    private final AtomicLong frameSize = new AtomicLong();
+    private long frameSize = 0;
+    // A new StompWireFormat is instantiated for each connection
+    // This tracks if the server has received the CONNECT (or FRAME) frame first.
+    private boolean processedConnect = false;
+    private boolean fatalError = false;
 
     @Override
     public ByteSequence marshal(Object command) throws IOException {
@@ -103,7 +114,7 @@ public class StompWireFormat implements WireFormat {
 
         StringBuilder builder = new StringBuilder();
 
-        os.write(marshalHeaders(stomp, builder).toString().getBytes("UTF-8"));
+        os.write(marshalHeaders(stomp, builder).toString().getBytes(StandardCharsets.UTF_8));
         os.write(stomp.getContent());
         os.write(END_OF_FRAME);
     }
@@ -117,7 +128,7 @@ public class StompWireFormat implements WireFormat {
         marshalHeaders(stomp, buffer);
 
         if (stomp.getContent() != null) {
-            String contentString = new String(stomp.getContent(), "UTF-8");
+            String contentString = new String(stomp.getContent(), StandardCharsets.UTF_8);
             buffer.append(contentString);
         }
 
@@ -128,11 +139,19 @@ public class StompWireFormat implements WireFormat {
     @Override
     public Object unmarshal(DataInput in) throws IOException {
         try {
+            // Prevent processing any future data, this is necessary because there is a delay
+            // in the connection close so it's possible this gets called again.
+            if (fatalError) {
+                throw new IOException("Can't process anymore data, fatal ProtocolError previously received.");
+            }
+
             // parse action
-            String action = parseAction(in, frameSize);
+            String action = parseAction(in);
+            // Ensure the action is valid
+            validateAction(action);
 
             // Parse the headers
-            HashMap<String, String> headers = parseHeaders(in, frameSize);
+            HashMap<String, String> headers = parseHeaders(in);
 
             // Read in the data part.
             byte[] data = NO_DATA;
@@ -140,7 +159,7 @@ public class StompWireFormat implements WireFormat {
             if ((action.equals(Stomp.Commands.SEND) || action.equals(Stomp.Responses.MESSAGE)) && contentLength != null) {
 
                 // Bless the client, he's telling us how much data to read in.
-                int length = parseContentLength(contentLength, frameSize);
+                int length = parseContentLength(contentLength);
 
                 data = new byte[length];
                 in.readFully(data);
@@ -160,7 +179,7 @@ public class StompWireFormat implements WireFormat {
                     } else if (baos.size() > getMaxDataLength()) {
                         throw new ProtocolException("The maximum data length was exceeded", true);
                     } else {
-                        if (frameSize.incrementAndGet() > getMaxFrameSize()) {
+                        if (++frameSize > getMaxFrameSize()) {
                             throw new ProtocolException("The maximum frame size was exceeded", true);
                         }
                     }
@@ -177,15 +196,19 @@ public class StompWireFormat implements WireFormat {
             return new StompFrame(action, headers, data);
 
         } catch (ProtocolException e) {
+            if (e.isFatal()) {
+                fatalError = true;
+            }
             return new StompFrameError(e);
         } finally {
-            frameSize.set(0);
+            resetFrame();
         }
     }
 
     private String readLine(DataInput in, int maxLength, String errorMessage) throws IOException {
         ByteSequence sequence = readHeaderLine(in, maxLength, errorMessage);
-        return new String(sequence.getData(), sequence.getOffset(), sequence.getLength(), "UTF-8").trim();
+        return new String(sequence.getData(), sequence.getOffset(), sequence.getLength(),
+                StandardCharsets.UTF_8).trim();
     }
 
     private ByteSequence readHeaderLine(DataInput in, int maxLength, String errorMessage) throws IOException {
@@ -212,7 +235,7 @@ public class StompWireFormat implements WireFormat {
         return line;
     }
 
-    protected String parseAction(DataInput in, AtomicLong frameSize) throws IOException {
+    String parseAction(DataInput in) throws IOException {
         String action = null;
 
         // skip white space to next real action line
@@ -227,11 +250,56 @@ public class StompWireFormat implements WireFormat {
                 }
             }
         }
-        frameSize.addAndGet(action.length());
+        frameSize += action.length();
         return action;
     }
 
-    protected HashMap<String, String> parseHeaders(DataInput in, AtomicLong frameSize) throws IOException {
+    // Validate that the server/client receive packets that are expected
+    void validateAction(String action) throws ProtocolException {
+        // Validate for the server
+        if (serverMode) {
+            switch(action) {
+                // Mark that we received the expected first frame it isn't a duplicate
+                case Commands.CONNECT:
+                case Commands.STOMP:
+                    if (processedConnect) {
+                        throw new ProtocolException("Duplicate CONNECT or STOMP packet received",
+                                true);
+                    }
+                    processedConnect = true;
+                    return;
+                // These are response packets, the server should not receive them
+                case Responses.CONNECTED:
+                case Responses.MESSAGE:
+                case Responses.ERROR:
+                case Responses.RECEIPT:
+                    throw new ProtocolException(
+                            "Invalid response frame received from Client: " + action, true);
+                default:
+                    // Any other frame received before CONNECT/STOMP is an error
+                    if (!processedConnect) {
+                        throw new ProtocolException(
+                                "Invalid frame received before CONNECT or STOMP frame: " + action, true);
+                    }
+            }
+        } else {
+            switch(action) {
+                // The client should only receive response frames
+                case Responses.CONNECTED:
+                case Responses.MESSAGE:
+                case Responses.ERROR:
+                case Responses.RECEIPT:
+                    return;
+                default:
+                    // Any other frame received before CONNECT/STOMP is an error
+                    throw new ProtocolException(
+                            "Invalid frame received by client: " + action, true);
+            }
+        }
+
+    }
+
+    HashMap<String, String> parseHeaders(DataInput in) throws IOException {
         HashMap<String, String> headers = new HashMap<>(25);
         while (true) {
             ByteSequence line = readHeaderLine(in, MAX_HEADER_LENGTH, "The maximum header length was exceeded");
@@ -240,7 +308,7 @@ public class StompWireFormat implements WireFormat {
                 if (headers.size() > MAX_HEADERS) {
                     throw new ProtocolException("The maximum number of headers was exceeded", true);
                 }
-                frameSize.addAndGet(line.length);
+                frameSize += line.length;
 
                 try {
 
@@ -259,7 +327,8 @@ public class StompWireFormat implements WireFormat {
 
                     ByteSequence nameSeq = stream.toByteSequence();
 
-                    String name = new String(nameSeq.getData(), nameSeq.getOffset(), nameSeq.getLength(), "UTF-8");
+                    String name = new String(nameSeq.getData(), nameSeq.getOffset(), nameSeq.getLength(),
+                            StandardCharsets.UTF_8);
                     String value = decodeHeader(headerLine);
                     if (stompVersion.equals(Stomp.V1_0)) {
                         value = value.trim();
@@ -281,7 +350,7 @@ public class StompWireFormat implements WireFormat {
         return headers;
     }
 
-    protected int parseContentLength(String contentLength, AtomicLong frameSize) throws ProtocolException {
+    int parseContentLength(String contentLength) throws ProtocolException {
         int length;
         try {
             length = Integer.parseInt(contentLength.trim());
@@ -289,11 +358,15 @@ public class StompWireFormat implements WireFormat {
             throw new ProtocolException("Specified content-length is not a valid integer", true);
         }
 
+        if (length < 0) {
+            throw new ProtocolException("Specified content-length may not be negative", true);
+        }
+
         if (length > getMaxDataLength()) {
             throw new ProtocolException("The maximum data length was exceeded", true);
         }
 
-        if (frameSize.addAndGet(length) > getMaxFrameSize()) {
+        if ((frameSize += length) > getMaxFrameSize()) {
             throw new ProtocolException("The maximum frame size was exceeded", true);
         }
 
@@ -303,7 +376,7 @@ public class StompWireFormat implements WireFormat {
     private String encodeHeader(String header) throws IOException {
         String result = header;
         if (!stompVersion.equals(Stomp.V1_0)) {
-            byte[] utf8buf = header.getBytes("UTF-8");
+            byte[] utf8buf = header.getBytes(StandardCharsets.UTF_8);
             ByteArrayOutputStream stream = new ByteArrayOutputStream(utf8buf.length);
             for(byte val : utf8buf) {
                 switch(val) {
@@ -325,7 +398,7 @@ public class StompWireFormat implements WireFormat {
                     stream.write(val);
                 }
             }
-            result =  new String(stream.toByteArray(), "UTF-8");
+            result =  new String(stream.toByteArray(), StandardCharsets.UTF_8);
             stream.close();
         }
 
@@ -372,7 +445,7 @@ public class StompWireFormat implements WireFormat {
 
         decoded.close();
 
-        return new String(decoded.toByteArray(), "UTF-8");
+        return new String(decoded.toByteArray(), StandardCharsets.UTF_8);
     }
 
     @Override
@@ -415,5 +488,21 @@ public class StompWireFormat implements WireFormat {
 
     public void setConnectionAttemptTimeout(long connectionAttemptTimeout) {
         this.connectionAttemptTimeout = connectionAttemptTimeout;
+    }
+
+    public boolean isServerMode() {
+        return serverMode;
+    }
+
+    public void setServerMode(boolean serverMode) {
+        this.serverMode = serverMode;
+    }
+
+    long incrementAndGetFrameSize() {
+        return ++frameSize;
+    }
+
+    void resetFrame() {
+        frameSize = 0;
     }
 }
