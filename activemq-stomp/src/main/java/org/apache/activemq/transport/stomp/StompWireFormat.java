@@ -263,7 +263,8 @@ public class StompWireFormat implements WireFormat {
                 case Commands.CONNECT:
                 case Commands.STOMP:
                     if (processedConnect) {
-                        throw new ProtocolException("Duplicate CONNECT or STOMP packet received",
+                        throw new ProtocolException("StompWireFormat is configured for 'server' mode"
+                                + " and received a duplicate CONNECT or STOMP frame",
                                 true);
                     }
                     processedConnect = true;
@@ -274,12 +275,13 @@ public class StompWireFormat implements WireFormat {
                 case Responses.ERROR:
                 case Responses.RECEIPT:
                     throw new ProtocolException(
-                            "Invalid response frame received from Client: " + action, true);
+                            "StompWireFormat is configured for 'server' mode and received a"
+                                    + " frame that is only excepted when configured for 'client' mode: " + action, true);
                 default:
                     // Any other frame received before CONNECT/STOMP is an error
                     if (!processedConnect) {
-                        throw new ProtocolException(
-                                "Invalid frame received before CONNECT or STOMP frame: " + action, true);
+                        throw new ProtocolException("StompWireFormat is configured for 'server' mode and received an" +
+                                " unexpected frame before CONNECT or STOMP frame: " + action, true);
                     }
             }
         } else {
@@ -291,9 +293,10 @@ public class StompWireFormat implements WireFormat {
                 case Responses.RECEIPT:
                     return;
                 default:
-                    // Any other frame received before CONNECT/STOMP is an error
+                    // Any other frame received that is not a Response is an error in client mode
                     throw new ProtocolException(
-                            "Invalid frame received by client: " + action, true);
+                            "StompWireFormat is configured for 'client' mode and received a"
+                                    + " frame that is not expected: " + action, true);
             }
         }
 
