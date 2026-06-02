@@ -134,8 +134,8 @@ public class SimpleSecurityBrokerSystemTest extends SecurityTestSupport {
         writeAccess.put(new ActiveMQTopic("GUEST.>"), USERS);
         writeAccess.put(new ActiveMQTopic("GUEST.>"), GUESTS);
 
-        readAccess.put(new ActiveMQTopic("ActiveMQ.Advisory.>"), WILDCARD);
-        writeAccess.put(new ActiveMQTopic("ActiveMQ.Advisory.>"), WILDCARD);
+        readAccess.put(new ActiveMQTopic("ActiveMQ.Advisory.TempQueue"), WILDCARD);
+        readAccess.put(new ActiveMQTopic("ActiveMQ.Advisory.TempTopic"), WILDCARD);
 
         DestinationMap adminAccess = new DefaultAuthorizationMap();
         adminAccess.put(new ActiveMQTopic(">"), ADMINS);

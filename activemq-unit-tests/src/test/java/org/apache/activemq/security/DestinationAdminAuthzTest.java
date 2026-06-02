@@ -271,9 +271,12 @@ public class DestinationAdminAuthzTest {
         adminAccess.put(new ActiveMQQueue("app1.>"), APP1GROUP);
         adminAccess.put(new ActiveMQQueue("app2.>"), APP2GROUP);
 
-        readAccess.put(new ActiveMQTopic("ActiveMQ.Advisory.>"), WILDCARD);
-        writeAccess.put(new ActiveMQTopic("ActiveMQ.Advisory.>"), WILDCARD);
-        adminAccess.put(new ActiveMQTopic("ActiveMQ.Advisory.>"), WILDCARD);
+        readAccess.put(new ActiveMQTopic("ActiveMQ.Advisory.TempTopic"), WILDCARD);
+        writeAccess.put(new ActiveMQTopic("ActiveMQ.Advisory.TempTopic"), ADMINS);
+        adminAccess.put(new ActiveMQTopic("ActiveMQ.Advisory.TempTopic"), ADMINS);
+        readAccess.put(new ActiveMQTopic("ActiveMQ.Advisory.TempQueue"), WILDCARD);
+        writeAccess.put(new ActiveMQTopic("ActiveMQ.Advisory.TempQueue"), ADMINS);
+        adminAccess.put(new ActiveMQTopic("ActiveMQ.Advisory.TempQueue"), ADMINS);
 
         var authorizationMap = new SimpleAuthorizationMap(writeAccess, readAccess, adminAccess);
         var tempDestinationAuthorizationEntry = new TempDestinationAuthorizationEntry();

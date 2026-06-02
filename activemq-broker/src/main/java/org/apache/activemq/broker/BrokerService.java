@@ -2447,7 +2447,7 @@ public class BrokerService implements Service {
     protected Broker addInterceptors(Broker broker) throws Exception {
         if (isAdvisorySupport()) {
             // AMQ-9187 - the AdvisoryBroker must be after the SchedulerBroker
-            broker = new AdvisoryBroker(broker);
+            broker = createAdvisoryBroker(broker);
         }
         if (isSchedulerSupport()) {
             SchedulerBroker sb = new SchedulerBroker(this, broker, getJobSchedulerStore());
@@ -2513,6 +2513,10 @@ public class BrokerService implements Service {
         } else {
             return new MemoryPersistenceAdapter();
         }
+    }
+
+    protected AdvisoryBroker createAdvisoryBroker(Broker broker) {
+        return new AdvisoryBroker(broker);
     }
 
     protected ObjectName createBrokerObjectName() throws MalformedObjectNameException  {

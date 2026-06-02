@@ -19,12 +19,14 @@ package org.apache.activemq.advisory;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Enumeration;
 import java.util.HashSet;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import jakarta.jms.BytesMessage;
 import jakarta.jms.Connection;
@@ -45,6 +47,8 @@ import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerFilter;
 import org.apache.activemq.broker.BrokerPlugin;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.broker.ProducerBrokerExchange;
 import org.apache.activemq.broker.region.policy.ConstantPendingMessageLimitStrategy;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
@@ -53,6 +57,7 @@ import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.command.MessageDispatch;
+import org.apache.activemq.security.SecurityContext;
 import org.apache.activemq.test.annotations.ParallelTest;
 import org.junit.After;
 import org.junit.Before;
@@ -690,7 +695,35 @@ public class AdvisoryTests {
     }
 
     protected BrokerService createBroker() throws Exception {
-        BrokerService answer = new BrokerService();
+        BrokerService answer = new BrokerService() {
+            // Wrap the broker used by the Advisory broker so we can intercept the send()
+            // calls and verify any messages published to advisory topics by the advisory broker
+            // use the right context. The AdvisoryBroker delegates to the "next" broker in the
+            // chain when sending generated advisories.
+            @Override
+            protected AdvisoryBroker createAdvisoryBroker(Broker broker) {
+                return new AdvisoryBroker(new BrokerFilter(broker) {
+                    // track first connection context used for advisories
+                    private final AtomicReference<ConnectionContext> first = new AtomicReference<>();
+
+                    @Override
+                    public void send(ProducerBrokerExchange producerExchange,
+                            org.apache.activemq.command.Message messageSend) throws Exception {
+                        super.send(producerExchange, messageSend);
+                        // Verify all advisory topic publishes use the admin context
+                        // This filter is only used by the advisory broker so all published
+                        // advisories should be the broker security context
+                        if (AdvisorySupport.isAdvisoryTopic(messageSend.getDestination())) {
+                            first.compareAndSet(null, producerExchange.getConnectionContext());
+                            assertEquals(SecurityContext.BROKER_SECURITY_CONTEXT,
+                                    producerExchange.getConnectionContext().getSecurityContext());
+                            // ConnectionContext is reused for each message (but producer exchange is not)
+                            assertSame(first.get(), producerExchange.getConnectionContext());
+                        }
+                    }
+                });
+            }
+        };
         configureBroker(answer);
         answer.start();
         return answer;
@@ -745,6 +778,7 @@ public class AdvisoryTests {
 
                         super.preProcessDispatch(messageDispatch);
                     }
+
                 };
             }
         } });

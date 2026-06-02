@@ -23,11 +23,13 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import java.util.function.Supplier;
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerFilter;
 import org.apache.activemq.broker.BrokerService;
@@ -61,7 +63,6 @@ import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.command.RemoveSubscriptionInfo;
 import org.apache.activemq.command.SessionId;
 import org.apache.activemq.filter.DestinationPath;
-import org.apache.activemq.security.SecurityContext;
 import org.apache.activemq.state.ProducerState;
 import org.apache.activemq.usage.Usage;
 import org.apache.activemq.util.IdGenerator;
@@ -79,6 +80,7 @@ public class AdvisoryBroker extends BrokerFilter {
     private static final Logger LOG = LoggerFactory.getLogger(AdvisoryBroker.class);
     private static final IdGenerator ID_GENERATOR = new IdGenerator();
 
+    protected final AdvisoryConnContextSupplier advisoryConnectionContext = new AdvisoryConnContextSupplier();
     protected final ConcurrentMap<ConnectionId, ConnectionInfo> connections = new ConcurrentHashMap<ConnectionId, ConnectionInfo>();
 
     private final ReentrantReadWriteLock consumersLock = new ReentrantReadWriteLock();
@@ -107,11 +109,17 @@ public class AdvisoryBroker extends BrokerFilter {
 
     private final LongSequenceGenerator messageIdGenerator = new LongSequenceGenerator();
 
-    private VirtualDestinationMatcher virtualDestinationMatcher = new DestinationFilterVirtualDestinationMatcher();
+    private final VirtualDestinationMatcher virtualDestinationMatcher = new DestinationFilterVirtualDestinationMatcher();
 
     public AdvisoryBroker(Broker next) {
         super(next);
         advisoryProducerId.setConnectionId(ID_GENERATOR.generateId());
+    }
+
+    @Override
+    public void stop() throws Exception {
+        super.stop();
+        this.advisoryConnectionContext.reset();
     }
 
     @Override
@@ -777,10 +785,7 @@ public class AdvisoryBroker extends BrokerFilter {
         try {
             ActiveMQTopic topic = AdvisorySupport.getMasterBrokerAdvisoryTopic();
             ActiveMQMessage advisoryMessage = new ActiveMQMessage();
-            ConnectionContext context = new ConnectionContext();
-            context.setSecurityContext(SecurityContext.BROKER_SECURITY_CONTEXT);
-            context.setBroker(getBrokerService().getBroker());
-            fireAdvisory(context, topic, null, null, advisoryMessage);
+            fireAdvisory(topic, null, advisoryMessage);
         } catch (Exception e) {
             handleFireFailure("now master broker", e);
         }
@@ -819,12 +824,7 @@ public class AdvisoryBroker extends BrokerFilter {
                 advisoryMessage.setStringProperty("remoteIp", remoteIp);
                 networkBridges.putIfAbsent(brokerInfo, advisoryMessage);
 
-                ActiveMQTopic topic = AdvisorySupport.getNetworkBridgeAdvisoryTopic();
-
-                ConnectionContext context = new ConnectionContext();
-                context.setSecurityContext(SecurityContext.BROKER_SECURITY_CONTEXT);
-                context.setBroker(getBrokerService().getBroker());
-                fireAdvisory(context, topic, brokerInfo, null, advisoryMessage);
+                fireAdvisory(AdvisorySupport.getNetworkBridgeAdvisoryTopic(), brokerInfo, advisoryMessage);
             }
         } catch (Exception e) {
             handleFireFailure("network bridge started", e);
@@ -839,12 +839,7 @@ public class AdvisoryBroker extends BrokerFilter {
                 advisoryMessage.setBooleanProperty("started", false);
                 networkBridges.remove(brokerInfo);
 
-                ActiveMQTopic topic = AdvisorySupport.getNetworkBridgeAdvisoryTopic();
-
-                ConnectionContext context = new ConnectionContext();
-                context.setSecurityContext(SecurityContext.BROKER_SECURITY_CONTEXT);
-                context.setBroker(getBrokerService().getBroker());
-                fireAdvisory(context, topic, brokerInfo, null, advisoryMessage);
+                fireAdvisory(AdvisorySupport.getNetworkBridgeAdvisoryTopic(), brokerInfo, advisoryMessage);
             }
         } catch (Exception e) {
             handleFireFailure("network bridge stopped", e);
@@ -901,7 +896,19 @@ public class AdvisoryBroker extends BrokerFilter {
         fireAdvisory(context, topic, command, targetConsumerId, advisoryMessage);
     }
 
-    public void fireAdvisory(ConnectionContext context, ActiveMQTopic topic, Command command, ConsumerId targetConsumerId, ActiveMQMessage advisoryMessage) throws Exception {
+    public void fireFailedForwardAdvisory(Message message, Throwable error) throws Exception {
+        ActiveMQMessage advisoryMessage = new ActiveMQMessage();
+        advisoryMessage.setStringProperty("cause", error.getLocalizedMessage());
+
+        fireAdvisory(AdvisorySupport.getNetworkBridgeForwardFailureAdvisoryTopic(), message, advisoryMessage);
+    }
+
+    private void fireAdvisory(ActiveMQTopic topic, Command command, ActiveMQMessage advisoryMessage) throws Exception {
+        fireAdvisory(advisoryConnectionContext.get(), topic, command, null, advisoryMessage);
+    }
+
+    private void fireAdvisory(ConnectionContext context, ActiveMQTopic topic, Command command,
+            ConsumerId targetConsumerId, ActiveMQMessage advisoryMessage) throws Exception {
         //set properties
         advisoryMessage.setStringProperty(AdvisorySupport.MSG_PROPERTY_ORIGIN_BROKER_NAME, getBrokerName());
         String id = getBrokerId() != null ? getBrokerId().getValue() : "NOT_SET";
@@ -927,17 +934,11 @@ public class AdvisoryBroker extends BrokerFilter {
         advisoryMessage.setDestination(topic);
         advisoryMessage.setResponseRequired(false);
         advisoryMessage.setProducerId(advisoryProducerId);
-        boolean originalFlowControl = context.isProducerFlowControl();
-        final ProducerBrokerExchange producerExchange = new ProducerBrokerExchange();
-        producerExchange.setConnectionContext(context);
-        producerExchange.setMutable(true);
-        producerExchange.setProducerState(new ProducerState(new ProducerInfo()));
-        try {
-            context.setProducerFlowControl(false);
-            next.send(producerExchange, advisoryMessage);
-        } finally {
-            context.setProducerFlowControl(originalFlowControl);
-        }
+
+        // The advisory messages are generated the broker itself, so this send will
+        // publish the advisory message using the Broker ConnectionContext so there will
+        // be admin permissions granted.
+        next.send(newAdvisoryProducerExchange(), advisoryMessage);
     }
 
     public Map<ConnectionId, ConnectionInfo> getAdvisoryConnections() {
@@ -965,7 +966,7 @@ public class AdvisoryBroker extends BrokerFilter {
         return virtualDestinationConsumers;
     }
 
-    private class VirtualConsumerPair {
+    protected class VirtualConsumerPair {
         private final VirtualDestination virtualDestination;
 
         //destination that matches this virtualDestination as part target
@@ -1030,4 +1031,50 @@ public class AdvisoryBroker extends BrokerFilter {
             return AdvisoryBroker.this;
         }
     }
+
+    protected ProducerBrokerExchange newAdvisoryProducerExchange() {
+        final ProducerBrokerExchange producerExchange = new ProducerBrokerExchange();
+        producerExchange.setConnectionContext(Objects.requireNonNull(advisoryConnectionContext.get(),
+                "Advisory ConnectionContext must not be null"));
+        producerExchange.setMutable(true);
+        producerExchange.setProducerState(new ProducerState(new ProducerInfo()));
+        return producerExchange;
+    }
+
+    // Lazy load becuase we need to call getBrokerService().getAdminConnectionContext()
+    // after the constructor finishes to allow the Broker chain to finish initializing
+    // to prevent a stack overflow. Uses double-checked locking abstracted away
+    // to share the advisory admin context to load on demand.
+    protected class AdvisoryConnContextSupplier implements Supplier<ConnectionContext> {
+
+        private volatile ConnectionContext advisoryContext;
+
+        @Override
+        public ConnectionContext get() {
+            ConnectionContext result = advisoryContext;
+
+            if (result == null) {
+                synchronized (this) {
+                    result = advisoryContext;
+                    if (result == null) {
+                        try {
+                            // Copy so we can set flow control false
+                            advisoryContext = result =
+                                    getBrokerService().getAdminConnectionContext().copy();
+                            // We never want to use flow control for advisories
+                            result.setProducerFlowControl(false);
+                        } catch (Exception e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+                }
+            }
+            return result;
+        }
+
+        public void reset() {
+            this.advisoryContext = null;
+        }
+    }
+
 }
