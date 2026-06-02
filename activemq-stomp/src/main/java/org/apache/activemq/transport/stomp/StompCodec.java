@@ -19,10 +19,9 @@ package org.apache.activemq.transport.stomp;
 import java.io.ByteArrayInputStream;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.Objects;
 
 import org.apache.activemq.transport.tcp.TcpTransport;
 import org.apache.activemq.util.ByteArrayOutputStream;
@@ -30,24 +29,22 @@ import org.apache.activemq.util.DataByteArrayInputStream;
 
 public class StompCodec {
 
-    final static byte[] crlfcrlf = new byte[]{'\r','\n','\r','\n'};
-    TcpTransport transport;
-    StompWireFormat wireFormat;
+    private final static byte[] crlfcrlf = new byte[]{'\r','\n','\r','\n'};
+    private final TcpTransport transport;
+    private final StompWireFormat wireFormat;
 
-    AtomicLong frameSize = new AtomicLong(); 
-    ByteArrayOutputStream currentCommand = new ByteArrayOutputStream();
-    boolean processedHeaders = false;
-    String action;
-    HashMap<String, String> headers;
-    int contentLength = -1;
-    int readLength = 0;
-    int previousByte = -1;
-    boolean awaitingCommandStart = true;
-    String version = Stomp.DEFAULT_VERSION;
+    private final ByteArrayOutputStream currentCommand = new ByteArrayOutputStream();
+    private boolean processedHeaders = false;
+    private String action;
+    private Map<String, String> headers;
+    private int contentLength = -1;
+    private int readLength = 0;
+    private int previousByte = -1;
+    private boolean awaitingCommandStart = true;
 
     public StompCodec(TcpTransport transport) {
-        this.transport = transport;
-        this.wireFormat = (StompWireFormat) transport.getWireFormat();
+        this.transport = Objects.requireNonNull(transport);
+        this.wireFormat = (StompWireFormat) Objects.requireNonNull(transport.getWireFormat());
     }
 
     public void parse(ByteArrayInputStream input, int readSize) throws Exception {
@@ -75,12 +72,13 @@ public class StompCodec {
                    DataByteArrayInputStream data = new DataByteArrayInputStream(currentCommand.toByteArray());
 
                    try {
-                       action = wireFormat.parseAction(data, frameSize);
-                       headers = wireFormat.parseHeaders(data, frameSize);
+                       action = wireFormat.parseAction(data);
+                       wireFormat.validateAction(action);
+                       headers = wireFormat.parseHeaders(data);
                        
                        String contentLengthHeader = headers.get(Stomp.Headers.CONTENT_LENGTH);
                        if ((action.equals(Stomp.Commands.SEND) || action.equals(Stomp.Responses.MESSAGE)) && contentLengthHeader != null) {
-                           contentLength = wireFormat.parseContentLength(contentLengthHeader, frameSize);
+                           contentLength = wireFormat.parseContentLength(contentLengthHeader);
                        } else {
                            contentLength = -1;
                        }
@@ -106,7 +104,7 @@ public class StompCodec {
                            transport.doConsume(errorFrame);
                            return;
                        }
-                       if (frameSize.incrementAndGet() > wireFormat.getMaxFrameSize()) {
+                       if (wireFormat.incrementAndGetFrameSize() > wireFormat.getMaxFrameSize()) {
                            StompFrameError errorFrame = new StompFrameError(new ProtocolException("The maximum frame size was exceeded", true));
                            errorFrame.setAction(this.action);
                            transport.doConsume(errorFrame);
@@ -135,7 +133,7 @@ public class StompCodec {
         awaitingCommandStart = true;
         currentCommand.reset();
         contentLength = -1;
-        frameSize.set(0);
+        wireFormat.resetFrame();
     }
 
     public static String detectVersion(Map<String, String> headers) throws ProtocolException {
