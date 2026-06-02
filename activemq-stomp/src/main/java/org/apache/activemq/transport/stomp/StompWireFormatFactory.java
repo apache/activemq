@@ -16,7 +16,6 @@
  */
 package org.apache.activemq.transport.stomp;
 
-import org.apache.activemq.wireformat.WireFormat;
 import org.apache.activemq.wireformat.WireFormatFactory;
 
 /**
@@ -26,13 +25,15 @@ public class StompWireFormatFactory implements WireFormatFactory {
 
     private int maxDataLength = StompWireFormat.MAX_DATA_LENGTH;
     private long maxFrameSize = StompWireFormat.DEFAULT_MAX_FRAME_SIZE;
+    private boolean serverMode = StompWireFormat.DEFAULT_SERVER_MODE;
 
     @Override
-    public WireFormat createWireFormat() {
+    public StompWireFormat createWireFormat() {
         StompWireFormat wireFormat = new StompWireFormat();
 
         wireFormat.setMaxDataLength(getMaxDataLength());
         wireFormat.setMaxFrameSize(getMaxFrameSize());
+        wireFormat.setServerMode(isServerMode());
 
         return wireFormat;
     }
@@ -51,5 +52,13 @@ public class StompWireFormatFactory implements WireFormatFactory {
 
     public void setMaxFrameSize(long maxFrameSize) {
         this.maxFrameSize = maxFrameSize;
+    }
+
+    public boolean isServerMode() {
+        return serverMode;
+    }
+
+    public void setServerMode(boolean serverMode) {
+        this.serverMode = serverMode;
     }
 }
