@@ -2667,7 +2667,8 @@ public class StompTest extends StompTestSupport {
             StompFrame message = stompConnection.receive();
             assertEquals(Responses.ERROR, message.getAction());
             assertTrue(message.getBody().contains(
-                    "Invalid frame received before CONNECT or STOMP frame: SEND"));
+                    "StompWireFormat is configured for 'server' mode and received an"
+                            + " unexpected frame before CONNECT or STOMP frame: SEND"));
             // make sure the connection was closed by the server
             assertConnectionClosed(5000);
         }
@@ -2715,7 +2716,7 @@ public class StompTest extends StompTestSupport {
         stompConnection.sendFrame(frame);
         StompFrame message = stompConnection.receive();
         assertEquals(Responses.ERROR, message.getAction());
-        assertTrue(message.getBody().contains("Duplicate CONNECT or STOMP packet received"));
+        assertTrue(message.getBody().contains("duplicate CONNECT or STOMP frame"));
 
         // make sure the connection was closed by the server
         assertConnectionClosed(5000);
@@ -2734,7 +2735,8 @@ public class StompTest extends StompTestSupport {
         stompConnection.sendFrame(frame);
         StompFrame message = stompConnection.receive();
         assertEquals(Responses.ERROR, message.getAction());
-        assertTrue(message.getBody().contains("Invalid response frame received from Client: RECEIPT"));
+        assertTrue(message.getBody().contains("StompWireFormat is configured for 'server' mode and received a"
+                + " frame that is only expected when configured for 'client' mode: RECEIPT"));
 
         // make sure the connection was closed by the server
         assertConnectionClosed(5000);

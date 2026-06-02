@@ -132,7 +132,8 @@ public class StompWSTransportTest extends WSTransportTestSupport {
         String incoming = wsStompConnection.receive(5, TimeUnit.SECONDS);
         assertNotNull(incoming);
         assertTrue(incoming.startsWith("ERROR"));
-        assertTrue(incoming.contains("Invalid frame received before CONNECT or STOMP frame: SEND"));
+        assertTrue(incoming.contains("StompWireFormat is configured for 'server' mode and received an"
+                + " unexpected frame before CONNECT or STOMP frame: SEND"));
 
         assertTrue("Connection should close", Wait.waitFor(
                 (Condition) () -> wsStompConnection.isNotConnected()));
@@ -188,7 +189,7 @@ public class StompWSTransportTest extends WSTransportTestSupport {
         incoming = wsStompConnection.receive(5, TimeUnit.SECONDS);
         assertNotNull(incoming);
         assertTrue(incoming.startsWith("ERROR"));
-        assertTrue(incoming.contains("Duplicate CONNECT or STOMP packet received"));
+        assertTrue(incoming.contains("duplicate CONNECT or STOMP frame"));
 
         assertTrue("Connection should close", Wait.waitFor(
                 (Condition) () -> wsStompConnection.isNotConnected()));
@@ -215,7 +216,8 @@ public class StompWSTransportTest extends WSTransportTestSupport {
         incoming = wsStompConnection.receive(5, TimeUnit.SECONDS);
         assertNotNull(incoming);
         assertTrue(incoming.startsWith("ERROR"));
-        assertTrue(incoming.contains("Invalid response frame received from Client: RECEIPT"));
+        assertTrue(incoming.contains("StompWireFormat is configured for 'server' mode and received a"
+                + " frame that is only expected when configured for 'client' mode: RECEIPT"));
 
         // make sure the connection was closed by the server
         assertTrue("Connection should close", Wait.waitFor(
