@@ -104,7 +104,7 @@
                         <authorizationEntries>
                             <authorizationEntry queue=">" read="admins" write="admins" admin="admins" />
                             <authorizationEntry topic=">" read="admins" write="admins" admin="admins" />
-                            <authorizationEntry topic="ActiveMQ.Advisory.>" read="admins" write="admins" admin="admins,users" />
+                            <authorizationEntry topic="ActiveMQ.Advisory.>" read="admins" write="admins" admin="admins" />
                             <authorizationEntry topic="ActiveMQ.Advisory.TempQueue" read="users,admins" write="admins" admin="admins"/>
                             <authorizationEntry topic="ActiveMQ.Advisory.TempTopic" read="users,admins" write="admins" admin="admins"/>
                         </authorizationEntries>
