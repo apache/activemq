@@ -41,7 +41,12 @@
              <authorizationEntry queue="&gt;" read="admins" write="admins" admin="admins"/>
              <authorizationEntry topic="&gt;" read="admins" write="admins" admin="admins"/>
              <authorizationEntry queue="GuestQueue" read="admins" write="admins, guests" admin="admins"/>
-             <authorizationEntry topic="ActiveMQ.Advisory.&gt;" read="guests" write="guests" admin="guests"/>
+              <!-- Grant only admins the ability to create/delete advisory destinations -->
+              <authorizationEntry topic="ActiveMQ.Advisory.&gt;" read="admins" write="admins" admin="admins"/>
+
+              <!-- All users need read access to temporary destination advisories -->
+              <authorizationEntry topic="ActiveMQ.Advisory.TempQueue" read="*" write="admin" admin="admin"/>
+              <authorizationEntry topic="ActiveMQ.Advisory.TempTopic" read="*" write="admin" admin="admin"/>
             </authorizationEntries>    
           </authorizationMap>
         </map>
