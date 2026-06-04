@@ -27,6 +27,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import java.util.function.Supplier;
@@ -80,7 +81,7 @@ public class AdvisoryBroker extends BrokerFilter {
     private static final Logger LOG = LoggerFactory.getLogger(AdvisoryBroker.class);
     private static final IdGenerator ID_GENERATOR = new IdGenerator();
 
-    protected final AdvisoryConnContextSupplier advisoryConnectionContext = new AdvisoryConnContextSupplier();
+    protected final AtomicReference<ConnectionContext> advisoryConnectionContext = new AtomicReference<>();
     protected final ConcurrentMap<ConnectionId, ConnectionInfo> connections = new ConcurrentHashMap<ConnectionId, ConnectionInfo>();
 
     private final ReentrantReadWriteLock consumersLock = new ReentrantReadWriteLock();
@@ -117,9 +118,30 @@ public class AdvisoryBroker extends BrokerFilter {
     }
 
     @Override
+    public void setAdminConnectionContext(ConnectionContext adminConnectionContext) {
+        super.setAdminConnectionContext(adminConnectionContext);
+        // Create a copy of the adminConnection context and set flow control false
+        // This will be used to publish all advisories. This will be called
+        // during broker construction and before the first advisories are sent.
+        ConnectionContext connectionContext = adminConnectionContext.copy();
+        connectionContext.setProducerFlowControl(false);
+        this.advisoryConnectionContext.set(connectionContext);
+    }
+
+    @Override
+    public void start() throws Exception {
+        super.start();
+        // Sanity check to make sure we setAdminConnectionContext() was called and
+        // we initialized the admin context
+        if (advisoryConnectionContext.get() == null) {
+            throw new IllegalArgumentException("AdminConnectionContext was not initialized");
+        }
+    }
+
+    @Override
     public void stop() throws Exception {
         super.stop();
-        this.advisoryConnectionContext.reset();
+        this.advisoryConnectionContext.set(null);
     }
 
     @Override
@@ -1079,42 +1101,6 @@ public class AdvisoryBroker extends BrokerFilter {
         producerExchange.setMutable(true);
         producerExchange.setProducerState(new ProducerState(new ProducerInfo()));
         return producerExchange;
-    }
-
-    // Lazy load becuase we need to call getBrokerService().getAdminConnectionContext()
-    // after the constructor finishes to allow the Broker chain to finish initializing
-    // to prevent a stack overflow. Uses double-checked locking abstracted away
-    // to share the advisory admin context to load on demand.
-    protected class AdvisoryConnContextSupplier implements Supplier<ConnectionContext> {
-
-        private volatile ConnectionContext advisoryContext;
-
-        @Override
-        public ConnectionContext get() {
-            ConnectionContext result = advisoryContext;
-
-            if (result == null) {
-                synchronized (this) {
-                    result = advisoryContext;
-                    if (result == null) {
-                        try {
-                            // Copy so we can set flow control false
-                            advisoryContext = result =
-                                    getBrokerService().getAdminConnectionContext().copy();
-                            // We never want to use flow control for advisories
-                            result.setProducerFlowControl(false);
-                        } catch (Exception e) {
-                            throw new RuntimeException(e);
-                        }
-                    }
-                }
-            }
-            return result;
-        }
-
-        public void reset() {
-            this.advisoryContext = null;
-        }
     }
 
 }

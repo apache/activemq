@@ -733,8 +733,18 @@ public class BrokerService implements Service {
         }
     }
 
+    // Ensure the broker chain is fully initialized and we create the admin connection.
+    // The admin connection is needed to create destinations and for the AdvisoryBroker
+    // before broker startup. Creating the connection will also call the
+    // setAdminConnectionContext() callback on the Broker chain. This ensures initialization
+    // is done correctly even if someone overrides getAdminConnectionContext();
+    private void initializeAdminConnection() throws Exception {
+        BrokerSupport.getConnectionContext(getBroker());
+    }
+
     private void doStartBroker() throws Exception {
         checkStartException();
+        initializeAdminConnection();
         startDestinations();
         addShutdownHook();
 
