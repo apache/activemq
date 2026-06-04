@@ -371,6 +371,14 @@ public interface Broker extends Region, Service {
     void messageDiscarded(ConnectionContext context, Subscription sub, MessageReference messageReference);
 
     /**
+     * Called when a message is processed with no consumers
+     *
+     * @param context connection context
+     * @param messageReference message reference
+     */
+    void messageNoConsumers(ConnectionContext context, MessageReference messageReference);
+
+    /**
      * Called when there is a slow consumer
      * @param context
      * @param destination

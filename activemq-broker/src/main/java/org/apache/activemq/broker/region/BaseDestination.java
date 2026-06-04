@@ -22,7 +22,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.jms.ResourceAllocationException;
 
-import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
@@ -643,50 +642,11 @@ public abstract class BaseDestination implements Destination {
      * Provides a hook to allow messages with no consumer to be processed in
      * some way - such as to send to a dead letter queue or something..
      */
-    protected void onMessageWithNoConsumers(ConnectionContext context, Message msg) throws Exception {
-        if (!msg.isPersistent()) {
-            if (isSendAdvisoryIfNoConsumers()) {
-                // allow messages with no consumers to be dispatched to a dead
-                // letter queue
-                if (destination.isQueue() || !AdvisorySupport.isAdvisoryTopic(destination)) {
-
-                    Message message = msg.copy();
-                    // The original destination and transaction id do not get
-                    // filled when the message is first sent,
-                    // it is only populated if the message is routed to another
-                    // destination like the DLQ
-                    if (message.getOriginalDestination() != null) {
-                        message.setOriginalDestination(message.getDestination());
-                    }
-                    if (message.getOriginalTransactionId() != null) {
-                        message.setOriginalTransactionId(message.getTransactionId());
-                    }
-
-                    ActiveMQTopic advisoryTopic;
-                    if (destination.isQueue()) {
-                        advisoryTopic = AdvisorySupport.getNoQueueConsumersAdvisoryTopic(destination);
-                    } else {
-                        advisoryTopic = AdvisorySupport.getNoTopicConsumersAdvisoryTopic(destination);
-                    }
-                    message.setDestination(advisoryTopic);
-                    message.setTransactionId(null);
-
-                    // Disable flow control for this since since we don't want
-                    // to block.
-                    boolean originalFlowControl = context.isProducerFlowControl();
-                    try {
-                        context.setProducerFlowControl(false);
-                        ProducerBrokerExchange producerExchange = new ProducerBrokerExchange();
-                        producerExchange.setMutable(false);
-                        producerExchange.setConnectionContext(context);
-                        producerExchange.setProducerState(new ProducerState(new ProducerInfo()));
-                        context.getBroker().send(producerExchange, message);
-                    } finally {
-                        context.setProducerFlowControl(originalFlowControl);
-                    }
-
-                }
-            }
+    protected void onMessageWithNoConsumers(ConnectionContext context, Message msg) {
+        if (!msg.isPersistent() && isSendAdvisoryIfNoConsumers()) {
+            // allow messages with no consumers to be dispatched to a dead
+            // letter queue
+            broker.messageNoConsumers(context, msg);
         }
     }
 

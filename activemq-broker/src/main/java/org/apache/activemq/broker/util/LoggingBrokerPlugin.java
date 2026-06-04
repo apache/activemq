@@ -560,6 +560,15 @@ public class LoggingBrokerPlugin extends BrokerPluginSupport {
     }
 
     @Override
+    public void messageNoConsumers(ConnectionContext context, MessageReference messageReference) {
+        if (isLogAll() || isLogInternalEvents()) {
+            String msg = messageReference.getMessage().toString();
+            LOG.info("Message without consumers: {}", msg);
+        }
+        super.messageNoConsumers(context, messageReference);
+    }
+
+    @Override
     public void slowConsumer(ConnectionContext context, Destination destination, Subscription subs) {
         if (isLogAll() || isLogConsumerEvents() || isLogInternalEvents()) {
             LOG.info("Detected slow consumer on {}", destination.getName());

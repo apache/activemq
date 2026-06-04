@@ -74,17 +74,24 @@
                  entirely; specify only packages you explicitly trust).
 
             NOTE ABOUT ADVISORY TOPICS:
-              1. All users need permission to create ActiveMQ.Advisory destinations,
-                 which is given by the "admin" acl. However, normal users should
-                 generally NOT be given access to read/write for advisories (except temp)
-                 as those messages are meant for admin users.
-              2. A notable exception to number 1 is regular users should be given access to
+              1. Normal (non-admin) users should generally NOT be given access to
+                 create/delete/read/write for advisories as those messages are meant for admin users.
+              2. A notable exception to number 1 is normal users should be given read access to
                  advisories for temporary destinations because ActiveMQConnection uses those advisories.
+                 Temp dest advisory topics are: ActiveMQ.Advisory.TempQueue and ActiveMQ.Advisory.TempTopic
               3. In addition, dynamic network connectors use advisories to determine
                  consumer demand so the users that will be used to create bridges need access
-                 consumer and virtual destination consumer advisories.
+                 consumer and virtual destination consumer advisories. Example, assuming bridge-user
+                 is the user that is used for the network connection:
 
-            For more information, see:
+                 <authorizationEntries>
+                     ......
+                     <authorizationEntry topic="ActiveMQ.Advisory.Consumer.>" read="bridge-user,admin" write="bridge-user,admin" admin="bridge-user,admin"/>
+                     <authorizationEntry topic="ActiveMQ.Advisory.VirtualDestination.Consumer.>" read="bridge-user,admin" write="bridge-user" admin="bridge-user,admin"/>
+                     ......
+                  </authorizationEntries>
+
+      For more information, see:
               https://activemq.apache.org/security
         -->
         <!--
@@ -97,9 +104,9 @@
                         <authorizationEntries>
                             <authorizationEntry queue=">" read="admins" write="admins" admin="admins" />
                             <authorizationEntry topic=">" read="admins" write="admins" admin="admins" />
-                            <authorizationEntry topic="ActiveMQ.Advisory.>" read="admins" write="admins" admin="admins,users" />
-                            <authorizationEntry topic="ActiveMQ.Advisory.TempQueue" read="admins,users" write="admins,users" admin="admins,users"/>
-                            <authorizationEntry topic="ActiveMQ.Advisory.TempTopic" read="admins,users" write="admins,users" admin="admins,users"/>
+                            <authorizationEntry topic="ActiveMQ.Advisory.>" read="admins" write="admins" admin="admins" />
+                            <authorizationEntry topic="ActiveMQ.Advisory.TempQueue" read="users,admins" write="admins" admin="admins"/>
+                            <authorizationEntry topic="ActiveMQ.Advisory.TempTopic" read="users,admins" write="admins" admin="admins"/>
                         </authorizationEntries>
                     </authorizationMap>
                 </map>
