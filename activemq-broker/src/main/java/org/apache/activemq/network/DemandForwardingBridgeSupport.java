@@ -1152,18 +1152,10 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                 advisoryBroker = (AdvisoryBroker) brokerService.getBroker().getAdaptor(AdvisoryBroker.class);
 
                 if (advisoryBroker != null) {
-                    ConnectionContext context = new ConnectionContext();
-                    context.setSecurityContext(SecurityContext.BROKER_SECURITY_CONTEXT);
-                    context.setBroker(brokerService.getBroker());
-
-                    ActiveMQMessage advisoryMessage = new ActiveMQMessage();
-                    advisoryMessage.setStringProperty("cause", error.getLocalizedMessage());
-                    advisoryBroker.fireAdvisory(context, AdvisorySupport.getNetworkBridgeForwardFailureAdvisoryTopic(), messageDispatch.getMessage(), null,
-                            advisoryMessage);
-
+                    advisoryBroker.fireFailedForwardAdvisory(messageDispatch.getMessage(), error);
                 }
             } catch (Exception e) {
-                LOG.warn("failed to fire forward failure advisory, cause: {}", e);
+                LOG.warn("failed to fire forward failure advisory, cause: {}", e.getMessage());
                 LOG.debug("detail", e);
             }
         }
