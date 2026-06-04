@@ -74,14 +74,27 @@
          <!-- set authenticate=false to disable login -->
         <property name="authenticate" value="true" />
     </bean>
+    <!--
+        Catch-all mapping: any request not matched by a more specific
+        constraint below requires authentication as a user or admin.
+    -->
     <bean id="securityConstraintMapping" class="org.eclipse.jetty.security.ConstraintMapping">
         <property name="constraint" ref="securityConstraint" />
         <property name="pathSpec" value="/" />
     </bean>
+    <!--
+        Web console (/admin/*) is restricted to the admins role. This covers
+        the full console UI, not just the *.action endpoints, so read-only
+        pages (queue listings, message browsing, etc.) also require admin.
+    -->
     <bean id="adminSecurityConstraintMapping" class="org.eclipse.jetty.security.ConstraintMapping">
         <property name="constraint" ref="adminSecurityConstraint" />
-        <property name="pathSpec" value="*.action" />
+        <property name="pathSpec" value="/admin/*" />
     </bean>
+    <!--
+        Jolokia JMX bridge exposes broker management operations over HTTP;
+        restrict to the admins role to prevent privilege escalation via JMX.
+    -->
     <bean id="jolokiaSecurityConstraintMapping" class="org.eclipse.jetty.security.ConstraintMapping">
         <property name="constraint" ref="adminSecurityConstraint" />
         <property name="pathSpec" value="/api/jolokia/*" />
@@ -140,16 +153,6 @@
                     <property name="pattern" value="/admin/xml/*"/>
                     <property name="name" value="Content-Security-Policy"/>
                     <property name="value" value="style-src-elem 'self' 'unsafe-inline'; style-src 'self'; img-src 'self' data:; script-src-elem 'self'; default-src 'none'; object-src 'none'; frame-ancestors 'none'; base-uri 'none';" />
-                </bean>
-                <bean id="header" class="org.eclipse.jetty.rewrite.handler.HeaderPatternRule">
-                    <property name="pattern" value="*"/>
-                    <property name="name" value="Referrer-Policy"/>
-                    <property name="value" value="no-referrer"/>
-                </bean>
-                <bean id="header" class="org.eclipse.jetty.rewrite.handler.HeaderPatternRule">
-                    <property name="pattern" value="*"/>
-                    <property name="name" value="Permissions-Policy"/>
-                    <property name="value" value="accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()"/>
                 </bean>
                 <!-- Uncomment when serving the console over HTTPS only -->
                 <!--
