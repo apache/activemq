@@ -362,11 +362,6 @@ public class BrokerFilter implements Broker {
     }
 
     @Override
-    public void messageNoConsumers(ConnectionContext context, MessageReference messageReference) {
-        getNext().messageNoConsumers(context, messageReference);
-    }
-
-    @Override
     public void slowConsumer(ConnectionContext context, Destination destination,Subscription subs) {
         getNext().slowConsumer(context, destination,subs);
     }
