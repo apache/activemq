@@ -698,7 +698,6 @@ public abstract class BaseDestination implements Destination {
         return producerExchange;
     }
 
-
     @Override
     public void processDispatchNotification(MessageDispatchNotification messageDispatchNotification) throws Exception {
     }
