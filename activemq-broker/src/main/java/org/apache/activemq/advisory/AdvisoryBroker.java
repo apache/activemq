@@ -570,6 +570,46 @@ public class AdvisoryBroker extends BrokerFilter {
     }
 
     @Override
+    public void messageNoConsumers(ConnectionContext context, MessageReference messageReference) {
+        super.messageNoConsumers(context, messageReference);
+        try {
+            if (!messageReference.isAdvisory()) {
+                // allow messages with no consumers to be dispatched to a dead
+                // letter queue
+                BaseDestination baseDestination = (BaseDestination) messageReference.getMessage().getRegionDestination();
+                ActiveMQDestination destination = baseDestination.getActiveMQDestination();
+                if (destination.isQueue() || !AdvisorySupport.isAdvisoryTopic(destination)) {
+
+                    Message message = messageReference.getMessage().copy();
+                    // The original destination and transaction id do not get
+                    // filled when the message is first sent,
+                    // it is only populated if the message is routed to another
+                    // destination like the DLQ
+                    if (message.getOriginalDestination() != null) {
+                        message.setOriginalDestination(message.getDestination());
+                    }
+                    if (message.getOriginalTransactionId() != null) {
+                        message.setOriginalTransactionId(message.getTransactionId());
+                    }
+
+                    ActiveMQTopic advisoryTopic;
+                    if (destination.isQueue()) {
+                        advisoryTopic = AdvisorySupport.getNoQueueConsumersAdvisoryTopic(destination);
+                    } else {
+                        advisoryTopic = AdvisorySupport.getNoTopicConsumersAdvisoryTopic(destination);
+                    }
+                    message.setDestination(advisoryTopic);
+                    message.setTransactionId(null);
+
+                    context.getBroker().send(newAdvisoryProducerExchange(), message);
+                }
+            }
+        } catch (Exception e) {
+            handleFireFailure("discarded", e);
+        }
+    }
+
+    @Override
     public void slowConsumer(ConnectionContext context, Destination destination, Subscription subs) {
         super.slowConsumer(context, destination, subs);
         try {
