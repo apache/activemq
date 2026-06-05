@@ -43,8 +43,8 @@ public class SecureDLQTest extends DeadLetterTestSupport {
         writeAccess.put(new ActiveMQQueue("TEST"), USERS);
         writeAccess.put(new ActiveMQQueue("ActiveMQ.DLQ"), ADMINS);
 
-        readAccess.put(new ActiveMQTopic("ActiveMQ.Advisory.>"), WILDCARD);
-        writeAccess.put(new ActiveMQTopic("ActiveMQ.Advisory.>"), WILDCARD);
+        readAccess.put(new ActiveMQTopic("ActiveMQ.Advisory.TempQueue"), WILDCARD);
+        readAccess.put(new ActiveMQTopic("ActiveMQ.Advisory.TempTopic"), WILDCARD);
 
         DestinationMap adminAccess = new DefaultAuthorizationMap();
         adminAccess.put(new ActiveMQQueue("TEST"), ADMINS);

@@ -731,8 +731,18 @@ public class BrokerService implements Service {
         }
     }
 
+    // Ensure the broker chain is fully initialized and we create the admin connection.
+    // The admin connection is needed to create destinations and for the AdvisoryBroker
+    // before broker startup. Creating the connection will also call the
+    // setAdminConnectionContext() callback on the Broker chain. This ensures initialization
+    // is done correctly even if someone overrides getAdminConnectionContext();
+    private void initializeAdminConnection() throws Exception {
+        BrokerSupport.getConnectionContext(getBroker());
+    }
+
     private void doStartBroker() throws Exception {
         checkStartException();
+        initializeAdminConnection();
         startDestinations();
         addShutdownHook();
 
@@ -2435,7 +2445,7 @@ public class BrokerService implements Service {
     protected Broker addInterceptors(Broker broker) throws Exception {
         if (isAdvisorySupport()) {
             // AMQ-9187 - the AdvisoryBroker must be after the SchedulerBroker
-            broker = new AdvisoryBroker(broker);
+            broker = createAdvisoryBroker(broker);
         }
         if (isSchedulerSupport()) {
             SchedulerBroker sb = new SchedulerBroker(this, broker, getJobSchedulerStore());
@@ -2501,6 +2511,10 @@ public class BrokerService implements Service {
         } else {
             return new MemoryPersistenceAdapter();
         }
+    }
+
+    protected AdvisoryBroker createAdvisoryBroker(Broker broker) {
+        return new AdvisoryBroker(broker);
     }
 
     protected ObjectName createBrokerObjectName() throws MalformedObjectNameException  {

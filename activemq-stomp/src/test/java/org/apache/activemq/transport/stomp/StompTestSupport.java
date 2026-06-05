@@ -292,10 +292,16 @@ public class StompTestSupport {
         entry.setAdmin("guests,users");
         authorizationEntries.add(entry);
         entry = new AuthorizationEntry();
-        entry.setTopic("ActiveMQ.Advisory.>");
+        entry.setTopic("ActiveMQ.Advisory.TempQueue");
         entry.setRead("guests,users");
-        entry.setWrite("guests,users");
-        entry.setAdmin("guests,users");
+        entry.setWrite("admins");
+        entry.setAdmin("admins");
+        authorizationEntries.add(entry);
+        entry = new AuthorizationEntry();
+        entry.setTopic("ActiveMQ.Advisory.TempTopic");
+        entry.setRead("guests,users");
+        entry.setWrite("admins");
+        entry.setAdmin("admins");
         authorizationEntries.add(entry);
 
         TempDestinationAuthorizationEntry tempEntry = new TempDestinationAuthorizationEntry();
