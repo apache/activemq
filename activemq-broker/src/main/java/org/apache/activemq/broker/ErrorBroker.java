@@ -359,6 +359,11 @@ public class ErrorBroker implements Broker {
     }
 
     @Override
+    public void messageNoConsumers(ConnectionContext context, MessageReference messageReference) {
+        throw new BrokerStoppedException(this.message);
+    }
+
+    @Override
     public void slowConsumer(ConnectionContext context, Destination destination,Subscription subs) {
         throw new BrokerStoppedException(this.message);
     }

@@ -23,9 +23,11 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.activemq.broker.Broker;
@@ -61,7 +63,6 @@ import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.command.RemoveSubscriptionInfo;
 import org.apache.activemq.command.SessionId;
 import org.apache.activemq.filter.DestinationPath;
-import org.apache.activemq.security.SecurityContext;
 import org.apache.activemq.state.ProducerState;
 import org.apache.activemq.usage.Usage;
 import org.apache.activemq.util.IdGenerator;
@@ -79,6 +80,7 @@ public class AdvisoryBroker extends BrokerFilter {
     private static final Logger LOG = LoggerFactory.getLogger(AdvisoryBroker.class);
     private static final IdGenerator ID_GENERATOR = new IdGenerator();
 
+    protected final AtomicReference<ConnectionContext> advisoryConnectionContext = new AtomicReference<>();
     protected final ConcurrentMap<ConnectionId, ConnectionInfo> connections = new ConcurrentHashMap<ConnectionId, ConnectionInfo>();
 
     private final ReentrantReadWriteLock consumersLock = new ReentrantReadWriteLock();
@@ -107,11 +109,38 @@ public class AdvisoryBroker extends BrokerFilter {
 
     private final LongSequenceGenerator messageIdGenerator = new LongSequenceGenerator();
 
-    private VirtualDestinationMatcher virtualDestinationMatcher = new DestinationFilterVirtualDestinationMatcher();
+    private final VirtualDestinationMatcher virtualDestinationMatcher = new DestinationFilterVirtualDestinationMatcher();
 
     public AdvisoryBroker(Broker next) {
         super(next);
         advisoryProducerId.setConnectionId(ID_GENERATOR.generateId());
+    }
+
+    @Override
+    public void setAdminConnectionContext(ConnectionContext adminConnectionContext) {
+        super.setAdminConnectionContext(adminConnectionContext);
+        // Create a copy of the adminConnection context and set flow control false
+        // This will be used to publish all advisories. This will be called
+        // during broker construction and before the first advisories are sent.
+        ConnectionContext connectionContext = adminConnectionContext.copy();
+        connectionContext.setProducerFlowControl(false);
+        this.advisoryConnectionContext.set(connectionContext);
+    }
+
+    @Override
+    public void start() throws Exception {
+        super.start();
+        // Sanity check to make sure we setAdminConnectionContext() was called and
+        // we initialized the admin context
+        if (advisoryConnectionContext.get() == null) {
+            throw new IllegalArgumentException("AdminConnectionContext was not initialized");
+        }
+    }
+
+    @Override
+    public void stop() throws Exception {
+        super.stop();
+        this.advisoryConnectionContext.set(null);
     }
 
     @Override
@@ -539,6 +568,46 @@ public class AdvisoryBroker extends BrokerFilter {
     }
 
     @Override
+    public void messageNoConsumers(ConnectionContext context, MessageReference messageReference) {
+        super.messageNoConsumers(context, messageReference);
+        try {
+            if (!messageReference.isAdvisory()) {
+                // allow messages with no consumers to be dispatched to a dead
+                // letter queue
+                BaseDestination baseDestination = (BaseDestination) messageReference.getMessage().getRegionDestination();
+                ActiveMQDestination destination = baseDestination.getActiveMQDestination();
+                if (destination.isQueue() || !AdvisorySupport.isAdvisoryTopic(destination)) {
+
+                    Message message = messageReference.getMessage().copy();
+                    // The original destination and transaction id do not get
+                    // filled when the message is first sent,
+                    // it is only populated if the message is routed to another
+                    // destination like the DLQ
+                    if (message.getOriginalDestination() != null) {
+                        message.setOriginalDestination(message.getDestination());
+                    }
+                    if (message.getOriginalTransactionId() != null) {
+                        message.setOriginalTransactionId(message.getTransactionId());
+                    }
+
+                    ActiveMQTopic advisoryTopic;
+                    if (destination.isQueue()) {
+                        advisoryTopic = AdvisorySupport.getNoQueueConsumersAdvisoryTopic(destination);
+                    } else {
+                        advisoryTopic = AdvisorySupport.getNoTopicConsumersAdvisoryTopic(destination);
+                    }
+                    message.setDestination(advisoryTopic);
+                    message.setTransactionId(null);
+
+                    context.getBroker().send(newAdvisoryProducerExchange(), message);
+                }
+            }
+        } catch (Exception e) {
+            handleFireFailure("discarded", e);
+        }
+    }
+
+    @Override
     public void slowConsumer(ConnectionContext context, Destination destination, Subscription subs) {
         super.slowConsumer(context, destination, subs);
         try {
@@ -775,10 +844,7 @@ public class AdvisoryBroker extends BrokerFilter {
         try {
             ActiveMQTopic topic = AdvisorySupport.getMasterBrokerAdvisoryTopic();
             ActiveMQMessage advisoryMessage = new ActiveMQMessage();
-            ConnectionContext context = new ConnectionContext();
-            context.setSecurityContext(SecurityContext.BROKER_SECURITY_CONTEXT);
-            context.setBroker(getBrokerService().getBroker());
-            fireAdvisory(context, topic, null, null, advisoryMessage);
+            fireAdvisory(topic, null, advisoryMessage);
         } catch (Exception e) {
             handleFireFailure("now master broker", e);
         }
@@ -817,12 +883,7 @@ public class AdvisoryBroker extends BrokerFilter {
                 advisoryMessage.setStringProperty("remoteIp", remoteIp);
                 networkBridges.putIfAbsent(brokerInfo, advisoryMessage);
 
-                ActiveMQTopic topic = AdvisorySupport.getNetworkBridgeAdvisoryTopic();
-
-                ConnectionContext context = new ConnectionContext();
-                context.setSecurityContext(SecurityContext.BROKER_SECURITY_CONTEXT);
-                context.setBroker(getBrokerService().getBroker());
-                fireAdvisory(context, topic, brokerInfo, null, advisoryMessage);
+                fireAdvisory(AdvisorySupport.getNetworkBridgeAdvisoryTopic(), brokerInfo, advisoryMessage);
             }
         } catch (Exception e) {
             handleFireFailure("network bridge started", e);
@@ -837,12 +898,7 @@ public class AdvisoryBroker extends BrokerFilter {
                 advisoryMessage.setBooleanProperty("started", false);
                 networkBridges.remove(brokerInfo);
 
-                ActiveMQTopic topic = AdvisorySupport.getNetworkBridgeAdvisoryTopic();
-
-                ConnectionContext context = new ConnectionContext();
-                context.setSecurityContext(SecurityContext.BROKER_SECURITY_CONTEXT);
-                context.setBroker(getBrokerService().getBroker());
-                fireAdvisory(context, topic, brokerInfo, null, advisoryMessage);
+                fireAdvisory(AdvisorySupport.getNetworkBridgeAdvisoryTopic(), brokerInfo, advisoryMessage);
             }
         } catch (Exception e) {
             handleFireFailure("network bridge stopped", e);
@@ -899,7 +955,19 @@ public class AdvisoryBroker extends BrokerFilter {
         fireAdvisory(context, topic, command, targetConsumerId, advisoryMessage);
     }
 
-    public void fireAdvisory(ConnectionContext context, ActiveMQTopic topic, Command command, ConsumerId targetConsumerId, ActiveMQMessage advisoryMessage) throws Exception {
+    public void fireFailedForwardAdvisory(Message message, Throwable error) throws Exception {
+        ActiveMQMessage advisoryMessage = new ActiveMQMessage();
+        advisoryMessage.setStringProperty("cause", error.getLocalizedMessage());
+
+        fireAdvisory(AdvisorySupport.getNetworkBridgeForwardFailureAdvisoryTopic(), message, advisoryMessage);
+    }
+
+    private void fireAdvisory(ActiveMQTopic topic, Command command, ActiveMQMessage advisoryMessage) throws Exception {
+        fireAdvisory(advisoryConnectionContext.get(), topic, command, null, advisoryMessage);
+    }
+
+    private void fireAdvisory(ConnectionContext context, ActiveMQTopic topic, Command command,
+            ConsumerId targetConsumerId, ActiveMQMessage advisoryMessage) throws Exception {
         //set properties
         advisoryMessage.setStringProperty(AdvisorySupport.MSG_PROPERTY_ORIGIN_BROKER_NAME, getBrokerName());
         String id = getBrokerId() != null ? getBrokerId().getValue() : "NOT_SET";
@@ -925,17 +993,11 @@ public class AdvisoryBroker extends BrokerFilter {
         advisoryMessage.setDestination(topic);
         advisoryMessage.setResponseRequired(false);
         advisoryMessage.setProducerId(advisoryProducerId);
-        boolean originalFlowControl = context.isProducerFlowControl();
-        final ProducerBrokerExchange producerExchange = new ProducerBrokerExchange();
-        producerExchange.setConnectionContext(context);
-        producerExchange.setMutable(true);
-        producerExchange.setProducerState(new ProducerState(new ProducerInfo()));
-        try {
-            context.setProducerFlowControl(false);
-            next.send(producerExchange, advisoryMessage);
-        } finally {
-            context.setProducerFlowControl(originalFlowControl);
-        }
+
+        // The advisory messages are generated the broker itself, so this send will
+        // publish the advisory message using the Broker ConnectionContext so there will
+        // be admin permissions granted.
+        next.send(newAdvisoryProducerExchange(), advisoryMessage);
     }
 
     public Map<ConnectionId, ConnectionInfo> getAdvisoryConnections() {
@@ -963,7 +1025,7 @@ public class AdvisoryBroker extends BrokerFilter {
         return virtualDestinationConsumers;
     }
 
-    private class VirtualConsumerPair {
+    protected class VirtualConsumerPair {
         private final VirtualDestination virtualDestination;
 
         //destination that matches this virtualDestination as part target
@@ -1028,4 +1090,14 @@ public class AdvisoryBroker extends BrokerFilter {
             return AdvisoryBroker.this;
         }
     }
+
+    protected ProducerBrokerExchange newAdvisoryProducerExchange() {
+        final ProducerBrokerExchange producerExchange = new ProducerBrokerExchange();
+        producerExchange.setConnectionContext(Objects.requireNonNull(advisoryConnectionContext.get(),
+                "Advisory ConnectionContext must not be null"));
+        producerExchange.setMutable(true);
+        producerExchange.setProducerState(new ProducerState(new ProducerInfo()));
+        return producerExchange;
+    }
+
 }
