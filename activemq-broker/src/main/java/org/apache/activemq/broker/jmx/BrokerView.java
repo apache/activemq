@@ -44,7 +44,7 @@ public class BrokerView implements BrokerViewMBean {
 
     private static final Logger LOG = LoggerFactory.getLogger(BrokerView.class);
 
-    public static final Set<String> DENIED_TRANSPORT_SCHEMES = Set.of("vm", "http",
+    public static final Set<String> DENIED_TRANSPORT_SCHEMES = Set.of("vm", "http", "https",
             "multicast", "zeroconf", "discovery", "fanout", "mock", "peer", "failover",
             "proxy", "reliable", "simple", "udp", "masterslave");
 
