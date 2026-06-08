@@ -35,6 +35,7 @@ import javax.naming.event.NamingEvent;
 import javax.naming.event.NamingExceptionEvent;
 import javax.naming.event.ObjectChangeListener;
 
+import org.apache.activemq.util.TransportValidationUtils;
 import org.apache.activemq.util.URISupport;
 import org.apache.activemq.util.URISupport.CompositeData;
 import org.slf4j.Logger;
@@ -307,6 +308,10 @@ public class LdapNetworkConnector extends NetworkConnector implements NamespaceC
         // want to map/manage these differently in the future
         // boolean useJMX = getBrokerService().isUseJmx();
         // getBrokerService().setUseJmx(false);
+
+        // Validate LDAP provided URI
+        TransportValidationUtils.validateAllowedUri(connectorURI);
+
         NetworkConnector connector = getBrokerService().addNetworkConnector(connectorURI);
         // getBrokerService().setUseJmx(useJMX);
 
