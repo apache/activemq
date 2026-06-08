@@ -35,6 +35,9 @@ public final class ActiveMQConnectionMetaData implements ConnectionMetaData {
     public static final String PROVIDER_NAME = "ActiveMQ";
     public static final String DEFAULT_PLATFORM_DETAILS = "Java";
     public static final String PLATFORM_DETAILS;
+    // Set the max length to 256 bytes now that we limit property value bufer sizes
+    // inside WireFormatInfo. There is really no reason to ever be larger than this
+    public static final int PLATFORM_DETAILS_MAX_LENGTH = 256;
 
     public static final ActiveMQConnectionMetaData INSTANCE = new ActiveMQConnectionMetaData();
 
@@ -157,10 +160,11 @@ public final class ActiveMQConnectionMetaData implements ConnectionMetaData {
      *
      * @return String containing the platform details
      */
-    private static String getPlatformDetails() {
-        String details = "java";
+    // Package scope for testing purposes
+    static String getPlatformDetails() {
+        String details = DEFAULT_PLATFORM_DETAILS;
         try {
-            StringBuilder platformInfo = new StringBuilder(128);
+            final StringBuilder platformInfo = new StringBuilder(128);
 
             platformInfo.append("JVM: ");
             platformInfo.append(System.getProperty("java.version"));
@@ -175,8 +179,10 @@ public final class ActiveMQConnectionMetaData implements ConnectionMetaData {
             platformInfo.append(", ");
             platformInfo.append(System.getProperty("os.arch"));
 
-            details = platformInfo.toString();
-        } catch (Throwable e) {
+            // truncate to the max allowed length if too long
+            details = platformInfo.length() > PLATFORM_DETAILS_MAX_LENGTH ?
+                    platformInfo.substring(0, PLATFORM_DETAILS_MAX_LENGTH) : platformInfo.toString();
+        } catch (Throwable ignored) {
         }
         return details;
     }
