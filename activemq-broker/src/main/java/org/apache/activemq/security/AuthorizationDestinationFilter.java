@@ -54,6 +54,7 @@ public class AuthorizationDestinationFilter extends DestinationFilter {
         }
 
         if (!securityContext.isBrokerContext() && allowedACLs != null && !securityContext.isInOneOf(allowedACLs) ) {
+            broker.logDestinationTypeHint(securityContext, destination, "read");
             throw new SecurityException("User " + securityContext.getUserName() + " is not authorized to read from: " + destination);
         }
 
