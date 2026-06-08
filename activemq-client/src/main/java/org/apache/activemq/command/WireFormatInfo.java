@@ -39,10 +39,15 @@ import org.fusesource.hawtbuf.UTF8Buffer;
 public class WireFormatInfo implements Command, MarshallAware {
 
     public static final byte DATA_STRUCTURE_TYPE = CommandTypes.WIREFORMAT_INFO;
-    private static final int MAX_PROPERTY_SIZE = 1024 * 4;
-    private static final byte MAGIC[] = new byte[] {'A', 'c', 't', 'i', 'v', 'e', 'M', 'Q'};
+    // Max number of properties allowed in the map is 64
+    static final int MAX_PROPERTY_SIZE = 64;
+    // Used to validate property values that allocate buffers, limit to 512 bytes
+    static final int MAX_PROPERTY_BUFFER_SIZE = 512;
+    // Do not allow any nested collections in properties
+    static final int MAX_PROPERTY_DEPTH = 0;
+    private static final byte[] MAGIC = new byte[] {'A', 'c', 't', 'i', 'v', 'e', 'M', 'Q'};
 
-    protected byte magic[] = MAGIC;
+    protected byte[] magic = MAGIC;
     protected int version;
     protected ByteSequence marshalledProperties;
 
@@ -136,7 +141,7 @@ public class WireFormatInfo implements Command, MarshallAware {
             if (marshalledProperties == null) {
                 return null;
             }
-            properties = unmarsallProperties(marshalledProperties);
+            properties = unmarshalProperties(marshalledProperties);
         }
         return properties.get(name);
     }
@@ -147,7 +152,7 @@ public class WireFormatInfo implements Command, MarshallAware {
             if (marshalledProperties == null) {
                 return Collections.EMPTY_MAP;
             }
-            properties = unmarsallProperties(marshalledProperties);
+            properties = unmarshalProperties(marshalledProperties);
         }
         return Collections.unmodifiableMap(properties);
     }
@@ -167,14 +172,15 @@ public class WireFormatInfo implements Command, MarshallAware {
             if (marshalledProperties == null) {
                 properties = new HashMap<String, Object>();
             } else {
-                properties = unmarsallProperties(marshalledProperties);
+                properties = unmarshalProperties(marshalledProperties);
                 marshalledProperties = null;
             }
         }
     }
 
-    private Map<String, Object> unmarsallProperties(ByteSequence marshalledProperties) throws IOException {
-        return MarshallingSupport.unmarshalPrimitiveMap(new DataInputStream(new ByteArrayInputStream(marshalledProperties)), MAX_PROPERTY_SIZE);
+    private Map<String, Object> unmarshalProperties(ByteSequence marshalledProperties) throws IOException {
+        return MarshallingSupport.unmarshalPrimitiveMap(new DataInputStream(new ByteArrayInputStream(marshalledProperties)),
+                MAX_PROPERTY_SIZE, MAX_PROPERTY_BUFFER_SIZE, MAX_PROPERTY_DEPTH);
     }
 
     @Override

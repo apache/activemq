@@ -22,7 +22,7 @@ import java.util.Set;
 
 public class TransportValidationUtils {
 
-    public static final Set<String> DENIED_TRANSPORT_SCHEMES = Set.of("vm", "http",
+    public static final Set<String> DENIED_TRANSPORT_SCHEMES = Set.of("vm", "http", "https",
             "multicast", "zeroconf", "discovery", "fanout", "mock", "peer", "failover",
             "proxy", "reliable", "simple", "udp", "masterslave");
 
