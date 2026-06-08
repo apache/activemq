@@ -42,7 +42,7 @@ public class WireFormatInfo implements Command, MarshallAware {
     // Max number of properties allowed in the map is 64
     static final int MAX_PROPERTY_SIZE = 64;
     // Used to validate property values that allocate buffers, limit to 512 bytes
-    static final int MAX_PROPERTY_BUFFER_SIZE = 512;
+    public static final int MAX_PROPERTY_BUFFER_SIZE = 512;
     // Do not allow any nested collections in properties
     static final int MAX_PROPERTY_DEPTH = 0;
     private static final byte[] MAGIC = new byte[] {'A', 'c', 't', 'i', 'v', 'e', 'M', 'Q'};
