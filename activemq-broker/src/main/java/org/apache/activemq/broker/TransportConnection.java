@@ -1392,7 +1392,14 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
     }
 
     @Override
-    public Response processBrokerInfo(BrokerInfo info) {
+    public Response processBrokerInfo(BrokerInfo info) throws IOException {
+        // We only expect to get at most one broker info command per connection
+        // Log and throw an IOException to close the connection if we receive more
+        // one because this is a protocol violation
+        if (this.brokerInfo != null) {
+            LOG.warn("Unexpected extra broker info command received: {}", info);
+            throw new IOException("Unexpected extra broker info command received from: " + info.getBrokerId());
+        }
         if (info.isSlaveBroker()) {
             LOG.error(" Slave Brokers are no longer supported - slave trying to attach is: {}", info.getBrokerName());
         } else if (info.isNetworkConnection() && !info.isDuplexConnection()) {
@@ -1463,10 +1470,6 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                 LOG.error("Failed to create responder end of duplex network bridge {}", duplexNetworkConnectorId, e);
                 return null;
             }
-        }
-        // We only expect to get one broker info command per connection
-        if (this.brokerInfo != null) {
-            LOG.warn("Unexpected extra broker info command received: {}", info);
         }
         this.brokerInfo = info;
         networkConnection = true;
