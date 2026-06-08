@@ -16,7 +16,8 @@
  */
 package org.apache.activemq.broker.jmx;
 
-import static org.apache.activemq.broker.jmx.BrokerView.DENIED_TRANSPORT_SCHEMES;
+
+import static org.apache.activemq.util.TransportValidationUtils.DENIED_TRANSPORT_SCHEMES;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
