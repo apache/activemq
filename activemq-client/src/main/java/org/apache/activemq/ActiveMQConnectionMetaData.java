@@ -22,6 +22,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import jakarta.jms.ConnectionMetaData;
+import org.apache.activemq.command.WireFormatInfo;
 
 /**
  * A <CODE>ConnectionMetaData</CODE> object provides information describing
@@ -35,9 +36,10 @@ public final class ActiveMQConnectionMetaData implements ConnectionMetaData {
     public static final String PROVIDER_NAME = "ActiveMQ";
     public static final String DEFAULT_PLATFORM_DETAILS = "Java";
     public static final String PLATFORM_DETAILS;
-    // Set the max length to 256 bytes now that we limit property value bufer sizes
-    // inside WireFormatInfo. There is really no reason to ever be larger than this
-    public static final int PLATFORM_DETAILS_MAX_LENGTH = 256;
+    // Set the max length to WireFormatInfo.MAX_PROPERTY_BUFFER_SIZE (512 bytes)
+    // Now that we limit property value buffer sizes inside WireFormatInfo we need to
+    // limit the value from being larger than this, or we would get an exception.
+    public static final int PLATFORM_DETAILS_MAX_LENGTH = WireFormatInfo.MAX_PROPERTY_BUFFER_SIZE;
 
     public static final ActiveMQConnectionMetaData INSTANCE = new ActiveMQConnectionMetaData();
 
