@@ -60,7 +60,7 @@
 	<td>
         <c:choose>
             <c:when test="${row.network}">
-                <a href="network.jsp">${row.clientId}</a><br/>
+                <a href="network.jsp"><c:out value="${row.clientId}"/></a><br/>
             </c:when>
             <c:otherwise>
                 <a href="<c:out value="connection.jsp?connectionID=${row.clientId}"/>"><c:out value="${row.clientId}" /></a><br/>
@@ -90,4 +90,3 @@
 
 </body>
 </html>
-	
