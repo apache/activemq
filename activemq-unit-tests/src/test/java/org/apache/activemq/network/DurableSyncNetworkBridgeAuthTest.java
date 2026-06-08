@@ -30,6 +30,7 @@ import org.apache.activemq.broker.BrokerPlugin;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.command.ActiveMQTopic;
+import org.apache.activemq.command.BrokerInfo;
 import org.apache.activemq.command.BrokerSubscriptionInfo;
 import org.apache.activemq.command.DiscoveryEvent;
 import org.apache.activemq.security.AuthenticationUser;
@@ -150,6 +151,23 @@ public class DurableSyncNetworkBridgeAuthTest extends AbstractDurableSyncNetwork
 
         // Wait for the reconnect and receive of BrokerSubInfo
         assertTrue(Wait.waitFor(() -> brokerSubInfo.get() != null,5000,10));
+    }
+
+    @Test
+    public void testDuplicateBrokerInfo() throws Exception {
+        // Wait for connection and auth setup
+        doSetUp(true, true, tempFolder.newFolder(), tempFolder.newFolder(),
+                TimeUnit.SECONDS.toMillis(15));
+        assertTrue(Wait.waitFor(() -> brokerSubInfo.get() != null,5000,10));
+
+        // find the established bridge
+        DemandForwardingBridge bridge = (DemandForwardingBridge) localBroker.getNetworkConnectors().get(0).activeBridges().stream()
+                .findFirst().orElseThrow();
+
+        // send to one of the brokers (networked brokers will have already received a BrokerInfo)
+        // the duplicate will trigger the bridge connection to close
+        bridge.localBroker.oneway(new BrokerInfo());
+        assertTrue(Wait.waitFor(bridge.localBroker::isDisposed,5000,10));
     }
 
     protected void doSetUp(boolean deleteAllMessages, boolean startNetworkConnector, File localDataDir,
