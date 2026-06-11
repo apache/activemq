@@ -67,6 +67,15 @@ public class StompCodec {
                }
 
                currentCommand.write(b);
+
+               if (currentCommand.size() > wireFormat.getMaxFrameSize()) {
+                   StompFrameError errorFrame = new StompFrameError(
+                           new ProtocolException("The maximum frame size was exceeded while processing headers.", true));
+                   errorFrame.setAction(this.action);
+                   transport.doConsume(errorFrame);
+                   return;
+               }
+
                // end of headers section, parse action and header
                if (b == '\n' && (previousByte == '\n' || currentCommand.endsWith(crlfcrlf))) {
                    DataByteArrayInputStream data = new DataByteArrayInputStream(currentCommand.toByteArray());

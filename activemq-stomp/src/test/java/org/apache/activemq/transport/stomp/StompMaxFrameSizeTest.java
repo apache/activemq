@@ -205,25 +205,25 @@ public class StompMaxFrameSizeTest extends StompTestSupport {
     @Test(timeout = 60000)
     public void testOversizedHeadersOnPlainSocket() throws Exception {
         Assume.assumeTrue(testType == TestType.FRAME_MAX_LESS_THAN_HEADER_MAX);
-        doTestOversizedHeaders(port, false);
+        doTestOversizedHeaders(port, false, false);
     }
 
     @Test(timeout = 60000)
     public void testOversizedHeadersOnNioSocket() throws Exception {
         Assume.assumeTrue(testType == TestType.FRAME_MAX_LESS_THAN_HEADER_MAX);
-        doTestOversizedHeaders(nioPort, false);
+        doTestOversizedHeaders(nioPort, false, true);
     }
 
     @Test(timeout = 60000)
     public void testOversizedHeadersOnSslSocket() throws Exception {
         Assume.assumeTrue(testType == TestType.FRAME_MAX_LESS_THAN_HEADER_MAX);
-        doTestOversizedHeaders(sslPort, true);
+        doTestOversizedHeaders(sslPort, true, false);
     }
 
     @Test(timeout = 60000)
     public void testOversizedHeadersOnNioSslSocket() throws Exception {
         Assume.assumeTrue(testType == TestType.FRAME_MAX_LESS_THAN_HEADER_MAX);
-        doTestOversizedHeaders(nioSslPort, true);
+        doTestOversizedHeaders(nioSslPort, true, true);
     }
 
     protected void doTestOversizedAction(int port, boolean useSsl) throws Exception {
@@ -242,7 +242,7 @@ public class StompMaxFrameSizeTest extends StompTestSupport {
         assertTrue(received.getBody().contains("maximum frame size"));
     }
 
-    protected void doTestOversizedHeaders(int port, boolean useSsl) throws Exception {
+    protected void doTestOversizedHeaders(int port, boolean useSsl, boolean nio) throws Exception {
         initializeStomp(port, useSsl);
 
         StringBuilder headers = new StringBuilder(maxFrameSize + 100);
@@ -259,6 +259,10 @@ public class StompMaxFrameSizeTest extends StompTestSupport {
         assertNotNull(received);
         assertEquals("ERROR", received.getAction());
         assertTrue(received.getBody().contains("maximum frame size"));
+        // verify we terminated during header processing and not later during the action
+        if (nio) {
+            assertTrue(received.getBody().contains("while processing headers"));
+        }
     }
 
     protected void doOversizedTestMessage(int port, boolean useSsl, int dataSize) throws Exception {
