@@ -16,10 +16,12 @@
  */
 package org.apache.activemq.network;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.Collection;
@@ -39,8 +41,11 @@ import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
 import org.apache.activemq.store.kahadb.disk.journal.Journal.JournalDiskSyncStrategy;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFilter;
+import org.apache.activemq.transport.discovery.DiscoveryAgent;
+import org.apache.activemq.transport.discovery.DiscoveryListener;
 import org.apache.activemq.util.Wait;
 import org.junit.After;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -84,6 +89,7 @@ public class DurableSyncNetworkBridgeAuthTest extends AbstractDurableSyncNetwork
     private static final String USER_PASSWORD = "password";
     private final boolean duplex;
     private final AtomicReference<BrokerSubscriptionInfo> brokerSubInfo = new AtomicReference<>();
+    private final AtomicReference<DiscoveryEvent> serviceFailed = new AtomicReference<>();
     private String ncPassword = USER_PASSWORD;
 
     public DurableSyncNetworkBridgeAuthTest(boolean duplex) {
@@ -94,6 +100,7 @@ public class DurableSyncNetworkBridgeAuthTest extends AbstractDurableSyncNetwork
     public void setUp() throws Exception {
         this.ncPassword = USER_PASSWORD;
         this.brokerSubInfo.set(null);
+        this.serviceFailed.set(null);
     }
 
     @After
@@ -110,29 +117,75 @@ public class DurableSyncNetworkBridgeAuthTest extends AbstractDurableSyncNetwork
         // automatically on connect so the remote broker will always receive it. However, the
         // remote broker should only send back its list after the connection is properly authenticated.
         assertTrue(Wait.waitFor(() -> brokerSubInfo.get() != null,5000,10));
+        assertNull(serviceFailed.get());
+        DemandForwardingBridge bridge = getActiveBridge();
 
         // Simulate a connection exception and reconnect, we should receive again
         brokerSubInfo.set(null);
         localBroker.getNetworkConnectors().get(0).activeBridges().stream()
                 .findFirst().orElseThrow().serviceRemoteException(new Exception());
+        // wait for failure
+        assertTrue(Wait.waitFor(() -> serviceFailed.get() != null,5000,10));
+        assertTrue(Wait.waitFor(bridge.localBroker::isDisposed,5000,10));
+
+        // should reconnect again and get updated info
+        assertTrue(Wait.waitFor(() -> localBroker.getNetworkConnectors().get(0).activeBridges().size() == 1,
+                TimeUnit.SECONDS.toMillis(5), 10));
         assertTrue(Wait.waitFor(() -> brokerSubInfo.get() != null,5000,10));
     }
 
     @Test
     public void testAuthFailure() throws Exception {
         this.ncPassword = "badpassword";
-        try {
-            // set a shorter wait time, it won't connect with bad password
-            doSetUp(true, true, tempFolder.newFolder(), tempFolder.newFolder(),
-                    TimeUnit.SECONDS.toMillis(5));
-            throw new IllegalStateException("Should have received assertion error with bad password");
-        } catch (AssertionError e) {
-            // expected
-        }
+        doSetUpRemoteBroker(true, tempFolder.newFolder(), 0);
+        doSetUpLocalBroker(true, true, tempFolder.newFolder());
 
+        // Wait for the failure due to authentication
+        assertTrue(Wait.waitFor(() -> serviceFailed.get() != null,5000,10));
+        assertTrue(Wait.waitFor(() -> localBroker.getNetworkConnectors().get(0).activeBridges().isEmpty(),
+                TimeUnit.SECONDS.toMillis(5), 10));
         // Because the local broker was not authenticated by the remote broker, the local broker
         // should not have received back the BrokerSubscriptionInfo
         assertNull(brokerSubInfo.get());
+    }
+
+    @Test
+    public void testDuplicateDuplexBridgeFailedAuthIgnored() throws Exception {
+        Assume.assumeTrue(duplex);
+        doSetUp(true, true, tempFolder.newFolder(), tempFolder.newFolder(),
+                TimeUnit.SECONDS.toMillis(15));
+
+        // everything is good, no error and we got the sync command
+        assertTrue(Wait.waitFor(() -> brokerSubInfo.get() != null,5000,10));
+        assertNull(serviceFailed.get());
+
+        // Start a duplicate bridge with the same configuration but bad password
+        // so authentication fails. This should not cause a failure with the existing
+        // bridge because this connection won't be authenticated
+        DemandForwardingBridge bridge = getActiveBridge();
+        this.ncPassword = "badpassword";
+        NetworkConnector nc = localBroker.addNetworkConnector(configureLocalNetworkConnector());
+        nc.start();
+        try {
+            Thread.sleep(2000);
+            // Verify bridge is not disposed and still connected
+            assertFalse(bridge.disposed.get());
+        } finally {
+            nc.stop();
+        }
+
+        // try again, this will connect successfully and the broker will detect it's a duplex bridge
+        // matching the same config and close the other
+        this.ncPassword = USER_PASSWORD;
+        nc = localBroker.addNetworkConnector(configureLocalNetworkConnector());
+        nc.start();
+        try {
+            // authentication is now correct so the RegionBroker should terminate the other duplex
+            // bridge as it matches
+            assertTrue(Wait.waitFor(bridge.disposed::get,5000,10));
+        } finally {
+            nc.stop();
+        }
     }
 
     @Test
@@ -144,12 +197,17 @@ public class DurableSyncNetworkBridgeAuthTest extends AbstractDurableSyncNetwork
         // automatically on connect so the remote broker will always receive it. However, the
         // remote broker should only send back its list after the connection is properly authenticated.
         assertTrue(Wait.waitFor(() -> brokerSubInfo.get() != null,5000,10));
+        assertNull(serviceFailed.get());
 
         // Restart, should receive again with new connection
         brokerSubInfo.set(null);
         restartRemoteBroker();
+        // should fail from restart
+        assertTrue(Wait.waitFor(() -> serviceFailed.get() != null,5000,10));
 
         // Wait for the reconnect and receive of BrokerSubInfo
+        assertTrue(Wait.waitFor(() -> localBroker.getNetworkConnectors().get(0).activeBridges().size() == 1,
+                TimeUnit.SECONDS.toMillis(5), 10));
         assertTrue(Wait.waitFor(() -> brokerSubInfo.get() != null,5000,10));
     }
 
@@ -159,10 +217,10 @@ public class DurableSyncNetworkBridgeAuthTest extends AbstractDurableSyncNetwork
         doSetUp(true, true, tempFolder.newFolder(), tempFolder.newFolder(),
                 TimeUnit.SECONDS.toMillis(15));
         assertTrue(Wait.waitFor(() -> brokerSubInfo.get() != null,5000,10));
+        assertNull(serviceFailed.get());
 
         // find the established bridge
-        DemandForwardingBridge bridge = (DemandForwardingBridge) localBroker.getNetworkConnectors().get(0).activeBridges().stream()
-                .findFirst().orElseThrow();
+        DemandForwardingBridge bridge = getActiveBridge();
 
         // send to one of the brokers (networked brokers will have already received a BrokerInfo)
         // the duplicate will trigger the bridge connection to close
@@ -232,6 +290,9 @@ public class DurableSyncNetworkBridgeAuthTest extends AbstractDurableSyncNetwork
         URI remoteURI = transportConnectors.get(0).getConnectUri();
         String uri = "static:(" + remoteURI + ")";
         NetworkConnector connector = new DiscoveryNetworkConnector(new URI(uri)) {
+            {
+                this.setDiscoveryAgent(new DiscoveryAgentFilter(getDiscoveryAgent()));
+            }
             @Override
             protected NetworkBridge createBridge(Transport localTransport,
                     Transport remoteTransport, DiscoveryEvent event) {
@@ -248,6 +309,7 @@ public class DurableSyncNetworkBridgeAuthTest extends AbstractDurableSyncNetwork
                         }
                         super.onCommand(command);
                     }
+
                 };
                 return super.createBridge(localTransport, remoteFilter, event);
             }
@@ -285,4 +347,37 @@ public class DurableSyncNetworkBridgeAuthTest extends AbstractDurableSyncNetwork
         return brokerService;
     }
 
+    private DemandForwardingBridge getActiveBridge() {
+        return(DemandForwardingBridge) localBroker.getNetworkConnectors().get(0).activeBridges().stream()
+                .findFirst().orElseThrow();
+    }
+
+    private class DiscoveryAgentFilter implements DiscoveryAgent {
+        private final DiscoveryAgent agent;
+
+        public DiscoveryAgentFilter(DiscoveryAgent agent) {
+            this.agent = agent;
+        }
+
+        public void setDiscoveryListener(DiscoveryListener listener) {
+            agent.setDiscoveryListener(listener);
+        }
+
+        public void start() throws Exception {
+            agent.start();
+        }
+
+        public void stop() throws Exception {
+            agent.stop();
+        }
+
+        public void registerService(String name) throws IOException {
+            agent.registerService(name);
+        }
+
+        public void serviceFailed(DiscoveryEvent event) throws IOException {
+            serviceFailed.set(event);
+            agent.serviceFailed(event);
+        }
+    }
 }

@@ -477,6 +477,15 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
             if (safeWaitUntilStarted()) {
                 setupStaticDestinations();
                 staticDestinationsLatch.countDown();
+
+                // Send to the remote broker the durable subs if sync is enabled after statup.
+                // This is done by the initiating side of a bridge as well as by duplex bridges to
+                // ensure everything is fully initialized before sending.
+                if (configuration.isSyncDurableSubs() &&
+                        remoteBroker.getWireFormat().getVersion() >= CommandTypes.PROTOCOL_VERSION_DURABLE_SYNC) {
+                    remoteBroker.oneway(NetworkBridgeUtils.getBrokerSubscriptionInfo(brokerService,
+                            configuration));
+                }
             }
         } catch (Throwable e) {
             serviceLocalException(e);
@@ -599,11 +608,6 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                     brokerInfo.setNetworkProperties(str);
                     brokerInfo.setBrokerId(this.localBrokerId);
                     remoteBroker.oneway(brokerInfo);
-                    if (configuration.isSyncDurableSubs() &&
-                            remoteBroker.getWireFormat().getVersion() >= CommandTypes.PROTOCOL_VERSION_DURABLE_SYNC) {
-                        remoteBroker.oneway(NetworkBridgeUtils.getBrokerSubscriptionInfo(brokerService,
-                                configuration));
-                    }
                 }
                 if (remoteConnectionInfo != null) {
                     remoteBroker.oneway(remoteConnectionInfo.createRemoveCommand());
