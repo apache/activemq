@@ -76,6 +76,9 @@ public class DestinationFactoryImpl extends DestinationFactory {
         if (destination.isQueue()) {
             if (destination.isTemporary()) {
                 final ActiveMQTempDestination tempDest = (ActiveMQTempDestination)destination;
+                if (tempDest.getConnectionId() == null) {
+                    throw new IllegalArgumentException("Temporary queue must have a connectionId");
+                }
                 Queue queue = new TempQueue(brokerService, destination, null, destinationStatistics, taskRunnerFactory);
                 configureQueue(queue, destination);
                 queue.initialize();
@@ -88,8 +91,11 @@ public class DestinationFactoryImpl extends DestinationFactory {
                 return queue;
             }
         } else if (destination.isTemporary()) {
-            
-            Topic topic = new Topic(brokerService, destination, null, destinationStatistics, taskRunnerFactory);
+            final ActiveMQTempDestination tempDest = (ActiveMQTempDestination)destination;
+            if (tempDest.getConnectionId() == null) {
+                throw new IllegalArgumentException("Temporary topic must have a connectionId");
+            }
+            Topic topic = new TempTopic(brokerService, destination, null, destinationStatistics, taskRunnerFactory);
             configureTopic(topic, destination);
             topic.initialize();
             return topic;

@@ -200,6 +200,8 @@ public class BrokerService implements Service {
     private boolean useVirtualTopics = true;
     private boolean useMirroredQueues = false;
     private boolean useTempMirroredQueues = true;
+    private boolean allowTempDestinationStealing = false;
+
     /**
      * Whether or not virtual destination subscriptions should cause network demand
      */
@@ -1936,6 +1938,14 @@ public class BrokerService implements Service {
 
     public void setUseTempMirroredQueues(boolean useTempMirroredQueues) {
         this.useTempMirroredQueues = useTempMirroredQueues;
+    }
+
+    public boolean isAllowTempDestinationStealing() {
+        return allowTempDestinationStealing;
+    }
+
+    public void setAllowTempDestinationStealing(boolean allowTempDestinationStealing) {
+        this.allowTempDestinationStealing = allowTempDestinationStealing;
     }
 
     public synchronized JobSchedulerStore getJobSchedulerStore() {

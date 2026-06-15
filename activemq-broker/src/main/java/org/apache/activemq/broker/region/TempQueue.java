@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.broker.region;
 
+import jakarta.jms.InvalidDestinationException;
 import java.io.IOException;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
@@ -65,6 +66,11 @@ public class TempQueue extends Queue{
     
     @Override
     public void addSubscription(ConnectionContext context, Subscription sub) throws Exception {
+        final String connectionId = sub.getConsumerInfo().getConsumerId().getConnectionId();
+        if (!brokerService.isAllowTempDestinationStealing() && !tempDest.getConnectionId().equals(connectionId)) {
+            throw new InvalidDestinationException("Subscribing to a temporary queue created by another connection is not permitted");
+        }
+
         // Only consumers on the same connection can consume from
         // the temporary destination
         // However, we could have failed over - and we do this
