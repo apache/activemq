@@ -38,7 +38,9 @@ import jakarta.jms.TemporaryQueue;
 import jakarta.jms.TextMessage;
 import java.util.Arrays;
 import java.util.Collection;
-import junit.framework.TestCase;
+import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.region.policy.PolicyEntry;
+import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.ExceptionResponse;
 import org.apache.activemq.command.Response;
@@ -86,6 +88,7 @@ public class JmsTempDestinationTest {
     private Connection connection;
     private ActiveMQConnectionFactory factory;
     protected List<Connection> connections = Collections.synchronizedList(new ArrayList<>());
+    private BrokerService brokerService;
     private final boolean allowTempDestinationStealing;
 
     public JmsTempDestinationTest(boolean allowTempDestinationStealing) {
@@ -94,8 +97,24 @@ public class JmsTempDestinationTest {
 
     @Before
     public void setUp() throws Exception {
-        factory = new ActiveMQConnectionFactory("vm://localhost?broker.persistent=false"
-                + "&broker.allowTempDestinationStealing=" + allowTempDestinationStealing);
+        brokerService = new BrokerService();
+        brokerService.setPersistent(false);
+
+        PolicyEntry tempQueueEntry = new PolicyEntry();
+        tempQueueEntry.setTempQueue(true);
+        tempQueueEntry.setAllowTempDestinationStealing(allowTempDestinationStealing);
+        PolicyEntry tempTopicEntry = new PolicyEntry();
+        tempTopicEntry.setTempTopic(true);
+        tempTopicEntry.setAllowTempDestinationStealing(allowTempDestinationStealing);
+
+        PolicyMap pMap = new PolicyMap();
+        pMap.setPolicyEntries(List.of(tempQueueEntry, tempTopicEntry));
+
+        brokerService.setDestinationPolicy(pMap);
+        brokerService.start();
+        brokerService.waitUntilStarted();
+
+        factory = new ActiveMQConnectionFactory("vm://localhost");
         factory.setAlwaysSyncSend(true);
         connection = factory.createConnection();
         connections.add(connection);
@@ -111,6 +130,8 @@ public class JmsTempDestinationTest {
             }
             iter.remove();
         }
+        brokerService.stop();
+        brokerService.waitUntilStopped();
     }
 
     /**
