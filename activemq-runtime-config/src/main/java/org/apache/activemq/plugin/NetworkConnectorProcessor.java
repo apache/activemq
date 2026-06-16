@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.plugin;
 
+import java.util.Properties;
 import java.util.TreeMap;
 
 import org.apache.activemq.network.DiscoveryNetworkConnector;
@@ -63,15 +64,23 @@ public class NetworkConnectorProcessor extends DefaultConfigurationProcessor {
     }
 
     private boolean configMatch(DtoNetworkConnector dto, NetworkConnector candidate) {
-        TreeMap<String, String> dtoProps = new TreeMap<String, String>();
+        Properties dtoProps = new Properties();
         IntrospectionSupport.getProperties(dto, dtoProps, null);
+        // the live candidate has its ${foo} placeholders already resolved, so resolve them on
+        // the dto side too before comparing — otherwise a connector declared with placeholders
+        // can never be matched for removal/modification
+        if (plugin.placeHolderUtil != null) {
+            plugin.placeHolderUtil.filter(dtoProps);
+        }
 
         TreeMap<String, String> candidateProps = new TreeMap<String, String>();
         IntrospectionSupport.getProperties(candidate, candidateProps, null);
 
         // every dto prop must be present in the candidate
-        for (String key : dtoProps.keySet()) {
-            if (!candidateProps.containsKey(key) || !candidateProps.get(key).equals(dtoProps.get(key))) {
+        for (Object keyObj : dtoProps.keySet()) {
+            String key = (String) keyObj;
+            String dtoValue = (String) dtoProps.get(key);
+            if (!candidateProps.containsKey(key) || !candidateProps.get(key).equals(dtoValue)) {
                 return false;
             }
         }
