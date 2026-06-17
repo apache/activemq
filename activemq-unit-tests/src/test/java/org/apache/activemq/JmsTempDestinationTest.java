@@ -16,9 +16,17 @@
  */
 package org.apache.activemq;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import jakarta.jms.BytesMessage;
 import jakarta.jms.Connection;
 import jakarta.jms.DeliveryMode;
+import jakarta.jms.Destination;
 import jakarta.jms.InvalidDestinationException;
 import jakarta.jms.JMSException;
 import jakarta.jms.Message;
@@ -28,11 +36,25 @@ import jakarta.jms.Queue;
 import jakarta.jms.Session;
 import jakarta.jms.TemporaryQueue;
 import jakarta.jms.TextMessage;
-import junit.framework.TestCase;
+import java.util.Arrays;
+import java.util.Collection;
+import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.region.policy.PolicyEntry;
+import org.apache.activemq.broker.region.policy.PolicyMap;
+import org.apache.activemq.command.ConsumerInfo;
+import org.apache.activemq.command.ExceptionResponse;
+import org.apache.activemq.command.Response;
 import org.apache.activemq.transport.TransportListener;
 import org.apache.activemq.transport.vm.VMTransport;
 import org.apache.activemq.util.Wait;
 import org.apache.activemq.test.annotations.ParallelTest;
+import org.junit.After;
+import org.junit.Assume;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,26 +73,55 @@ import org.junit.experimental.categories.Category;
  * @version
  */
 @Category(ParallelTest.class)
-public class JmsTempDestinationTest extends TestCase {
+@RunWith(Parameterized.class)
+public class JmsTempDestinationTest {
+
+    @Parameters(name="allowTempDestinationStealing={0}")
+    public static Collection<Object[]> data() {
+        return Arrays.asList(new Object[][] {
+                {false},
+                {true},
+        });
+    }
 
     private static final Logger LOG = LoggerFactory.getLogger(JmsTempDestinationTest.class);
     private Connection connection;
     private ActiveMQConnectionFactory factory;
-    protected List<Connection> connections = Collections.synchronizedList(new ArrayList<Connection>());
+    protected List<Connection> connections = Collections.synchronizedList(new ArrayList<>());
+    private BrokerService brokerService;
+    private final boolean allowTempDestinationStealing;
 
-    @Override
-    protected void setUp() throws Exception {
-        factory = new ActiveMQConnectionFactory("vm://localhost?broker.persistent=false");
+    public JmsTempDestinationTest(boolean allowTempDestinationStealing) {
+        this.allowTempDestinationStealing = allowTempDestinationStealing;
+    }
+
+    @Before
+    public void setUp() throws Exception {
+        brokerService = new BrokerService();
+        brokerService.setPersistent(false);
+
+        PolicyEntry tempQueueEntry = new PolicyEntry();
+        tempQueueEntry.setTempQueue(true);
+        tempQueueEntry.setAllowTempDestinationStealing(allowTempDestinationStealing);
+        PolicyEntry tempTopicEntry = new PolicyEntry();
+        tempTopicEntry.setTempTopic(true);
+        tempTopicEntry.setAllowTempDestinationStealing(allowTempDestinationStealing);
+
+        PolicyMap pMap = new PolicyMap();
+        pMap.setPolicyEntries(List.of(tempQueueEntry, tempTopicEntry));
+
+        brokerService.setDestinationPolicy(pMap);
+        brokerService.start();
+        brokerService.waitUntilStarted();
+
+        factory = new ActiveMQConnectionFactory("vm://localhost");
         factory.setAlwaysSyncSend(true);
         connection = factory.createConnection();
         connections.add(connection);
     }
 
-    /**
-     * @see junit.framework.TestCase#tearDown()
-     */
-    @Override
-    protected void tearDown() throws Exception {
+    @After
+    public void tearDown() throws Exception {
         for (Iterator<Connection> iter = connections.iterator(); iter.hasNext();) {
             Connection conn = iter.next();
             try {
@@ -79,6 +130,8 @@ public class JmsTempDestinationTest extends TestCase {
             }
             iter.remove();
         }
+        brokerService.stop();
+        brokerService.waitUntilStopped();
     }
 
     /**
@@ -86,6 +139,7 @@ public class JmsTempDestinationTest extends TestCase {
      *
      * @throws JMSException
      */
+    @Test
     public void testTempDestOnlyConsumedByLocalConn() throws JMSException {
         connection.start();
 
@@ -102,11 +156,12 @@ public class JmsTempDestinationTest extends TestCase {
         Session otherSession = otherConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         TemporaryQueue otherQueue = otherSession.createTemporaryQueue();
         MessageConsumer consumer = otherSession.createConsumer(otherQueue);
-        Message msg = consumer.receive(3000);
+        Message msg = consumer.receive(2000);
         assertNull(msg);
 
         // should throw InvalidDestinationException when consuming a temp
-        // destination from another connection
+        // destination from another connection.
+        // Note that this check is done in the client side
         try {
             consumer = otherSession.createConsumer(queue);
             fail("Send should fail since temp destination should be used from another connection");
@@ -116,10 +171,58 @@ public class JmsTempDestinationTest extends TestCase {
 
         // should be able to consume temp destination from the same connection
         consumer = tempSession.createConsumer(queue);
-        msg = consumer.receive(3000);
+        msg = consumer.receive(2000);
         assertNotNull(msg);
-
     }
+
+    // Test broker checks and enforces allowTempDestinationStealing flag
+    @Test
+    public void testAllowTempDestStealingQueue() throws Exception {
+        testAllowTempDestStealing(false, allowTempDestinationStealing);
+    }
+
+    // Test broker checks and enforces allowTempDestinationStealing flag
+    @Test
+    public void testAllowTempDestStealingTopic() throws Exception {
+        testAllowTempDestStealing(true, allowTempDestinationStealing);
+    }
+
+    // Test broker checks and enforces allowTempDestinationStealing flag
+    private void testAllowTempDestStealing(boolean topic, boolean tempDestStealing) throws Exception {
+        connection.start();
+
+        // create a temporary queue on the first connection
+        Session tempSession = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        Destination tempDest = topic ? tempSession.createTemporaryTopic() :
+                tempSession.createTemporaryQueue();
+
+        // Create another connection/session
+        ActiveMQConnection otherConnection = (ActiveMQConnection) factory.createConnection();
+        connections.add(otherConnection);
+        ActiveMQSession otherSession = (ActiveMQSession) otherConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+
+        // Send a direct ConsumerInfo to bypass the client check that would normally block this
+        // This will try and subscribe the second connection to the first connections
+        // temporary dest
+        ConsumerInfo info = new ConsumerInfo(otherSession.getNextConsumerId());
+        info.setClientId(otherSession.connection.getClientID());
+        info.setDestination(ActiveMQMessageTransformation.transformDestination(tempDest));
+        Object result = otherConnection.getTransport().request(info, 1000);
+
+        // The broker should allow because allowTempDestinationStealing = true
+        if (tempDestStealing) {
+            assertTrue(result instanceof Response);
+            assertFalse(((Response) result).isException());
+        } else {
+            // The broker should throw an error because allowTempDestinationStealing = false
+            assertTrue(result instanceof ExceptionResponse);
+            assertTrue(((Response) result).isException());
+            assertTrue(((ExceptionResponse) result).getException() instanceof InvalidDestinationException);
+            assertTrue(((ExceptionResponse) result).getException().getMessage()
+                    .contains("created by another connection is not permitted"));
+        }
+    }
+
 
     /**
      * Make sure that a temp queue does not drop message if there is an active
@@ -127,6 +230,7 @@ public class JmsTempDestinationTest extends TestCase {
      *
      * @throws JMSException
      */
+    @Test
     public void testTempQueueHoldsMessagesWithConsumers() throws JMSException {
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         Queue queue = session.createTemporaryQueue();
@@ -141,7 +245,8 @@ public class JmsTempDestinationTest extends TestCase {
         Message message2 = consumer.receive(1000);
         assertNotNull(message2);
         assertTrue("Expected message to be a TextMessage", message2 instanceof TextMessage);
-        assertTrue("Expected message to be a '" + message.getText() + "'", ((TextMessage)message2).getText().equals(message.getText()));
+        assertEquals("Expected message to be a '" + message.getText() + "'",
+                ((TextMessage) message2).getText(), message.getText());
     }
 
     /**
@@ -150,6 +255,7 @@ public class JmsTempDestinationTest extends TestCase {
      *
      * @throws JMSException
      */
+    @Test
     public void testTempQueueHoldsMessagesWithoutConsumers() throws JMSException {
 
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -161,10 +267,11 @@ public class JmsTempDestinationTest extends TestCase {
 
         connection.start();
         MessageConsumer consumer = session.createConsumer(queue);
-        Message message2 = consumer.receive(3000);
+        Message message2 = consumer.receive(1000);
         assertNotNull(message2);
         assertTrue("Expected message to be a TextMessage", message2 instanceof TextMessage);
-        assertTrue("Expected message to be a '" + message.getText() + "'", ((TextMessage)message2).getText().equals(message.getText()));
+        assertEquals("Expected message to be a '" + message.getText() + "'",
+                ((TextMessage) message2).getText(), message.getText());
 
     }
 
@@ -173,11 +280,12 @@ public class JmsTempDestinationTest extends TestCase {
      *
      * @throws JMSException
      */
+    @Test
     public void testTmpQueueWorksUnderLoad() throws JMSException {
         int count = 500;
         int dataSize = 1024;
 
-        ArrayList<BytesMessage> list = new ArrayList<BytesMessage>(count);
+        ArrayList<BytesMessage> list = new ArrayList<>(count);
         Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         Queue queue = session.createTemporaryQueue();
         MessageProducer producer = session.createProducer(queue);
@@ -196,9 +304,9 @@ public class JmsTempDestinationTest extends TestCase {
         MessageConsumer consumer = session.createConsumer(queue);
         for (int i = 0; i < count; i++) {
             Message message2 = consumer.receive(2000);
-            assertTrue(message2 != null);
+            assertNotNull(message2);
             assertEquals(i, message2.getIntProperty("c"));
-            assertTrue(message2.equals(list.get(i)));
+            assertEquals(message2, list.get(i));
         }
     }
 
@@ -210,7 +318,10 @@ public class JmsTempDestinationTest extends TestCase {
      * @throws InterruptedException
      * @throws URISyntaxException
      */
+    @Test
     public void testPublishFailsForClosedConnection() throws Exception {
+        // This test is slow and we only need to run this test with the default
+        Assume.assumeFalse(allowTempDestinationStealing);
 
         Connection tempConnection = factory.createConnection();
         connections.add(tempConnection);
@@ -253,7 +364,10 @@ public class JmsTempDestinationTest extends TestCase {
      * @throws JMSException
      * @throws InterruptedException
      */
+    @Test
     public void testPublishFailsForDestroyedTempDestination() throws Exception {
+        // This test is slow and we only need to run this test with the default
+        Assume.assumeFalse(allowTempDestinationStealing);
 
         Connection tempConnection = factory.createConnection();
         connections.add(tempConnection);
@@ -294,6 +408,7 @@ public class JmsTempDestinationTest extends TestCase {
      *
      * @throws JMSException
      */
+    @Test
     public void testDeleteDestinationWithSubscribersFails() throws JMSException {
         Connection connection = factory.createConnection();
         connections.add(connection);
@@ -314,7 +429,11 @@ public class JmsTempDestinationTest extends TestCase {
         }
     }
 
+    @Test
     public void testSlowConsumerDoesNotBlockFastTempUsers() throws Exception {
+        // This test is slow and we only need to run this test with the default
+        Assume.assumeFalse(allowTempDestinationStealing);
+
         ActiveMQConnectionFactory advisoryConnFactory = new ActiveMQConnectionFactory("vm://localhost?asyncQueueDepth=20");
         Connection connection = advisoryConnFactory.createConnection();
         connections.add(connection);
