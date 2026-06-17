@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.broker.region;
 
+import jakarta.jms.InvalidDestinationException;
 import java.io.IOException;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
@@ -33,10 +34,12 @@ import org.slf4j.LoggerFactory;
  * 
  * 
  */
-public class TempQueue extends Queue{
+public class TempQueue extends Queue implements TempDestination{
+
     private static final Logger LOG = LoggerFactory.getLogger(TempQueue.class);
+
     private final ActiveMQTempDestination tempDest;
-   
+    private boolean allowTempDestinationStealing = false;
     
     /**
      * @param brokerService
@@ -65,6 +68,11 @@ public class TempQueue extends Queue{
     
     @Override
     public void addSubscription(ConnectionContext context, Subscription sub) throws Exception {
+        final String connectionId = sub.getConsumerInfo().getConsumerId().getConnectionId();
+        if (!isAllowTempDestinationStealing() && !tempDest.getConnectionId().equals(connectionId)) {
+            throw new InvalidDestinationException("Subscribing to a temporary queue created by another connection is not permitted");
+        }
+
         // Only consumers on the same connection can consume from
         // the temporary destination
         // However, we could have failed over - and we do this
@@ -96,5 +104,15 @@ public class TempQueue extends Queue{
             LOG.warn("Caught an exception purging Queue: {}", destination, e);
         }
         super.dispose(context);
+    }
+
+    @Override
+    public boolean isAllowTempDestinationStealing() {
+        return allowTempDestinationStealing;
+    }
+
+    @Override
+    public void setAllowTempDestinationStealing(boolean allowTempDestinationStealing) {
+        this.allowTempDestinationStealing = allowTempDestinationStealing;
     }
 }
