@@ -50,6 +50,7 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.MessageAvailableConsumer;
 import org.apache.activemq.broker.BrokerRegistry;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.util.JMSExceptionSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -232,6 +233,7 @@ public class WebClient implements HttpSessionActivationListener, HttpSessionBind
     }
 
     public void send(Destination destination, Message message) throws JMSException {
+        marshalForBrokerSend(message);
         getProducer().send(destination, message);
         if (LOG.isDebugEnabled()) {
             LOG.debug("Sent! to destination: " + destination + " message: " + message);
@@ -239,10 +241,21 @@ public class WebClient implements HttpSessionActivationListener, HttpSessionBind
     }
 
     public void send(Destination destination, Message message, boolean persistent, int priority, long timeToLive) throws JMSException {
+        marshalForBrokerSend(message);
         int deliveryMode = persistent ? DeliveryMode.PERSISTENT : DeliveryMode.NON_PERSISTENT;
         getProducer().send(destination, message, deliveryMode, priority, timeToLive);
         if (LOG.isDebugEnabled()) {
             LOG.debug("Sent! to destination: " + destination + " message: " + message);
+        }
+    }
+
+    private void marshalForBrokerSend(Message message) throws JMSException {
+        if (message instanceof org.apache.activemq.command.Message activemqMessage) {
+            try {
+                activemqMessage.beforeMarshall(null);
+            } catch (IOException e) {
+                throw JMSExceptionSupport.create(e);
+            }
         }
     }
 
