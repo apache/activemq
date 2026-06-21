@@ -16,6 +16,9 @@
  */
 package org.apache.activemq.command;
 
+
+import static org.mockito.Mockito.mock;
+
 import java.io.IOException;
 
 import jakarta.jms.JMSException;
@@ -23,7 +26,10 @@ import jakarta.jms.MessageNotReadableException;
 import jakarta.jms.MessageNotWriteableException;
 
 import junit.framework.TestCase;
+import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.test.annotations.ParallelTest;
+import org.apache.activemq.util.ByteSequenceData;
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.junit.experimental.categories.Category;
 
 /**
@@ -123,6 +129,30 @@ public class ActiveMQObjectMessageTest extends TestCase {
         } catch (MessageNotReadableException e) {
             fail("should be readable");
         } catch (MessageNotWriteableException mnwe) {
+        }
+    }
+
+    public void testUnCompressedException() throws Exception {
+        ActiveMQConnection connection = mock(ActiveMQConnection.class);
+
+        ActiveMQObjectMessage msg = new ActiveMQObjectMessage();
+        msg.setConnection(connection);
+        msg.setObject("test");
+
+        // store and marshal
+        msg.storeContentAndClear();
+        assertNull(msg.object);
+
+        // corrupt the buffer
+        ByteSequenceData.writeIntBig(msg.content, 1000);
+
+        try {
+            // trigger unmarshalling the object
+            msg.getObject();
+            fail("Should have thrown exception");
+        } catch (JMSException e) {
+            // uncompressed will have an error from the JDK deserialization
+            assertTrue(ExceptionUtils.getRootCause(e) instanceof IOException);
         }
     }
 

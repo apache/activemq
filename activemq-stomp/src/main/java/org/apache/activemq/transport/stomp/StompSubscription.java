@@ -74,6 +74,23 @@ public class StompSubscription {
     void onMessageDispatch(MessageDispatch md) throws IOException, JMSException {
         ActiveMQMessage message = (ActiveMQMessage)md.getMessage();
 
+        boolean ignoreTransformation = false;
+
+        if (transformation != null && !( message instanceof ActiveMQBytesMessage ) ) {
+            message.setReadOnlyProperties(false);
+            message.setStringProperty(Stomp.Headers.TRANSFORMATION, transformation);
+        } else {
+            if (message.getStringProperty(Stomp.Headers.TRANSFORMATION) != null) {
+                ignoreTransformation = true;
+            }
+        }
+
+        // This has been intentionally moved to happen before the acks are set up and
+        // auto ack is done, which is line with all the other protocols.
+        StompFrame command = protocolConverter.convertMessage(message, ignoreTransformation);
+
+        // Only configure the acks after protocol conversion. If there is an error we don't want to
+        // track pending acks or auto ack as the message won't be dispatched
         String ackId = null;
         if (isClientAck() || isIndividualAck()) {
             ackId = ACK_ID_GENERATOR.generateId();
@@ -89,19 +106,6 @@ public class StompSubscription {
             MessageAck ack = new MessageAck(md, MessageAck.STANDARD_ACK_TYPE, 1);
             protocolConverter.getStompTransport().sendToActiveMQ(ack);
         }
-
-        boolean ignoreTransformation = false;
-
-        if (transformation != null && !( message instanceof ActiveMQBytesMessage ) ) {
-            message.setReadOnlyProperties(false);
-            message.setStringProperty(Stomp.Headers.TRANSFORMATION, transformation);
-        } else {
-            if (message.getStringProperty(Stomp.Headers.TRANSFORMATION) != null) {
-                ignoreTransformation = true;
-            }
-        }
-
-        StompFrame command = protocolConverter.convertMessage(message, ignoreTransformation);
 
         command.setAction(Stomp.Responses.MESSAGE);
         if (subscriptionId != null) {

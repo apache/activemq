@@ -18,8 +18,10 @@ package org.apache.activemq.command;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.mockito.Mockito.mock;
 
 import jakarta.jms.JMSException;
 import jakarta.jms.MessageEOFException;
@@ -27,7 +29,11 @@ import jakarta.jms.MessageFormatException;
 import jakarta.jms.MessageNotReadableException;
 import jakarta.jms.MessageNotWriteableException;
 
+import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.test.annotations.ParallelTest;
+import org.apache.activemq.util.ByteSequenceData;
+import org.apache.activemq.util.MarshallingSupport.ActiveMQUnmarshalException;
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -1074,5 +1080,30 @@ public class ActiveMQStreamMessageTest {
         try {
             message.readBoolean();
         } catch (MessageEOFException ex) {}
+    }
+
+    @Test
+    public void testUnmarshalException() throws Exception {
+        ActiveMQConnection connection = mock(ActiveMQConnection.class);
+
+        ActiveMQStreamMessage msg = new ActiveMQStreamMessage();
+        msg.setConnection(connection);
+        msg.writeBytes("Test".getBytes());
+
+        // store and marshal
+        msg.reset();
+        assertNull(msg.dataOut);
+
+        // corrupt the buffer
+        ByteSequenceData.writeIntBig(msg.content, 1000000);
+
+        try {
+            msg.readBytes(new byte[1024]);
+            fail("Should have thrown exception");
+        } catch (JMSException e) {
+            // expected
+            assertTrue(
+                    ExceptionUtils.getRootCause(e) instanceof ActiveMQUnmarshalException);
+        }
     }
 }

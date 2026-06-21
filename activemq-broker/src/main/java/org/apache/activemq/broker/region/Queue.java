@@ -31,6 +31,7 @@ import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -98,6 +99,7 @@ import org.apache.activemq.transaction.Synchronization;
 import org.apache.activemq.usage.Usage;
 import org.apache.activemq.usage.UsageListener;
 import org.apache.activemq.util.BrokerSupport;
+import org.apache.activemq.ActiveMQMessageFormatException;
 import org.apache.activemq.util.ThreadPoolUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -497,6 +499,8 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
     public void removeSubscription(ConnectionContext context, Subscription sub, long lastDeliveredSequenceId)
             throws Exception {
         super.removeSubscription(context, sub, lastDeliveredSequenceId);
+
+        Map<QueueMessageReference, ActiveMQMessageFormatException> messageFormatErrors = null;
         // synchronize with dispatch method so that no new messages are sent
         // while removing up a subscription.
         pagedInPendingDispatchLock.writeLock().lock();
@@ -593,7 +597,8 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                 }
                 // AMQ-5107: don't resend if the broker is shutting down
                 if (dispatchPendingList.hasRedeliveries() && (! this.brokerService.isStopping())) {
-                    doDispatch(new OrderedPendingList());
+                    messageFormatErrors = new LinkedHashMap<>();
+                    doDispatch(new OrderedPendingList(), messageFormatErrors);
                 }
             } finally {
                 consumersLock.writeLock().unlock();
@@ -609,6 +614,11 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
             // iteratingMutex -> dispatchLock. - see
             // https://issues.apache.org/activemq/browse/AMQ-1878
             wakeup();
+        }
+
+        // Remove any corrupt messages
+        if (messageFormatErrors != null) {
+            removeMessageFormatErrorMessages(messageFormatErrors);
         }
     }
 
@@ -1885,6 +1895,16 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         }
     }
 
+    protected void removeAndSendToDlq(ConnectionContext c, QueueMessageReference r, Exception e) throws IOException {
+        MessageAck ack = new MessageAck();
+        ack.setAckType(MessageAck.POISON_ACK_TYPE);
+        ack.setPoisonCause(e);
+        ack.setDestination(destination);
+        ack.setMessageID(r.getMessageId());
+        removeMessage(c, null, r, ack);
+        broker.getRoot().sendToDeadLetterQueue(c, r.getMessage(), null, e);
+    }
+
     protected void removeMessage(ConnectionContext c, Subscription subs, QueueMessageReference r) throws IOException {
         MessageAck ack = new MessageAck();
         ack.setAckType(MessageAck.STANDARD_ACK_TYPE);
@@ -2192,7 +2212,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         return consumers.size() - browserSubscriptions.size() > 0;
     }
 
-    private void doDispatch(PendingList list) throws Exception {
+    private void doDispatch(PendingList list, Map<QueueMessageReference, ActiveMQMessageFormatException> errors) throws Exception {
         boolean doWakeUp = false;
 
         pagedInPendingDispatchLock.writeLock().lock();
@@ -2207,12 +2227,12 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                 list = null;
             }
 
-            doActualDispatch(dispatchPendingList);
+            doActualDispatch(dispatchPendingList, errors);
             // and now see if we can dispatch the new stuff.. and append to the pending
             // list anything that does not actually get dispatched.
             if (list != null && !list.isEmpty()) {
                 if (dispatchPendingList.isEmpty()) {
-                    dispatchPendingList.addAll(doActualDispatch(list));
+                    dispatchPendingList.addAll(doActualDispatch(list, errors));
                 } else {
                     for (MessageReference qmr : list) {
                         if (!dispatchPendingList.contains(qmr)) {
@@ -2236,7 +2256,8 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
      * @return list of messages that could get dispatched to consumers if they
      *         were not full.
      */
-    private PendingList doActualDispatch(PendingList list) throws Exception {
+    private PendingList doActualDispatch(PendingList list,
+            Map<QueueMessageReference, ActiveMQMessageFormatException> errors) throws Exception {
         List<Subscription> consumers;
         consumersLock.readLock().lock();
 
@@ -2262,12 +2283,27 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                 }
                 if (!fullConsumers.contains(s)) {
                     if (!s.isFull()) {
-                        if (dispatchSelector.canSelect(s, node) && assignMessageGroup(s, (QueueMessageReference)node) && !((QueueMessageReference) node).isAcked() ) {
-                            // Dispatch it.
-                            s.add(node);
-                            LOG.trace("assigned {} to consumer {}", node.getMessageId(), s.getConsumerInfo().getConsumerId());
+                        try {
+                            if (dispatchSelector.canSelect(s, node) && assignMessageGroup(s,
+                                    (QueueMessageReference) node)
+                                    && !((QueueMessageReference) node).isAcked()) {
+                                // Dispatch it.
+                                s.add(node);
+                                LOG.trace("assigned {} to consumer {}", node.getMessageId(),
+                                        s.getConsumerInfo().getConsumerId());
+                                iterator.remove();
+                                target = s;
+                                break;
+                            }
+                        } catch (ActiveMQMessageFormatException e) {
+                            // A ActiveMQMessageFormatException could occur when evaluating
+                            // the selector which could trigger the properties to unmarshal or the
+                            // body to be read (for xpath selectors). This should be rare but
+                            // if it happens the message will just be stuck so we need to remove it
+                            // from the dispatched list and collect it to be removed from this queue
+                            // and sent to the DLQ
                             iterator.remove();
-                            target = s;
+                            errors.put((QueueMessageReference) node, e);
                             break;
                         }
                     } else {
@@ -2363,7 +2399,20 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
     }
 
     protected void pageInMessages(boolean force, int maxPageSize) throws Exception {
-        doDispatch(doPageInForDispatch(force, true, maxPageSize));
+        Map<QueueMessageReference, ActiveMQMessageFormatException> messageFormatErrors = new LinkedHashMap<>();
+        doDispatch(doPageInForDispatch(force, true, maxPageSize), messageFormatErrors);
+        // Handle outside the pagedInPendingDispatchLock
+        removeMessageFormatErrorMessages(messageFormatErrors);
+    }
+
+    // Any bad messages were already removed from dispatchPendingList and not dispatched, so now we
+    // need to drop the message, remove it from pagedInMessages, remove from the store and
+    // send to the DLQ
+    private void removeMessageFormatErrorMessages(Map<QueueMessageReference, ActiveMQMessageFormatException> dispatchUnmarshalErrors)
+            throws IOException {
+        for (Entry<QueueMessageReference, ActiveMQMessageFormatException> error : dispatchUnmarshalErrors.entrySet()) {
+            removeAndSendToDlq(broker.getAdminConnectionContext(), error.getKey(), error.getValue());
+        }
     }
 
     private void addToConsumerList(Subscription sub) {

@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.util.LinkedList;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.activemq.ActiveMQMessageFormatException;
 import org.apache.activemq.broker.region.AbstractSubscription;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
@@ -41,6 +42,7 @@ import org.apache.activemq.transport.amqp.AmqpProtocolConverter;
 import org.apache.activemq.transport.amqp.message.AutoOutboundTransformer;
 import org.apache.activemq.transport.amqp.message.EncodedMessage;
 import org.apache.activemq.transport.amqp.message.OutboundTransformer;
+import org.apache.activemq.util.ExceptionUtils;
 import org.apache.qpid.proton.amqp.messaging.Accepted;
 import org.apache.qpid.proton.amqp.messaging.Modified;
 import org.apache.qpid.proton.amqp.messaging.Outcome;
@@ -491,7 +493,16 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
                     }
                 }
             } catch (Exception e) {
-                LOG.warn("Error detected while flushing outbound messages: {}", e.getMessage());
+                // Check if there is a format error trying to convert the message. This error means the
+                // message can't be converted (corruption, etc). This will wrap and throw the message
+                // so it can be handled by the transport
+                ActiveMQMessageFormatException formatError = ExceptionUtils.createMessageFormatException(e);
+                if (formatError != null) {
+                    LOG.warn("Message conversion error while flushing outbound messages: {}", e.getMessage(), e);
+                    throw e;
+                } else {
+                    LOG.warn("Error detected while flushing outbound messages: {}", e.getMessage());
+                }
             }
         }
     }
