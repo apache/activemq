@@ -22,6 +22,8 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.net.ServerSocketFactory;
 import javax.net.SocketFactory;
@@ -35,14 +37,19 @@ import org.apache.activemq.transport.nio.NIOSSLTransportServer;
 import org.apache.activemq.transport.tcp.TcpTransport;
 import org.apache.activemq.transport.tcp.TcpTransport.InitBuffer;
 import org.apache.activemq.transport.tcp.TcpTransportServer;
+import org.apache.activemq.util.IOExceptionSupport;
+import org.apache.activemq.util.IntrospectionSupport;
+import org.apache.activemq.util.URISupport;
 import org.apache.activemq.wireformat.WireFormat;
 
 public class StompNIOSSLTransportFactory extends StompNIOTransportFactory {
 
-    protected SSLContext context;
-
     @Override
     protected TcpTransportServer createTcpTransportServer(URI location, ServerSocketFactory serverSocketFactory) throws IOException, URISyntaxException {
+        return createTcpTransportServer(location, serverSocketFactory, null);
+    }
+
+    protected TcpTransportServer createTcpTransportServer(URI location, ServerSocketFactory serverSocketFactory, final SSLContext context) throws IOException, URISyntaxException {
         return new NIOSSLTransportServer(context, this, location, serverSocketFactory) {
 
             @Override
@@ -74,13 +81,33 @@ public class StompNIOSSLTransportFactory extends StompNIOTransportFactory {
 
     @Override
     public TransportServer doBind(URI location) throws IOException {
-        if (SslContext.getCurrentSslContext() != null) {
+        return doBind(location, null);
+    }
+
+    @Override
+    public TransportServer doBind(URI location, SslContext sslContext) throws IOException {
+        SSLContext context = null;
+        if (sslContext != null) {
             try {
-                context = SslContext.getCurrentSslContext().getSSLContext();
+                context = sslContext.getSSLContext();
             } catch (Exception e) {
                 throw new IOException(e);
             }
         }
-        return super.doBind(location);
+        try {
+            Map<String, String> options = new HashMap<String, String>(URISupport.parseParameters(location));
+
+            ServerSocketFactory serverSocketFactory = createServerSocketFactory();
+            TcpTransportServer server = createTcpTransportServer(location, serverSocketFactory, context);
+            server.setWireFormatFactory(createWireFormatFactory(options));
+            IntrospectionSupport.setProperties(server, options);
+            Map<String, Object> transportOptions = IntrospectionSupport.extractProperties(options, "transport.");
+            server.setTransportOption(transportOptions);
+            server.bind();
+
+            return server;
+        } catch (URISyntaxException e) {
+            throw IOExceptionSupport.create(e);
+        }
     }
 }

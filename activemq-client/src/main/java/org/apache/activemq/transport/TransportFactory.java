@@ -27,6 +27,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Executor;
 
+import org.apache.activemq.broker.SslContext;
 import org.apache.activemq.util.FactoryFinder;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.IntrospectionSupport;
@@ -49,6 +50,33 @@ public abstract class TransportFactory {
 
     public abstract TransportServer doBind(URI location) throws IOException;
 
+    /**
+     * Default implementation delegates to the single-arg method, ignoring the
+     * SslContext. Subclasses (e.g. SslTransportFactory) override to use the
+     * context for SSL socket creation.
+     */
+    public TransportServer doBind(URI location, SslContext sslContext) throws IOException {
+        return doBind(location);
+    }
+
+    /**
+     * Default implementation delegates to the single-arg method, ignoring the
+     * SslContext. Subclasses (e.g. SslTransportFactory) override to use the
+     * context for SSL socket creation.
+     */
+    public Transport doConnect(URI location, SslContext sslContext) throws Exception {
+        return doConnect(location);
+    }
+
+    /**
+     * Default implementation delegates to the single-arg method, ignoring the
+     * SslContext. Subclasses (e.g. SslTransportFactory) override to use the
+     * context for SSL socket creation.
+     */
+    public Transport doCompositeConnect(URI location, SslContext sslContext) throws Exception {
+        return doCompositeConnect(location);
+    }
+
     public Transport doConnect(URI location, Executor ex) throws Exception {
         return doConnect(location);
     }
@@ -67,6 +95,11 @@ public abstract class TransportFactory {
     public static Transport connect(URI location) throws Exception {
         TransportFactory tf = findTransportFactory(location);
         return tf.doConnect(location);
+    }
+
+    public static Transport connect(URI location, SslContext sslContext) throws Exception {
+        TransportFactory tf = findTransportFactory(location);
+        return tf.doConnect(location, sslContext);
     }
 
     /**
@@ -93,6 +126,11 @@ public abstract class TransportFactory {
     public static Transport compositeConnect(URI location) throws Exception {
         TransportFactory tf = findTransportFactory(location);
         return tf.doCompositeConnect(location);
+    }
+
+    public static Transport compositeConnect(URI location, SslContext sslContext) throws Exception {
+        TransportFactory tf = findTransportFactory(location);
+        return tf.doCompositeConnect(location, sslContext);
     }
 
     /**

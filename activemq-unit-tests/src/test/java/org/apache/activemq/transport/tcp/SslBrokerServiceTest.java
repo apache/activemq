@@ -38,10 +38,8 @@ import junit.textui.TestRunner;
 
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.SslBrokerService;
-import org.apache.activemq.broker.SslContext;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.transport.TransportBrokerTestSupport;
-import org.apache.activemq.transport.TransportFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.junit.experimental.categories.Category;
@@ -74,25 +72,35 @@ public class SslBrokerServiceTest extends TransportBrokerTestSupport {
         limitedCipherSuites = service.addSslConnector("ssl://localhost:0?transport.enabledCipherSuites=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256", km, tm, null);
         needClientAuthConnector = service.addSslConnector("ssl://localhost:0?transport.needClientAuth=true", km, tm, null);
         
-        // for client side
-        SslTransportFactory sslFactory = new SslTransportFactory();
-        SslContext ctx = new SslContext(km, tm, null);
-        SslContext.setCurrentSslContext(ctx);
-        TransportFactory.registerTransportFactory("ssl", sslFactory);
-        
+        // for client side: the inherited createConnection() path uses the
+        // JVM default SSLSocketFactory, configured via system properties
+        // (same pattern as SslTransportBrokerTest)
+        System.setProperty("javax.net.ssl.trustStore", SslTransportBrokerTest.TRUST_KEYSTORE);
+        System.setProperty("javax.net.ssl.trustStorePassword", SslTransportBrokerTest.PASSWORD);
+        System.setProperty("javax.net.ssl.trustStoreType", SslTransportBrokerTest.KEYSTORE_TYPE);
+        System.setProperty("javax.net.ssl.keyStore", SslTransportBrokerTest.SERVER_KEYSTORE);
+        System.setProperty("javax.net.ssl.keyStorePassword", SslTransportBrokerTest.PASSWORD);
+        System.setProperty("javax.net.ssl.keyStoreType", SslTransportBrokerTest.KEYSTORE_TYPE);
+
         return service;
     }
 
     public void testNeedClientAuthReject() throws Exception {
-        SSLContext context = SSLContext.getInstance("TLS");    
+        // TLSv1.2: under TLS 1.3 the client finishes its handshake before the
+        // server's certificate_required alert arrives, so the rejection would
+        // only surface on first read/write rather than in startHandshake()
+        SSLContext context = SSLContext.getInstance("TLSv1.2");
         // no client cert
         context.init(null, getTrustManager(), null);
         
         try {
             makeSSLConnection(context, null, needClientAuthConnector);
             fail("expected failure on no client cert");
-        } catch (SSLException expected) {
-            expected.printStackTrace();
+        } catch (SSLException | SocketException expected) {
+            // SSLException when the server's fatal alert is read first;
+            // SocketException (broken pipe/reset) when the client's handshake
+            // write races the server-side close after the alert
+            LOG.info("Got expected rejection: {}", expected.toString());
         }
         // should work with regular connector
         makeSSLConnection(context, null, connector);
@@ -127,12 +135,14 @@ public class SslBrokerServiceTest extends TransportBrokerTestSupport {
             sslSocket.setEnabledCipherSuites(enabledSuites);
         }
         sslSocket.setSoTimeout(5000);
-        
-        SSLSession session = sslSocket.getSession();
+
+        // handshake first so failures surface as SSLException (getSession()
+        // swallows handshake errors and returns an invalid session)
         sslSocket.startHandshake();
+        SSLSession session = sslSocket.getSession();
         LOG.info("cyphersuite: " + session.getCipherSuite());
         LOG.info("peer port: " + session.getPeerPort());
-        LOG.info("peer cert: " + session.getPeerCertificateChain()[0].toString());    
+        LOG.info("peer cert: " + session.getPeerCertificates()[0].toString());
     }
     
     public static TrustManager[] getTrustManager() throws Exception {

@@ -24,10 +24,7 @@ import javax.net.ssl.KeyManager;
 import javax.net.ssl.TrustManager;
 
 import org.apache.activemq.broker.SslBrokerService;
-import org.apache.activemq.broker.SslContext;
 import org.apache.activemq.broker.TransportConnector;
-import org.apache.activemq.transport.TransportFactory;
-import org.apache.activemq.transport.tcp.SslTransportFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -93,9 +90,8 @@ public class SSLMAnagedConnectionFactoryTest {
 
         connectionURI = connector.getPublishableConnectString();
 
-        SslTransportFactory sslFactory = new SslTransportFactory();
-        SslContext ctx = new SslContext(km, tm, null);
-        SslContext.setCurrentSslContext(ctx);
-        TransportFactory.registerTransportFactory("ssl", sslFactory);
+        // No ThreadLocal SslContext needed: the RA client uses
+        // ActiveMQSslConnectionFactory configured with the trust/key stores
+        // set on the managed connection factory above.
     }
 }

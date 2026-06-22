@@ -26,6 +26,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.activemq.broker.SslContext;
 import org.apache.activemq.command.Command;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.Message;
@@ -69,6 +70,7 @@ public class FanoutTransport implements CompositeTransport {
     private boolean started;
 
     private final ArrayList<FanoutTransportHandler> transports = new ArrayList<FanoutTransportHandler>();
+    private final SslContext sslContext;
     private int connectedCount;
 
     private int minAckCount = 2;
@@ -158,6 +160,11 @@ public class FanoutTransport implements CompositeTransport {
     }
 
     public FanoutTransport() {
+        this(null);
+    }
+
+    public FanoutTransport(SslContext sslContext) {
+        this.sslContext = sslContext;
         // Setup a task that is used to reconnect the a connection async.
         reconnectTaskFactory = new TaskRunnerFactory();
         reconnectTaskFactory.init();
@@ -212,7 +219,7 @@ public class FanoutTransport implements CompositeTransport {
                         try {
                             LOG.debug("Stopped: " + this);
                             LOG.debug("Attempting connect to: " + uri);
-                            Transport t = TransportFactory.compositeConnect(uri);
+                            Transport t = TransportFactory.compositeConnect(uri, sslContext);
                             fanoutHandler.transport = t;
                             t.setTransportListener(fanoutHandler);
                             if (started) {
