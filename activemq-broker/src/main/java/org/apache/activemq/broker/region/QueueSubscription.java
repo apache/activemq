@@ -110,7 +110,7 @@ public class QueueSubscription extends PrefetchSubscription implements LockOwner
         try {
             return super.matchesSelector(node, context);
         } catch (JMSException e) {
-            // This may cause the headers to unmarshal which could throw ActiveMQUnmarshalException
+            // This may cause the headers to unmarshal which could throw ActiveMQUnmarshalEOFException
             // The body could also be unmarshaled if using XPATH and could trigger a
             // MessageDataFormat exception which this also handles.
             ActiveMQMessageFormatException formatError = ExceptionUtils.createMessageFormatException(e);
@@ -118,7 +118,7 @@ public class QueueSubscription extends PrefetchSubscription implements LockOwner
                 LOG.error("Message could not be read for selector evaluation: {}", e.getMessage(), e);
                 throw formatError;
             }
-            // it error is not an ActiveMQUnmarshalException, just rethrow the JMSException
+            // it error is not an ActiveMQUnmarshalEOFException, just rethrow the JMSException
             // which will be caught and handled
             throw e;
         }

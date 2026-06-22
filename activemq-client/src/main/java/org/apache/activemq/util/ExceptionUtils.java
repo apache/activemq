@@ -62,7 +62,7 @@ public class ExceptionUtils {
 
     /*
      * Checks if the error is considered an error with the format of the message.
-     * This checks for the ActiveMQ custom ActiveMQUnmarshalException that
+     * This checks for the ActiveMQ custom ActiveMQUnmarshalEOFException that
      * can be thrown by MarshallingSupport as well as JMS specific exceptions
      * that indicated corruption/read problems such as MessageFormatException
      * and MessageEOFException.
@@ -72,7 +72,7 @@ public class ExceptionUtils {
             return false;
         }
 
-        return error instanceof MarshallingSupport.ActiveMQUnmarshalException ||
+        return error instanceof MarshallingSupport.ActiveMQUnmarshalEOFException ||
                 error instanceof MessageFormatException ||
                 error instanceof MessageEOFException;
     }

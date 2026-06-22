@@ -36,7 +36,7 @@ import org.apache.activemq.util.ByteArrayOutputStream;
 import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.util.ByteSequenceData;
 import org.apache.activemq.util.MarshallingSupport;
-import org.apache.activemq.util.MarshallingSupport.ActiveMQUnmarshalException;
+import org.apache.activemq.util.MarshallingSupport.ActiveMQUnmarshalEOFException;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.junit.experimental.categories.Category;
 
@@ -185,7 +185,7 @@ public class ActiveMQTextMessageTest extends TestCase {
         } catch (JMSException e) {
             // expected
             assertTrue(
-                    ExceptionUtils.getRootCause(e) instanceof ActiveMQUnmarshalException);
+                    ExceptionUtils.getRootCause(e) instanceof ActiveMQUnmarshalEOFException);
         }
     }
     

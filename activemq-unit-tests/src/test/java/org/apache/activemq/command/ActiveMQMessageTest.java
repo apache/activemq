@@ -33,7 +33,7 @@ import org.apache.activemq.state.CommandVisitor;
 import org.apache.activemq.test.annotations.ParallelTest;
 import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.util.ByteSequenceData;
-import org.apache.activemq.util.MarshallingSupport.ActiveMQUnmarshalException;
+import org.apache.activemq.util.MarshallingSupport.ActiveMQUnmarshalEOFException;
 import org.apache.activemq.wireformat.WireFormat;
 import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
@@ -1012,7 +1012,7 @@ public class ActiveMQMessageTest extends TestCase {
             // this will trigger unmarshalling
             msg.getProperty("test");
             fail("Should have thrown exception");
-        } catch (ActiveMQUnmarshalException e) {
+        } catch (ActiveMQUnmarshalEOFException e) {
             // expected
         }
     }

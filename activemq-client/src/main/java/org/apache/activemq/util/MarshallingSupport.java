@@ -19,6 +19,7 @@ package org.apache.activemq.util;
 import java.io.DataInputStream;
 import java.io.DataOutput;
 import java.io.DataOutputStream;
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UTFDataFormatException;
@@ -457,7 +458,7 @@ public final class MarshallingSupport {
 
     private static void validatePropertySize(int size, int maxPropertySize) throws IOException {
         if (size > maxPropertySize) {
-            throw new ActiveMQUnmarshalException("Primitive map is larger than the allowed size: " + size);
+            throw new ActiveMQUnmarshalEOFException("Primitive map is larger than the allowed size: " + size);
         }
     }
 
@@ -468,28 +469,18 @@ public final class MarshallingSupport {
         }
 
         if (size > maxSize) {
-            throw new ActiveMQUnmarshalException("Max buffer size: " + maxSize + " exceeded, size: " + size);
+            throw new ActiveMQUnmarshalEOFException("Max buffer size: " + maxSize + " exceeded, size: " + size);
         }
         return size;
     }
 
-    private static void validateDepth(int maxDepth, int currentDepth) throws IOException {
+    private static void validateDepth(int maxDepth, int currentDepth) throws EOFException {
         if (currentDepth > maxDepth) {
-            throw new ActiveMQUnmarshalException("Max unmarshaling depth: " + maxDepth + " exceeded, depth: " + currentDepth);
+            throw new ActiveMQUnmarshalEOFException("Max unmarshaling depth: " + maxDepth + " exceeded, depth: " + currentDepth);
         }
     }
 
-    public static class ActiveMQUnmarshalException extends IOException {
-        public ActiveMQUnmarshalException(String message) {
-            super(message);
-        }
-
-        public ActiveMQUnmarshalException(Throwable cause) {
-            super(cause);
-        }
-    }
-
-    public static class ActiveMQUnmarshalEOFException extends ActiveMQUnmarshalException {
+    public static class ActiveMQUnmarshalEOFException extends EOFException {
         public ActiveMQUnmarshalEOFException(String message) {
             super(message);
         }

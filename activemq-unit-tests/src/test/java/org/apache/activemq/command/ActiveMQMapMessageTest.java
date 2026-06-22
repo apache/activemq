@@ -38,7 +38,7 @@ import jakarta.jms.MessageNotWriteableException;
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.test.annotations.ParallelTest;
 import org.apache.activemq.util.ByteSequenceData;
-import org.apache.activemq.util.MarshallingSupport.ActiveMQUnmarshalException;
+import org.apache.activemq.util.MarshallingSupport.ActiveMQUnmarshalEOFException;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -500,7 +500,7 @@ public class ActiveMQMapMessageTest {
         } catch (JMSException e) {
             // expected
             assertTrue(
-                    ExceptionUtils.getRootCause(e) instanceof ActiveMQUnmarshalException);
+                    ExceptionUtils.getRootCause(e) instanceof ActiveMQUnmarshalEOFException);
         }
     }
 
