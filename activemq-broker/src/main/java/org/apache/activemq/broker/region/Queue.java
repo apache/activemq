@@ -619,9 +619,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         }
 
         // Remove any corrupt messages
-        if (messageFormatErrors != null) {
-            removeMessageFormatErrorMessages(messageFormatErrors);
-        }
+        removeMessageFormatErrorMessages(messageFormatErrors);
     }
 
     private volatile ResourceAllocationException sendMemAllocationException = null;
@@ -2419,10 +2417,13 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
     // Any bad messages were already removed from dispatchPendingList and not dispatched, so now we
     // need to drop the message, remove it from pagedInMessages, remove from the store and
     // send to the DLQ
-    private void removeMessageFormatErrorMessages(Map<QueueMessageReference, ActiveMQMessageFormatException> dispatchUnmarshalErrors)
+    private void removeMessageFormatErrorMessages(Map<QueueMessageReference, ActiveMQMessageFormatException> messageFormatErrors)
             throws IOException {
-        for (Entry<QueueMessageReference, ActiveMQMessageFormatException> error : dispatchUnmarshalErrors.entrySet()) {
-            removeAndSendToDlq(broker.getAdminConnectionContext(), error.getKey(), error.getValue());
+        if (messageFormatErrors != null) {
+            for (Entry<QueueMessageReference, ActiveMQMessageFormatException> error : messageFormatErrors.entrySet()) {
+                removeAndSendToDlq(broker.getAdminConnectionContext(), error.getKey(),
+                        error.getValue());
+            }
         }
     }
 
