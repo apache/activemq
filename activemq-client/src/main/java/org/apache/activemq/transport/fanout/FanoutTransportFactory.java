@@ -21,6 +21,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Map;
 
+import org.apache.activemq.broker.SslContext;
 import org.apache.activemq.transport.MutexTransport;
 import org.apache.activemq.transport.ResponseCorrelator;
 import org.apache.activemq.transport.Transport;
@@ -35,8 +36,17 @@ import org.apache.activemq.util.URISupport.CompositeData;
 public class FanoutTransportFactory extends TransportFactory {
 
     public Transport doConnect(URI location) throws IOException {
+        return doConnectInternal(location, null);
+    }
+
+    @Override
+    public Transport doConnect(URI location, SslContext sslContext) throws IOException {
+        return doConnectInternal(location, sslContext);
+    }
+
+    private Transport doConnectInternal(URI location, SslContext sslContext) throws IOException {
         try {
-            Transport transport = createTransport(location);
+            Transport transport = createTransport(location, sslContext);
             transport = new MutexTransport(transport);
             transport = new ResponseCorrelator(transport);
             return transport;
@@ -47,7 +57,16 @@ public class FanoutTransportFactory extends TransportFactory {
 
     public Transport doCompositeConnect(URI location) throws IOException {
         try {
-            return createTransport(location);
+            return createTransport(location, (SslContext) null);
+        } catch (URISyntaxException e) {
+            throw new IOException("Invalid location: " + location);
+        }
+    }
+
+    @Override
+    public Transport doCompositeConnect(URI location, SslContext sslContext) throws IOException {
+        try {
+            return createTransport(location, sslContext);
         } catch (URISyntaxException e) {
             throw new IOException("Invalid location: " + location);
         }
@@ -60,15 +79,23 @@ public class FanoutTransportFactory extends TransportFactory {
      * @throws URISyntaxException
      */
     public Transport createTransport(URI location) throws IOException, URISyntaxException {
+        return createTransport(location, (SslContext) null);
+    }
+
+    public Transport createTransport(URI location, SslContext sslContext) throws IOException, URISyntaxException {
         CompositeData compositeData = URISupport.parseComposite(location);
         Map<String, String> parameters = compositeData.getParameters();
-        FanoutTransport fanoutTransport = createTransport(parameters);        
+        FanoutTransport fanoutTransport = createTransport(parameters, sslContext);
         DiscoveryTransport discoveryTransport = DiscoveryTransportFactory.createTransport(fanoutTransport, compositeData, parameters);
         return discoveryTransport;
     }
 
     public FanoutTransport createTransport(Map<String,String> parameters) throws IOException {
-        FanoutTransport transport = new FanoutTransport();
+        return createTransport(parameters, null);
+    }
+
+    public FanoutTransport createTransport(Map<String,String> parameters, SslContext sslContext) throws IOException {
+        FanoutTransport transport = new FanoutTransport(sslContext);
         IntrospectionSupport.setProperties(transport, parameters);
         return transport;
     }

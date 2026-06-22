@@ -40,10 +40,11 @@ import javax.management.ObjectName;
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.TrustManager;
 
-import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.ActiveMQSslConnectionFactory;
 import org.apache.activemq.AutoFailTestSupport;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.SslContext;
+import org.apache.activemq.broker.DefaultSslContext;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
@@ -68,6 +69,8 @@ public class FailoverStaticNetworkTest {
 
 
     private SslContext sslContext;
+    private KeyManager[] km;
+    private TrustManager[] tm;
 
     protected BrokerService createBroker(String scheme, String listenPort, String[] networkToPorts) throws Exception {
         return createBroker(scheme, listenPort, networkToPorts, null);
@@ -118,9 +121,9 @@ public class FailoverStaticNetworkTest {
 
     @Before
     public void setUp() throws Exception {
-        KeyManager[] km = SslBrokerServiceTest.getKeyManager();
-        TrustManager[] tm = SslBrokerServiceTest.getTrustManager();
-        sslContext = new SslContext(km, tm, null);
+        km = SslBrokerServiceTest.getKeyManager();
+        tm = SslBrokerServiceTest.getTrustManager();
+        sslContext = new DefaultSslContext(km, tm, null);
     }
 
     @After
@@ -418,7 +421,6 @@ public class FailoverStaticNetworkTest {
 
         LOG.info("Creating Consumer on the networked broker ..." + from);
 
-        SslContext.setCurrentSslContext(sslContext);
         // Create a consumer on brokerA
         ConnectionFactory consFactory = createConnectionFactory(from);
         Connection consConn = consFactory.createConnection();
@@ -460,7 +462,10 @@ public class FailoverStaticNetworkTest {
 
     protected ConnectionFactory createConnectionFactory(final BrokerService broker) throws Exception {
         String url = broker.getTransportConnectors().get(0).getServer().getConnectURI().toString();
-        ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory(url);
+        // explicit key/trust managers replace the previous ThreadLocal
+        // SslContext propagation; ignored by the tcp scheme variants
+        ActiveMQSslConnectionFactory connectionFactory = new ActiveMQSslConnectionFactory(url);
+        connectionFactory.setKeyAndTrustManagers(km, tm, null);
         connectionFactory.setOptimizedMessageDispatch(true);
         connectionFactory.setDispatchAsync(false);
         connectionFactory.setUseAsyncSend(false);

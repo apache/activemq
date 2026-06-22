@@ -72,12 +72,12 @@ public class VMTransportFactory extends TransportFactory {
     }
 
     @Override
-    public Transport doConnect(URI location) throws Exception {
+    public Transport doConnect(URI location) throws IOException, URISyntaxException {
         return VMTransportServer.configure(doCompositeConnect(location));
     }
 
     @Override
-    public Transport doCompositeConnect(URI location) throws Exception {
+    public Transport doCompositeConnect(URI location) throws IOException, URISyntaxException {
         URI brokerURI;
         String host;
         Map<String, String> options;
@@ -134,11 +134,17 @@ public class VMTransportFactory extends TransportFactory {
             // cause multiple brokers to be started.
             synchronized (BrokerRegistry.getInstance().getRegistryMutext()) {
                 broker = lookupBroker(BrokerRegistry.getInstance(), host, waitForStart);
-                if (broker == null) {
-                    if (!create) {
-                        throw new IOException("Broker named '" + host + "' does not exist.");
-                    }
-                    try {
+                // Broker create/start and connector.start() below are the only
+                // calls here that throw a bare checked Exception; wrap those as
+                // IOException to satisfy the narrowed throws clause. IOException
+                // and any RuntimeException (e.g. the schema-guard
+                // IllegalArgumentException, or invalid broker config) are
+                // re-thrown unchanged so their type/contract is preserved.
+                try {
+                    if (broker == null) {
+                        if (!create) {
+                            throw new IOException("Broker named '" + host + "' does not exist.");
+                        }
                         validateBrokerCreationSchema(host, brokerURI);
                         if (brokerFactoryHandler != null) {
                             broker = brokerFactoryHandler.createBroker(brokerURI);
@@ -147,22 +153,24 @@ public class VMTransportFactory extends TransportFactory {
                         }
                         broker.start();
                         MDC.put("activemq.broker", broker.getBrokerName());
-                    } catch (URISyntaxException e) {
-                        throw IOExceptionSupport.create(e);
+                        BROKERS.put(host, broker);
+                        BrokerRegistry.getInstance().getRegistryMutext().notifyAll();
                     }
-                    BROKERS.put(host, broker);
-                    BrokerRegistry.getInstance().getRegistryMutext().notifyAll();
-                }
 
-                server = SERVERS.get(host);
-                if (server == null) {
-                    server = (VMTransportServer)bind(location, true);
-                    TransportConnector connector = new TransportConnector(server);
-                    connector.setBrokerService(broker);
-                    connector.setUri(location);
-                    connector.setTaskRunnerFactory(broker.getTaskRunnerFactory());
-                    connector.start();
-                    CONNECTORS.put(host, connector);
+                    server = SERVERS.get(host);
+                    if (server == null) {
+                        server = (VMTransportServer)bind(location, true);
+                        TransportConnector connector = new TransportConnector(server);
+                        connector.setBrokerService(broker);
+                        connector.setUri(location);
+                        connector.setTaskRunnerFactory(broker.getTaskRunnerFactory());
+                        connector.start();
+                        CONNECTORS.put(host, connector);
+                    }
+                } catch (IOException | RuntimeException e) {
+                    throw e;
+                } catch (Exception e) {
+                    throw IOExceptionSupport.create(e);
                 }
 
             }

@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.net.ServerSocketFactory;
+import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
 
 import org.apache.activemq.broker.BrokerService;
@@ -62,6 +63,12 @@ public class AutoNioSslTransportFactory extends NIOSSLTransportFactory implement
 
     @Override
     protected AutoNIOSSLTransportServer createTcpTransportServer(URI location, ServerSocketFactory serverSocketFactory) throws IOException, URISyntaxException {
+        return createTcpTransportServer(location, serverSocketFactory, null);
+    }
+
+    @Override
+    protected AutoNIOSSLTransportServer createTcpTransportServer(URI location, ServerSocketFactory serverSocketFactory, SslContext sslContext) throws IOException, URISyntaxException {
+        final SSLContext context = toSSLContext(sslContext);
         return new AutoNIOSSLTransportServer(context, this, location, serverSocketFactory, brokerService, enabledProtocols) {
 
             @Override
@@ -94,23 +101,15 @@ public class AutoNioSslTransportFactory extends NIOSSLTransportFactory implement
     private Set<String> enabledProtocols;
 
     @Override
-    public TransportServer doBind(final URI location) throws IOException {
+    public TransportServer doBind(final URI location, SslContext sslContext) throws IOException {
         try {
-            if (SslContext.getCurrentSslContext() != null) {
-                try {
-                    context = SslContext.getCurrentSslContext().getSSLContext();
-                } catch (Exception e) {
-                    throw new IOException(e);
-                }
-            }
-
             Map<String, String> options = new HashMap<String, String>(URISupport.parseParameters(location));
 
             Map<String, Object> autoProperties = IntrospectionSupport.extractProperties(options, "auto.");
             this.enabledProtocols = AutoTransportUtils.parseProtocols((String) autoProperties.get("protocols"));
 
-            ServerSocketFactory serverSocketFactory = createServerSocketFactory();
-            AutoTcpTransportServer server = createTcpTransportServer(location, serverSocketFactory);
+            ServerSocketFactory serverSocketFactory = createServerSocketFactory(sslContext);
+            AutoTcpTransportServer server = createTcpTransportServer(location, serverSocketFactory, sslContext);
             server.setWireFormatFactory(new OpenWireFormatFactory());
             if (options.get("allowLinkStealing") != null){
                 allowLinkStealingSet = true;

@@ -39,7 +39,14 @@ public class NetworkAsyncStartSslTest extends JmsMultipleBrokersTestSupport {
     public static final String TRUST_KEYSTORE = "src/test/resources/client.keystore";
 
     public void testSslPerConnectorConfig() throws Exception {
-        String transport = "ssl";
+        doTestSslPerConnectorConfig("ssl");
+    }
+
+    public void testSslPerConnectorConfigNioSsl() throws Exception {
+        doTestSslPerConnectorConfig("nio+ssl");
+    }
+
+    private void doTestSslPerConnectorConfig(String transport) throws Exception {
         String brokerBUri = transport + "://" + brokerBDomain;
         String brokerCUri = transport + "://" + brokerCDomain;
 

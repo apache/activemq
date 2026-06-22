@@ -76,7 +76,7 @@ public class UdpTransportFactory extends TransportFactory {
     }
 
     @Override
-    public Transport configure(Transport transport, WireFormat format, Map options) throws Exception {
+    public Transport configure(Transport transport, WireFormat format, Map options) throws IOException {
         return configure(transport, format, options, false);
     }
 
@@ -124,7 +124,7 @@ public class UdpTransportFactory extends TransportFactory {
      *                SocketServers where new connections spin up a new separate
      *                UDP transport
      */
-    protected Transport configure(Transport transport, WireFormat format, Map options, boolean acceptServer) throws Exception {
+    protected Transport configure(Transport transport, WireFormat format, Map options, boolean acceptServer) throws IOException {
         IntrospectionSupport.setProperties(transport, options);
         UdpTransport udpTransport = (UdpTransport)transport;
 

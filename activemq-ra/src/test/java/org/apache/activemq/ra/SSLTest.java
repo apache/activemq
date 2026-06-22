@@ -64,13 +64,10 @@ import javax.transaction.xa.Xid;
 import org.apache.activemq.ActiveMQSslConnectionFactory;
 import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.SslBrokerService;
-import org.apache.activemq.broker.SslContext;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ConsumerInfo;
-import org.apache.activemq.transport.TransportFactory;
-import org.apache.activemq.transport.tcp.SslTransportFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -112,12 +109,11 @@ public class SSLTest {
         TrustManager[] tm = getTrustManager();
         connector = broker.addSslConnector(BIND_ADDRESS, km, tm, null);
         broker.start();
-        broker.waitUntilStarted();     // for client side
+        broker.waitUntilStarted();
 
-        SslTransportFactory sslFactory = new SslTransportFactory();
-        SslContext ctx = new SslContext(km, tm, null);
-        SslContext.setCurrentSslContext(ctx);
-        TransportFactory.registerTransportFactory("ssl", sslFactory);
+        // No ThreadLocal SslContext needed: every client in this test
+        // (ActiveMQSslConnectionFactory, the RA, and the activation specs)
+        // configures its trust/key stores explicitly.
     }
 
     private static final class StubBootstrapContext implements BootstrapContext {

@@ -30,7 +30,6 @@ import javax.net.ssl.SSLEngine;
 
 import org.apache.activemq.broker.SslContext;
 import org.apache.activemq.transport.Transport;
-import org.apache.activemq.transport.TransportServer;
 import org.apache.activemq.transport.nio.NIOSSLTransportServer;
 import org.apache.activemq.transport.tcp.TcpTransport;
 import org.apache.activemq.transport.tcp.TcpTransport.InitBuffer;
@@ -39,10 +38,14 @@ import org.apache.activemq.wireformat.WireFormat;
 
 public class StompNIOSSLTransportFactory extends StompNIOTransportFactory {
 
-    protected SSLContext context;
-
     @Override
     protected TcpTransportServer createTcpTransportServer(URI location, ServerSocketFactory serverSocketFactory) throws IOException, URISyntaxException {
+        return createTcpTransportServer(location, serverSocketFactory, null);
+    }
+
+    @Override
+    protected TcpTransportServer createTcpTransportServer(URI location, ServerSocketFactory serverSocketFactory, SslContext sslContext) throws IOException, URISyntaxException {
+        final SSLContext context = toSSLContext(sslContext);
         return new NIOSSLTransportServer(context, this, location, serverSocketFactory) {
 
             @Override
@@ -70,17 +73,5 @@ public class StompNIOSSLTransportFactory extends StompNIOTransportFactory {
             SSLEngine engine, InitBuffer initBuffer, ByteBuffer inputBuffer)
             throws IOException {
         return new StompNIOSSLTransport(wireFormat, socket, engine, initBuffer, inputBuffer);
-    }
-
-    @Override
-    public TransportServer doBind(URI location) throws IOException {
-        if (SslContext.getCurrentSslContext() != null) {
-            try {
-                context = SslContext.getCurrentSslContext().getSSLContext();
-            } catch (Exception e) {
-                throw new IOException(e);
-            }
-        }
-        return super.doBind(location);
     }
 }

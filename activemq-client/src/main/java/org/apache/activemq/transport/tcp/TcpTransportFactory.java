@@ -20,16 +20,17 @@ import java.io.IOException;
 import java.net.Socket;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
 
 import javax.net.ServerSocketFactory;
 import javax.net.SocketFactory;
+import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
 
 import org.apache.activemq.TransportLoggerSupport;
+import org.apache.activemq.broker.SslContext;
 import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.transport.InactivityMonitor;
 import org.apache.activemq.transport.Transport;
@@ -50,11 +51,25 @@ public class TcpTransportFactory extends TransportFactory {
 
     @Override
     public TransportServer doBind(final URI location) throws IOException {
+        return doBind(location, null);
+    }
+
+    /**
+     * Binds a TCP based transport server. The given {@link SslContext} is
+     * handed to {@link #createServerSocketFactory(SslContext)} and
+     * {@link #createTcpTransportServer(URI, ServerSocketFactory, SslContext)}
+     * so SSL capable subclasses can derive their socket factory and server
+     * from it; plain TCP ignores it. The broker always binds through this
+     * method, so subclasses customizing the bind must override it rather
+     * than {@link #doBind(URI)}.
+     */
+    @Override
+    public TransportServer doBind(final URI location, SslContext sslContext) throws IOException {
         try {
             Map<String, String> options = new HashMap<String, String>(URISupport.parseParameters(location));
 
-            ServerSocketFactory serverSocketFactory = createServerSocketFactory();
-            TcpTransportServer server = createTcpTransportServer(location, serverSocketFactory);
+            ServerSocketFactory serverSocketFactory = createServerSocketFactory(sslContext);
+            TcpTransportServer server = createTcpTransportServer(location, serverSocketFactory, sslContext);
             server.setWireFormatFactory(createWireFormatFactory(options));
             IntrospectionSupport.setProperties(server, options);
             Map<String, Object> transportOptions = IntrospectionSupport.extractProperties(options, "transport.");
@@ -79,6 +94,18 @@ public class TcpTransportFactory extends TransportFactory {
      */
     protected TcpTransportServer createTcpTransportServer(final URI location, ServerSocketFactory serverSocketFactory) throws IOException, URISyntaxException {
         return new TcpTransportServer(this, location, serverSocketFactory);
+    }
+
+    /**
+     * Allows SSL capable subclasses to create a TcpTransportServer that uses
+     * the given SslContext for accepted connections. The default ignores the
+     * context and delegates to
+     * {@link #createTcpTransportServer(URI, ServerSocketFactory)}.
+     *
+     * @param sslContext the SslContext to use, or null for the JVM default.
+     */
+    protected TcpTransportServer createTcpTransportServer(final URI location, ServerSocketFactory serverSocketFactory, SslContext sslContext) throws IOException, URISyntaxException {
+        return createTcpTransportServer(location, serverSocketFactory);
     }
 
     @Override
@@ -121,8 +148,38 @@ public class TcpTransportFactory extends TransportFactory {
         return true;
     }
 
+    /**
+     * Connects a TCP based transport. The given {@link SslContext} is threaded
+     * through {@link #doConnectInternal} to {@link #createTransport(URI, WireFormat, SslContext)}
+     * (and thence {@link #createSocketFactory(SslContext)}) so SSL capable
+     * subclasses can derive their socket factory from it; plain TCP ignores it.
+     * The plain {@code doConnect(URI)}/{@code doCompositeConnect(URI)} are
+     * inherited from {@link TransportFactory}, which routes through the same
+     * createTransport(URI, WireFormat, SslContext) override with a null context.
+     */
     @Override
-    protected Transport createTransport(URI location, WireFormat wf) throws UnknownHostException, IOException {
+    public Transport doConnect(URI location, SslContext sslContext) throws IOException {
+        return doConnectInternal(location, sslContext, false);
+    }
+
+    @Override
+    public Transport doCompositeConnect(URI location, SslContext sslContext) throws IOException {
+        return doConnectInternal(location, sslContext, true);
+    }
+
+    @Override
+    protected Transport createTransport(URI location, WireFormat wf) throws IOException {
+        return createTransport(location, wf, null);
+    }
+
+    /**
+     * Creates the client side transport for the given location, deriving the
+     * socket factory from the given SslContext via
+     * {@link #createSocketFactory(SslContext)}.
+     *
+     * @param sslContext the SslContext to use, or null for the JVM default.
+     */
+    protected Transport createTransport(URI location, WireFormat wf, SslContext sslContext) throws IOException {
         URI localLocation = null;
         String path = location.getPath();
         // see if the path is a local URI location
@@ -139,7 +196,7 @@ public class TcpTransportFactory extends TransportFactory {
                 }
             }
         }
-        SocketFactory socketFactory = createSocketFactory();
+        SocketFactory socketFactory = createSocketFactory(sslContext);
         return createTcpTransport(wf, socketFactory, location, localLocation);
     }
 
@@ -163,10 +220,9 @@ public class TcpTransportFactory extends TransportFactory {
      *
      * @return a new TcpTransport instance connected to the given location.
      *
-     * @throws UnknownHostException
      * @throws IOException
      */
-    protected TcpTransport createTcpTransport(WireFormat wf, SocketFactory socketFactory, URI location, URI localLocation) throws UnknownHostException, IOException {
+    protected TcpTransport createTcpTransport(WireFormat wf, SocketFactory socketFactory, URI location, URI localLocation) throws IOException {
         return new TcpTransport(wf, socketFactory, location, localLocation);
     }
 
@@ -174,8 +230,47 @@ public class TcpTransportFactory extends TransportFactory {
         return ServerSocketFactory.getDefault();
     }
 
+    /**
+     * Allows SSL capable subclasses to derive the ServerSocketFactory from the
+     * given SslContext. The default ignores the context and delegates to
+     * {@link #createServerSocketFactory()}.
+     *
+     * @param sslContext the SslContext to use, or null for the JVM default.
+     */
+    protected ServerSocketFactory createServerSocketFactory(SslContext sslContext) throws IOException {
+        return createServerSocketFactory();
+    }
+
+    /**
+     * Resolves the SSLContext held by the given SslContext.
+     *
+     * @return the SSLContext, or null when no SslContext was supplied.
+     * @throws IOException if the SslContext cannot produce an SSLContext.
+     */
+    protected static SSLContext toSSLContext(SslContext sslContext) throws IOException {
+        if (sslContext == null) {
+            return null;
+        }
+        try {
+            return sslContext.getSSLContext();
+        } catch (Exception e) {
+            throw IOExceptionSupport.create(e);
+        }
+    }
+
     protected SocketFactory createSocketFactory() throws IOException {
         return SocketFactory.getDefault();
+    }
+
+    /**
+     * Allows SSL capable subclasses to derive the SocketFactory from the given
+     * SslContext. The default ignores the context and delegates to
+     * {@link #createSocketFactory()}.
+     *
+     * @param sslContext the SslContext to use, or null for the JVM default.
+     */
+    protected SocketFactory createSocketFactory(SslContext sslContext) throws IOException {
+        return createSocketFactory();
     }
 
     protected Transport createInactivityMonitor(Transport transport, WireFormat format) {

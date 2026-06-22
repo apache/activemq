@@ -24,11 +24,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-import javax.net.ServerSocketFactory;
 import javax.net.ssl.SSLServerSocketFactory;
 
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.BrokerServiceAware;
+import org.apache.activemq.broker.SslContext;
 import org.apache.activemq.transport.TransportServer;
 import org.apache.activemq.transport.tcp.SslTransportFactory;
 import org.apache.activemq.transport.tcp.TcpTransport;
@@ -54,19 +54,16 @@ public class AutoSslTransportFactory extends SslTransportFactory implements Brok
 
     private Set<String> enabledProtocols;
 
-    /**
-     * Overriding to use SslTransportServer and allow for proper reflection.
-     */
     @Override
-    public TransportServer doBind(final URI location) throws IOException {
+    public TransportServer doBind(final URI location, SslContext sslContext) throws IOException {
         try {
             Map<String, String> options = new HashMap<String, String>(URISupport.parseParameters(location));
 
             Map<String, Object> autoProperties = IntrospectionSupport.extractProperties(options, "auto.");
             this.enabledProtocols = AutoTransportUtils.parseProtocols((String) autoProperties.get("protocols"));
 
-            ServerSocketFactory serverSocketFactory = createServerSocketFactory();
-            AutoSslTransportServer server = createAutoSslTransportServer(location, (SSLServerSocketFactory)serverSocketFactory);
+            SSLServerSocketFactory serverSocketFactory = (SSLServerSocketFactory) createServerSocketFactory(sslContext);
+            AutoSslTransportServer server = createAutoSslTransportServer(location, serverSocketFactory);
             if (options.get("allowLinkStealing") != null){
                 allowLinkStealingSet = true;
             }

@@ -43,9 +43,14 @@ public class HttpsTransportFactory extends HttpTransportFactory {
 
     @Override
     public TransportServer doBind(URI location) throws IOException {
+        return doBind(location, null);
+    }
+
+    @Override
+    public TransportServer doBind(URI location, SslContext sslContext) throws IOException {
         try {
             Map<String, String> options = new HashMap<String, String>(URISupport.parseParameters(location));
-            HttpsTransportServer result = new HttpsTransportServer(location, this, SslContext.getCurrentSslContext());
+            HttpsTransportServer result = new HttpsTransportServer(location, this, sslContext);
             Map<String, Object> httpOptions = IntrospectionSupport.extractProperties(options, "http.");
             Map<String, Object> transportOptions = IntrospectionSupport.extractProperties(options, "transport.");
             result.setTransportOption(transportOptions);
@@ -58,7 +63,18 @@ public class HttpsTransportFactory extends HttpTransportFactory {
 
     @Override
     protected Transport createTransport(URI location, WireFormat wf) throws IOException {
-        // need to remove options from uri
+        return createTransport(location, wf, null);
+    }
+
+    /**
+     * HTTPS SSL-aware createTransport override: builds the client transport with the supplied SslContext
+     * (null = JVM default). The connect template threads the context here via
+     * TcpTransportFactory's inherited doConnect(URI, SslContext); overriding this
+     * 3-arg (instead of the 2-arg) is what lets HTTPS receive the context
+     * directly, replacing the old sslContext field + doConnect stash.
+     */
+    @Override
+    protected Transport createTransport(URI location, WireFormat wf, SslContext sslContext) throws IOException {
         try {
             URI uri = URISupport.removeQuery(location);
 
@@ -69,7 +85,7 @@ public class HttpsTransportFactory extends HttpTransportFactory {
                 verifyHostName = Boolean.parseBoolean(transportOptions.get("verifyHostName").toString());
             }
 
-            HttpsClientTransport clientTransport = new HttpsClientTransport(asTextWireFormat(wf), uri);
+            HttpsClientTransport clientTransport = new HttpsClientTransport(asTextWireFormat(wf), uri, sslContext);
             clientTransport.setVerifyHostName(verifyHostName);
             return clientTransport;
         } catch (URISyntaxException e) {

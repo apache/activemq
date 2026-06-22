@@ -23,6 +23,7 @@ import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.activemq.broker.SslContext;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFactory;
 import org.apache.activemq.transport.TransportLoggerFactory;
@@ -87,9 +88,28 @@ public class HttpTransportFactory extends TransportFactory {
         return new HttpClientTransport(textWireFormat, uri);
     }
 
+    /**
+     * HttpTransportFactory extends TransportFactory directly (not
+     * TcpTransportFactory), so it does not inherit Tcp's SslContext-threading
+     * doConnect. It must supply its own, or the base doConnect(URI, SslContext)
+     * would silently drop the context and an HTTPS client would fall back to the
+     * JVM default trust store. The context is threaded through doConnectInternal
+     * to createTransport(URI, WireFormat, SslContext) — plain HTTP ignores it,
+     * HttpsTransportFactory overrides that method to use it.
+     */
+    @Override
+    public Transport doConnect(URI location, SslContext sslContext) throws IOException {
+        return doConnectInternal(location, sslContext, false);
+    }
+
+    @Override
+    public Transport doCompositeConnect(URI location, SslContext sslContext) throws IOException {
+        return doConnectInternal(location, sslContext, true);
+    }
+
     @Override
     @SuppressWarnings("rawtypes")
-    public Transport serverConfigure(Transport transport, WireFormat format, HashMap options) throws Exception {
+    public Transport serverConfigure(Transport transport, WireFormat format, HashMap options) {
         return compositeConfigure(transport, format, options);
     }
 
