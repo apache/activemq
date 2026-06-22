@@ -29,6 +29,7 @@ import javax.net.ssl.SSLServerSocketFactory;
 
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.BrokerServiceAware;
+import org.apache.activemq.broker.SslContext;
 import org.apache.activemq.transport.TransportServer;
 import org.apache.activemq.transport.tcp.SslTransportFactory;
 import org.apache.activemq.transport.tcp.TcpTransport;
@@ -54,19 +55,31 @@ public class AutoSslTransportFactory extends SslTransportFactory implements Brok
 
     private Set<String> enabledProtocols;
 
-    /**
-     * Overriding to use SslTransportServer and allow for proper reflection.
-     */
     @Override
+    @SuppressWarnings("deprecation")
     public TransportServer doBind(final URI location) throws IOException {
+        return doBind(location, SslContext.getCurrentSslContext());
+    }
+
+    @Override
+    public TransportServer doBind(final URI location, SslContext sslContext) throws IOException {
         try {
             Map<String, String> options = new HashMap<String, String>(URISupport.parseParameters(location));
 
             Map<String, Object> autoProperties = IntrospectionSupport.extractProperties(options, "auto.");
             this.enabledProtocols = AutoTransportUtils.parseProtocols((String) autoProperties.get("protocols"));
 
-            ServerSocketFactory serverSocketFactory = createServerSocketFactory();
-            AutoSslTransportServer server = createAutoSslTransportServer(location, (SSLServerSocketFactory)serverSocketFactory);
+            SSLServerSocketFactory serverSocketFactory;
+            if (sslContext != null) {
+                try {
+                    serverSocketFactory = sslContext.getSSLContext().getServerSocketFactory();
+                } catch (Exception e) {
+                    throw IOExceptionSupport.create(e);
+                }
+            } else {
+                serverSocketFactory = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
+            }
+            AutoSslTransportServer server = createAutoSslTransportServer(location, serverSocketFactory);
             if (options.get("allowLinkStealing") != null){
                 allowLinkStealingSet = true;
             }

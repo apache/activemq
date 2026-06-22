@@ -44,7 +44,7 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.AutoFailTestSupport;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.SslContext;
-import org.apache.activemq.broker.ThreadLocalSslContext;
+import org.apache.activemq.broker.DefaultSslContext;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
@@ -121,7 +121,7 @@ public class FailoverStaticNetworkTest {
     public void setUp() throws Exception {
         KeyManager[] km = SslBrokerServiceTest.getKeyManager();
         TrustManager[] tm = SslBrokerServiceTest.getTrustManager();
-        sslContext = new ThreadLocalSslContext(km, tm, null);
+        sslContext = new DefaultSslContext(km, tm, null);
     }
 
     @After

@@ -1,0 +1,155 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.apache.activemq.broker;
+
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.SecureRandom;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+import javax.net.ssl.KeyManager;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+
+/**
+ * An {@link SslContext} that is API-compatible with {@link ThreadLocalSslContext}
+ * but carries no ThreadLocal state.
+ *
+ * <p>This class exposes the same protected fields, list-based getters/setters,
+ * and mutator methods that {@link ThreadLocalSslContext} does, so subclasses
+ * (such as {@code SpringSslContext}) can be reparented onto this class without
+ * any source or binary breakage.
+ *
+ * <p>The SSLContext is lazily created on first call to {@link #getSSLContext()}
+ * and can be replaced directly via {@link #setSSLContext(SSLContext)}.
+ */
+public class CompatibleSslContext extends SslContext {
+
+    protected String protocol = "TLS";
+    protected String provider = null;
+    protected List<KeyManager> keyManagers = new ArrayList<>();
+    protected List<TrustManager> trustManagers = new ArrayList<>();
+    protected SecureRandom secureRandom;
+
+    private volatile boolean initialized;
+    private SSLContext sslContext;
+
+    public CompatibleSslContext() {
+    }
+
+    public CompatibleSslContext(KeyManager[] km, TrustManager[] tm, SecureRandom random) {
+        if (km != null) {
+            setKeyManagers(Arrays.asList(km));
+        }
+        if (tm != null) {
+            setTrustManagers(Arrays.asList(tm));
+        }
+        setSecureRandom(random);
+    }
+
+    public KeyManager[] getKeyManagersAsArray() {
+        KeyManager[] rc = new KeyManager[keyManagers.size()];
+        return keyManagers.toArray(rc);
+    }
+
+    public TrustManager[] getTrustManagersAsArray() {
+        TrustManager[] rc = new TrustManager[trustManagers.size()];
+        return trustManagers.toArray(rc);
+    }
+
+    public void addKeyManager(KeyManager km) {
+        keyManagers.add(km);
+    }
+
+    public boolean removeKeyManager(KeyManager km) {
+        return keyManagers.remove(km);
+    }
+
+    public void addTrustManager(TrustManager tm) {
+        trustManagers.add(tm);
+    }
+
+    public boolean removeTrustManager(TrustManager tm) {
+        return trustManagers.remove(tm);
+    }
+
+    public List<KeyManager> getKeyManagers() {
+        return keyManagers;
+    }
+
+    public void setKeyManagers(List<KeyManager> keyManagers) {
+        this.keyManagers = keyManagers;
+    }
+
+    public List<TrustManager> getTrustManagers() {
+        return trustManagers;
+    }
+
+    public void setTrustManagers(List<TrustManager> trustManagers) {
+        this.trustManagers = trustManagers;
+    }
+
+    public SecureRandom getSecureRandom() {
+        return secureRandom;
+    }
+
+    public void setSecureRandom(SecureRandom secureRandom) {
+        this.secureRandom = secureRandom;
+    }
+
+    public String getProtocol() {
+        return protocol;
+    }
+
+    public void setProtocol(String protocol) {
+        this.protocol = protocol;
+    }
+
+    public String getProvider() {
+        return provider;
+    }
+
+    public void setProvider(String provider) {
+        this.provider = provider;
+    }
+
+    @Override
+    public SSLContext getSSLContext() throws NoSuchProviderException, NoSuchAlgorithmException, KeyManagementException {
+        if (!initialized) {
+            synchronized (this) {
+                if (!initialized) {
+                    if (provider == null) {
+                        sslContext = SSLContext.getInstance(protocol);
+                    } else {
+                        sslContext = SSLContext.getInstance(protocol, provider);
+                    }
+                    sslContext.init(getKeyManagersAsArray(), getTrustManagersAsArray(), getSecureRandom());
+                    initialized = true;
+                }
+            }
+        }
+        return sslContext;
+    }
+
+    public synchronized void setSSLContext(SSLContext sslContext) {
+        this.sslContext = sslContext;
+        initialized = true;
+    }
+}
