@@ -81,6 +81,7 @@ public class TransportConnector implements Connector, BrokerServiceAware {
     private boolean warnOnRemoteClose = false;
     private boolean displayStackTrace = false;
     private boolean autoStart = true;
+    private SslContext sslContext;
 
     LinkedList<String> peerBrokers = new LinkedList<String>();
     private AtomicBoolean started = new AtomicBoolean(false);
@@ -350,7 +351,8 @@ public class TransportConnector implements Connector, BrokerServiceAware {
             throw new IllegalArgumentException(
                     "You must specify the brokerService property. Maybe this connector should be added to a broker?");
         }
-        return TransportFactorySupport.bind(brokerService, uri);
+        SslContext ctx = sslContext != null ? sslContext : brokerService.getSslContext();
+        return TransportFactorySupport.bind(brokerService, uri, ctx);
     }
 
     public DiscoveryAgent getDiscoveryAgent() throws IOException {
@@ -715,6 +717,14 @@ public class TransportConnector implements Connector, BrokerServiceAware {
     @Override
     public boolean isAutoStart() {
         return autoStart;
+    }
+
+    public SslContext getSslContext() {
+        return sslContext;
+    }
+
+    public void setSslContext(SslContext sslContext) {
+        this.sslContext = sslContext;
     }
 
     @Override

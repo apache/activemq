@@ -51,16 +51,31 @@ public class SslTransportFactory extends TcpTransportFactory {
 
     private static final Logger LOG = LoggerFactory.getLogger(SslTransportFactory.class);
 
-    /**
-     * Overriding to use SslTransportServer and allow for proper reflection.
-     */
+    protected SslContext sslContext;
+
     @Override
+    @SuppressWarnings("deprecation")
     public TransportServer doBind(final URI location) throws IOException {
+        return doBind(location, SslContext.getCurrentSslContext());
+    }
+
+    @Override
+    public TransportServer doBind(final URI location, SslContext sslContext) throws IOException {
+        this.sslContext = sslContext;
         try {
             Map<String, String> options = new HashMap<String, String>(URISupport.parseParameters(location));
 
-            ServerSocketFactory serverSocketFactory = createServerSocketFactory();
-            SslTransportServer server = createSslTransportServer(location, (SSLServerSocketFactory)serverSocketFactory);
+            SSLServerSocketFactory serverSocketFactory;
+            if (sslContext != null) {
+                try {
+                    serverSocketFactory = sslContext.getSSLContext().getServerSocketFactory();
+                } catch (Exception e) {
+                    throw IOExceptionSupport.create(e);
+                }
+            } else {
+                serverSocketFactory = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
+            }
+            SslTransportServer server = createSslTransportServer(location, serverSocketFactory);
             server.setWireFormatFactory(createWireFormatFactory(options));
             IntrospectionSupport.setProperties(server, options);
             Map<String, Object> transportOptions = IntrospectionSupport.extractProperties(options, "transport.");
@@ -100,9 +115,16 @@ public class SslTransportFactory extends TcpTransportFactory {
         return super.compositeConfigure(transport, format, options);
     }
 
-    /**
-     * Overriding to use SslTransports.
-     */
+    @Override
+    public Transport doConnect(URI location, SslContext sslContext) throws Exception {
+        this.sslContext = sslContext;
+        try {
+            return doConnect(location);
+        } finally {
+            this.sslContext = null;
+        }
+    }
+
     @Override
     protected Transport createTransport(URI location, WireFormat wf) throws UnknownHostException, IOException {
         URI localLocation = null;
@@ -131,37 +153,26 @@ public class SslTransportFactory extends TcpTransportFactory {
      */
     @Override
     protected ServerSocketFactory createServerSocketFactory() throws IOException {
-        if( SslContext.getCurrentSslContext()!=null ) {
-            SslContext ctx = SslContext.getCurrentSslContext();
+        if (sslContext != null) {
             try {
-                return ctx.getSSLContext().getServerSocketFactory();
+                return sslContext.getSSLContext().getServerSocketFactory();
             } catch (Exception e) {
                 throw IOExceptionSupport.create(e);
             }
-        } else {
-            return SSLServerSocketFactory.getDefault();
         }
+        return SSLServerSocketFactory.getDefault();
     }
 
-    /**
-     * Creates a new SSL SocketFactory. The given factory will use user-provided
-     * key and trust managers (if the user provided them).
-     *
-     * @return Newly created (Ssl)SocketFactory.
-     * @throws IOException
-     */
     @Override
     protected SocketFactory createSocketFactory() throws IOException {
-        if( SslContext.getCurrentSslContext()!=null ) {
-            SslContext ctx = SslContext.getCurrentSslContext();
+        if (sslContext != null) {
             try {
-                return ctx.getSSLContext().getSocketFactory();
+                return sslContext.getSSLContext().getSocketFactory();
             } catch (Exception e) {
                 throw IOExceptionSupport.create(e);
             }
-        } else {
-            return SSLSocketFactory.getDefault();
         }
+        return SSLSocketFactory.getDefault();
     }
 
     @Override

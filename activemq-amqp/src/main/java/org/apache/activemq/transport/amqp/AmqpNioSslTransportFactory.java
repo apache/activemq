@@ -72,14 +72,20 @@ public class AmqpNioSslTransportFactory extends AmqpNioTransportFactory {
     }
 
     @Override
-    public TransportServer doBind(URI location) throws IOException {
-        if (SslContext.getCurrentSslContext() != null) {
+    public TransportServer doBind(URI location, SslContext sslContext) throws IOException {
+        if (sslContext != null) {
             try {
-                context = SslContext.getCurrentSslContext().getSSLContext();
+                context = sslContext.getSSLContext();
             } catch (Exception e) {
                 throw new IOException(e);
             }
         }
         return super.doBind(location);
+    }
+
+    @Override
+    @SuppressWarnings("deprecation")
+    public TransportServer doBind(URI location) throws IOException {
+        return doBind(location, SslContext.getCurrentSslContext());
     }
 }

@@ -36,8 +36,9 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 
 import org.apache.activemq.broker.SslContext;
-import org.apache.activemq.broker.ThreadLocalSslContext;
+import org.apache.activemq.broker.DefaultSslContext;
 import org.apache.activemq.transport.Transport;
+import org.apache.activemq.transport.TransportFactory;
 import org.apache.activemq.util.JMSExceptionSupport;
 
 /**
@@ -109,20 +110,31 @@ public class ActiveMQSslConnectionFactory extends ActiveMQConnectionFactory {
      */
     @Override
     protected Transport createTransport() throws JMSException {
-        SslContext existing = SslContext.getCurrentSslContext();
         try {
             if (keyStore != null || trustStore != null) {
                 keyManager = createKeyManager();
                 trustManager = createTrustManager();
             }
             if (keyManager != null || trustManager != null) {
-                SslContext.setCurrentSslContext(new ThreadLocalSslContext(keyManager, trustManager, secureRandom));
+                SslContext sslContext = new DefaultSslContext(keyManager, trustManager, secureRandom);
+                URI connectBrokerUL = brokerURL;
+                String scheme = brokerURL.getScheme();
+                if (scheme != null) {
+                    if (scheme.equals("auto")) {
+                        connectBrokerUL = new URI(brokerURL.toString().replace("auto", "tcp"));
+                    } else if (scheme.equals("auto+ssl")) {
+                        connectBrokerUL = new URI(brokerURL.toString().replace("auto+ssl", "ssl"));
+                    } else if (scheme.equals("auto+nio")) {
+                        connectBrokerUL = new URI(brokerURL.toString().replace("auto+nio", "nio"));
+                    } else if (scheme.equals("auto+nio+ssl")) {
+                        connectBrokerUL = new URI(brokerURL.toString().replace("auto+nio+ssl", "nio+ssl"));
+                    }
+                }
+                return TransportFactory.connect(connectBrokerUL, sslContext);
             }
             return super.createTransport();
         } catch (Exception e) {
             throw JMSExceptionSupport.create("Could not create Transport. Reason: " + e, e);
-        } finally {
-            SslContext.setCurrentSslContext(existing);
         }
     }
 

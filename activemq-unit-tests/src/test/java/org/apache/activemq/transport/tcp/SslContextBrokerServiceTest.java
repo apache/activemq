@@ -23,7 +23,7 @@ import java.util.Map;
 import junit.framework.TestCase;
 
 import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.broker.ThreadLocalSslContext;
+import org.apache.activemq.broker.CompatibleSslContext;
 import org.apache.activemq.broker.TransportConnector;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
@@ -44,7 +44,7 @@ public class SslContextBrokerServiceTest extends TestCase {
         assertEquals(new URI("ssl://localhost:61616"), connector.getUri());
 
         assertNotNull(broker.getSslContext());
-        ThreadLocalSslContext sslCtx = (ThreadLocalSslContext) broker.getSslContext();
+        CompatibleSslContext sslCtx = (CompatibleSslContext) broker.getSslContext();
         assertFalse(sslCtx.getKeyManagers().isEmpty());
         assertFalse(sslCtx.getTrustManagers().isEmpty());
 
