@@ -113,10 +113,10 @@ public class QueueSubscription extends PrefetchSubscription implements LockOwner
             // This may cause the headers to unmarshal which could throw ActiveMQUnmarshalException
             // The body could also be unmarshaled if using XPATH and could trigger a
             // MessageDataFormat exception which this also handles.
-            ActiveMQMessageFormatException error = ExceptionUtils.createMessageFormatException(e);
-            if (error != null) {
+            ActiveMQMessageFormatException formatError = ExceptionUtils.createMessageFormatException(e);
+            if (formatError != null) {
                 LOG.error("Message could not be read for selector evaluation: {}", e.getMessage(), e);
-                throw error;
+                throw formatError;
             }
             // it error is not an ActiveMQUnmarshalException, just rethrow the JMSException
             // which will be caught and handled

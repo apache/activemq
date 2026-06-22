@@ -499,7 +499,7 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
                 ActiveMQMessageFormatException formatError = ExceptionUtils.createMessageFormatException(e);
                 if (formatError != null) {
                     LOG.warn("Message conversion error while flushing outbound messages: {}", e.getMessage(), e);
-                    throw e;
+                    throw formatError;
                 } else {
                     LOG.warn("Error detected while flushing outbound messages: {}", e.getMessage());
                 }

@@ -20,6 +20,7 @@ import java.io.DataInputStream;
 import java.io.DataOutput;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UTFDataFormatException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -27,6 +28,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import java.util.zip.InflaterInputStream;
+import org.apache.activemq.transport.FrameSizeLimitedFilterInputStream;
 import org.fusesource.hawtbuf.UTF8Buffer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,6 +58,15 @@ public final class MarshallingSupport {
     public static final byte BIG_STRING_TYPE = 13;
 
     private MarshallingSupport() {}
+
+    // TODO: This will be limited in a future PR to something besides Integer.MAX_VALUE
+    public static InputStream createInflaterInputStream(InputStream is) {
+        return createFrameLimitedInputStream(Integer.MAX_VALUE, new InflaterInputStream(is));
+    }
+
+    public static InputStream createFrameLimitedInputStream(int maxAvailable, InputStream is) {
+        return new FrameSizeLimitedFilterInputStream(maxAvailable, is);
+    }
 
     public static void marshalPrimitiveMap(Map<String, Object> map, DataOutputStream out) throws IOException {
         if (map == null) {

@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -121,6 +122,8 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
     private final PendingList pagedInMessages = new OrderedPendingList();
     // Messages that are paged in but have not yet been targeted at a subscription
     private final ReentrantReadWriteLock pagedInPendingDispatchLock = new ReentrantReadWriteLock();
+    // this is guarded by pagedInPendingDispatchLock
+    private final Map<QueueMessageReference, ActiveMQMessageFormatException> dispatchMessageFormatErrors = new LinkedHashMap<>();
     protected QueueDispatchPendingList dispatchPendingList = new QueueDispatchPendingList();
     private AtomicInteger pendingSends = new AtomicInteger(0);
     private MessageGroupMap messageGroupOwners;
@@ -597,8 +600,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                 }
                 // AMQ-5107: don't resend if the broker is shutting down
                 if (dispatchPendingList.hasRedeliveries() && (! this.brokerService.isStopping())) {
-                    messageFormatErrors = new LinkedHashMap<>();
-                    doDispatch(new OrderedPendingList(), messageFormatErrors);
+                    messageFormatErrors = doDispatch(new OrderedPendingList());
                 }
             } finally {
                 consumersLock.writeLock().unlock();
@@ -2212,8 +2214,10 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         return consumers.size() - browserSubscriptions.size() > 0;
     }
 
-    private void doDispatch(PendingList list, Map<QueueMessageReference, ActiveMQMessageFormatException> errors) throws Exception {
+    private Map<QueueMessageReference, ActiveMQMessageFormatException> doDispatch(PendingList list) throws Exception {
         boolean doWakeUp = false;
+
+        Map<QueueMessageReference, ActiveMQMessageFormatException> messageFormatErrors = null;
 
         pagedInPendingDispatchLock.writeLock().lock();
         try {
@@ -2227,12 +2231,12 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                 list = null;
             }
 
-            doActualDispatch(dispatchPendingList, errors);
+            doActualDispatch(dispatchPendingList);
             // and now see if we can dispatch the new stuff.. and append to the pending
             // list anything that does not actually get dispatched.
             if (list != null && !list.isEmpty()) {
                 if (dispatchPendingList.isEmpty()) {
-                    dispatchPendingList.addAll(doActualDispatch(list, errors));
+                    dispatchPendingList.addAll(doActualDispatch(list));
                 } else {
                     for (MessageReference qmr : list) {
                         if (!dispatchPendingList.contains(qmr)) {
@@ -2243,6 +2247,11 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                 }
             }
         } finally {
+            // Copy the errors and clear as we need to proces outside the lock
+            if (!dispatchMessageFormatErrors.isEmpty()) {
+                messageFormatErrors = new LinkedHashMap<>(dispatchMessageFormatErrors);
+                dispatchMessageFormatErrors.clear();
+            }
             pagedInPendingDispatchLock.writeLock().unlock();
         }
 
@@ -2250,14 +2259,16 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
             // avoid lock order contention
             asyncWakeup();
         }
+
+        return messageFormatErrors;
     }
 
     /**
      * @return list of messages that could get dispatched to consumers if they
      *         were not full.
      */
-    private PendingList doActualDispatch(PendingList list,
-            Map<QueueMessageReference, ActiveMQMessageFormatException> errors) throws Exception {
+    private PendingList doActualDispatch(PendingList list) throws Exception {
+
         List<Subscription> consumers;
         consumersLock.readLock().lock();
 
@@ -2303,7 +2314,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                             // from the dispatched list and collect it to be removed from this queue
                             // and sent to the DLQ
                             iterator.remove();
-                            errors.put((QueueMessageReference) node, e);
+                            dispatchMessageFormatErrors.put((QueueMessageReference) node, e);
                             break;
                         }
                     } else {
@@ -2399,8 +2410,8 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
     }
 
     protected void pageInMessages(boolean force, int maxPageSize) throws Exception {
-        Map<QueueMessageReference, ActiveMQMessageFormatException> messageFormatErrors = new LinkedHashMap<>();
-        doDispatch(doPageInForDispatch(force, true, maxPageSize), messageFormatErrors);
+        Map<QueueMessageReference, ActiveMQMessageFormatException> messageFormatErrors =
+            doDispatch(doPageInForDispatch(force, true, maxPageSize));
         // Handle outside the pagedInPendingDispatchLock
         removeMessageFormatErrorMessages(messageFormatErrors);
     }
