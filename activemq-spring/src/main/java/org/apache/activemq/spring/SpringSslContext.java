@@ -30,7 +30,7 @@ import java.util.Collection;
 import jakarta.annotation.PostConstruct;
 import javax.net.ssl.*;
 
-import org.apache.activemq.broker.SslContext;
+import org.apache.activemq.broker.ThreadLocalSslContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;
@@ -42,7 +42,7 @@ import org.springframework.core.io.Resource;
  *
  *
  */
-public class SpringSslContext extends SslContext {
+public class SpringSslContext extends ThreadLocalSslContext {
 
     private static final transient Logger LOG = LoggerFactory.getLogger(SpringSslContext.class);
 

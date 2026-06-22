@@ -18,6 +18,7 @@
 package org.apache.activemq.broker.scheduler;
 
 import org.apache.activemq.broker.SslContext;
+import org.apache.activemq.broker.ThreadLocalSslContext;
 import org.junit.Test;
 
 import javax.net.ssl.SSLContext;
@@ -32,7 +33,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public class SslContextTest {
-    SslContext underTest = new SslContext();
+    SslContext underTest = new ThreadLocalSslContext();
 
     @Test
     public void testConcurrentGet() throws Exception {
