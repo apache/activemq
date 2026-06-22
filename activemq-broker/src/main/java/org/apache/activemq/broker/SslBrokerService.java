@@ -91,7 +91,7 @@ public class SslBrokerService extends BrokerService {
             // it to use the given key and trust managers.
             SslTransportFactory transportFactory = new SslTransportFactory();
             
-            SslContext ctx = new SslContext(km, tm, random);
+            ThreadLocalSslContext ctx = new ThreadLocalSslContext(km, tm, random);
             SslContext.setCurrentSslContext(ctx);
             try {
                 return transportFactory.doBind(brokerURI);

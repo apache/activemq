@@ -36,6 +36,7 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 
 import org.apache.activemq.broker.SslContext;
+import org.apache.activemq.broker.ThreadLocalSslContext;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.util.JMSExceptionSupport;
 
@@ -115,7 +116,7 @@ public class ActiveMQSslConnectionFactory extends ActiveMQConnectionFactory {
                 trustManager = createTrustManager();
             }
             if (keyManager != null || trustManager != null) {
-                SslContext.setCurrentSslContext(new SslContext(keyManager, trustManager, secureRandom));
+                SslContext.setCurrentSslContext(new ThreadLocalSslContext(keyManager, trustManager, secureRandom));
             }
             return super.createTransport();
         } catch (Exception e) {

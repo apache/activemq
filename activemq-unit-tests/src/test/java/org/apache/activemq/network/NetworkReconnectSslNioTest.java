@@ -18,6 +18,7 @@ package org.apache.activemq.network;
 
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.SslContext;
+import org.apache.activemq.broker.ThreadLocalSslContext;
 import org.apache.activemq.broker.TransportConnection;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.command.ConnectionError;
@@ -44,7 +45,7 @@ public class NetworkReconnectSslNioTest {
     @Test
     public void testForceReconnect() throws Exception {
 
-        final SslContext sslContext = new SslContext(getKeyManager(), getTrustManager(), null);
+        final SslContext sslContext = new ThreadLocalSslContext(getKeyManager(), getTrustManager(), null);
 
         BrokerService remote = new BrokerService();
         remote.setBrokerName("R");
