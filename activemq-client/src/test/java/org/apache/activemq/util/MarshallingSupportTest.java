@@ -79,8 +79,8 @@ public class MarshallingSupportTest {
 
         // buffers too large
         dataIn.reset();
-        assertException(() -> unmarshalPrimitiveMap(dataIn, 100, 2, 10),
-                "Max buffer size: 2 exceeded, size: 6");
+        assertException(() -> unmarshalPrimitiveMap(dataIn, 100, 4, 10),
+                "Max buffer size: 4 exceeded, size: 6");
 
         // max depth violated
         dataIn.reset();

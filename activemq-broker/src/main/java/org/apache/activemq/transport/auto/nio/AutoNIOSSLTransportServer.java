@@ -24,6 +24,7 @@ import org.apache.activemq.transport.tcp.TcpTransport;
 import org.apache.activemq.transport.tcp.TcpTransport.InitBuffer;
 import org.apache.activemq.transport.tcp.TcpTransportFactory;
 import org.apache.activemq.transport.tcp.TcpTransportServer;
+import org.apache.activemq.util.ExceptionUtils;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.wireformat.WireFormat;
 import org.slf4j.Logger;
@@ -125,7 +126,7 @@ public class AutoNIOSSLTransportServer extends AutoTcpTransportServer {
                 } catch (Exception error) {
                     LOG.warn("Could not accept connection {}: {} ({})",
                             (in.getRemoteAddress() == null ? "" : "from " + in.getRemoteAddress()), error.getMessage(),
-                            TransportConnector.getRootCause(error).getMessage());
+                            ExceptionUtils.getRootCause(error).getMessage());
                     throw new IllegalStateException("Could not complete Transport start", error);
                 }
 
