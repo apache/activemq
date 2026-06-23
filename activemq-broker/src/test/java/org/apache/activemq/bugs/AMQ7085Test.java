@@ -62,7 +62,7 @@ public class AMQ7085Test
             final Message toSend = session.createMessage();
             toSend.setStringProperty("foo", "bar");
             final MessageProducer producer = session.createProducer(queue);
-            producer.send(queue, toSend);
+            producer.send(toSend);
         } finally {
             conn.close();
         }
