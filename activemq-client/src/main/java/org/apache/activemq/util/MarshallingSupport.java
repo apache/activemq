@@ -60,13 +60,25 @@ public final class MarshallingSupport {
 
     private MarshallingSupport() {}
 
-    // TODO: This will be limited in a future PR to something besides Integer.MAX_VALUE
-    public static InputStream createInflaterInputStream(InputStream is) {
-        return createFrameLimitedInputStream(Integer.MAX_VALUE, new InflaterInputStream(is));
+    public static InputStream createInflaterInputStream(int maxAvailable, InputStream is) {
+        return createFrameLimitedInputStream(maxAvailable, new InflaterInputStream(is));
     }
 
     public static InputStream createFrameLimitedInputStream(int maxAvailable, InputStream is) {
         return new FrameSizeLimitedFilterInputStream(maxAvailable, is);
+    }
+
+    // Validate that the size value is not greater than the max available size
+    public static void validateMaxInflatedDataSize(int maxAvailable, int size) throws IOException {
+        if (size > maxAvailable) {
+            throw new MaxInflatedDataSizeExceededException(
+                    "Cannot read more than the uncompressed size bytes: requested " + size);
+        }
+    }
+
+    // Validate the size value is not greater than the remaining bytes in the stream
+    public static void validateBufferSizeRemaining(DataInputStream stream, int size) throws IOException {
+        validateBufferSize(stream, Integer.MAX_VALUE, size);
     }
 
     public static void marshalPrimitiveMap(Map<String, Object> map, DataOutputStream out) throws IOException {
@@ -482,6 +494,12 @@ public final class MarshallingSupport {
 
     public static class ActiveMQUnmarshalEOFException extends EOFException {
         public ActiveMQUnmarshalEOFException(String message) {
+            super(message);
+        }
+    }
+
+    public static class MaxInflatedDataSizeExceededException extends ActiveMQUnmarshalEOFException {
+        public MaxInflatedDataSizeExceededException(String message) {
             super(message);
         }
     }

@@ -60,6 +60,7 @@ import org.apache.activemq.util.IdGenerator;
 import org.apache.activemq.util.JMSExceptionSupport;
 import org.apache.activemq.util.LRUCache;
 import org.apache.activemq.util.LongSequenceGenerator;
+import org.apache.activemq.util.MarshallingSupport;
 import org.fusesource.hawtbuf.Buffer;
 import org.fusesource.hawtbuf.UTF8Buffer;
 import org.fusesource.mqtt.client.QoS;
@@ -636,8 +637,12 @@ public class MQTTProtocolConverter {
                     inflater.setInput(byteSequence.data, byteSequence.offset, byteSequence.length);
                     byte[] data = new byte[4096];
                     int read;
+                    int total = 0;
                     ByteArrayOutputStream bytesOut = new ByteArrayOutputStream();
                     while ((read = inflater.inflate(data)) != 0) {
+                        total = Math.addExact(total, read);
+                        // check if we have exceeded maxInflatedSize before continuing
+                        MarshallingSupport.validateMaxInflatedDataSize(message.getMaxInflatedDataSize(), total);
                         bytesOut.write(data, 0, read);
                     }
                     byteSequence = bytesOut.toByteSequence();

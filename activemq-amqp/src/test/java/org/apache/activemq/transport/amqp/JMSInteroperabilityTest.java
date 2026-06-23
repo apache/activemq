@@ -521,6 +521,42 @@ public class JMSInteroperabilityTest extends JMSClientTestSupport {
         openwire.close();
     }
 
+    @Test
+    public void testOpenWireToQpidCompressionFailure() throws Exception {
+
+        // Raw Transformer doesn't expand message properties.
+        assumeFalse(!transformer.equals("jms"));
+
+        // set to 512 bytes
+        brokerService.setMaxInflatedDataSize(512);
+
+        try (Connection openwire = createJMSConnection(); Connection amqp = createConnection()) {
+            ((ActiveMQConnection) openwire).setUseCompression(true);
+            openwire.start();
+            amqp.start();
+
+            Session openwireSession = openwire.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            Session amqpSession = amqp.createSession(false, Session.AUTO_ACKNOWLEDGE);
+
+            Destination queue = openwireSession.createQueue(getDestinationName());
+            MessageProducer openwireProducer = openwireSession.createProducer(queue);
+            MessageConsumer amqpConsumer = amqpSession.createConsumer(queue);
+
+            StringBuilder builder = new StringBuilder();
+            // generate a string longer than 512 bytes
+            for (int i = 1; i <= 50; i++) {
+                builder.append("compresedpayload");
+            }
+            // Create and send the Message
+            openwireProducer.send(openwireSession.createTextMessage(builder.toString()));
+
+            // There should be an error triggered on dispatch during decompression
+            // and message should go to the DLQ
+            assertNull(amqpConsumer.receive(1000));
+            assertTrue(sentToDlq.get());
+        }
+    }
+
     // The following tests for corruption will corrupt the headers or body
     // to test that the AMQP protocol correctly passes the error during
     // dispatch to allow the Transport Connection to properly handle

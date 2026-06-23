@@ -1186,6 +1186,53 @@ public class MQTTTest extends MQTTTestSupport {
                 .getDestinationStatistics().getMessages().getCount() == 0, 500, 10));
     }
 
+    @Test
+    public void testMaxInflatedDataSizeErrorBytes() throws Exception {
+        testMaxInflatedDataSizeError(true);
+    }
+
+    @Test
+    public void testMaxInflatedDataSizeErrorText() throws Exception {
+        testMaxInflatedDataSizeError(false);
+    }
+
+    private void testMaxInflatedDataSizeError(boolean bytes) throws Exception {
+        final MQTTClientProvider provider = getMQTTClientProvider();
+        initializeConnection(provider);
+
+        brokerService.setMaxInflatedDataSize(10);
+        String destinationName = "foo.far";
+        ActiveMQConnection activeMQConnection = (ActiveMQConnection) cf.createConnection();
+        activeMQConnection.setUseCompression(true);
+        activeMQConnection.start();
+        Session s = activeMQConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        jakarta.jms.Topic jmsTopic = s.createTopic(destinationName);
+        MessageProducer producer = s.createProducer(jmsTopic);
+
+        provider.subscribe("foo/+", AT_MOST_ONCE);
+        ActiveMQMessage sendMessage;
+        if (bytes) {
+            BytesMessage bytesMessage = s.createBytesMessage();
+            bytesMessage.writeBytes("bodybodybodybodybody".getBytes());
+            sendMessage = (ActiveMQMessage) bytesMessage;
+        } else {
+            sendMessage = (ActiveMQMessage) s.createTextMessage("bodybodybodybodybody");
+        }
+        // marshal and clear so the broker will have to decompress
+        sendMessage.storeContentAndClear();
+        producer.send(sendMessage);
+
+        byte[] message = provider.receive(1000);
+        assertNull("Should not get message", message);
+
+        provider.disconnect();
+        activeMQConnection.close();
+
+        // verify message is gone off the dest
+        assertTrue(Wait.waitFor(() -> brokerService.getDestination(new ActiveMQTopic(destinationName))
+                .getDestinationStatistics().getMessages().getCount() == 0, 500, 10));
+    }
+
     @Test(timeout = 60 * 1000)
     public void testPingKeepsInactivityMonitorAlive() throws Exception {
         MQTT mqtt = createMQTTConnection();

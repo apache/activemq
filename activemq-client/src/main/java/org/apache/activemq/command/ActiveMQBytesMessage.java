@@ -39,6 +39,7 @@ import org.apache.activemq.util.ByteArrayOutputStream;
 import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.util.ByteSequenceData;
 import org.apache.activemq.util.JMSExceptionSupport;
+import org.apache.activemq.util.MarshallingSupport;
 
 /**
  * A <CODE>BytesMessage</CODE> object is used to send a message containing a
@@ -901,11 +902,15 @@ public class ActiveMQBytesMessage extends ActiveMQMessage implements BytesMessag
         ByteArrayOutputStream decompressed = new ByteArrayOutputStream();
         try {
             length = ByteSequenceData.readIntBig(dataSequence);
+            // verify the length of the buffer is not larger than maxInflatedDataSize
+            MarshallingSupport.validateMaxInflatedDataSize(getMaxInflatedDataSize(), length);
             dataSequence.offset = 0;
-            byte[] data = Arrays.copyOfRange(dataSequence.getData(), 4, dataSequence.getLength());
-            inflater.setInput(data);
+            inflater.setInput(dataSequence.getData(), 4, dataSequence.getLength() - 4);
             byte[] buffer = new byte[length];
             int count = inflater.inflate(buffer);
+            if (count != length) {
+                throw new IllegalStateException("Inflated buffer size is different than expected size of " + length);
+            }
             decompressed.write(buffer, 0, count);
             return decompressed.toByteArray();
         } catch (Exception e) {
