@@ -19,11 +19,11 @@ package org.apache.activemq.broker.region;
 import java.util.ArrayList;
 import java.util.List;
 
-import jakarta.jms.Connection;
-import jakarta.jms.MessageConsumer;
-import jakarta.jms.MessageProducer;
-import jakarta.jms.Session;
-import jakarta.jms.TextMessage;
+import javax.jms.Connection;
+import javax.jms.MessageConsumer;
+import javax.jms.MessageProducer;
+import javax.jms.Session;
+import javax.jms.TextMessage;
 
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.policy.ConstantPendingMessageLimitStrategy;
@@ -33,8 +33,6 @@ import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQTopic;
 
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.apache.activemq.test.annotations.ParallelTest;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertEquals;
@@ -52,7 +50,6 @@ import static org.junit.Assert.assertEquals;
  * on the {@link org.apache.activemq.broker.region.policy.MessageEvictionStrategy} skips that
  * scan entirely via a single boolean check guarding the call site.
  */
-@Category(ParallelTest.class)
 public class TopicSubscriptionEnableExpiryTest {
 
     // -------------------------------------------------------------------------
@@ -275,7 +272,7 @@ public class TopicSubscriptionEnableExpiryTest {
             // Send messages with short TTL
             for (int i = 0; i < SEND_COUNT; i++) {
                 TextMessage msg = session.createTextMessage("msg-" + i);
-                producer.send(msg, jakarta.jms.DeliveryMode.NON_PERSISTENT, 4, SHORT_TTL_MS);
+                producer.send(msg, javax.jms.DeliveryMode.NON_PERSISTENT, 4, SHORT_TTL_MS);
             }
 
             // Wait for all TTLs to expire
@@ -326,7 +323,7 @@ public class TopicSubscriptionEnableExpiryTest {
             MessageProducer producer = session.createProducer(new ActiveMQTopic("TEST.EXPIRY.ENABLED"));
             for (int i = 0; i < SEND_COUNT; i++) {
                 TextMessage msg = session.createTextMessage("msg-" + i);
-                producer.send(msg, jakarta.jms.DeliveryMode.NON_PERSISTENT, 4, SHORT_TTL_MS);
+                producer.send(msg, javax.jms.DeliveryMode.NON_PERSISTENT, 4, SHORT_TTL_MS);
             }
 
             // Wait for all TTLs to expire

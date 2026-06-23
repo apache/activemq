@@ -19,11 +19,11 @@ package org.apache.activemq.broker.region;
 import java.util.ArrayList;
 import java.util.List;
 
-import jakarta.jms.Connection;
-import jakarta.jms.DeliveryMode;
-import jakarta.jms.MessageConsumer;
-import jakarta.jms.MessageProducer;
-import jakarta.jms.Session;
+import javax.jms.Connection;
+import javax.jms.DeliveryMode;
+import javax.jms.MessageConsumer;
+import javax.jms.MessageProducer;
+import javax.jms.Session;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
@@ -34,8 +34,6 @@ import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQTopic;
 
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.apache.activemq.test.annotations.ParallelTest;
 import static org.junit.Assert.assertTrue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,7 +65,6 @@ import org.slf4j.LoggerFactory;
  * in the normal CI suite, but uses a modest message count to keep wall-clock
  * time acceptable on slow machines.
  */
-@Category(ParallelTest.class)
 public class TopicSubscriptionEnableExpiryThroughputTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(TopicSubscriptionEnableExpiryThroughputTest.class);
