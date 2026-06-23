@@ -138,7 +138,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
 
     static final byte COMPACTED_JOURNAL_FILE = DataFile.STANDARD_LOG_FILE + 1;
 
-    class Metadata {
+    protected class Metadata {
         protected Page<Metadata> page;
         protected int state;
         protected BTreeIndex<String, StoredDestination> destinations;
@@ -249,7 +249,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
 
     protected PageFile pageFile;
     protected Journal journal;
-    Metadata metadata = new Metadata();
+    protected Metadata metadata = new Metadata();
     protected final PersistenceAdapterStatistics persistenceAdapterStatistics = new PersistenceAdapterStatistics();
 
     MetadataMarshaller metadataMarshaller = new MetadataMarshaller();
@@ -1258,7 +1258,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     }
 
     @SuppressWarnings("rawtypes")
-    void process(final KahaAddMessageCommand command, final Location location, final IndexAware runWithIndexLock) throws IOException {
+    protected void process(final KahaAddMessageCommand command, final Location location, final IndexAware runWithIndexLock) throws IOException {
         if (command.hasTransactionInfo()) {
             List<Operation> inflightTx = getInflightTx(command.getTransactionInfo());
             inflightTx.add(new AddOperation(command, location, runWithIndexLock));
@@ -1334,7 +1334,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     }
 
     @SuppressWarnings("rawtypes")
-    void process(KahaCommitCommand command, final Location location, final IndexAware before) throws IOException {
+    protected void process(KahaCommitCommand command, final Location location, final IndexAware before) throws IOException {
         TransactionId key = TransactionIdConversion.convert(command.getTransactionInfo());
         List<Operation> inflightTx;
         synchronized (inflightTransactions) {
@@ -3179,7 +3179,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     @SuppressWarnings("rawtypes")
     private final LinkedHashMap<TransactionId, List<Operation>> inflightTransactions = new LinkedHashMap<>();
     @SuppressWarnings("rawtypes")
-    final LinkedHashMap<TransactionId, List<Operation>> preparedTransactions = new LinkedHashMap<>();
+    protected final LinkedHashMap<TransactionId, List<Operation>> preparedTransactions = new LinkedHashMap<>();
 
     @SuppressWarnings("rawtypes")
     private List<Operation> getInflightTx(KahaTransactionInfo info) {
@@ -3197,7 +3197,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         return TransactionIdConversion.convert(transactionInfo);
     }
 
-    abstract static class Operation <T extends JournalCommand<T>> {
+    protected abstract static class Operation <T extends JournalCommand<T>> {
         final T command;
         final Location location;
 
@@ -3217,7 +3217,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         abstract public void execute(Transaction tx) throws IOException;
     }
 
-    class AddOperation extends Operation<KahaAddMessageCommand> {
+    protected class AddOperation extends Operation<KahaAddMessageCommand> {
         final IndexAware runWithIndexLock;
         public AddOperation(KahaAddMessageCommand command, Location location, IndexAware runWithIndexLock) {
             super(command, location);
@@ -3233,7 +3233,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         }
     }
 
-    class RemoveOperation extends Operation<KahaRemoveMessageCommand> {
+    protected class RemoveOperation extends Operation<KahaRemoveMessageCommand> {
 
         public RemoveOperation(KahaRemoveMessageCommand command, Location location) {
             super(command, location);
@@ -4024,7 +4024,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         this.indexDirectory = indexDirectory;
     }
 
-    interface IndexAware {
+    protected interface IndexAware {
         void sequenceAssignedWithIndexLocked(long index);
     }
 

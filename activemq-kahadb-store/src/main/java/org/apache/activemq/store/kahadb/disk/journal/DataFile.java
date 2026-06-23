@@ -38,7 +38,7 @@ public class DataFile extends LinkedNode<DataFile> implements Comparable<DataFil
     protected final SequenceSet corruptedBlocks = new SequenceSet();
     protected RecoverableRandomAccessFile appendRandomAccessFile;
 
-    DataFile(File file, int number) {
+    protected DataFile(File file, int number) {
         this.file = file;
         this.dataFileId = number;
         length = (int)(file.exists() ? file.length() : 0);
