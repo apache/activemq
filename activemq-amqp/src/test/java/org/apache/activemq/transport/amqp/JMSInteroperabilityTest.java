@@ -18,10 +18,12 @@ package org.apache.activemq.transport.amqp;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeFalse;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -30,20 +32,25 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicBoolean;
 
-import javax.jms.BytesMessage;
-import javax.jms.Connection;
-import javax.jms.Destination;
-import javax.jms.MapMessage;
-import javax.jms.Message;
-import javax.jms.MessageConsumer;
-import javax.jms.MessageProducer;
-import javax.jms.ObjectMessage;
-import javax.jms.Session;
-import javax.jms.TextMessage;
+import javax.jms.*;
 
 import org.apache.activemq.ActiveMQConnection;
+import org.apache.activemq.broker.Broker;
+import org.apache.activemq.broker.BrokerFilter;
+import org.apache.activemq.broker.BrokerPlugin;
+import org.apache.activemq.broker.BrokerPluginSupport;
+import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.broker.region.MessageReference;
+import org.apache.activemq.broker.region.Subscription;
+import org.apache.activemq.command.ActiveMQBytesMessage;
+import org.apache.activemq.command.ActiveMQDestination;
+import org.apache.activemq.command.ActiveMQMessage;
+import org.apache.activemq.util.ByteSequenceData;
+import org.apache.activemq.util.Wait;
 import org.apache.qpid.proton.amqp.Binary;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -59,6 +66,7 @@ public class JMSInteroperabilityTest extends JMSClientTestSupport {
 
     protected static final Logger LOG = LoggerFactory.getLogger(JMSInteroperabilityTest.class);
 
+    private final AtomicBoolean sentToDlq = new AtomicBoolean(false);
     private final String transformer;
 
     @Parameters(name="Transformer->{0}")
@@ -68,6 +76,13 @@ public class JMSInteroperabilityTest extends JMSClientTestSupport {
                 {"native"},
                 {"raw"},
             });
+    }
+
+    @Before
+    @Override
+    public void setUp() throws Exception {
+        super.setUp();
+        sentToDlq.set(false);
     }
 
     public JMSInteroperabilityTest(String transformer) {
@@ -84,7 +99,26 @@ public class JMSInteroperabilityTest extends JMSClientTestSupport {
         return transformer;
     }
 
-    //----- Tests for property handling between protocols --------------------//
+    @Override
+    protected void addAdditionalPlugins(List<BrokerPlugin> plugins) throws Exception {
+        super.addAdditionalPlugins(plugins);
+        plugins.add(new BrokerPluginSupport() {
+            @Override
+            public Broker installPlugin(Broker broker) {
+                return new BrokerFilter(broker) {
+                    @Override
+                    public boolean sendToDeadLetterQueue(ConnectionContext context,
+                                                         MessageReference messageReference, Subscription subscription,
+                                                         Throwable poisonCause) {
+                        sentToDlq.set(true);
+                        return super.sendToDeadLetterQueue(context, messageReference,
+                                subscription, poisonCause);
+                    }
+                };
+            }
+        });
+    }
+//----- Tests for property handling between protocols --------------------//
 
     @SuppressWarnings("unchecked")
     @Test(timeout = 60000)
@@ -483,8 +517,122 @@ public class JMSInteroperabilityTest extends JMSClientTestSupport {
         assertNotNull(payload);
         assertTrue(payload instanceof UUID);
 
-        amqp.close();
-        openwire.close();
+    }
+
+    // The following tests for corruption will corrupt the headers or body
+    // to test that the AMQP protocol correctly passes the error during
+    // dispatch to allow the Transport Connection to properly handle
+    // with a poison ack so the message will be removed from the subscription.
+    // No selectors are set so these messages are only going to error
+    // during the protocol conversion.
+
+    @Test
+    public void testCorruptMessageErrorHeaders() throws Exception {
+        testCorruptMessageError(session -> {
+            ActiveMQBytesMessage message = (ActiveMQBytesMessage) session.createBytesMessage();
+            message.setStringProperty("testestt", "Testestt");
+            message.setStringProperty("prop2", "Testestt");
+            try {
+                message.beforeMarshall(null);
+                ByteSequenceData.writeIntBig(message.getMarshalledProperties(), 1024 * 1024);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            return message;
+        }, false);
+    }
+
+    @Test
+    public void testCorruptMessageErrorMap() throws Exception {
+        testCorruptMessageError(session -> {
+            MapMessage message = session.createMapMessage();
+            message.setString("id", UUID.randomUUID().toString());
+            return message;
+        }, false);
+    }
+
+    // Check durable sub as well which is also a prefetch subscription so a
+    // poison ack will be handled the same way and DLQ
+    @Test
+    public void testCorruptMessageErrorMapDurableSub() throws Exception {
+        testCorruptMessageError(session -> {
+            MapMessage message = session.createMapMessage();
+            message.setString("id", UUID.randomUUID().toString());
+            return message;
+        }, true);
+    }
+
+    @Test
+    public void testCorruptMessageErrorText() throws Exception {
+        testCorruptMessageError(session -> {
+            TextMessage message = session.createTextMessage();
+            message.setText(UUID.randomUUID().toString());
+            return message;
+        }, false);
+    }
+
+    @Test
+    public void testCorruptMessageErrorTextDurableSub() throws Exception {
+        testCorruptMessageError(session -> {
+            TextMessage message = session.createTextMessage();
+            message.setText(UUID.randomUUID().toString());
+            return message;
+        }, true);
+    }
+
+
+    @Test
+    public void testCorruptMessageErrorStream() throws Exception {
+        testCorruptMessageError(session -> {
+            StreamMessage message = session.createStreamMessage();
+            message.writeBytes(UUID.randomUUID().toString().getBytes());
+            return message;
+        }, false);
+    }
+
+    private void testCorruptMessageError(MessageCreator messageCreator, boolean topic) throws Exception {
+        // Raw Transformer doesn't expand the body
+        assumeFalse(!transformer.equals("jms"));
+
+        try (Connection openwire = createJMSConnection(); Connection amqp = createConnection()) {
+            openwire.start();
+            amqp.start();
+            Session openwireSession = openwire.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            Session amqpSession = amqp.createSession(false, Session.AUTO_ACKNOWLEDGE);
+
+            ActiveMQDestination dest = topic ?
+                    (ActiveMQDestination)  openwireSession.createTopic(getDestinationName()) :
+                    (ActiveMQDestination)  openwireSession.createQueue(getDestinationName());
+            MessageProducer openwireProducer = openwireSession.createProducer(dest);
+            MessageConsumer amqpConsumer = topic ?
+                    amqpSession.createDurableSubscriber((Topic) dest, "sub") :
+                    amqpSession.createConsumer(dest);
+
+            // Create and send the Message
+            ActiveMQMessage outgoing = (ActiveMQMessage) messageCreator.create(openwireSession);
+            outgoing.storeContentAndClear();
+
+            // corrupt the buffer
+            // might be null if we are testing headers only
+            if (outgoing.getContent() != null && outgoing.getContent().length > 0) {
+                ByteSequenceData.writeIntBig(outgoing.getContent(), 1000);
+            }
+
+            openwireProducer.send(outgoing);
+
+            // Now try to consume the Message, should not be received
+            Message received = amqpConsumer.receive(2000);
+            assertNull(received);
+
+            // verify message is gone off the dest and went to the DLQ
+            assertTrue(Wait.waitFor(() -> brokerService.getDestination(dest)
+                    .getDestinationStatistics().getMessages().getCount() == 0, 500, 10));
+            assertTrue(sentToDlq.get());
+        }
+    }
+
+    private interface MessageCreator {
+        Message create(Session session) throws JMSException;
     }
 
     @SuppressWarnings("unchecked")

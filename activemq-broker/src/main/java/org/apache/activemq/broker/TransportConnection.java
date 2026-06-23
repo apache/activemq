@@ -26,9 +26,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -98,6 +96,8 @@ import org.apache.activemq.transport.ResponseCorrelator;
 import org.apache.activemq.transport.TransmitCallback;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportDisposedIOException;
+import org.apache.activemq.util.ExceptionUtils;
+import org.apache.activemq.ActiveMQMessageFormatException;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.MarshallingSupport;
 import org.apache.activemq.util.NetworkBridgeUtils;
@@ -992,6 +992,18 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                 if (sub != null) {
                     sub.onFailure();
                 }
+                // Check if this is a type of message format error which indicates the
+                // message was corrupt and there was some problem unmarshaling. For these
+                // errors we can handle by acking with a poison ack (which will send to the DLQ
+                // if durable/queue sub) and remove them from the consumer so the consumer can
+                // continue. We do not want to throw the exception as that would close the connection.
+                ActiveMQMessageFormatException marshallingError = ExceptionUtils.createMessageFormatException(e);
+                if (marshallingError != null) {
+                    handleMessageFormatError(marshallingError, messageDispatch);
+                    // must set to null so when we return the finally block is skipped
+                    messageDispatch = null;
+                    return;
+                }
                 messageDispatch = null;
                 throw e;
             } else {
@@ -1008,6 +1020,38 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                     sub.onSuccess();
                 }
             }
+        }
+    }
+
+    private void handleMessageFormatError(ActiveMQMessageFormatException e, MessageDispatch messageDispatch) {
+        if (TRANSPORTLOG.isDebugEnabled()) {
+            TRANSPORTLOG.debug("{} had an unexpected Message format error: {}", this, e.getMessage(), e);
+        } else if (TRANSPORTLOG.isWarnEnabled()) {
+            if (connector.isDisplayStackTrace()) {
+                TRANSPORTLOG.warn("{} had an unexpected Message format  error", this, e);
+            } else {
+                TRANSPORTLOG.warn("{} had an unexpected Message format  error: {}", this, e.getMessage());
+            }
+        }
+
+        ConsumerBrokerExchange consumerExchange = getConsumerBrokerExchange(messageDispatch.getConsumerId());
+        try {
+            // acknowledge with the consumer exchange for this dispatch
+            // This should exist because this error happened during dispatch, but if for some
+            // reason it is null it should get handled when delivery is attempted again
+            if (consumerExchange != null) {
+                MessageAck ack = new MessageAck();
+                // Acking with a poison ack will send to the DLQ
+                ack.setAckType(MessageAck.POISON_ACK_TYPE);
+                ack.setPoisonCause(e);
+                ack.setConsumerId(messageDispatch.getConsumerId());
+                ack.setDestination(messageDispatch.getDestination());
+                ack.setMessageID(messageDispatch.getMessage().getMessageId());
+                broker.acknowledge(consumerExchange, ack);
+            }
+        } catch (Exception ex) {
+            TRANSPORTLOG.warn("{} could not acknowledge and send message to the DLQ after"
+                    + " ActiveMQMessageFormatException: {}", this, e.getMessage());
         }
     }
 

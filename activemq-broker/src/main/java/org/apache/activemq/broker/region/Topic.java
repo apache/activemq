@@ -32,6 +32,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import java.util.stream.Collectors;
+import org.apache.activemq.ActiveMQMessageFormatException;
 import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
@@ -63,6 +64,7 @@ import org.apache.activemq.thread.Task;
 import org.apache.activemq.thread.TaskRunner;
 import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.transaction.Synchronization;
+import org.apache.activemq.util.ExceptionUtils;
 import org.apache.activemq.util.SubscriptionKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -802,9 +804,26 @@ public class Topic extends BaseDestination implements Task {
 
         dispatchLock.readLock().lock();
         try {
-            if (!subscriptionRecoveryPolicy.add(context, message)) {
-                return;
+            try {
+                if (!subscriptionRecoveryPolicy.add(context, message)) {
+                    return;
+                }
+            } catch (Exception e) {
+                // In this case couldn't read the header properties so we need to catch and continue.
+                // We still need to let dispatchPolicy.dispatch(message, msgContext, consumers)
+                // run. If subs set a selector then they won't be matched if it can't read
+                // the properites and that code will take care of any removal/acks for durables
+                // by calling sub.unmatched(). If no subs match at all then onMessageWithNoConsumers()
+                // will be called which allows sending an adivsory if enabled (or if someone wanted to
+                // do something special like the DLQ).
+                ActiveMQMessageFormatException formatError = ExceptionUtils.createMessageFormatException(e);
+                if (formatError != null) {
+                    LOG.warn("Failed to check recovery policy, message is corrupt: {}", e.getMessage(), e);
+                } else {
+                    throw e;
+                }
             }
+
             synchronized (consumers) {
                 if (consumers.isEmpty()) {
                     onMessageWithNoConsumers(context, message);
