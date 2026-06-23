@@ -932,4 +932,9 @@ public abstract class BaseDestination implements Destination {
     public void setMessageInterceptorStrategy(MessageInterceptorStrategy messageInterceptorStrategy) {
         this.messageInterceptorStrategy = messageInterceptorStrategy;
     }
+
+    @Override
+    public int getMaxInflatedDataSize() {
+        return brokerService.getMaxInflatedDataSize();
+    }
 }
