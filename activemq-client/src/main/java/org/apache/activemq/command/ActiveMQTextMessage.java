@@ -95,7 +95,7 @@ public class ActiveMQTextMessage extends ActiveMQMessage implements TextMessage 
             try {
                 is = new ByteArrayInputStream(bodyAsBytes);
                 if (isCompressed()) {
-                    is = new InflaterInputStream(is);
+                    is = MarshallingSupport.createInflaterInputStream(is);
                 }
                 DataInputStream dataIn = new DataInputStream(is);
                 text = MarshallingSupport.readUTF8(dataIn);

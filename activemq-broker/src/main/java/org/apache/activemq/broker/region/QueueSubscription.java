@@ -22,12 +22,12 @@ import jakarta.jms.JMSException;
 
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
-import org.apache.activemq.broker.region.group.MessageGroupMap;
-import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ConsumerInfo;
-import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
+import org.apache.activemq.filter.MessageEvaluationContext;
 import org.apache.activemq.usage.SystemUsage;
+import org.apache.activemq.util.ExceptionUtils;
+import org.apache.activemq.ActiveMQMessageFormatException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -100,4 +100,27 @@ public class QueueSubscription extends PrefetchSubscription implements LockOwner
        return result;
     }
 
+    // For queues if a message is in a bad state it could get stuck and will block good
+    // messages from being processed. We don't want to handle all errors as not all
+    // mean the message is bad, but if we specifically know the message is corrupted
+    // then we should remove and DLQ as it may be stuck and not possible to ever dispatch.
+    @Override
+    protected boolean matchesSelector(MessageReference node, MessageEvaluationContext context)
+            throws JMSException, ActiveMQMessageFormatException {
+        try {
+            return super.matchesSelector(node, context);
+        } catch (JMSException e) {
+            // This may cause the headers to unmarshal which could throw ActiveMQUnmarshalEOFException
+            // The body could also be unmarshaled if using XPATH and could trigger a
+            // MessageDataFormat exception which this also handles.
+            ActiveMQMessageFormatException formatError = ExceptionUtils.createMessageFormatException(e);
+            if (formatError != null) {
+                LOG.error("Message could not be read for selector evaluation: {}", e.getMessage(), e);
+                throw formatError;
+            }
+            // it error is not an ActiveMQUnmarshalEOFException, just rethrow the JMSException
+            // which will be caught and handled
+            throw e;
+        }
+    }
 }

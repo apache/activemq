@@ -31,6 +31,7 @@ import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.filter.MessageEvaluationContext;
 import org.apache.activemq.usage.SystemUsage;
+import org.apache.activemq.util.MarshallingSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -80,6 +81,13 @@ public class QueueBrowserSubscription extends QueueSubscription {
     @Override
     public boolean matches(MessageReference node, MessageEvaluationContext context) throws IOException {
         return !browseDone && super.matches(node, context);
+    }
+
+    // Queue browsers can just delegate to the original method and throw a JMSException which
+    // wil be caught and any message can be skipped if there is an error.
+    protected boolean matchesSelector(MessageReference node, MessageEvaluationContext context)
+            throws JMSException {
+        return evaluateSelectorExpression(context);
     }
 
     /**
