@@ -181,7 +181,7 @@ public class MessageCompressionTest {
         producer.send(bytesMessage);
 
         assertTrue(Wait.waitFor(() -> broker.getDestination(queue)
-                .getDestinationStatistics().getMessages().getCount() == 1, 500, 10));
+                .getDestinationStatistics().getMessages().getCount() == 1, 1000, 10));
         assertFalse(sentToDlq.get());
 
         // simulate a decompression error

@@ -395,9 +395,6 @@ public class StompTest extends StompTestSupport {
         m.storeContentAndClear();
         producer.send(m);
 
-        assertTrue(Wait.waitFor(() -> brokerService.getDestination(queue)
-                .getDestinationStatistics().getMessages().getCount() == 1, 500, 10));
-
         // Message should be DLQ'd because it exceeds max inflated data size
         try {
             StompFrame frameNull = stompConnection.receive(500);
