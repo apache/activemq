@@ -119,6 +119,9 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     public static final String DEFAULT_USER = null;
     public static final String DEFAULT_PASSWORD = null;
     public static final int DEFAULT_PRODUCER_WINDOW_SIZE = 0;
+    // The default ratio for maxInflatedDataSize. The default is 10x the size
+    // of maxFrameSize
+    public static final double DEFAULT_MAX_INFLATED_DATA_SIZE_RATIO = 10.0;
 
     protected URI brokerURL;
     protected String userName;
@@ -149,6 +152,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     private long optimizedAckScheduledAckInterval = 0;
     private boolean copyMessageOnSend = true;
     private boolean useCompression;
+    private double maxInflatedDataSizeRatio = DEFAULT_MAX_INFLATED_DATA_SIZE_RATIO;
     private boolean objectMessageSerializationDefered;
     private boolean useAsyncSend;
     private boolean optimizeAcknowledge;
@@ -432,6 +436,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         connection.setOptimizedMessageDispatch(isOptimizedMessageDispatch());
         connection.setCopyMessageOnSend(isCopyMessageOnSend());
         connection.setUseCompression(isUseCompression());
+        connection.setMaxInflatedDataSizeRatio(getMaxInflatedDataSizeRatio());
         connection.setObjectMessageSerializationDefered(isObjectMessageSerializationDefered());
         connection.setDispatchAsync(isDispatchAsync());
         connection.setUseAsyncSend(isUseAsyncSend());
@@ -864,6 +869,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
 
         props.setProperty("useAsyncSend", Boolean.toString(isUseAsyncSend()));
         props.setProperty("useCompression", Boolean.toString(isUseCompression()));
+        props.setProperty("maxInflatedDataSizeRatio", Double.toString(getMaxInflatedDataSizeRatio()));
         props.setProperty("useRetroactiveConsumer", Boolean.toString(isUseRetroactiveConsumer()));
         props.setProperty("watchTopicAdvisories", Boolean.toString(isWatchTopicAdvisories()));
 
@@ -902,6 +908,21 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
      */
     public void setUseCompression(boolean useCompression) {
         this.useCompression = useCompression;
+    }
+
+    public double getMaxInflatedDataSizeRatio() {
+        return maxInflatedDataSizeRatio;
+    }
+
+    /**
+     * Set the ratio to use to compute maxInflatedDataSize which controls
+     * how large a decompressed message buffer can be. maxInflatedDataSize
+     * is computed as maxFrameSize * maxInflatedDataSizeRatio.
+     *
+     * @param maxInflatedDataSizeRatio
+     */
+    public void setMaxInflatedDataSizeRatio(double maxInflatedDataSizeRatio) {
+        this.maxInflatedDataSizeRatio = maxInflatedDataSizeRatio;
     }
 
     public boolean isObjectMessageSerializationDefered() {

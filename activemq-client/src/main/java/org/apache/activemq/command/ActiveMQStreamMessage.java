@@ -833,6 +833,8 @@ public class ActiveMQStreamMessage extends ActiveMQMessage implements StreamMess
             }
             if (type == MarshallingSupport.BYTE_ARRAY_TYPE) {
                 int len = this.dataIn.readInt();
+                // verify that there are enough bytes remaining before allocation
+                MarshallingSupport.validateBufferSizeRemaining(dataIn, len);
                 byte[] value = new byte[len];
                 this.dataIn.readFully(value);
                 return value;
@@ -1165,10 +1167,15 @@ public class ActiveMQStreamMessage extends ActiveMQMessage implements StreamMess
                 if (compressed) {
                     ByteArrayInputStream input = new ByteArrayInputStream(this.content.getData(), this.content.getOffset(), this.content.getLength());
                     InflaterInputStream inflater = new InflaterInputStream(input);
+                    int total = 0;
                     try {
                         byte[] buffer = new byte[8*1024];
                         int read = 0;
                         while ((read = inflater.read(buffer)) != -1) {
+                            total = Math.addExact(total, read);
+                            // each time through the loop see if we are >= max inflated size so we stop
+                            // by doing this here we might go slightly pass the limit (up to 8 KB) but that is fine
+                            MarshallingSupport.validateMaxInflatedDataSize(getMaxInflatedDataSize(), total);
                             this.dataOut.write(buffer, 0, read);
                         }
                     } finally {
@@ -1203,7 +1210,10 @@ public class ActiveMQStreamMessage extends ActiveMQMessage implements StreamMess
             if (isCompressed()) {
                 is = new InflaterInputStream(is);
                 is = new BufferedInputStream(is);
-                is = MarshallingSupport.createFrameLimitedInputStream(Integer.MAX_VALUE, is);
+                // Wrap the buffered stream in a frame limited stream so we can error if we exceed
+                // max inflate size
+                is = MarshallingSupport.createFrameLimitedInputStream(getMaxInflatedDataSize(), is);
+
             }
             this.dataIn = new DataInputStream(is);
         }
