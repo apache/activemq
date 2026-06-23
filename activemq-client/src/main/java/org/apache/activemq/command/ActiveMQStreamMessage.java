@@ -1203,6 +1203,7 @@ public class ActiveMQStreamMessage extends ActiveMQMessage implements StreamMess
             if (isCompressed()) {
                 is = new InflaterInputStream(is);
                 is = new BufferedInputStream(is);
+                is = MarshallingSupport.createFrameLimitedInputStream(Integer.MAX_VALUE, is);
             }
             this.dataIn = new DataInputStream(is);
         }

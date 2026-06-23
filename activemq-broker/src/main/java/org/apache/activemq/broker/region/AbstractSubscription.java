@@ -38,6 +38,7 @@ import org.apache.activemq.filter.LogicExpression;
 import org.apache.activemq.filter.MessageEvaluationContext;
 import org.apache.activemq.filter.NoLocalExpression;
 import org.apache.activemq.selector.SelectorParser;
+import org.apache.activemq.ActiveMQMessageFormatException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -106,11 +107,30 @@ public abstract class AbstractSubscription implements Subscription {
             }
         }
         try {
-            return (selectorExpression == null || selectorExpression.matches(context)) && this.context.isAllowedToConsume(node);
+            return matchesSelector(node, context) && this.context.isAllowedToConsume(node);
         } catch (JMSException e) {
             LOG.info("Selector failed to evaluate: {}", e.getMessage(), e);
             return false;
         }
+    }
+
+    // This logic exists in a separate method so subscriptions can optionally choose to
+    // handle any exception. Normally if an exception is thrown, the matches() method
+    // that calls this will just log the error and return. This is correct for browsers as
+    // the message gets skipped. It's also correct for topic/durable subs because each
+    // sub independently will handle acking/removing if the message does not match and
+    // will not block other subs. If there is no matching durable subs the message gets
+    // removed from the store as well. However, for queue subscriptions, if there is an error
+    // we need to handle ActiveMQMessageFormatException so we don't get stuck in a loop
+    // because queues will keep trying to re-add the message to a sub on each iteration.
+    protected boolean matchesSelector(MessageReference node, MessageEvaluationContext context)
+            throws JMSException, ActiveMQMessageFormatException {
+        return evaluateSelectorExpression(context);
+    }
+
+    // move the original selector expression into its own method so we can reference it
+    protected final boolean evaluateSelectorExpression(MessageEvaluationContext context) throws JMSException {
+        return selectorExpression == null || selectorExpression.matches(context);
     }
 
     @Override

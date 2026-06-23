@@ -31,6 +31,8 @@ import junit.framework.TestCase;
 import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.state.CommandVisitor;
 import org.apache.activemq.util.ByteSequence;
+import org.apache.activemq.util.ByteSequenceData;
+import org.apache.activemq.util.MarshallingSupport.ActiveMQUnmarshalEOFException;
 import org.apache.activemq.wireformat.WireFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -988,5 +990,26 @@ public class ActiveMQMessageTest extends TestCase {
         assertTrue(msg.isExpired());
         msg.setJMSExpiration(System.currentTimeMillis() + 10000);
         assertFalse(msg.isExpired());
+    }
+
+    public void testUnmarshalPropertiesException() throws Exception {
+        ActiveMQMessage msg = new ActiveMQMessage();
+        msg.setProperty("test", "test");
+
+        // marshal properties and clear unmarshaled state
+        msg.beforeMarshall(null);
+        msg.clearUnMarshalledState();
+        assertNull(msg.properties);
+
+        // corrupt the buffer
+        ByteSequenceData.writeIntBig(msg.marshalledProperties, 100000);
+
+        try {
+            // this will trigger unmarshalling
+            msg.getProperty("test");
+            fail("Should have thrown exception");
+        } catch (ActiveMQUnmarshalEOFException e) {
+            // expected
+        }
     }
 }
