@@ -152,6 +152,27 @@ public class FrameSizeLimitedFilterInputStreamTest {
             }
 
             assertThrows(IOException.class, () -> stream.read());
+            // docs say len of 0 just returns 0 and no attempt to read is made
+            assertEquals(0, stream.read(new byte[10], 0, 0));
+        }
+    }
+
+    @Test
+    public void testReadBytesStreamLessThanLimit() throws IOException {
+        final ByteArrayInputStream bais = new ByteArrayInputStream(createPayload());
+
+        try (FrameSizeLimitedFilterInputStream stream = new FrameSizeLimitedFilterInputStream(Integer.MAX_VALUE, bais)) {
+            for (int i = 0; i < DEFAULT_TEST_PAYLOAD_SIZE; ++i) {
+                assertEquals(i, stream.read());
+            }
+
+            // Stream should return -1 because we are finished but less than the
+            // limit of the wrapper
+            assertEquals(-1, stream.read());
+            assertEquals(-1, stream.read(new byte[10]));
+            assertEquals(-1, stream.read(new byte[10], 0, 10));
+            // docs say len of 0 just returns 0
+            assertEquals(0, stream.read(new byte[10], 0, 0));
         }
     }
 
@@ -387,10 +408,16 @@ public class FrameSizeLimitedFilterInputStreamTest {
             assertEquals(6, stream.available());
             assertEquals(4, stream.read());
 
-            assertThrows(IOException.class, () -> stream.read(new byte[10], 0, 10));
+            // partial read should work
+            byte[] data = new byte[10];
+            assertEquals(5, stream.read(data, 0, 10));
+            for (int i = 0; i < 5; i++) {
+                assertEquals(i + 5, data[i]);
+            }
 
-            assertEquals(5, stream.available());
-            assertEquals(5, stream.read());
+            assertEquals(0, stream.available());
+            // availableBytes has been exhausted so this will error
+            assertThrows(IOException.class, stream::read);
         }
     }
 
