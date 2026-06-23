@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -53,11 +54,18 @@ import jakarta.jms.TextMessage;
 import javax.management.ObjectName;
 
 import javax.net.ssl.SSLSocket;
+import org.apache.activemq.ActiveMQConnection;
+import org.apache.activemq.broker.Broker;
+import org.apache.activemq.broker.BrokerFilter;
+import org.apache.activemq.broker.BrokerPlugin;
+import org.apache.activemq.broker.BrokerPluginSupport;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.broker.jmx.BrokerViewMBean;
 import org.apache.activemq.broker.jmx.QueueViewMBean;
 import org.apache.activemq.broker.region.AbstractSubscription;
+import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
@@ -68,6 +76,7 @@ import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTextMessage;
 import org.apache.activemq.transport.stomp.Stomp.Commands;
 import org.apache.activemq.transport.stomp.Stomp.Responses;
+import org.apache.activemq.util.ByteSequenceData;
 import org.apache.activemq.util.NioSslTestUtil;
 import org.apache.activemq.util.Wait;
 import org.junit.Assume;
@@ -121,6 +130,9 @@ public class StompTest extends StompTestSupport {
         + "]"
         + "}}";
 
+
+    final AtomicBoolean sentToDlq = new AtomicBoolean(false);
+
     @Override
     public void setUp() throws Exception {
         queue = new ActiveMQQueue(getQueueName());
@@ -135,6 +147,7 @@ public class StompTest extends StompTestSupport {
         xstream = new XStream();
         xstream.processAnnotations(SamplePojo.class);
         xstream.allowTypes(new Class[] { SamplePojo.class });
+        sentToDlq.set(false);
     }
 
     @Override
@@ -155,6 +168,26 @@ public class StompTest extends StompTestSupport {
         } finally {
             super.tearDown();
         }
+    }
+
+    @Override
+    protected void addAdditionalPlugins(List<BrokerPlugin> plugins) throws Exception {
+        super.addAdditionalPlugins(plugins);
+        plugins.add(new BrokerPluginSupport() {
+            @Override
+            public Broker installPlugin(Broker broker) {
+                return new BrokerFilter(broker) {
+                    @Override
+                    public boolean sendToDeadLetterQueue(ConnectionContext context,
+                            MessageReference messageReference, Subscription subscription,
+                            Throwable poisonCause) {
+                        sentToDlq.set(true);
+                        return super.sendToDeadLetterQueue(context, messageReference,
+                                subscription, poisonCause);
+                    }
+                };
+            }
+        });
     }
 
     public void sendMessage(String msg) throws Exception {
@@ -288,6 +321,40 @@ public class StompTest extends StompTestSupport {
         StompFrame message = stompConnection.receive();
         assertNotNull(message);
         assertEquals(body, message.getBody());
+    }
+
+    // The following test will corrupt a message and test the Stomp
+    // protocol correctly passes the error during
+    // dispatch to allow the Transport Connection to properly handle
+    // with a poison ack so the message will be removed from the subscription.
+    @Test(timeout = 60000)
+    public void testCorruptMessage() throws Exception {
+        MessageProducer producer = session.createProducer(queue);
+        String frame = "CONNECT\n" + "login:system\n" + "passcode:manager\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+        frame = stompConnection.receiveFrame();
+        assertTrue(frame.startsWith("CONNECTED"));
+        frame = "SUBSCRIBE\n" + "destination:/queue/" + getQueueName() + "\n" + "ack:auto\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+        ActiveMQTextMessage msg = (ActiveMQTextMessage) session.createTextMessage("test");
+
+        // corrupt the buffer
+        msg.storeContentAndClear();
+        ByteSequenceData.writeIntBig(msg.getContent(), 1000);
+        producer.send(msg);
+
+        // Message should not be received because the UTF8 buffer is corrupt
+        try {
+            StompFrame frameNull = stompConnection.receive(500);
+            if (frameNull != null) {
+                fail("Should not have received any messages");
+            }
+        } catch (SocketTimeoutException ignored) {}
+
+        // Message should go to the DLQ
+        assertTrue(Wait.waitFor(() -> brokerService.getDestination(queue)
+                .getDestinationStatistics().getMessages().getCount() == 0, 500, 10));
+        assertTrue(sentToDlq.get());
     }
 
     @Test(timeout = 60000)

@@ -20,6 +20,7 @@ package org.apache.activemq.transport;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Objects;
+import org.apache.activemq.util.MarshallingSupport.ActiveMQUnmarshalEOFException;
 
 /**
  * A filtered style input stream that allows reads up to a given known max frame size
@@ -223,7 +224,7 @@ public class FrameSizeLimitedFilterInputStream extends InputStream {
 
     private static void validateAvailable(int requested, int available) throws IOException {
         if (requested > available) {
-            throw new IOException(String.format(
+            throw new ActiveMQUnmarshalEOFException(String.format(
                 "Cannot read more than the max available %d bytes: requested %d", available, requested));
         }
     }

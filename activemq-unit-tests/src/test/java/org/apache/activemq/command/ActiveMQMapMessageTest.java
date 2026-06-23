@@ -21,6 +21,8 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -33,7 +35,11 @@ import jakarta.jms.MessageFormatException;
 import jakarta.jms.MessageNotReadableException;
 import jakarta.jms.MessageNotWriteableException;
 
+import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.test.annotations.ParallelTest;
+import org.apache.activemq.util.ByteSequenceData;
+import org.apache.activemq.util.MarshallingSupport.ActiveMQUnmarshalEOFException;
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
@@ -471,4 +477,31 @@ public class ActiveMQMapMessageTest {
         msg.getShort("short");
         msg.getString("string");
     }
+
+    @Test
+    public void testUnmarshalException() throws Exception {
+        ActiveMQConnection connection = mock(ActiveMQConnection.class);
+
+        ActiveMQMapMessage msg = new ActiveMQMapMessage();
+        msg.setConnection(connection);
+        msg.setString("test", "test");
+
+        // store and marshal
+        msg.storeContentAndClear();
+        assertTrue(msg.map.isEmpty());
+
+        // corrupt the buffer
+        ByteSequenceData.writeIntBig(msg.content, 1000);
+
+        try {
+            // trigger unmarshalling the map
+            msg.getString("test");
+            fail("Should have thrown exception");
+        } catch (JMSException e) {
+            // expected
+            assertTrue(
+                    ExceptionUtils.getRootCause(e) instanceof ActiveMQUnmarshalEOFException);
+        }
+    }
+
 }

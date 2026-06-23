@@ -62,8 +62,10 @@ import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.broker.region.policy.RetainedMessageSubscriptionRecoveryPolicy;
 import org.apache.activemq.command.ActiveMQMessage;
+import org.apache.activemq.command.ActiveMQTextMessage;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.util.ByteSequence;
+import org.apache.activemq.util.ByteSequenceData;
 import org.apache.activemq.util.JMXSupport;
 import org.apache.activemq.util.NioSslTestUtil;
 import org.apache.activemq.util.Wait;
@@ -1128,6 +1130,68 @@ public class MQTTTest extends MQTTTestSupport {
         }
         provider.disconnect();
         activeMQConnection.close();
+    }
+
+    // The following test will corrupt a message and test the MQTT
+    // protocol correctly passes the error during
+    // dispatch to allow the Transport Connection to properly handle
+    // with a poison ack so the message will be removed from the subscription.
+    @Test
+    public void testCorruptHeaders() throws Exception {
+        final MQTTClientProvider provider = getMQTTClientProvider();
+        initializeConnection(provider);
+
+        String destinationName = "foo.far";
+        ActiveMQConnection activeMQConnection = (ActiveMQConnection) cf.createConnection();
+        activeMQConnection.start();
+        Session s = activeMQConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        jakarta.jms.Topic jmsTopic = s.createTopic(destinationName);
+        MessageProducer producer = s.createProducer(jmsTopic);
+
+        provider.subscribe("foo/+", AT_MOST_ONCE);
+        ActiveMQMessage sendMessage = (ActiveMQMessage) s.createTextMessage("test");
+        sendMessage.setStringProperty("test", "Test");
+        // marshal and corrupt props
+        sendMessage.beforeMarshall(null);
+        ByteSequenceData.writeIntBig(sendMessage.getMarshalledProperties(), 1000);
+        producer.send(sendMessage);
+        assertNull("Should not get message", provider.receive(500));
+
+        provider.disconnect();
+        activeMQConnection.close();
+
+        // verify message is gone off the dest
+        assertTrue(Wait.waitFor(() -> brokerService.getDestination(new ActiveMQTopic(destinationName))
+                .getDestinationStatistics().getMessages().getCount() == 0, 500, 10));
+    }
+
+    @Test
+    public void testCorruptBody() throws Exception {
+        final MQTTClientProvider provider = getMQTTClientProvider();
+        initializeConnection(provider);
+
+        String destinationName = "foo.far";
+        ActiveMQConnection activeMQConnection = (ActiveMQConnection) cf.createConnection();
+        activeMQConnection.start();
+        Session s = activeMQConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        jakarta.jms.Topic jmsTopic = s.createTopic(destinationName);
+        MessageProducer producer = s.createProducer(jmsTopic);
+
+        provider.subscribe("foo/+", AT_MOST_ONCE);
+        ActiveMQMessage sendMessage = (ActiveMQMessage) s.createTextMessage("test");
+
+        // marshal and corrupt body
+        sendMessage.storeContentAndClear();
+        ByteSequenceData.writeIntBig(sendMessage.getContent(), 1000);
+        producer.send(sendMessage);
+        assertNull("Should not get message", provider.receive(500));
+
+        provider.disconnect();
+        activeMQConnection.close();
+
+        // verify message is gone off the dest
+        assertTrue(Wait.waitFor(() -> brokerService.getDestination(new ActiveMQTopic(destinationName))
+                .getDestinationStatistics().getMessages().getCount() == 0, 500, 10));
     }
 
     @Test(timeout = 60 * 1000)
