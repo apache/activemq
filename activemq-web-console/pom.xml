@@ -216,6 +216,7 @@
         <groupId>${project.groupId}</groupId>
         <artifactId>activemq-stomp</artifactId>
     </dependency>
+
     <dependency>
         <groupId>${project.groupId}</groupId>
         <artifactId>activemq-spring</artifactId>
@@ -241,10 +242,10 @@
       <groupId>org.springframework</groupId>
       <artifactId>spring-web</artifactId>
     </dependency>
-
+    
     <dependency>
       <groupId>org.springframework</groupId>
-      <artifactId>spring-webmvc</artifactId>
+      <artifactId>spring-context</artifactId>
     </dependency>
 
     <!-- web container -->
@@ -313,6 +314,20 @@
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <!-- Temporarily use servlet-api 6 on tests so we can use the Mock classes
+         from spring-test. These mocks depend on servlet-api 6, but we are still
+          using 5. -->
+    <dependency>
+      <groupId>jakarta.servlet</groupId>
+      <artifactId>jakarta.servlet-api</artifactId>
+      <version>6.0.0</version>
       <scope>test</scope>
     </dependency>
 

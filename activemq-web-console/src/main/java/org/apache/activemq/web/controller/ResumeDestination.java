@@ -18,32 +18,30 @@ package org.apache.activemq.web.controller;
 
 import org.apache.activemq.web.BrokerFacade;
 import org.apache.activemq.web.DestinationFacade;
-import org.springframework.web.servlet.ModelAndView;
-import org.springframework.web.servlet.mvc.Controller;
+import org.springframework.stereotype.Component;
+import org.springframework.web.context.annotation.RequestScope;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-/**
- *
- *
- */
+@Component
+@RequestScope
 public class ResumeDestination extends DestinationFacade implements Controller {
 
-    public ResumeDestination(BrokerFacade brokerFacade) {
+    public ResumeDestination(final BrokerFacade brokerFacade) {
         super(brokerFacade);
     }
 
-    public ModelAndView handleRequest(HttpServletRequest request, HttpServletResponse response) throws Exception {
+    public void handleRequest(final HttpServletRequest request, final HttpServletResponse response) throws Exception {
         resumeDestination();
-        return redirectToBrowseView();
+        response.sendRedirect(isQueue() ? "queues.jsp" : "topics.jsp");
     }
 
     public void resumeDestination() throws Exception {
         if (isQueue()) {
             getQueueView().resume();
         } else {
-            throw new UnsupportedOperationException("Resume supported for queues only. Receieved JMSDestinationType=" + getJMSDestinationType());
+            throw new UnsupportedOperationException("Resume supported for queues only. Received JMSDestinationType=" + getJMSDestinationType());
         }
     }
 }

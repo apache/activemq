@@ -21,28 +21,27 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import org.apache.activemq.web.BrokerFacade;
 import org.apache.activemq.web.DestinationFacade;
-import org.springframework.web.servlet.ModelAndView;
-import org.springframework.web.servlet.mvc.Controller;
+import org.springframework.stereotype.Component;
+import org.springframework.web.context.annotation.RequestScope;
 
-/**
- * 
- */
+@Component
+@RequestScope
 public class PurgeDestination extends DestinationFacade implements Controller {
 
-    public PurgeDestination(BrokerFacade brokerFacade) {
+    public PurgeDestination(final BrokerFacade brokerFacade) {
         super(brokerFacade);
     }
 
-    public ModelAndView handleRequest(HttpServletRequest request, HttpServletResponse response) throws Exception {
+    public void handleRequest(final HttpServletRequest request, final HttpServletResponse response) throws Exception {
         purgeDestination();
-        return redirectToBrowseView();
+        response.sendRedirect(isQueue() ? "queues.jsp" : "topics.jsp");
     }
 
     public void purgeDestination() throws Exception {
         if (isQueue()) {
             getBrokerFacade().purgeQueue(createDestination());
         } else {
-            throw new UnsupportedOperationException("Purge supported for queues only. Receieved JMSDestinationType=" + getJMSDestinationType());
+            throw new UnsupportedOperationException("Purge supported for queues only. Received JMSDestinationType=" + getJMSDestinationType());
         }
     }
 }

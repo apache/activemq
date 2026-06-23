@@ -64,10 +64,6 @@ These pages are used to test out the environment and web framework.
   <td>${request.serverPort}</td>
 </tr>
 <tr> 
-  <td class="label">Spring applicationContext</td>
-  <td>${applicationContext}</td>
-</tr>
-<tr> 
   <td class="label">Spring requestContext</td>
   <td>${requestContext}</td>
 </tr>
