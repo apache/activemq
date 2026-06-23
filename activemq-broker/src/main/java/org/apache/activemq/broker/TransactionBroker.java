@@ -312,9 +312,9 @@ public class TransactionBroker extends BrokerFilter {
     }
 
     protected void verifyUncommittedCount(ProducerBrokerExchange producerExchange, Transaction transaction, Message message) throws Exception {
-        // maxUncommittedCount <= 0 disables
+        // maxUncommittedCount <= 0 disables; null transaction means non-transactional send
         int maxUncommittedCount = this.getBrokerService().getMaxUncommittedCount();
-        if (maxUncommittedCount > 0 && transaction.size() >= maxUncommittedCount) {
+        if (maxUncommittedCount > 0 && transaction != null && transaction.size() >= maxUncommittedCount) {
 
             try {
                 // Rollback as we are throwing an error the client as throwing the error will cause
