@@ -23,8 +23,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import jakarta.jms.JMSContext;
-import jakarta.jms.Message;
+import javax.jms.JMSContext;
+import javax.jms.Message;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
@@ -33,8 +33,6 @@ import org.apache.activemq.util.Wait;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.apache.activemq.test.annotations.ParallelTest;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
@@ -48,7 +46,6 @@ import org.junit.runners.Parameterized;
  * was set to a positive value.
  */
 @RunWith(value = Parameterized.class)
-@Category(ParallelTest.class)
 public class MaxUncommittedCountNetworkTest {
 
     private BrokerService brokerA;
