@@ -18,6 +18,7 @@ package org.apache.activemq.command;
 
 
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 
@@ -29,6 +30,7 @@ import junit.framework.TestCase;
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.test.annotations.ParallelTest;
 import org.apache.activemq.util.ByteSequenceData;
+import org.apache.activemq.util.MarshallingSupport.ActiveMQUnmarshalEOFException;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.junit.experimental.categories.Category;
 
@@ -132,8 +134,17 @@ public class ActiveMQObjectMessageTest extends TestCase {
         }
     }
 
-    public void testUnCompressedException() throws Exception {
+    public void testUnCompressedUnmarshalException() throws Exception {
+        testUnmarshalException(false);
+    }
+
+    public void testCompressedUnmarshalException() throws Exception {
+        testUnmarshalException(true);
+    }
+
+    private void testUnmarshalException(boolean compressed) throws Exception {
         ActiveMQConnection connection = mock(ActiveMQConnection.class);
+        when(connection.isUseCompression()).thenReturn(compressed);
 
         ActiveMQObjectMessage msg = new ActiveMQObjectMessage();
         msg.setConnection(connection);
@@ -142,6 +153,7 @@ public class ActiveMQObjectMessageTest extends TestCase {
         // store and marshal
         msg.storeContentAndClear();
         assertNull(msg.object);
+        assertEquals(compressed, msg.isCompressed());
 
         // corrupt the buffer
         ByteSequenceData.writeIntBig(msg.content, 1000);
@@ -153,6 +165,12 @@ public class ActiveMQObjectMessageTest extends TestCase {
         } catch (JMSException e) {
             // uncompressed will have an error from the JDK deserialization
             assertTrue(ExceptionUtils.getRootCause(e) instanceof IOException);
+
+            // our validation causes BufferUnmarshalException for a compressed stream
+            if (compressed) {
+                // expected
+                assertTrue(ExceptionUtils.getRootCause(e) instanceof ActiveMQUnmarshalEOFException);
+            }
         }
     }
 

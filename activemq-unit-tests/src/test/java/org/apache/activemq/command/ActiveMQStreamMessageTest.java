@@ -18,10 +18,12 @@ package org.apache.activemq.command;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import jakarta.jms.JMSException;
 import jakarta.jms.MessageEOFException;
@@ -32,8 +34,7 @@ import jakarta.jms.MessageNotWriteableException;
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.test.annotations.ParallelTest;
 import org.apache.activemq.util.ByteSequenceData;
-import org.apache.activemq.util.MarshallingSupport.ActiveMQUnmarshalEOFException;
-import org.apache.commons.lang.exception.ExceptionUtils;
+import org.apache.activemq.util.ExceptionUtils;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -1084,7 +1085,17 @@ public class ActiveMQStreamMessageTest {
 
     @Test
     public void testUnmarshalException() throws Exception {
+        testUnmarshalException(false);
+    }
+
+    @Test
+    public void testCompressedUnmarshalException() throws Exception {
+        testUnmarshalException(true);
+    }
+
+    private void testUnmarshalException(boolean compressed) throws Exception {
         ActiveMQConnection connection = mock(ActiveMQConnection.class);
+        when(connection.isUseCompression()).thenReturn(compressed);
 
         ActiveMQStreamMessage msg = new ActiveMQStreamMessage();
         msg.setConnection(connection);
@@ -1093,6 +1104,7 @@ public class ActiveMQStreamMessageTest {
         // store and marshal
         msg.reset();
         assertNull(msg.dataOut);
+        assertEquals(compressed, msg.isCompressed());
 
         // corrupt the buffer
         ByteSequenceData.writeIntBig(msg.content, 1000000);
@@ -1101,8 +1113,8 @@ public class ActiveMQStreamMessageTest {
             msg.readBytes(new byte[1024]);
             fail("Should have thrown exception");
         } catch (JMSException e) {
-            // expected
-            assertTrue(e instanceof MessageFormatException);
+            // if this is not null then there was an expected format exception
+            assertNotNull(ExceptionUtils.createMessageFormatException(e));
         }
     }
 }

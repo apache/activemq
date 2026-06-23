@@ -152,6 +152,9 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     private boolean optimizedMessageDispatch = true;
     private boolean copyMessageOnSend = true;
     private boolean useCompression;
+    private double maxInflatedDataSizeRatio = ActiveMQConnectionFactory.DEFAULT_MAX_INFLATED_DATA_SIZE_RATIO;
+    // This will be configured during negotiation if maxFrameSize has been configured.
+    private int maxInflatedDataSize = Integer.MAX_VALUE;
     private boolean objectMessageSerializationDefered;
     private boolean useAsyncSend;
     private boolean optimizeAcknowledge;
@@ -2034,6 +2037,15 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
         if(tmpMaxFrameSize > 0) {
             maxFrameSize.set(tmpMaxFrameSize);
         }
+
+        // Compute the maxInflatedData size as a ratio of maxFrameSize
+        // This prevents overflow and sets to Integer.MAX_VALUE if too large
+        double updatedMaxInflated = (double)tmpMaxFrameSize * maxInflatedDataSizeRatio;
+        if (Double.isInfinite(updatedMaxInflated) || updatedMaxInflated > Integer.MAX_VALUE) {
+            this.maxInflatedDataSize = Integer.MAX_VALUE;
+        } else {
+            this.maxInflatedDataSize = (int) updatedMaxInflated;
+        }
     }
 
     /**
@@ -2208,6 +2220,18 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      */
     public void setUseCompression(boolean useCompression) {
         this.useCompression = useCompression;
+    }
+
+    public int getMaxInflatedDataSize() {
+        return maxInflatedDataSize;
+    }
+
+    public double getMaxInflatedDataSizeRatio() {
+        return maxInflatedDataSizeRatio;
+    }
+
+    public void setMaxInflatedDataSizeRatio(double maxInflatedDataSizeRatio) {
+        this.maxInflatedDataSizeRatio = maxInflatedDataSizeRatio;
     }
 
     public void destroyDestination(ActiveMQDestination destination) throws JMSException {

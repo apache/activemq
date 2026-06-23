@@ -16,13 +16,20 @@
  */
 package org.apache.activemq.command;
 
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import jakarta.jms.JMSException;
 import jakarta.jms.MessageFormatException;
 import jakarta.jms.MessageNotReadableException;
 import jakarta.jms.MessageNotWriteableException;
 
 import junit.framework.TestCase;
+import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.test.annotations.ParallelTest;
+import org.apache.activemq.util.ByteSequenceData;
+import org.apache.activemq.util.ExceptionUtils;
+import org.apache.activemq.util.MarshallingSupport.ActiveMQUnmarshalEOFException;
 import org.junit.experimental.categories.Category;
 
 /**
@@ -510,6 +517,30 @@ public class ActiveMQBytesMessageTest extends TestCase {
             message.readUTF();
             fail("Should have thrown exception");
         } catch (MessageNotReadableException e) {
+        }
+    }
+
+    public void testCompressedUnmarshalException() throws Exception {
+        ActiveMQConnection connection = mock(ActiveMQConnection.class);
+        when(connection.isUseCompression()).thenReturn(true);
+
+        ActiveMQBytesMessage msg = new ActiveMQBytesMessage();
+        msg.setConnection(connection);
+        msg.writeDouble(3.3d);
+
+        // store and reset for reading
+        msg.reset();
+        assertTrue(msg.isCompressed());
+
+        // corrupt the buffer
+        ByteSequenceData.writeIntBig(msg.content, 100000);
+
+        try {
+            msg.readDouble();
+            fail("Should have thrown exception");
+        } catch (JMSException e) {
+            // expected
+            assertTrue(ExceptionUtils.getRootCause(e) instanceof ActiveMQUnmarshalEOFException);
         }
     }
 }

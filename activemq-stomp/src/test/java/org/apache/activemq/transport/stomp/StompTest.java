@@ -358,6 +358,58 @@ public class StompTest extends StompTestSupport {
     }
 
     @Test(timeout = 60000)
+    public void testMaxInflatedDataSizeErrorDlqText() throws Exception {
+        testMaxInflatedDataSizeErrorDlq(false);
+    }
+
+    @Test(timeout = 60000)
+    public void testMaxInflatedDataSizeErrorDlqBytes() throws Exception {
+        testMaxInflatedDataSizeErrorDlq(true);
+    }
+
+    private void testMaxInflatedDataSizeErrorDlq(boolean bytes) throws Exception {
+        String body = "testtesttesttesttesttest";
+
+        // set a tiny max size to trigger an error on dispatch
+        brokerService.setMaxInflatedDataSize(10);
+        ((ActiveMQConnection)connection).setUseCompression(true);
+        MessageProducer producer = session.createProducer(queue);
+
+        String frame = "CONNECT\n" + "login:system\n" + "passcode:manager\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+
+        frame = stompConnection.receiveFrame();
+        assertTrue(frame.startsWith("CONNECTED"));
+        frame = "SUBSCRIBE\n" + "destination:/queue/" + getQueueName() + "\n" + "ack:auto\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+
+        // marshal and clear so the broker will have to decompress
+        ActiveMQMessage m;
+        if (bytes) {
+            BytesMessage bytesMessage = session.createBytesMessage();
+            bytesMessage.writeBytes(body.getBytes());
+            m = (ActiveMQMessage) bytesMessage;
+        } else {
+            m = (ActiveMQMessage) session.createTextMessage(body);
+        }
+        m.storeContentAndClear();
+        producer.send(m);
+
+        // Message should be DLQ'd because it exceeds max inflated data size
+        try {
+            StompFrame frameNull = stompConnection.receive(500);
+            if (frameNull != null) {
+                fail("Should not have received any messages");
+            }
+        } catch (SocketTimeoutException soe) {}
+
+        // verify message is gone off the dest and went to the DLQ
+        assertTrue(Wait.waitFor(() -> brokerService.getDestination(queue)
+                .getDestinationStatistics().getMessages().getCount() == 0, 500, 10));
+        assertTrue(sentToDlq.get());
+    }
+
+    @Test(timeout = 60000)
     public void testJMSXGroupIdCanBeSet() throws Exception {
 
         MessageConsumer consumer = session.createConsumer(queue);
