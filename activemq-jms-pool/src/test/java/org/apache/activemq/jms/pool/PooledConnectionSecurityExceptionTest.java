@@ -18,7 +18,10 @@ package org.apache.activemq.jms.pool;
 
 import jakarta.jms.Connection;
 import jakarta.jms.ExceptionListener;
+import jakarta.jms.JMSConsumer;
+import jakarta.jms.JMSContext;
 import jakarta.jms.JMSException;
+import jakarta.jms.JMSRuntimeException;
 import jakarta.jms.JMSSecurityException;
 import jakarta.jms.MessageProducer;
 import jakarta.jms.Queue;
@@ -46,6 +49,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
@@ -222,6 +226,39 @@ public class PooledConnectionSecurityExceptionTest {
                 try (final MessageProducer producer = session.createProducer(guestsQueue)) {
                     // We can still produce to the GUESTS queue.
                 }
+            }
+        }
+    }
+
+    @Test
+    public void testCreateContextWithInvalidCredentials() throws Exception {
+        try (final JMSContext context = pooledConnFact.createContext("invalid", "credentials")) {
+            JMSRuntimeException thrown = null;
+            try {
+                context.createProducer();
+                fail("Expected JMSRuntimeException for invalid credentials");
+            } catch (JMSRuntimeException e) {
+                thrown = e;
+            }
+
+            // ConnectionPool.createSession wraps the failed session create, so walk the
+            // cause chain to prove the failure is the broker's authentication rejection.
+            boolean securityCause = false;
+            for (Throwable t = thrown; t != null; t = t.getCause()) {
+                if (t instanceof JMSSecurityException) {
+                    securityCause = true;
+                    break;
+                }
+            }
+            assertTrue("Expected JMSSecurityException in the cause chain but was: " + thrown, securityCause);
+        }
+
+        // the factory must still hand out working contexts for valid credentials
+        try (final JMSContext context = pooledConnFact.createContext("system", "manager")) {
+            final Queue queue = context.createQueue(name.getMethodName());
+            context.createProducer().send(queue, "ok");
+            try (final JMSConsumer consumer = context.createConsumer(queue)) {
+                assertEquals("ok", consumer.receiveBody(String.class, 5000));
             }
         }
     }
