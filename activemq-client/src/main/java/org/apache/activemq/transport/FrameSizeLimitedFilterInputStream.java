@@ -151,7 +151,8 @@ public class FrameSizeLimitedFilterInputStream extends InputStream {
 
         final int read = stream.read();
 
-        reduceAvailable(1);
+        // if -1 then the stream is done
+        reduceAvailable(read >= 0 ? 1 : -1);
 
         return read;
     }
@@ -165,16 +166,25 @@ public class FrameSizeLimitedFilterInputStream extends InputStream {
     public int read(byte[] b, int off, int len) throws IOException {
         Objects.requireNonNull(stream, "The stream wrapper has not been bound to a source input stream");
 
-        // It is technically permissible for this method to read up to available
-        // bytes if the length is greater than that but it is likely not going to
-        // result in outcomes we can predict as easily so for now this is limited
-        // and just throws for anything over available bytes. This could be changed
-        // to call a read using Math.min(availableBytes, length) but what could
-        // happen is we get into a read loop where we endlessly return end of stream
-        // which won't send the signal that a read past the max limit was triggered.
-        validateAvailable(len, availableBytes);
+        // If length is 0, this method is supposed to just return 0 with
+        // no bytes being read
+        if (len == 0) {
+            return 0;
+        }
 
-        return reduceAvailable(stream.read(b, off, len));
+        final int toRead;
+        if (availableBytes > 0) {
+            // read the smaller of availableBytes or the length
+            // this method allows partial reads less than len
+            toRead = Math.min(len, availableBytes);
+        } else {
+            // we have no more remaining but there is data left so trigger error
+            toRead = 1;
+        }
+
+        validateAvailable(toRead, availableBytes);
+
+        return reduceAvailable(stream.read(b, off, toRead));
     }
 
     @Override
@@ -230,6 +240,10 @@ public class FrameSizeLimitedFilterInputStream extends InputStream {
     }
 
     private int reduceAvailable(int amount) throws IOException {
+        if (amount == -1) {
+            return -1; // Underlying says there are no more bytes
+        }
+
         try {
             availableBytes = Math.subtractExact(availableBytes, amount);
         } catch (ArithmeticException e) {
