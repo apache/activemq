@@ -33,8 +33,6 @@ import org.apache.activemq.util.Wait;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.apache.activemq.test.annotations.ParallelTest;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
@@ -48,7 +46,6 @@ import org.junit.runners.Parameterized;
  * was set to a positive value.
  */
 @RunWith(value = Parameterized.class)
-@Category(ParallelTest.class)
 public class MaxUncommittedCountNetworkTest {
 
     private BrokerService brokerA;
