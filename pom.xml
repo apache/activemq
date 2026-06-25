@@ -74,7 +74,7 @@
     <jetty-version>11.0.26</jetty-version>
     <jetty-version-range>[11,13)</jetty-version-range>
     <jmdns-version>3.6.3</jmdns-version>
-    <javassist-version>3.31.0-GA</javassist-version>
+    <javassist-version>3.32.0-GA</javassist-version>
     <jettison-version>1.5.6</jettison-version>
     <jolokia-version>2.6.0</jolokia-version>
     <junit-version>4.13.2</junit-version>
