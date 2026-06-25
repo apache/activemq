@@ -19,7 +19,7 @@ package org.apache.activemq.transport.stomp;
 import java.io.IOException;
 
 /**
- * @author <a href="http://hiramchirino.com">chirino</a>
+ *
  */
 public class ProtocolException extends IOException {
 

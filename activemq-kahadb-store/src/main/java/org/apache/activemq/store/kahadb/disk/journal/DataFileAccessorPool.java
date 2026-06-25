@@ -26,7 +26,7 @@ import java.util.Map;
 /**
  * Used to pool DataFileAccessors.
  *
- * @author chirino
+ *
  */
 public class DataFileAccessorPool {
 

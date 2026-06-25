@@ -46,7 +46,7 @@ import org.apache.activemq.test.annotations.ParallelTest;
  *
  * See AMQ-3537
  *
- * @author jason.yankus
+ *
  *
  */
 @SuppressWarnings({ "rawtypes", "unchecked" })

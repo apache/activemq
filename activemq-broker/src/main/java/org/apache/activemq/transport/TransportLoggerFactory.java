@@ -36,7 +36,7 @@ import static org.apache.activemq.TransportLoggerSupport.defaultJmxPort;
  * This MBean permits enabling and disabling the logging for
  * all TransportLogger objects at once.
  *
- * @author David Martin Clavo david(dot)martin(dot)clavo(at)gmail.com
+ *
  *
  * @see TransportLoggerControlMBean
  */

@@ -19,7 +19,7 @@ package org.apache.activemq.util;
 import java.io.File;
 
 /**
- * @author wcrowell
+ *
  *
  * LargeFile is used to simulate a large file system (e.g. exabytes in size).
  * The getTotalSpace() method is intentionally set to exceed the largest

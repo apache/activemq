@@ -36,7 +36,7 @@ import org.slf4j.LoggerFactory;
  * ActiveMQ commands. All of the conversion work is done by delegating to the
  * ProtocolConverter.
  *
- * @author <a href="http://hiramchirino.com">chirino</a>
+ *
  */
 public class StompTransportFilter extends TransportFilter implements StompTransport {
 

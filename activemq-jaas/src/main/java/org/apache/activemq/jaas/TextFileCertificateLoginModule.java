@@ -42,7 +42,7 @@ import javax.security.auth.login.LoginException;
  * NOTE: This class will re-read user and group files for every authentication
  * (i.e it does live updates of allowed groups and users).
  *
- * @author sepandm@gmail.com (Sepand)
+ *
  */
 public class TextFileCertificateLoginModule extends CertificateLoginModule {
 

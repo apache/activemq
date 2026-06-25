@@ -26,7 +26,7 @@ import java.util.concurrent.*;
  *   Can be converted to a future using the future() method.
  * </p>
  *
- * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
+ *
  */
 public class Promise<T> extends PromiseCallback<T> {
 

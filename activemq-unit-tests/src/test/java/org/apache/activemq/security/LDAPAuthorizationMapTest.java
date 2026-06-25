@@ -47,7 +47,7 @@ import org.apache.activemq.test.annotations.ParallelTest;
 /**
  * This test assumes setup like in file 'AMQauth.ldif'. Contents of this file is attached below in comments.
  *
- * @author ngcutura
+ *
  *
  *
  */

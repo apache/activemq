@@ -35,7 +35,7 @@ import org.junit.experimental.categories.Category;
 import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
- * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
+ *
  */
 @Category(ParallelTest.class)
 public class KahaDBFilePendingMessageCursorTest extends FilePendingMessageCursorTestSupport {

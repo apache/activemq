@@ -50,7 +50,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static org.apache.activemq.TestSupport.getDestination;
 
 /**
- * @author <a href="http://www.christianposta.com/blog">Christian Posta</a>
+ *
  */
 public class TwoBrokerVirtualTopicSelectorAwareForwardingTest extends
         JmsMultipleBrokersTestSupport {

@@ -20,7 +20,7 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import jakarta.jms.*;
 
 /**
- * @author <a href="http://www.christianposta.com/blog">Christian Posta</a>
+ *
  */
 public class Consumer {
     private static final String BROKER_URL = "tcp://localhost:61616";

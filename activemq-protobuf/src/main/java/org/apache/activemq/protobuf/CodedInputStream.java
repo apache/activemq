@@ -31,7 +31,7 @@ import java.io.InputStream;
  * encoded protocol messages, you should use the former methods, but if you are
  * reading some other format of your own design, use the latter.
  * 
- * @author kenton@google.com Kenton Varda
+ *
  */
 public final class CodedInputStream extends FilterInputStream {
 

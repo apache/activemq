@@ -19,7 +19,7 @@ package org.apache.activemq.broker.region;
 /**
  * Queue specific MessageReference.
  *
- * @author fateev@amazon.com
+ *
  *
  */
 public interface QueueMessageReference extends MessageReference {

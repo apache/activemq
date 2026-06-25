@@ -22,7 +22,7 @@ import java.io.IOException;
  * Thrown when a protocol message being parsed is invalid in some way, e.g. it
  * contains a malformed varint or a negative byte length.
  * 
- * @author kenton@google.com Kenton Varda
+ *
  */
 public class InvalidProtocolBufferException extends IOException {
     private static final long serialVersionUID = 5685337441004132240L;

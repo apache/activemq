@@ -41,7 +41,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 /**
- * @author <a href="http://www.christianposta.com/blog">Christian Posta</a>
+ *
  *
  * You can use this class to connect up to a running web console and run some queries.
  * Used to work through https://issues.apache.org/jira/browse/AMQ-4272 but would be useful

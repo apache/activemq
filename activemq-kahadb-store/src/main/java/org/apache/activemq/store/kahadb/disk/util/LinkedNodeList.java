@@ -21,7 +21,7 @@ import java.util.ArrayList;
 /**
  * Provides a list of LinkedNode objects. 
  * 
- * @author chirino
+ *
  */
 public class LinkedNodeList<T extends LinkedNode<T>> {
 

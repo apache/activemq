@@ -21,7 +21,7 @@ import java.util.Properties;
 /**
  * Class used to provide configurable options in a convenient way
  *
- * @author Jeff Mesnil (jmesnil@gmail.com)
+ *
  * @version $Id: TestConfig.java,v 1.2 2007/06/14 18:39:51 csuconic Exp $
  */
 public class TestConfig

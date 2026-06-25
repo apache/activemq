@@ -22,7 +22,7 @@ import java.util.Iterator;
 import org.apache.activemq.util.ByteSequence;
 
 /**
- * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
+ *
  */
 public interface PList {
     String getName();

@@ -39,7 +39,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Keeps track of the STOMP subscription so that acking is correctly done.
  *
- * @author <a href="http://hiramchirino.com">chirino</a>
+ *
  */
 public class StompSubscription {
 

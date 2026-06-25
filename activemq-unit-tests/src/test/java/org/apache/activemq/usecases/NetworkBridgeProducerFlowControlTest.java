@@ -97,7 +97,7 @@ import org.apache.activemq.test.annotations.ParallelTest;
  * <p/>
  * https://issues.apache.org/jira/browse/AMQ-3331
  *
- * @author schow
+ *
  */
 @Category(ParallelTest.class)
 public class NetworkBridgeProducerFlowControlTest extends

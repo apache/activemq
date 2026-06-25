@@ -28,7 +28,7 @@ import java.io.OutputStream;
 import java.util.zip.GZIPOutputStream;
 
 /**
- * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
+ *
  */
 public class ExportStreamManager {
 

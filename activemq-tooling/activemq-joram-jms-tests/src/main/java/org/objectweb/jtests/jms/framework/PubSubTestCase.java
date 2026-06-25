@@ -35,7 +35,7 @@ import javax.naming.Context;
  * Classes which want that convenience should extend <code>PubSubTestCase</code> instead of 
  * <code>JMSTestCase</code>.
  *
- * @author Jeff Mesnil (jmesnil@gmail.com)
+ *
  * @version $Id: PubSubTestCase.java,v 1.2 2007/06/19 23:32:35 csuconic Exp $
  */
 public abstract class PubSubTestCase extends JMSTestCase

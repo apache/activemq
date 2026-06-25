@@ -23,7 +23,7 @@ import jakarta.jms.*;
 import java.util.Scanner;
 
 /**
- * @author <a href="http://www.christianposta.com/blog">Christian Posta</a>
+ *
  */
 public class Client {
     private static final Boolean NON_TRANSACTED = false;

@@ -32,7 +32,7 @@ import org.apache.activemq.util.MarshallingSupport;
 /**
  * Represents all the data in a STOMP frame.
  *
- * @author <a href="http://hiramchirino.com">chirino</a>
+ *
  */
 public class StompFrame implements Command {
 

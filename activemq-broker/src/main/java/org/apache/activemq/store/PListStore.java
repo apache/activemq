@@ -21,7 +21,7 @@ import org.apache.activemq.Service;
 import java.io.File;
 
 /**
- * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
+ *
  */
 public interface PListStore extends Service {
     File getDirectory();

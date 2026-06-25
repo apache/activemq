@@ -35,7 +35,7 @@ import org.objectweb.jtests.jms.framework.TestConfig;
 /**
  * Test the headers of a message
  *
- * @author Jeff Mesnil (jmesnil@gmail.com)
+ *
  * @version $Id: MessageHeaderTest.java,v 1.1 2007/03/29 04:28:36 starksm Exp $
  */
 public class MessageHeaderTest extends PTPTestCase

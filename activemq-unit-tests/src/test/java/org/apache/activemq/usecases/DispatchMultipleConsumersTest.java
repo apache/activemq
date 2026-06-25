@@ -35,7 +35,7 @@ import org.junit.experimental.categories.Category;
 import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
- * @author Rajani Chennamaneni
+ *
  */
 @Category(ParallelTest.class)
 public class DispatchMultipleConsumersTest extends TestCase {

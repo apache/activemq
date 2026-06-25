@@ -73,7 +73,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * @author <a href="http://hiramchirino.com">chirino</a>
+ *
  */
 public class ProtocolConverter {
 

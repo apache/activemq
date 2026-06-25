@@ -24,7 +24,7 @@ import org.apache.activemq.util.IntrospectionSupport;
  * Helper utility that can be used to set the properties on any object using
  * command line arguments.
  * 
- * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
+ *
  */
 public final class CommandLineSupport {
 

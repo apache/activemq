@@ -49,8 +49,8 @@ import org.objectweb.jtests.jms.framework.TestConfig;
  * <br />
  * For each of this type of message, we test that a message can be sent and received
  * with an empty body or not.
- * 
- * @author Jeff Mesnil (jmesnil@gmail.com)
+ *
+ *
  * @version $Id: MessageTypeTest.java,v 1.1 2007/03/29 04:28:37 starksm Exp $
  */
 public class MessageTypeTest extends PTPTestCase

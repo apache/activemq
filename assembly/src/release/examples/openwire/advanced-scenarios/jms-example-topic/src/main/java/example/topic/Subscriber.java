@@ -22,7 +22,7 @@ import jakarta.jms.*;
 import java.util.concurrent.CountDownLatch;
 
 /**
- * @author <a href="http://www.christianposta.com/blog">Christian Posta</a>
+ *
  */
 public class Subscriber implements MessageListener {
     private static final String BROKER_URL = "tcp://localhost:61616";

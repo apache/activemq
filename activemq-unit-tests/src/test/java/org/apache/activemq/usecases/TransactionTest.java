@@ -41,7 +41,7 @@ import org.junit.experimental.categories.Category;
 import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
- * @author pragmasoft
+ *
  *
  */
 @Category(ParallelTest.class)

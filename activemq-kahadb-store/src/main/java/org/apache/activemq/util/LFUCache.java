@@ -42,7 +42,7 @@ import java.util.Set;
  * As a consequence, this cache runs in *amortized* O(1) time (considering the worst case of having the lowest frequency at 0 and having to evict all
  * elements).
  *
- * @author Sergio Bossa
+ *
  */
 public class LFUCache<Key, Value> implements Map<Key, Value> {
 

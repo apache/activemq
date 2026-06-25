@@ -28,7 +28,7 @@ import org.apache.activemq.filter.MessageEvaluationContext;
  * client. Then the message with a "PTP_CLIENTID" property, can be received by a
  * mqtt client with the same clientId.
  *
- * @author kimmking (kimmking@163.com)
+ *
  * @date 2013-12-20
  * @org.apache.xbean.XBean
  */

@@ -49,7 +49,7 @@ import org.junit.experimental.categories.Category;
  * {@code jakarta.jms.JMSException: Could not correlate acknowledgment with
  * dispatched message: MessageAck}
  * 
- * @author daroo
+ *
  */
 @Category(ParallelTest.class)
 public class AMQ2489Test extends TestSupport {

@@ -36,7 +36,7 @@ import org.junit.experimental.categories.Category;
 
 /**
  *
- * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
+ *
  */
 @Category(ParallelTest.class)
 public class ActiveMQAdmin implements Admin {

@@ -44,7 +44,7 @@ import org.apache.activemq.command.ActiveMQTopic;
  * Common functionality for ActiveMQ test cases.
  * </p>
  *
- * @author Rainer Klute <a
+ *
  *         href="mailto:rainer.klute@dp-itsolutions.de">&lt;rainer.klute@dp-itsolutions.de&gt;</a>
  * @since 2007-08-10
  * @version $Id: ActiveMQTestCase.java 12 2007-08-14 12:02:02Z rke $

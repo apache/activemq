@@ -30,7 +30,7 @@ import protobuf_unittest.UnittestProto.TestExtremeDefaultValues;
  * Unit test for generated messages and generated code.  See also
  * {@link MessageTest}, which tests some generated message functionality.
  *
- * @author kenton@google.com Kenton Varda
+ *
  */
 public class GeneratedMessageTest extends TestCase {
 

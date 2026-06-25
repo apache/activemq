@@ -33,7 +33,7 @@ import java.io.OutputStream;
  * <p>
  * This class is totally unsynchronized.
  * 
- * @author kneton@google.com Kenton Varda
+ *
  */
 public final class CodedOutputStream extends FilterOutputStream {
 

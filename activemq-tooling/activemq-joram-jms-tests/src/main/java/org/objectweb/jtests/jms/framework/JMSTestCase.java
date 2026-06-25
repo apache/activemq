@@ -33,7 +33,7 @@ import org.objectweb.jtests.jms.admin.AdminFactory;
  *<br />
  * Every Test Case for JMS should extend this class instead of <code>junit.framework.TestCase</code>
  *
- * @author Jeff Mesnil (jmesnil@gmail.com)
+ *
  * @version $Id: JMSTestCase.java,v 1.2 2007/07/19 21:20:08 csuconic Exp $
  */
 public abstract class JMSTestCase extends TestCase

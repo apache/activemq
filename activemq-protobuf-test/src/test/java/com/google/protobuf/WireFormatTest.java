@@ -26,7 +26,7 @@ import protobuf_unittest.UnittestProto.TestAllTypes;
 /**
  * Tests related to parsing and serialization.
  *
- * @author kenton@google.com (Kenton Varda)
+ *
  */
 public class WireFormatTest extends TestCase {
   public void testSerialization() throws Exception {

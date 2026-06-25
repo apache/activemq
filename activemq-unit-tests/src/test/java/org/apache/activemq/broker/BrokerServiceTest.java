@@ -36,7 +36,7 @@ import org.junit.experimental.categories.Category;
 /**
  * Tests for the BrokerService class
  * 
- * @author chirino
+ *
  */
 @Category(ParallelTest.class)
 public class BrokerServiceTest extends TestCase {
