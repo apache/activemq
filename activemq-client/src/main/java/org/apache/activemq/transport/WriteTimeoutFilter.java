@@ -48,7 +48,7 @@ import org.slf4j.LoggerFactory;
  *     uri=&quot;tcp://127.0.0.1:61616?transport.soTimeout=10000&amp;transport.soWriteTimeout=15000"
  * /&gt;
  * </code></pre>
- * @author Filip Hanik
+ *
  *
  */
 public class WriteTimeoutFilter extends TransportFilter {

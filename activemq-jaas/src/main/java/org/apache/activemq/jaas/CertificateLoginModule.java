@@ -40,7 +40,7 @@ import org.slf4j.LoggerFactory;
  * Allows for subclasses to define methods used to verify user certificates and
  * find user groups. Uses CertificateCallbacks to retrieve certificates.
  * 
- * @author sepandm@gmail.com (Sepand)
+ *
  */
 public abstract class CertificateLoginModule extends PropertiesLoader implements LoginModule {
 

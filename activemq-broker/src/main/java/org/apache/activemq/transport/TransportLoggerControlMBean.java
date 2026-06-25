@@ -22,7 +22,7 @@ package org.apache.activemq.transport;
  *  -Enable logging for all TransportLoggers at once.
  *  -Disable logging for all TransportLoggers at once.
  *  
- * @author David Martin Clavo david(dot)martin(dot)clavo(at)gmail.com
+ *
  * 
  */
 public interface TransportLoggerControlMBean {

@@ -48,7 +48,7 @@ import jakarta.jms.Topic;
  * </li>
  * </ul>
  *
- * @author Rainer Klute <a
+ *
  *         href="mailto:rainer.klute@dp-itsolutions.de">&lt;rainer.klute@dp-itsolutions.de&gt;</a>
  * @since 2007-08-09
  * @version $Id: MessageSelectorTest.java 12 2007-08-14 12:02:02Z rke $

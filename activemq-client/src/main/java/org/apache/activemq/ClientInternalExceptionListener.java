@@ -27,7 +27,7 @@ package org.apache.activemq;
  * the problem.
  * </p>
  * 
- * @author Kai Hudalla
+ *
  * @see ActiveMQConnection#setClientInternalExceptionListener(org.apache.activemq.ClientInternalExceptionListener)
  */
 public interface ClientInternalExceptionListener

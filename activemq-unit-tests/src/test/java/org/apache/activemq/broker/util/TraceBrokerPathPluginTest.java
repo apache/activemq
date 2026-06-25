@@ -38,7 +38,7 @@ import org.junit.experimental.categories.Category;
 
 /**
  * Tests TraceBrokerPathPlugin by creating two brokers linked by a network connector, and checking to see if the consuming end receives the expected value in the trace property
- * @author Raul Kripalani
+ *
  *
  */
 @Category(ParallelTest.class)

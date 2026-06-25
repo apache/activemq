@@ -30,7 +30,7 @@ import java.util.List;
  * be thrown by correct code, but {@code InvalidProtocolBufferException} might
  * be.
  * 
- * @author kenton@google.com Kenton Varda
+ *
  */
 public class UninitializedMessageException extends RuntimeException {
 

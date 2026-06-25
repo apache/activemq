@@ -36,7 +36,7 @@ import org.apache.activemq.thread.TaskRunnerFactory;
  * Creates standard ActiveMQ implementations of
  * {@link org.apache.activemq.broker.region.Destination}.
  * 
- * @author fateev@amazon.com
+ *
  * 
  */
 public class DestinationFactoryImpl extends DestinationFactory {

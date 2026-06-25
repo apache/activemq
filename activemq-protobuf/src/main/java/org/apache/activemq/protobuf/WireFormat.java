@@ -25,7 +25,7 @@ package org.apache.activemq.protobuf;
  * This class contains constants and helper functions useful for dealing with
  * the Protocol Buffer wire format.
  * 
- * @author kenton@google.com Kenton Varda
+ *
  */
 public final class WireFormat {
     // Do not allow instantiation.

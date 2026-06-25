@@ -34,8 +34,8 @@ import org.objectweb.jtests.jms.framework.TestConfig;
  * Test queue sessions
  * <br />
  * See JMS specifications, sec. 4.4 Session
- * 
- * @author Jeff Mesnil (jmesnil@gmail.com)
+ *
+ *
  * @version $Id: QueueSessionTest.java,v 1.2 2007/06/19 23:32:35 csuconic Exp $
  */
 public class QueueSessionTest extends PTPTestCase

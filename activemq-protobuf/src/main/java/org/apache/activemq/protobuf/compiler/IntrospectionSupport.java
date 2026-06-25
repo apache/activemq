@@ -37,7 +37,7 @@ import java.util.Map.Entry;
 /**
  * Support class used to do introspection/reflection based setting and getting of properties on a Java Bean.
  * 
- * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
+ *
  */
 public final class IntrospectionSupport {
     

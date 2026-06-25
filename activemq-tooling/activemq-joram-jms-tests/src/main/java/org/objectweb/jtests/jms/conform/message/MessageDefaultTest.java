@@ -28,7 +28,7 @@ import org.objectweb.jtests.jms.framework.JMSTestCase;
 /**
  * Test the default constants of the <code>jakarta.jms.Message</code> interface.
  *
- * @author Jeff Mesnil (jmesnil@gmail.com)
+ *
  * @version $Id: MessageDefaultTest.java,v 1.1 2007/03/29 04:28:37 starksm Exp $
  */
 public class MessageDefaultTest extends JMSTestCase

@@ -27,7 +27,7 @@ import junit.framework.TestCase;
  * Misc. unit tests for message operations that apply to both generated
  * and dynamic messages.
  *
- * @author kenton@google.com Kenton Varda
+ *
  */
 public class MessageTest extends TestCase {
   // =================================================================

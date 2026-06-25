@@ -25,7 +25,7 @@ import org.slf4j.Logger;
  * Implementation of LogWriter interface to keep ActiveMQ's
  * old logging format.
  * 
- * @author David Martin Clavo david(dot)martin(dot)clavo(at)gmail.com
+ *
  * 
  */
 public class DefaultLogWriter implements LogWriter {

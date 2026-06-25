@@ -58,7 +58,7 @@ import static org.junit.Assert.*;
 
 /**
  *
- * @author x22koe
+ *
  */
 public class CheckDuplicateMessagesOnDuplexTest {
 

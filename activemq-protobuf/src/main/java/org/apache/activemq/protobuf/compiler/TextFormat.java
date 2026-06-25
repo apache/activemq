@@ -33,8 +33,8 @@ import org.apache.activemq.protobuf.UTF8Buffer;
  * to copy this file over.  We need to request that the protobuf folks open 
  * this class up amoung a few others. 
  * 
- * @author wenboz@google.com Wenbo Zhu
- * @author kenton@google.com Kenton Varda
+ *
+ *
  */
 public final class TextFormat {
 

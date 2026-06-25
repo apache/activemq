@@ -37,7 +37,7 @@ import org.slf4j.LoggerFactory;
  * resources/META-INF/services/org/apache/activemq/transport/logwriters
  * directory.
  *
- * @author David Martin Clavo david(dot)martin(dot)clavo(at)gmail.com
+ *
  *
  */
 public class LogWriterFinder {

@@ -28,7 +28,7 @@ import java.lang.annotation.Target;
  * of new features that may change or be removed
  * between any release, 
  *
- * @author Matt Pavlovich <mattrpav@apache.org>
+ *
  * @since 6.2.0
  */
 @Documented

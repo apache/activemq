@@ -33,7 +33,7 @@ import java.io.IOException;
  *     uri=&quot;tcp://127.0.0.1:61616?transport.soTimeout=10000&amp;transport.threadName"
  * /&gt;
  * </code></pre>
- * @author Filip Hanik
+ *
  *
  */
 public class ThreadNameFilter extends TransportFilter {

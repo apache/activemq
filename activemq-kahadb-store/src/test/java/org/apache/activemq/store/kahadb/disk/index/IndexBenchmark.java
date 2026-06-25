@@ -29,7 +29,7 @@ import org.apache.activemq.store.kahadb.disk.page.Transaction;
 import org.apache.activemq.util.IOHelper;
 
 /**
- * @author chirino
+ *
  */
 public abstract class IndexBenchmark extends TestCase {
 

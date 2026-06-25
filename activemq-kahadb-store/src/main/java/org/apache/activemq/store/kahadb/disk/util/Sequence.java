@@ -19,7 +19,7 @@ package org.apache.activemq.store.kahadb.disk.util;
 /**
  * Represents a range of numbers.
  * 
- * @author chirino
+ *
  */
 public class Sequence extends LinkedNode<Sequence> {
     long first;

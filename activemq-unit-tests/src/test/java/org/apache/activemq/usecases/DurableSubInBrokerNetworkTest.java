@@ -38,8 +38,8 @@ import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * Tests durable topic subscriptions inside a network of brokers.
- * 
- * @author tmielke
+ *
+ *
  *
  */
 @Category(ParallelTest.class)

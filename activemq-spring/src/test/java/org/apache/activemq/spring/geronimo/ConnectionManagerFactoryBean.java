@@ -52,7 +52,7 @@ import org.springframework.beans.FatalBeanException;
  * The connection manager will be then injected in the
  * LocalConnectionFactoryBean, class of the JCA support of Spring.
  *
- * @author Thierry Templier
+ *
  * @see org.apache.geronimo.spring.factory.ConnectionFactoryFactoryBean#setConnectionManager(ConnectionManager)
  * @org.apache.xbean.XBean element="connectionManager"
  */

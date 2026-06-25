@@ -21,7 +21,7 @@ import jakarta.jms.*;
 import java.util.concurrent.TimeUnit;
 
 /**
- * @author <a href="http://www.christianposta.com/blog">Christian Posta</a>
+ *
  */
 public class ProducerRequestReply{
 

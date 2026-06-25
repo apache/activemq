@@ -29,7 +29,7 @@ import java.util.Date;
 /**
  * Used to lock a File.
  *
- * @author chirino
+ *
  */
 public class LockFile {
 

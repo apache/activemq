@@ -35,7 +35,7 @@ import org.objectweb.jtests.jms.framework.PTPTestCase;
  * <br />
  *  See JMS Specification, sec. 3.5 Message Properties (p.32-37)
  *
- * @author Jeff Mesnil (jmesnil@gmail.com)
+ *
  * @version $Id: MessagePropertyTest.java,v 1.1 2007/03/29 04:28:34 starksm Exp $
  */
 public class MessagePropertyTest extends PTPTestCase

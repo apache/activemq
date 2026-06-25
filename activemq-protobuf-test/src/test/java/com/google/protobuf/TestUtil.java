@@ -46,7 +46,7 @@ import com.google.protobuf.test.UnittestImport.ImportMessage;
  * set all fields of a message, serialize it, parse it, and check that all
  * fields are set.
  *
- * @author kenton@google.com Kenton Varda
+ *
  */
 class TestUtil {
   private TestUtil() {}

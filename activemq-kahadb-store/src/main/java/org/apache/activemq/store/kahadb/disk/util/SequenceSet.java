@@ -29,7 +29,7 @@ import java.util.NoSuchElementException;
  * Sequence representation. Use to keep track of received message ids to find
  * out if a message is duplicate or if there are any missing messages.
  *
- * @author chirino
+ *
  */
 public class SequenceSet extends LinkedNodeList<Sequence> implements Iterable<Long> {
 

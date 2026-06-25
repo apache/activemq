@@ -30,7 +30,7 @@ import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * 
- * @author Neil Clayton
+ *
  * 
  */
 @Category(ParallelTest.class)
