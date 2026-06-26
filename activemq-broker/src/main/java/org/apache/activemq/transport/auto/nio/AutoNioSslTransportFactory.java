@@ -94,11 +94,17 @@ public class AutoNioSslTransportFactory extends NIOSSLTransportFactory implement
     private Set<String> enabledProtocols;
 
     @Override
+    @SuppressWarnings("deprecation")
     public TransportServer doBind(final URI location) throws IOException {
+        return doBind(location, SslContext.getCurrentSslContext());
+    }
+
+    @Override
+    public TransportServer doBind(final URI location, SslContext sslContext) throws IOException {
         try {
-            if (SslContext.getCurrentSslContext() != null) {
+            if (sslContext != null) {
                 try {
-                    context = SslContext.getCurrentSslContext().getSSLContext();
+                    context = sslContext.getSSLContext();
                 } catch (Exception e) {
                     throw new IOException(e);
                 }

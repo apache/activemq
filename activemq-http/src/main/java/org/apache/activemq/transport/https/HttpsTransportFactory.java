@@ -37,15 +37,24 @@ import org.apache.activemq.wireformat.WireFormat;
  */
 public class HttpsTransportFactory extends HttpTransportFactory {
 
+    private SslContext sslContext;
+
     public TransportServer doBind(String brokerId, URI location) throws IOException {
         return doBind(location);
     }
 
     @Override
+    @SuppressWarnings("deprecation")
     public TransportServer doBind(URI location) throws IOException {
+        return doBind(location, SslContext.getCurrentSslContext());
+    }
+
+    @Override
+    public TransportServer doBind(URI location, SslContext sslContext) throws IOException {
+        this.sslContext = sslContext;
         try {
             Map<String, String> options = new HashMap<String, String>(URISupport.parseParameters(location));
-            HttpsTransportServer result = new HttpsTransportServer(location, this, SslContext.getCurrentSslContext());
+            HttpsTransportServer result = new HttpsTransportServer(location, this, sslContext);
             Map<String, Object> httpOptions = IntrospectionSupport.extractProperties(options, "http.");
             Map<String, Object> transportOptions = IntrospectionSupport.extractProperties(options, "transport.");
             result.setTransportOption(transportOptions);
@@ -57,8 +66,17 @@ public class HttpsTransportFactory extends HttpTransportFactory {
     }
 
     @Override
+    public Transport doConnect(URI location, SslContext sslContext) throws Exception {
+        this.sslContext = sslContext;
+        try {
+            return doConnect(location);
+        } finally {
+            this.sslContext = null;
+        }
+    }
+
+    @Override
     protected Transport createTransport(URI location, WireFormat wf) throws IOException {
-        // need to remove options from uri
         try {
             URI uri = URISupport.removeQuery(location);
 
@@ -69,7 +87,7 @@ public class HttpsTransportFactory extends HttpTransportFactory {
                 verifyHostName = Boolean.parseBoolean(transportOptions.get("verifyHostName").toString());
             }
 
-            HttpsClientTransport clientTransport = new HttpsClientTransport(asTextWireFormat(wf), uri);
+            HttpsClientTransport clientTransport = new HttpsClientTransport(asTextWireFormat(wf), uri, sslContext);
             clientTransport.setVerifyHostName(verifyHostName);
             return clientTransport;
         } catch (URISyntaxException e) {

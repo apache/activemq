@@ -55,15 +55,37 @@ public class NIOSSLTransportFactory extends NIOTransportFactory {
     }
 
     @Override
-    public TransportServer doBind(URI location) throws IOException {
-        if (SslContext.getCurrentSslContext() != null) {
+    public TransportServer doBind(URI location, SslContext sslContext) throws IOException {
+        if (sslContext != null) {
             try {
-                context = SslContext.getCurrentSslContext().getSSLContext();
+                context = sslContext.getSSLContext();
             } catch (Exception e) {
                 throw new IOException(e);
             }
         }
         return super.doBind(location);
+    }
+
+    @Override
+    @SuppressWarnings("deprecation")
+    public TransportServer doBind(URI location) throws IOException {
+        return doBind(location, SslContext.getCurrentSslContext());
+    }
+
+    @Override
+    public Transport doConnect(URI location, SslContext sslContext) throws Exception {
+        if (sslContext != null) {
+            try {
+                context = sslContext.getSSLContext();
+            } catch (Exception e) {
+                throw new IOException(e);
+            }
+        }
+        try {
+            return doConnect(location);
+        } finally {
+            context = null;
+        }
     }
 
     /**
@@ -122,17 +144,10 @@ public class NIOSSLTransportFactory extends NIOTransportFactory {
      */
     @Override
     protected SocketFactory createSocketFactory() throws IOException {
-        if (SslContext.getCurrentSslContext() != null) {
-            SslContext ctx = SslContext.getCurrentSslContext();
-            try {
-                return ctx.getSSLContext().getSocketFactory();
-            } catch (Exception e) {
-                throw IOExceptionSupport.create(e);
-            }
-        } else {
-            return SSLSocketFactory.getDefault();
+        if (context != null) {
+            return context.getSocketFactory();
         }
-
+        return SSLSocketFactory.getDefault();
     }
 
 }
