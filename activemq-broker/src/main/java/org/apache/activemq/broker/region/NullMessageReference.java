@@ -159,4 +159,13 @@ public final class NullMessageReference implements QueueMessageReference {
         return false;
     }
 
+    @Override
+    public boolean isDelivered() {
+        return false;
+    }
+
+    @Override
+    public void setDelivered(boolean delivered) {
+
+    }
 }
