@@ -30,6 +30,8 @@ concurrency:
 jobs:
   deploy:
 
+    if: github.event.repository.fork != true
+
     permissions:
       contents: read
 
