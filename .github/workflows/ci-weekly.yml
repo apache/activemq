@@ -30,6 +30,8 @@ jobs:
   build:
     name: build
 
+    if: github.event.repository.fork != true
+
     permissions:
       contents: read
 
