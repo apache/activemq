@@ -388,7 +388,7 @@ public abstract class AbstractJmxCommand extends AbstractCommand {
         try {
             super.execute(tokens);
         } catch (Exception exception) {
-            handleException(exception, jmxServiceUrl.toString());
+            handleException(exception, jmxServiceUrl != null ? jmxServiceUrl.toString() : "local");
             return;
         }finally {
             closeJmxConnection();
