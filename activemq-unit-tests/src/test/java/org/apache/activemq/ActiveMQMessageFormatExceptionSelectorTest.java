@@ -70,10 +70,12 @@ public class ActiveMQMessageFormatExceptionSelectorTest {
     private URI clientUri;
     private BrokerService brokerService;
     private final AtomicInteger dlqCount = new AtomicInteger();
+    private final AtomicInteger discardCount = new AtomicInteger();
 
     @Before
     public void setUp() throws Exception {
         dlqCount.set(0);
+        discardCount.set(0);
         startBroker();
     }
 
@@ -128,6 +130,7 @@ public class ActiveMQMessageFormatExceptionSelectorTest {
             assertEquals(100, destination.getDestinationStatistics().getMessages().getCount());
             assertTrue(destination.getMemoryUsage().getUsage() > 0);
             assertEquals(0, dlqCount.get());
+            assertEquals(0, discardCount.get());
             assertEquals(100, destination.getMessageStore().getMessageCount());
         }
     }
@@ -140,6 +143,7 @@ public class ActiveMQMessageFormatExceptionSelectorTest {
         // corrupted it makes sense to just remove with the first error and
         // send to the DLQ
         assertEquals(20, dlqCount.get());
+        assertEquals(20, discardCount.get());
     }
 
     @Test(timeout = 30000)
@@ -361,6 +365,7 @@ public class ActiveMQMessageFormatExceptionSelectorTest {
         brokerService = new BrokerService();
         PolicyEntry policy = new PolicyEntry();
         policy.setSendAdvisoryIfNoConsumers(true);
+        policy.setAdvisoryForDiscardingMessages(true);
         PolicyMap pMap = new PolicyMap();
         pMap.setDefaultEntry(policy);
         brokerService.setDestinationPolicy(pMap);
@@ -382,6 +387,13 @@ public class ActiveMQMessageFormatExceptionSelectorTest {
                         dlqCount.getAndIncrement();
                         return super.sendToDeadLetterQueue(context, messageReference,
                                 subscription, poisonCause);
+                    }
+
+                    @Override
+                    public void messageDiscarded(ConnectionContext context, Subscription sub,
+                            MessageReference messageReference) {
+                        discardCount.getAndIncrement();
+                        super.messageDiscarded(context, sub, messageReference);
                     }
                 };
             }
