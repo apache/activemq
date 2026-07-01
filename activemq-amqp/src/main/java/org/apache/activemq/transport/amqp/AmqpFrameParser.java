@@ -83,12 +83,7 @@ public class AmqpFrameParser {
         if (wireFormat != null) {
             maxFrameSize = wireFormat.getMaxFrameSize();
         }
-
-        if (Integer.toUnsignedLong(frameSize) > maxFrameSize) {
-            throw IOExceptionSupport.createFrameSizeException(frameSize, maxFrameSize);
-        } else if (Integer.compareUnsigned(frameSize, 8) < 0) {
-            throw new AmqpProtocolException("Frame size value was invalid: " + frameSize);
-        }
+        AmqpWireFormat.validateFrameSize(frameSize, maxFrameSize);
     }
 
     public void setWireFormat(AmqpWireFormat wireFormat) {
