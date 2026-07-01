@@ -86,6 +86,8 @@ public class AmqpFrameParser {
 
         if (frameSize > maxFrameSize) {
             throw IOExceptionSupport.createFrameSizeException(frameSize, maxFrameSize);
+        } else if (frameSize <= 0) {
+            throw new AmqpProtocolException("Frame size value was invalid: " + frameSize);
         }
     }
 
