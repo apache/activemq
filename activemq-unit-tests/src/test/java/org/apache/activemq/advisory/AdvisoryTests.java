@@ -432,6 +432,8 @@ public class AdvisoryTests {
 
         Topic advisoryTopic = AdvisorySupport.getExpiredMessageTopic(dest);
         MessageConsumer advisoryConsumer = s.createConsumer(advisoryTopic);
+        MessageConsumer dlqConsumer = s.createConsumer(AdvisorySupport.getMessageDLQdAdvisoryTopic(dest));
+
         // start throwing messages at the consumer
         MessageProducer producer = s.createProducer(dest);
         producer.setTimeToLive(ttl);
@@ -453,6 +455,9 @@ public class AdvisoryTests {
         ActiveMQMessage message = (ActiveMQMessage) msg;
         ActiveMQMessage payload = (ActiveMQMessage) message.getDataStructure();
 
+        // should have also gotten advisory for the DLQ
+        assertNotNull(dlqConsumer.receive(1000));
+
         //This should be set
         assertNotNull(message.getProperty(AdvisorySupport.MSG_PROPERTY_ORIGIN_BROKER_URL));
 
@@ -471,6 +476,7 @@ public class AdvisoryTests {
         MessageConsumer consumer =  s.createConsumer(dest);
         MessageConsumer expiredAdvisoryConsumer = s.createConsumer(AdvisorySupport.getExpiredMessageTopic(dest));
         MessageConsumer discardedAdvisoryConsumer = s.createConsumer(AdvisorySupport.getMessageDiscardedAdvisoryTopic(dest));
+        MessageConsumer dlqConsumer = s.createConsumer(AdvisorySupport.getMessageDLQdAdvisoryTopic(dest));
 
         // start throwing messages at the consumer
         MessageProducer producer = s.createProducer(dest);
@@ -497,6 +503,9 @@ public class AdvisoryTests {
         assertNotNull(msg);
         ActiveMQMessage message = (ActiveMQMessage) msg;
         ActiveMQMessage payload = (ActiveMQMessage) message.getDataStructure();
+
+        // should have also gotten advisory for the DLQ
+        assertNotNull(dlqConsumer.receive(1000));
 
         //This should be set
         assertNotNull(message.getProperty(AdvisorySupport.MSG_PROPERTY_ORIGIN_BROKER_URL));
@@ -533,6 +542,7 @@ public class AdvisoryTests {
 
         Topic advisoryTopic = AdvisorySupport.getExpiredMessageTopic(dest);
         MessageConsumer advisoryConsumer = s.createConsumer(advisoryTopic);
+        MessageConsumer dlqConsumer = s.createConsumer(AdvisorySupport.getMessageDLQdAdvisoryTopic(dest));
         // start throwing messages at the consumer
         MessageProducer producer = s.createProducer(dest);
         producer.setTimeToLive(ttl);
@@ -552,6 +562,9 @@ public class AdvisoryTests {
         ActiveMQMessage message = (ActiveMQMessage) msg;
         ActiveMQMessage payload = (ActiveMQMessage) message.getDataStructure();
 
+        // should have also gotten advisory for the DLQ
+        assertNotNull(dlqConsumer.receive(1000));
+
         //This should be set
         assertNotNull(message.getProperty(AdvisorySupport.MSG_PROPERTY_ORIGIN_BROKER_URL));
 
@@ -561,7 +574,7 @@ public class AdvisoryTests {
     }
 
     @Test(timeout = 60000)
-    public void testMessageDLQd() throws Exception {
+    public void testMessageDLQdOnDiscard() throws Exception {
         ActiveMQPrefetchPolicy policy = new ActiveMQPrefetchPolicy();
         policy.setTopicPrefetch(2);
         ((ActiveMQConnection) connection).setPrefetchPolicy(policy);

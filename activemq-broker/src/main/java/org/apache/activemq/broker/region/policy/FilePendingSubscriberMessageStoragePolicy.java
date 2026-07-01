@@ -43,6 +43,6 @@ public class FilePendingSubscriberMessageStoragePolicy implements PendingSubscri
     public PendingMessageCursor getSubscriberPendingMessageCursor(Broker broker, String name, int maxBatchSize,
             Subscription subs) {
         return new FilePendingMessageCursor(broker, "PendingCursor:" + name, AbstractPendingMessageCursor
-                .isPrioritizedMessageSubscriber(broker, subs));
+                .isPrioritizedMessageSubscriber(broker, subs), subs);
     }
 }
