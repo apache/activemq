@@ -30,6 +30,7 @@ import org.apache.activemq.transport.amqp.message.InboundTransformer;
 import org.apache.activemq.util.ByteArrayInputStream;
 import org.apache.activemq.util.ByteArrayOutputStream;
 import org.apache.activemq.util.ByteSequence;
+import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.wireformat.WireFormat;
 import org.fusesource.hawtbuf.Buffer;
 import org.slf4j.Logger;
@@ -109,9 +110,9 @@ public class AmqpWireFormat implements WireFormat {
             return new AmqpHeader(magic, false);
         } else {
             int size = dataIn.readInt();
-            if (size > maxFrameSize) {
-                throw new AmqpProtocolException("Frame size exceeded max frame length.");
-            } else if (size <= 0) {
+            if (Integer.toUnsignedLong(size) > maxFrameSize) {
+                throw IOExceptionSupport.createFrameSizeException(size, maxFrameSize);
+            } else if (Integer.compareUnsigned(size, 8) < 0) {
                 throw new AmqpProtocolException("Frame size value was invalid: " + size);
             }
             Buffer frame = new Buffer(size);

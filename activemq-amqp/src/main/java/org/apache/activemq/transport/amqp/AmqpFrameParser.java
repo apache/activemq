@@ -84,9 +84,9 @@ public class AmqpFrameParser {
             maxFrameSize = wireFormat.getMaxFrameSize();
         }
 
-        if (frameSize > maxFrameSize) {
+        if (Integer.toUnsignedLong(frameSize) > maxFrameSize) {
             throw IOExceptionSupport.createFrameSizeException(frameSize, maxFrameSize);
-        } else if (frameSize <= 0) {
+        } else if (Integer.compareUnsigned(frameSize, 8) < 0) {
             throw new AmqpProtocolException("Frame size value was invalid: " + frameSize);
         }
     }
