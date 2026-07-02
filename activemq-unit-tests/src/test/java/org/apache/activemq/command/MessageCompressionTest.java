@@ -43,6 +43,8 @@ import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.MessageReference;
 import org.apache.activemq.broker.region.Subscription;
+import org.apache.activemq.broker.region.policy.PolicyEntry;
+import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.util.MarshallingSupport.ActiveMQUnmarshalEOFException;
 import org.apache.activemq.util.MarshallingSupport.MaxInflatedDataSizeExceededException;
 import org.apache.activemq.util.Wait;
@@ -69,13 +71,20 @@ public class MessageCompressionTest {
     private String connectionUri;
     private final AtomicBoolean throwMaxInflatedException = new AtomicBoolean(false);
     private final AtomicBoolean sentToDlq = new AtomicBoolean(false);
+    private final AtomicBoolean discarded = new AtomicBoolean(false);
 
     @Before
     public void setUp() throws Exception {
         throwMaxInflatedException.set(false);
         sentToDlq.set(false);
+        discarded.set(false);
 
         broker = new BrokerService();
+        PolicyEntry policy = new PolicyEntry();
+        policy.setAdvisoryForDiscardingMessages(true);
+        PolicyMap pMap = new PolicyMap();
+        pMap.setDefaultEntry(policy);
+        broker.setDestinationPolicy(pMap);
         broker.setPlugins(new BrokerPlugin[]{new BrokerPluginSupport() {
             @Override
             public Broker installPlugin(Broker broker) {
@@ -101,6 +110,13 @@ public class MessageCompressionTest {
                         sentToDlq.set(true);
                         return super.sendToDeadLetterQueue(context, messageReference,
                                 subscription, poisonCause);
+                    }
+
+                    @Override
+                    public void messageDiscarded(ConnectionContext context, Subscription sub,
+                            MessageReference messageReference) {
+                        discarded.set(true);
+                        super.messageDiscarded(context, sub, messageReference);
                     }
                 };
             }
@@ -180,10 +196,13 @@ public class MessageCompressionTest {
         assertTrue(Wait.waitFor(() -> broker.getDestination(queue)
                 .getDestinationStatistics().getMessages().getCount() == 1, 1000, 10));
         assertFalse(sentToDlq.get());
+        assertFalse(discarded.get());
 
-        // simulate a decompression error
+        // simulate a decompression error. This should cause an error on
+        // dispatch inside TransportConnection
         // this should poison ack and DLQ and we shouldn't get the message
-        // but the connection should still be open
+        // but the connection should still be open. The message will also call
+        // the discard callback because advisoryForDiscardingMessages is enabled
         this.throwMaxInflatedException.set(true);
 
         ActiveMQConnection con2 = (ActiveMQConnection) factory.createConnection();
@@ -196,15 +215,18 @@ public class MessageCompressionTest {
         assertTrue(Wait.waitFor(() -> broker.getDestination(queue)
                 .getDestinationStatistics().getMessages().getCount() == 0, 500, 10));
         assertTrue(sentToDlq.get());
+        assertTrue(discarded.get());
 
         // no longer throw an exception
         this.throwMaxInflatedException.set(false);
         sentToDlq.set(false);
+        discarded.set(false);
 
         // exception has been disabled so we should receive again on the same connection
         producer.send(bytesMessage);
         assertNotNull(consumer.receive(1000));
         assertFalse(sentToDlq.get());
+        assertFalse(discarded.get());
 
         con1.close();
         con2.close();
