@@ -64,7 +64,8 @@ public class StoreDurableSubscriberCursor extends AbstractPendingMessageCursor {
         this.clientId = clientId;
         this.subscriberName = subscriberName;
         if (broker.getBrokerService().isPersistent()) {
-            this.nonPersistent = new FilePendingMessageCursor(broker,clientId + subscriberName,this.prioritizedMessages);
+            this.nonPersistent = new FilePendingMessageCursor(broker,clientId + subscriberName,this.prioritizedMessages,
+                    subscription);
         } else {
             this.nonPersistent = new VMPendingMessageCursor(this.prioritizedMessages);
         }

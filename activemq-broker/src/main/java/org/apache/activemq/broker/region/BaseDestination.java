@@ -31,6 +31,7 @@ import org.apache.activemq.broker.region.policy.MessageInterceptorStrategy;
 import org.apache.activemq.broker.region.policy.SlowConsumerStrategy;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQTopic;
+import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageDispatchNotification;
@@ -578,6 +579,12 @@ public abstract class BaseDestination implements Destination {
         if (advisoryForDiscardingMessages) {
             broker.messageDiscarded(context, sub, messageReference);
         }
+        // We need to send to the DLQ because broker.messageDiscarded() will not do that because it's
+        // optionally enabled and off by default. This is different than expiration handling because
+        // broker.messageExpired() does send to the DLQ
+        final ConsumerInfo info = sub != null ? sub.getConsumerInfo() : null;
+        final String poisonCause = info != null ? "Subscription discard. ID:" + info.getConsumerId() : "Message discarded";
+        broker.sendToDeadLetterQueue(context, messageReference, sub, new Throwable(poisonCause));
     }
 
     /**
