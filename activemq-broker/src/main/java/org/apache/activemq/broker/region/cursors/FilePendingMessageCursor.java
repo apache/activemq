@@ -588,7 +588,7 @@ public class FilePendingMessageCursor extends AbstractPendingMessageCursor imple
 
     private void discardMessage(MessageReference reference) {
         try {
-            LOG.debug("Discarding message {}", reference);
+            LOG.debug("Discarding message {} due to full temporary storage {}", reference, systemUsage.getTempUsage());
             ConnectionContext context = broker.getAdminConnectionContext();
             // This will handle advisories if advisoryForDiscardingMessages is enabled
             // as well as DLQ processing
