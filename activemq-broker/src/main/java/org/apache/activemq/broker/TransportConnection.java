@@ -37,6 +37,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import javax.transaction.xa.XAResource;
 
 import org.apache.activemq.advisory.AdvisorySupport;
+import org.apache.activemq.broker.region.BaseDestination;
 import org.apache.activemq.broker.region.ConnectionStatistics;
 import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.command.ActiveMQDestination;
@@ -1048,6 +1049,17 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                 ack.setDestination(messageDispatch.getDestination());
                 ack.setMessageID(messageDispatch.getMessage().getMessageId());
                 broker.acknowledge(consumerExchange, ack);
+
+                // Send discarded advisory (if enabled). This calls directly on the broker
+                // and not messageDiscarded() on the destination itself so that it will
+                // not send to the DLQ, because that is eventually handled by the subs
+                // when acking with a poison ack above
+                final Message.MessageDestination dest = messageDispatch.getMessage()
+                        .getRegionDestination();
+                if (dest instanceof BaseDestination && ((BaseDestination) dest).isAdvisoryForDiscardingMessages()) {
+                    broker.messageDiscarded(consumerExchange.getConnectionContext(),
+                            consumerExchange.getSubscription(), messageDispatch.getMessage());
+                }
             }
         } catch (Exception ex) {
             TRANSPORTLOG.warn("{} could not acknowledge and send message to the DLQ after"

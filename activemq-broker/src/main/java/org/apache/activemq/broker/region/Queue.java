@@ -1888,14 +1888,16 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         }
     }
 
-    protected void removeAndSendToDlq(ConnectionContext c, QueueMessageReference r, Exception e) throws IOException {
+    private void discardAndSendToDlq(ConnectionContext c, QueueMessageReference r, Exception e) throws IOException {
         MessageAck ack = new MessageAck();
         ack.setAckType(MessageAck.POISON_ACK_TYPE);
         ack.setPoisonCause(e);
         ack.setDestination(destination);
         ack.setMessageID(r.getMessageId());
         removeMessage(c, null, r, ack);
-        broker.getRoot().sendToDeadLetterQueue(c, r.getMessage(), null, e);
+        // this.messageDiscarded() sends to the DLQ with the poison cause
+        // as well as sending the discarded advisory (if enabled).
+        this.messageDiscarded(c, null, r, e);
     }
 
     protected void removeMessage(ConnectionContext c, Subscription subs, QueueMessageReference r) throws IOException {
@@ -2414,7 +2416,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
             throws IOException {
         if (messageFormatErrors != null) {
             for (Entry<QueueMessageReference, ActiveMQMessageFormatException> error : messageFormatErrors.entrySet()) {
-                removeAndSendToDlq(broker.getAdminConnectionContext(), error.getKey(),
+                discardAndSendToDlq(broker.getAdminConnectionContext(), error.getKey(),
                         error.getValue());
             }
         }
