@@ -82,7 +82,7 @@ public class TopicSubscription extends AbstractSubscription {
         if (info.getDestination().isTemporary() || broker.getTempDataStore()==null ) {
             this.matched = new VMPendingMessageCursor(false);
         } else {
-            this.matched = new FilePendingMessageCursor(broker,matchedName,false);
+            this.matched = new FilePendingMessageCursor(broker,matchedName,false, this);
         }
 
         this.scheduler = broker.getScheduler();
@@ -759,19 +759,25 @@ public class TopicSubscription extends AbstractSubscription {
                     destination.getDestinationStatistics().getNetworkDequeues().increment();
                 }
             }
-            Destination dest = (Destination) message.getRegionDestination();
+
+            final Destination dest = (Destination) message.getRegionDestination();
+            // This should not be null
             if (dest != null) {
                 //If discard is due to expiration then use the messageExpired() callback
                 if (expired) {
                     LOG.debug("{}, expiring message {}", this, message);
+                    // This callback will also send messages to the DLQ
                     dest.messageExpired(getContext(), this, message);
                 } else {
                     LOG.debug("{}, discarding message {}", this, message);
                     discarded.incrementAndGet();
+                    // This callback will also send messages to the DLQ
                     dest.messageDiscarded(getContext(), this, message);
                 }
+            } else {
+                LOG.debug("Message {} regionDestination unexpectedly unset during discard on {}",
+                        message.getMessageId(), info.getConsumerId());
             }
-            broker.getRoot().sendToDeadLetterQueue(getContext(), message, this, new Throwable("TopicSubDiscard. ID:" + info.getConsumerId()));
         } finally {
             discarding = false;
         }
