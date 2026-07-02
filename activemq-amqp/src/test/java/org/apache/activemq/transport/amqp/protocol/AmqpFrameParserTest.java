@@ -18,9 +18,11 @@ package org.apache.activemq.transport.amqp.protocol;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
@@ -60,6 +62,7 @@ public class AmqpFrameParserTest {
                 frames.add(frame);
             }
         });
+        amqpWireFormat.setMaxFrameSize(AmqpWireFormat.DEFAULT_MAX_FRAME_SIZE);
         codec.setWireFormat(amqpWireFormat);
     }
 
@@ -346,6 +349,49 @@ public class AmqpFrameParserTest {
 
         codec.parse(output.toBuffer().toByteBuffer());
         assertEquals(2, frames.size());
+    }
+
+    @Test
+    public void testNegativeFrameSize() throws Exception {
+        AmqpHeader inputHeader = new AmqpHeader();
+
+        DataByteArrayOutputStream output = new DataByteArrayOutputStream();
+        output.write(inputHeader.getBuffer());
+        // the value is unsigned so negative means too large
+        output.writeInt(-100);
+        output.close();
+
+        IOException e = assertThrows(IOException.class, () -> codec.parse(output.toBuffer().toByteBuffer()));
+        assertTrue(e.getMessage().contains("exceeds the maximum frame configured or supported frame size limit"));
+    }
+
+    @Test
+    public void testFrameSizeTooSmall() throws Exception {
+        AmqpHeader inputHeader = new AmqpHeader();
+
+        DataByteArrayOutputStream output = new DataByteArrayOutputStream();
+        output.write(inputHeader.getBuffer());
+        // less than 8 is too small
+        output.writeInt(3);
+        output.close();
+
+        IOException e = assertThrows(IOException.class, () -> codec.parse(output.toBuffer().toByteBuffer()));
+        assertTrue(e.getMessage().contains("is smaller than the minimally viable frame size value"));
+    }
+
+    @Test
+    public void testFrameSizeTooLarge() throws Exception {
+        amqpWireFormat.setMaxFrameSize(100);
+        AmqpHeader inputHeader = new AmqpHeader();
+
+        DataByteArrayOutputStream output = new DataByteArrayOutputStream();
+        output.write(inputHeader.getBuffer());
+        // less than 300 is larger than 100 maxFrameSize
+        output.writeInt(300);
+        output.close();
+
+        IOException e = assertThrows(IOException.class, () -> codec.parse(output.toBuffer().toByteBuffer()));
+        assertTrue(e.getMessage().contains("larger than max allowed"));
     }
 
     private void assertHeadersEqual(AmqpHeader expected, AmqpHeader actual) {
