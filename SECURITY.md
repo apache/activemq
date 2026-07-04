@@ -61,6 +61,8 @@ Users are expected to secure their environments
 
 11. Normal users need permission to create advisory topics but should generally **not** be given permission to read/write to those topics as those messages are meant for admins. A notable exception is for temporary destination advisory topics. For more information see the authorization section [here](https://activemq.apache.org/components/classic/documentation/security#authorization).
 
+12. Specify maxUncommittedCount (Broker) and maxDestinations (PolicyEntry) to prevent DoS attacks.
+
 ## ActiveMQ Security Improvement Project
 
 The Apache ActiveMQ team has initiated a security hardening project to move from a default configuration that is geared for developer testing and learning to a secured-by-default stance.

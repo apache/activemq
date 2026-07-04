@@ -1,7 +1,7 @@
 <!-- SPDX-License-Identifier: Apache-2.0
      https://www.apache.org/legal/release-policy.html -->
 
-# Apache ActiveMQ ("Classic") — Threat Model
+# Apache ActiveMQ — Threat Model
 
 > **STATUS: v0 DRAFT — for ActiveMQ PMC review.** This document was drafted
 > *for* the ActiveMQ maintainers as a starting point they will review, correct,
@@ -12,11 +12,8 @@
 
 ## §1 Header
 
-- **Project:** Apache ActiveMQ "Classic" — the 5.x and 6.x message broker and
-  its Java client. This model covers ActiveMQ Classic only. It does **not**
-  cover ActiveMQ Artemis (the next-generation broker under the same PMC),
-  which needs its own threat model. *(documented — ActiveMQ website
-  distinguishes Classic and Artemis as separate components)*
+- **Project:** Apache ActiveMQ — the 5.x and 6.x message broker and
+  its Java client.
 - **Version binding:** Written against the currently security-supported
   lines — **6.2.x** and **5.19.x**. *(documented — `SECURITY.md`:
   "Only versions 6.2.x and 5.19.x receive security support"; 5.19.x carries the
@@ -44,7 +41,7 @@
   default config; the balance should shift toward *(maintainer)* as the PMC
   reacts.
 
-**What ActiveMQ Classic is.** ActiveMQ Classic is a Java message broker: a
+**What ActiveMQ is.** ActiveMQ is a Java message broker: a
 long-running server process that accepts connections from message producers and
 consumers over one or more wire protocols (OpenWire, AMQP, MQTT, STOMP,
 WebSocket), routes and stores messages on queues and topics, and enforces
@@ -59,7 +56,7 @@ clients and the broker, and by the operator's configuration choices.
 
 ## §2 Scope and intended use
 
-ActiveMQ Classic is deployed as a **standalone or clustered broker daemon**,
+ActiveMQ is deployed as a **standalone or clustered broker daemon**,
 typically as backing message infrastructure for an application or integration
 layer. It is also **embedded in-process** (broker + VM transport) inside host
 applications, and its **client library** is linked into producers and
@@ -115,10 +112,11 @@ matter, each with its own trust level:
   `activemq.xml`, write JAAS files, reach JMX, log into the web console with
   operator rights) is out of model. *(documented — `SECURITY.md`)*
 - **Resource-exhaustion (OOM) DoS where the operator did not set the relevant
-  bound.** DoS by OOM "because users did not configure a `maxFrameSize` or
-  `maxInflatedDataSize`" is excluded — the knobs exist and the operator is
-  expected to set them. *(documented — `SECURITY.md`)* (The default
-  `activemq.xml` in fact ships `wireFormat.maxFrameSize=10485760`.)
+  bound.** DoS by OOM "because users did not configure a `maxDestinations`,
+  `maxUncommittedCount`, `maxFrameSize` or `maxInflatedDataSize`" is excluded —
+  the knobs exist and the operator is expected to set them. *(documented —
+  `SECURITY.md`)* (The default `activemq.xml` in fact ships
+  `wireFormat.maxFrameSize=10485760`.)
 - **JMS-specification behaviors that look like access-control gaps but are
   not:** message selectors filtering *within* a destination the principal is
   already authorized for; `ClientId` identifier semantics per the JMS spec;
@@ -131,11 +129,11 @@ matter, each with its own trust level:
   `admin/admin` web-console credentials and `credentials.properties`
   placeholders). These exist for out-of-the-box startup and local
   experimentation and are not a production posture; they are threat-modeled
-  separately (i.e. not at all as a security guarantee). *(inferred — see §14
+  separately (i.e. not at all as a security guarantee). *(confirmed — see §14
   Q1)*
 - **Third-party JAAS back-ends, LDAP servers, JDBC databases, and the JVM/TLS
   stack themselves.** ActiveMQ integrates with them; their own vulnerabilities
-  are out of this model (though our *use* of them is in scope). *(inferred —
+  are out of this model (though our *use* of them is in scope). *(confirmed —
   see §14 Q2)*
 - **ActiveMQ Artemis.** Separate codebase, separate model. *(documented)*
 
@@ -148,19 +146,19 @@ arrive from a network client and are unmarshalled into broker-internal
 protocol commands and message objects. Everything a client sends — protocol
 frames, headers, destination names, selectors, and message bodies — is
 untrusted until an authentication plugin has established a principal, and
-remains authorization-scoped thereafter. *(inferred — see §14 Q3)*
+remains authorization-scoped thereafter. *(confirmed — see §14 Q3)*
 
 Secondary boundaries:
 
 - **Management plane (web console / JMX / Jolokia) vs. broker core.** The
   management surface is intended for operators, not clients; reaching it is a
-  distinct boundary from reaching a transport connector. *(inferred — see §14
+  distinct boundary from reaching a transport connector. *(confirmed — see §14
   Q4)*
 - **Broker vs. persistence store.** KahaDB files and the JDBC database are
   trusted storage: the broker assumes it is the only writer and that the store
-  has not been tampered with out of band. *(inferred — see §14 Q5)*
+  has not been tampered with out of band. *(confirmed — see §14 Q5)*
 - **Broker vs. peer broker.** A network-of-brokers link crosses into another
-  administrative domain's broker. *(inferred — see §14 Q9)*
+  administrative domain's broker. *(confirmed — see §14 Q9)*
 
 **Reachability precondition per family** (the test a triager applies before
 anything else):
@@ -180,7 +178,7 @@ anything else):
   operation their granted `read`/`write`/`admin` entries should forbid.
   *(documented — authorization docs)*
 - Web-console / JMX finding — in-model only if reachable without operator
-  credentials on a surface intended to require them. *(inferred — see §14 Q4)*
+  credentials on a surface intended to require them. *(confirmed — see §14 Q4)*
 
 ---
 
@@ -188,14 +186,14 @@ anything else):
 
 - **Runtime:** a JVM of the version the release line targets, with a
   conformant TLS provider. Java serialization semantics are assumed to be the
-  standard JDK's. *(inferred — see §14 Q6)*
+  standard JDK's. *(confirmed — see §14 Q6)*
 - **Clock / TLS:** message expiry, TLS certificate validation, and JAAS
   credential checks assume a correct system clock and a correctly configured
-  trust store. *(inferred — see §14 Q6)*
+  trust store. *(confirmed — see §14 Q6)*
 - **Filesystem:** the KahaDB data directory, JAAS property files
   (`users.properties`, `groups.properties`), keystores, and `activemq.xml` are
   on storage writable only by the broker's OS user and trusted operators. The
-  broker assumes exclusive ownership of its KahaDB directory. *(inferred — see
+  broker assumes exclusive ownership of its KahaDB directory. *(confirmed — see
   §14 Q5)*
 - **Network placement:** the broker expects the operator to place it behind
   appropriate network controls; the project's stance is defense-in-depth
@@ -214,7 +212,7 @@ and write its KahaDB directory, read environment (`ACTIVEMQ_OPTS`,
 `ACTIVEMQ_HOME`), and start a JMX/RMI server and a Jetty container when those
 are enabled. It is a full daemon and makes **no** "no-side-effects" promise.
 The relevant question for an integrator is not *whether* it touches the host
-but *which* connectors and management surfaces are enabled. *(inferred — see
+but *which* connectors and management surfaces are enabled. *(confirmed — see
 §14 Q7)*
 
 ### §5a Build-time and configuration variants
@@ -272,10 +270,10 @@ triager uses to look up a specific reported sink.
 | KahaDB / JDBC store | on-disk / in-DB records | no — trusted storage | OS/DB permissions; exclusive broker ownership |
 
 Size/shape/rate: messages are streamed and may be large; the broker relies on
-`maxFrameSize`, `maxInflatedDataSize`, `maximumConnections` (default `1000` on
-the sample OpenWire connector), producer flow control, and memory/store limits
-to bound resource use — **all of which are operator-tuned**. *(documented for
-the named knobs; §14 Q8 for the completeness of this list)*
+`maxDestinations`, `maxUncommittedCount`, `maxFrameSize`, `maxInflatedDataSize`, `maximumConnections`
+(default `1000` on the sample OpenWire connector), producer flow control, and
+memory/store limits to bound resource use — **all of which are operator-tuned**.
+*(documented for the named knobs; §14 Q8 for the completeness of this list)*
 
 ---
 
@@ -288,12 +286,12 @@ authentication and authorization. The adversary may be fully unauthenticated
 authenticated low-privilege principal trying to exceed their granted
 `read`/`write`/`admin` scope. Capabilities: send arbitrary protocol frames and
 message bodies, open many connections, craft malformed or oversized frames,
-craft serialized-object payloads, and replay. *(inferred — see §14 Q3)*
+craft serialized-object payloads, and replay. *(confirmed — see §14 Q3)*
 
 **Also in scope:** a network attacker on the path of a plaintext connector
 (observe/modify traffic where TLS was not used — though the operator's choice
 to run plaintext bounds this), and an **authenticated-but-Byzantine peer
-broker** on a network-of-brokers link. *(inferred — see §14 Q3, Q9)*
+broker** on a network-of-brokers link. *(confirmed — see §14 Q3, Q9)*
 
 **Explicitly out of scope:**
 
@@ -303,9 +301,10 @@ broker** on a network-of-brokers link. *(inferred — see §14 Q3, Q9)*
 - **A client attacking a broker with auth/authz turned off.** That is a
   configuration gap, not an adversary the model defends against. *(documented)*
 - **A local attacker with filesystem access to the KahaDB directory, keystores,
-  or credential files.** Storage is trusted. *(inferred — see §14 Q5)*
+  or credential files.** Storage is trusted. *(confirmed — see §14 Q5)*
 - **Attackers exploiting the operator's failure to set documented resource
-  bounds.** OOM from unset `maxFrameSize`/`maxInflatedDataSize` is excluded.
+  bounds.** OOM from unset `maxUncommittedCount`, `maxDestinations`,
+  `maxFrameSize`/`maxInflatedDataSize` is excluded.
   *(documented)*
 
 ---
@@ -358,7 +357,7 @@ kept narrow.
    console, Jolokia, or JMX on a surface configured to require auth. *Severity:*
    security-critical. *(inferred — see §14 Q4)*
 6. **Resource bounds are honored once set.** When the operator sets
-   `maxFrameSize`, `maxInflatedDataSize`, `maximumConnections`, memory/store
+   `maxUncommittedCount`, `maxDestinations`, `maxFrameSize`, `maxInflatedDataSize`, `maximumConnections`, memory/store
    limits, and flow control, the broker enforces them; a single client cannot
    exceed the configured frame/inflation/connection ceilings. *Violation
    symptom:* the broker exceeds a **configured** bound (accepts an oversized
@@ -369,7 +368,7 @@ kept narrow.
    uncorrupted storage, persistent messages survive restart and are delivered
    per their QoS. *Violation symptom:* acknowledged persistent messages lost or
    corrupted absent hardware/OS fault. *Severity:* correctness-critical (data
-   loss); not a confidentiality/authz property. *(inferred — see §14 Q5)*
+   loss); not a confidentiality/authz property. *(confirmed — see §14 Q5)*
 
 ---
 
@@ -382,9 +381,10 @@ kept narrow.
 - **No protection for operators against themselves.** The model provides
   nothing against an admin, and nothing against a client on an unconfigured
   broker. *(documented)*
-- **No unbounded-resource defense by default.** Without `maxFrameSize` /
-  `maxInflatedDataSize` (and connection/memory limits) set, a client can drive
-  the broker to OOM; that is explicitly the operator's bound to set.
+- **No unbounded-resource defense by default.** Without `maxUncommittedCount`,
+  `maxDestinations`, `maxFrameSize` / `maxInflatedDataSize`
+  (and connection/memory limits) set, a client can drive the broker to OOM;
+  that is explicitly the operator's bound to set.
   *(documented — `SECURITY.md`)*
 - **No safety when the deserialization allow-list is widened.** Setting
   `SERIALIZABLE_PACKAGES=*` or client `setTrustAllPackages(true)`, or
@@ -417,6 +417,11 @@ kept narrow.
 - **`BlobMessage` URIs are not validated by the broker.** They look like broker
   data but the fetch and its target are the client's trust decision.
   *(documented — `SECURITY.md`)*
+- **XA Transaction scope lives across connections** XA Transactions are designed
+  (by specification) to be resumed or modified across client connections, provided
+  each connection is authenticated and authorized appropriately. XA Transaction
+  Ids are similar to a web session id and are designed to be secret between
+  unrelated clients, hard to guess, and short-lived.
 
 **Well-known attack classes left to the caller/operator:** Java deserialization
 gadget-chain RCE (bounded, not eliminated, by the allow-list); SSRF via
@@ -424,7 +429,7 @@ client-controlled URIs (`BlobMessage`, and any operator-configured outbound
 fetch); XXE/entity attacks in any XML the operator feeds the broker;
 credential-stuffing/brute-force against enabled auth (rate limiting is the
 operator's); amplification/DoS from unbounded connections or subscriptions when
-limits are unset. *(inferred except where cited above — see §14 Q10)*
+limits are unset. *(confirmed except where cited above — see §14 Q10)*
 
 ---
 
@@ -437,8 +442,9 @@ following. This is a contract, not a how-to.
    exposing any connector beyond localhost. *(documented)*
 2. **Enable authorization** with `authorizationEntry` rules scoped to least
    privilege, including correct `ActiveMQ.Advisory.>` grants. *(documented)*
-3. **Set resource bounds:** `wireFormat.maxFrameSize`, `maxInflatedDataSize`,
-   `maximumConnections`, memory/store usage limits, and producer flow control.
+3. **Set resource bounds:** `maxUncommittedCount`, `maxDestinations`,
+   `wireFormat.maxFrameSize`, `maxInflatedDataSize`, `maximumConnections`,
+   memory/store usage limits, and producer flow control.
    Unset bounds are your DoS exposure, not the broker's bug. *(documented)*
 4. **Keep `SERIALIZABLE_PACKAGES` as narrow as possible**; never `=*` in
    production; never `setTrustAllPackages(true)` outside testing. Only
@@ -461,7 +467,7 @@ following. This is a contract, not a how-to.
    broker assumes exclusive, trusted storage. Set `reload=true` if you need
    live credential revocation. *(documented for reload; §14 Q5 for storage)*
 10. **Authenticate and scope network-of-brokers links**; treat a peer broker as
-    adversarial. *(inferred — see §14 Q9)*
+    adversarial. *(confirmed — see §14 Q9)*
 
 ---
 
@@ -471,14 +477,14 @@ following. This is a contract, not a how-to.
   and sample credentials — treating the developer-convenience defaults as a
   deployment posture. *(documented — defaults are for testing)*
 - **Exposing the OpenWire (or any) connector directly to the public internet**
-  without authentication or TLS. *(inferred — see §14 Q3)*
+  without authentication or TLS. *(confirmed — see §14 Q3)*
 - **Widening the deserialization allow-list** (`SERIALIZABLE_PACKAGES=*` or
   `setTrustAllPackages(true)`) to "make `ObjectMessage` work", re-opening RCE.
   *(documented)*
 - **Treating JMS selectors or `ClientId` as security controls** — using a
   selector to "hide" messages or a `ClientId` as authentication. *(documented)*
 - **Leaving the web console / Jolokia / JMX reachable** on an untrusted network
-  with default or no authentication. *(inferred — see §14 Q4)*
+  with default or no authentication. *(confirmed — see §14 Q4)*
 - **Not setting resource bounds** and then treating the resulting OOM as a
   broker vulnerability. *(documented)*
 - **Fetching `BlobMessage` URIs without client-side validation**, enabling
@@ -497,9 +503,9 @@ suppressing scan noise.
   distribution meant to be changed; `OUT-OF-MODEL: unsupported-component` /
   non-default posture per §3. *(documented — sample creds; §14 Q1)*
 - **"Unbounded memory / OOM on large or compressed messages."** If the reporter
-  did not set `maxFrameSize` / `maxInflatedDataSize`, this is `BY-DESIGN:
-  property-disclaimed` per §3/§9. If a *configured* bound is breached, it is
-  `VALID`. *(documented)*
+  did not set `maxUncommittedCount`, `maxDestinations`, `maxFrameSize` /
+  `maxInflatedDataSize`, this is `BY-DESIGN: property-disclaimed` per §3/§9.
+  If a *configured* bound is breached, it is `VALID`. *(documented)*
 - **"Java deserialization RCE via `ObjectMessage`."** If the class is outside a
   reasonable `SERIALIZABLE_PACKAGES` list, the allow-list already blocks it —
   `KNOWN-NON-FINDING` unless a genuine allow-list *bypass* is shown (then
@@ -596,12 +602,12 @@ strike, and names where the answer lands. Grouped in waves.
 
 **Wave 3 — resource bounds, peers, deserialization edges (reshapes §6, §8, §9):**
 
-8. *(→ §5a, §6)* Is the resource-bound set we list (`maxFrameSize`,
-   `maxInflatedDataSize`, `maximumConnections`, memory/store limits, producer
-   flow control) the **complete** set an operator must set to make DoS
-   in-model, or are there others (per-destination limits, connection-rate
-   limits)? And is "breach of a *configured* bound" the correct line for `VALID`
-   vs `BY-DESIGN`?
+8. *(→ §5a, §6)* Is the resource-bound set we list (`maxUncommittedCount`,
+   `maxDestinations`, `maxFrameSize`, `maxInflatedDataSize`, `maximumConnections`,
+   memory/store limits, producer flow control) the **complete** set an operator
+   must set to make DoS in-model, or are there others (per-destination limits,
+   connection-rate limits)? And is "breach of a *configured* bound" the correct
+   line for `VALID` vs `BY-DESIGN`?
 9. *(→ §2, §7, §8, §10)* We model a network-of-brokers peer as
    **authenticated-but-adversarial** and expect operators to authenticate/scope
    the link. Do you provide any safety guarantee across a broker link (e.g.
