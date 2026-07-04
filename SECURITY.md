@@ -106,3 +106,9 @@ Some of the most common reported examples:
 2. Any attack that require administrative access to be granted. For example, by default Jolokia and the web console now requires administrative access. By definition admins are allowed to do anything, so if the issue requires the user to login with admin credentials then the report will not be accepted and would be treated as a bug.
 
 3. DoS attacks caused by OOM because users did not configure a maxFrameSize or maxInflatedDataSize which are designed to limit the size of messages in memory.
+
+## Threat Model
+
+What the project treats as in scope and out of scope, the security
+properties it provides and disclaims, the adversary model, and how
+findings are triaged are documented in [THREAT_MODEL.md](./THREAT_MODEL.md).
