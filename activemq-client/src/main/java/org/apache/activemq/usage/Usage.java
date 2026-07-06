@@ -381,6 +381,10 @@ public abstract class Usage<T extends Usage> implements Service {
         children.remove(child);
     }
 
+    protected List<T> getChildren() {
+        return children;
+    }
+
     /**
      * @param callback
      * @return true if the UsageManager was full. The callback will only be called if this method returns true.
