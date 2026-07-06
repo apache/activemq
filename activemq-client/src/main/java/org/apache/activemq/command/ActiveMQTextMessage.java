@@ -79,6 +79,13 @@ public class ActiveMQTextMessage extends ActiveMQMessage implements TextMessage 
         }
     }
 
+    // Synchronize this to prevent setting content if another mutation operation
+    // is happening concurrently.
+    @Override
+    public synchronized void setContent(ByteSequence content) {
+        super.setContent(content);
+    }
+
     @Override
     public String getText() throws JMSException {
         ByteSequence content = getContent();
