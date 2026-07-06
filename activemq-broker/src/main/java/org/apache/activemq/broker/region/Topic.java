@@ -641,7 +641,12 @@ public class Topic extends BaseDestination implements Task {
             if (memoryUsage != null) {
                 memoryUsage.start();
             }
-
+            if (systemUsage.getStoreUsage() != null) {
+                systemUsage.getStoreUsage().start();
+            }
+            if (systemUsage.getTempUsage() != null) {
+                systemUsage.getTempUsage().start();
+            }
             if (getExpireMessagesPeriod() > 0 && !AdvisorySupport.isAdvisoryTopic(getActiveMQDestination())) {
                 scheduler.executePeriodically(expireMessagesTask, getExpireMessagesPeriod());
             }
@@ -657,6 +662,12 @@ public class Topic extends BaseDestination implements Task {
             this.subscriptionRecoveryPolicy.stop();
             if (memoryUsage != null) {
                 memoryUsage.stop();
+            }
+            if (systemUsage.getStoreUsage() != null) {
+                systemUsage.getStoreUsage().stop();
+            }
+            if (this.systemUsage.getTempUsage() != null) {
+                this.systemUsage.getTempUsage().stop();
             }
             if (this.topicStore != null) {
                 this.topicStore.stop();
