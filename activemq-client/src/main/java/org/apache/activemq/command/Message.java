@@ -86,7 +86,7 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
     protected DataStructure dataStructure;
     protected int redeliveryCounter;
 
-    protected int size;
+    protected volatile int size;
     protected Map<String, Object> properties;
     protected boolean readOnlyProperties;
     protected boolean readOnlyBody;
@@ -716,14 +716,17 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
 	public int getSize() {
         int minimumMessageSize = getMinimumMessageSize();
         ByteSequence content = this.content;
+        int size = this.size;
         if (size < minimumMessageSize || size == 0) {
             size = minimumMessageSize;
+            ByteSequence marshalledProperties = this.marshalledProperties;
             if (marshalledProperties != null) {
                 size += marshalledProperties.getLength();
             }
             if (content != null) {
                 size += content.getLength();
             }
+            this.size = size;
         }
         return size;
     }
