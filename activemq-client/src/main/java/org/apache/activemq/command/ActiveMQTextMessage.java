@@ -45,7 +45,8 @@ public class ActiveMQTextMessage extends ActiveMQMessage implements TextMessage 
 
     public static final byte DATA_STRUCTURE_TYPE = CommandTypes.ACTIVEMQ_TEXT_MESSAGE;
 
-    protected String text;
+    // This is package scope (instead of private) for testing purposes
+    volatile String text;
 
     @Override
     public Message copy() {
@@ -54,7 +55,7 @@ public class ActiveMQTextMessage extends ActiveMQMessage implements TextMessage 
         return copy;
     }
 
-    private void copy(ActiveMQTextMessage copy) {
+    private synchronized void copy(ActiveMQTextMessage copy) {
         super.copy(copy);
         copy.text = text;
     }
@@ -72,18 +73,29 @@ public class ActiveMQTextMessage extends ActiveMQMessage implements TextMessage 
     @Override
     public void setText(String text) throws MessageNotWriteableException {
         checkReadOnlyBody();
-        this.text = text;
-        setContent(null);
+        synchronized (this) {
+            this.text = text;
+            setContent(null);
+        }
     }
 
     @Override
     public String getText() throws JMSException {
         ByteSequence content = getContent();
+        String text = this.text;
 
         if (text == null && content != null) {
-            text = decodeContent(content);
-            setContent(null);
-            setCompressed(false);
+            synchronized (this) {
+                content = getContent();
+                text = this.text;
+                // Double-checked locking, re-check under lock if we need
+                // to decode
+                if (text == null && content != null) {
+                    this.text = text = decodeContent(content);
+                    setContent(null);
+                    setCompressed(false);
+                }
+            }
         }
         return text;
     }
@@ -124,27 +136,57 @@ public class ActiveMQTextMessage extends ActiveMQMessage implements TextMessage 
 
     @Override
     public void storeContentAndClear() {
-        storeContent();
-        text=null;
+        storeContent(true);
     }
 
     @Override
     public void storeContent() {
+        storeContent(false);
+    }
+
+    private void storeContent(final boolean clear) {
         try {
             ByteSequence content = getContent();
             String text = this.text;
+            // Both of these are volatile reads, we can just skip
+            // if state is already correct
             if (content == null && text != null) {
-                ByteArrayOutputStream bytesOut = new ByteArrayOutputStream();
-                OutputStream os = bytesOut;
-                ActiveMQConnection connection = getConnection();
-                if (connection != null && connection.isUseCompression()) {
-                    compressed = true;
-                    os = new DeflaterOutputStream(os);
+                synchronized (this) {
+                    // Double-checked locking, re-read under lock
+                    content = getContent();
+                    text = this.text;
+                    // re-check if we need to store under lock
+                    if (content == null && text != null) {
+                        ByteArrayOutputStream bytesOut = new ByteArrayOutputStream();
+                        OutputStream os = bytesOut;
+                        ActiveMQConnection connection = getConnection();
+                        if (connection != null && connection.isUseCompression()) {
+                            compressed = true;
+                            os = new DeflaterOutputStream(os);
+                        }
+                        DataOutputStream dataOut = new DataOutputStream(os);
+                        MarshallingSupport.writeUTF8(dataOut, text);
+                        dataOut.close();
+                        this.content = content = bytesOut.toByteSequence();
+                    }
+                    // We are in a synchornized block so at this point we know we only need
+                    // to clear if content is not null and text is not null
+                    if (clear && text != null && content != null) {
+                        this.text = null;
+                    }
                 }
-                DataOutputStream dataOut = new DataOutputStream(os);
-                MarshallingSupport.writeUTF8(dataOut, text);
-                dataOut.close();
-                setContent(bytesOut.toByteSequence());
+            } else if (clear && content != null && text != null) {
+                synchronized (this) {
+                    // re-read under lock
+                    content = getContent();
+                    text = this.text;
+                    // Double-checked locking
+                    // We are in a synchornized block so at this point we know we only need
+                    // to clear if content is not null and text is not null
+                    if (text != null && content != null) {
+                        this.text = null;
+                    }
+                }
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -156,11 +198,19 @@ public class ActiveMQTextMessage extends ActiveMQMessage implements TextMessage 
     @Override
     public void clearUnMarshalledState() throws JMSException {
         super.clearUnMarshalledState();
-        this.text = null;
+        if (this.text != null) {
+            synchronized (this) {
+                // This is volatile but another locking makes sure another thread
+                // isn't attempting to read this value to marshal to the content at the
+                // same time
+                this.text = null;
+            }
+        }
     }
 
     @Override
     public boolean isContentMarshalled() {
+        // volatile reads, should be fine to just check without synchronized
         return content != null || text == null;
     }
 
@@ -177,13 +227,16 @@ public class ActiveMQTextMessage extends ActiveMQMessage implements TextMessage 
      */
     @Override
     public void clearBody() throws JMSException {
-        super.clearBody();
-        this.text = null;
+        synchronized (this) {
+            super.clearBody();
+            this.text = null;
+        }
     }
 
     @Override
     public int getSize() {
         String text = this.text;
+        ByteSequence content = getContent();
         if (size == 0 && content == null && text != null) {
             size = getMinimumMessageSize();
             if (marshalledProperties != null) {

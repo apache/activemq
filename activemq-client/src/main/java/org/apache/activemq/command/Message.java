@@ -81,7 +81,7 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
     protected boolean compressed;
     protected String userID;
 
-    protected ByteSequence content;
+    protected volatile ByteSequence content;
     protected volatile ByteSequence marshalledProperties;
     protected DataStructure dataStructure;
     protected int redeliveryCounter;
@@ -715,6 +715,7 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
     @Override
 	public int getSize() {
         int minimumMessageSize = getMinimumMessageSize();
+        ByteSequence content = this.content;
         if (size < minimumMessageSize || size == 0) {
             size = minimumMessageSize;
             if (marshalledProperties != null) {
