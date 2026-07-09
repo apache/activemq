@@ -77,9 +77,10 @@ public class MulticastNetworkConnector extends NetworkConnector {
         this.remoteTransport = remoteTransport;
     }
 
+    // Satisfies the abstract getUri() contract from NetworkConnector; delegates to getRemoteURI()
     @Override
     public URI getUri() {
-        return remoteURI;
+        return getRemoteURI();
     }
 
     public URI getRemoteURI() {
