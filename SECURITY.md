@@ -63,6 +63,10 @@ Users are expected to secure their environments
 
 12. Specify maxUncommittedCount (Broker) and maxDestinations (PolicyEntry) to prevent DoS attacks.
 
+13. Administrators are expected to change the default password (and optionally the default 'admin' user id)
+
+=======
+
 ## ActiveMQ Security Improvement Project
 
 The Apache ActiveMQ team has initiated a security hardening project to move from a default configuration that is geared for developer testing and learning to a secured-by-default stance.

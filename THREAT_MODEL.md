@@ -569,14 +569,24 @@ strike, and names where the answer lands. Grouped in waves.
    convenience, not a production posture), so findings there are
    `OUT-OF-MODEL`. Is the `admin/admin` credential specifically in that bucket,
    or do you consider a shipped default credential a `VALID-HARDENING` item?
+
+   > Users are expected to reset password. The use of admin/admin default
+   > credentials is to provide a working out-of-the-box developer and 
+   > administrator experience.
+
 2. *(→ §3)* We put third-party JAAS back-ends, LDAP/JDBC servers, and the
    JVM/TLS stack **out of model** (our *use* of them stays in). Correct?
+
+   > Correct, ActiveMQ is a consumer of those systems. 
+  
 3. *(→ §4, §7, §11)* We state the primary trust boundary is the transport
    connector and the primary adversary is a network client reaching an
    **enabled** connector on an **auth-configured** broker (plus a
    path-plaintext attacker where TLS was not chosen). Confirm this is the right
    framing and that "exposing a connector to the internet unauthenticated" is a
    §11 misuse, not a broker defect.
+
+   > Correct.
 
 **Wave 2 — management plane & storage (reshapes §4, §5, §8, §9):**
 
@@ -587,18 +597,37 @@ strike, and names where the answer lands. Grouped in waves.
    bind to `0.0.0.0` or localhost? is Jolokia exposed by default?). Please
    confirm the default authentication state and bind address of the management
    surfaces.
+
+   > Jetty and Jolokia are configured to only listen on localhost (127.0.0.1) 
+   > by default and are configured to require authentication and authorization.
+
 5. *(→ §4, §5, §7, §8)* We assume the KahaDB directory, JDBC store, keystores,
    and credential files are **trusted storage** with the broker as exclusive
    writer, and that a local-filesystem attacker is out of scope. Confirm; and
    confirm that message durability/integrity (§8 #7) is a correctness — not a
    confidentiality/authz — guarantee.
+
+   > Correct. 
+
 6. *(→ §5)* We assume a conformant JVM, correct system clock, and correctly
    configured TLS trust store as environmental preconditions. Anything else
    load-bearing (specific JDK floor per line, RMI/JMX assumptions)?
+   
+   > Non-localhost network access to RMI/JMX must be secured as an 
+   > environmental pre-condition. ActiveMQ does not have the ability to 
+   > control IP filtering, rate limiting or request limits of RMI/JMX
+   > operations.
+
 7. *(→ §5)* Our "what the broker does to the host" inventory says it opens
    listening + outbound sockets, owns its KahaDB dir, reads `ACTIVEMQ_OPTS`,
    and starts JMX/Jetty when enabled — and makes **no** no-side-effects
    promise. Is that inventory complete and correct?
+
+   > Yes. Administrators are responsible to ensure proper system sizing and
+   > configuration to meet the expected workload. Running out of file descriptors,
+   > using too much memory due to high thread counts or running out of disk 
+   > space through normal broker operations is not a DoS, but a misconfiguration
+   > of system sizing to the workload.
 
 **Wave 3 — resource bounds, peers, deserialization edges (reshapes §6, §8, §9):**
 
@@ -608,18 +637,33 @@ strike, and names where the answer lands. Grouped in waves.
    must set to make DoS in-model, or are there others (per-destination limits,
    connection-rate limits)? And is "breach of a *configured* bound" the correct
    line for `VALID` vs `BY-DESIGN`?
+
+   > Add 'maximumProducersAllowedPerConnection' and
+   > 'maximumConsumersAllowedPerConnection'. Per-destination limits are needed  
+   > for a shared, multi-tenant, or for traffic shaping to settle down noisy
+   > neighbors. Valid application traffic causing noisy-neighbor disruption
+   > to other applications is not a valid security report for degrading service.
+
 9. *(→ §2, §7, §8, §10)* We model a network-of-brokers peer as
    **authenticated-but-adversarial** and expect operators to authenticate/scope
    the link. Do you provide any safety guarantee across a broker link (e.g.
    forwarded-message authorization), or is a compromised/malicious peer wholly
    the operator's trust decision?
+
+   > Yes, compromised/malicious peer is the operator's trust decision.   
+   >   
+   > Peer connections are authenticated and authorized with two-way TLS being 
+   > the recommended security method. Messages cannot be forwarded unless the 
+   > peer is authenticated and authorized to the destinations.
+     
 10. *(→ §9)* We frame `SERIALIZABLE_PACKAGES` as a **package-level gate, not a
     gadget-chain guarantee** — an allow-listed package containing a gadget is
     the operator's risk, and only an allow-list *bypass* (a class outside the
     list getting deserialized) is `VALID`. Confirm this is the right line, and
     confirm the default trusted-package list is considered gadget-safe by the
     project.
-
+  
+   > Correct
 ---
 
 *End of v0 draft. Provenance counts and every §14 answer should be folded back
