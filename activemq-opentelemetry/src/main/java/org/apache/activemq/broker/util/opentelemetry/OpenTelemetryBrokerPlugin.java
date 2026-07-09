@@ -16,7 +16,9 @@
  */
 package org.apache.activemq.broker.util.opentelemetry;
 
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Span;
@@ -40,6 +42,9 @@ import org.slf4j.LoggerFactory;
  * Traces message send, dispatch, and acknowledge operations with proper
  * context propagation via W3C TraceContext.
  *
+ * <p>For topic destinations, each subscriber dispatch creates its own span,
+ * so a single published message may produce multiple deliver spans.
+ *
  * @org.apache.xbean.XBean element="openTelemetryPlugin"
  */
 public class OpenTelemetryBrokerPlugin extends BrokerPluginSupport {
@@ -47,11 +52,34 @@ public class OpenTelemetryBrokerPlugin extends BrokerPluginSupport {
     private static final Logger LOG = LoggerFactory.getLogger(OpenTelemetryBrokerPlugin.class);
     private static final String INSTRUMENTATION_NAME = "org.apache.activemq";
 
+    // Cap in-flight dispatch spans to avoid unbounded growth when postProcessDispatch is missed.
+    // The eldest entry is ended and evicted if this limit is exceeded.
+    private static final int MAX_DISPATCH_SPANS = 1000;
+
     private boolean traceProducer = true;
     private boolean traceConsumer = true;
     private boolean traceAcknowledge = true;
 
-    private final ConcurrentHashMap<MessageDispatch, Span> dispatchSpans = new ConcurrentHashMap<>();
+    private final TextMapPropagator propagator;
+    private final Tracer tracer;
+
+    private final Map<MessageDispatch, Span> dispatchSpans = Collections.synchronizedMap(
+            new LinkedHashMap<MessageDispatch, Span>(256, 0.75f, false) {
+                @Override
+                protected boolean removeEldestEntry(Map.Entry<MessageDispatch, Span> eldest) {
+                    if (size() > MAX_DISPATCH_SPANS) {
+                        LOG.warn("dispatchSpans exceeded max size; ending oldest span to prevent leak");
+                        eldest.getValue().end();
+                        return true;
+                    }
+                    return false;
+                }
+            });
+
+    public OpenTelemetryBrokerPlugin() {
+        this.propagator = GlobalOpenTelemetry.getPropagators().getTextMapPropagator();
+        this.tracer = GlobalOpenTelemetry.getTracer(INSTRUMENTATION_NAME);
+    }
 
     public boolean isTraceProducer() {
         return traceProducer;
@@ -84,31 +112,26 @@ public class OpenTelemetryBrokerPlugin extends BrokerPluginSupport {
             return;
         }
 
-        TextMapPropagator propagator = GlobalOpenTelemetry.getPropagators().getTextMapPropagator();
-        Tracer tracer = GlobalOpenTelemetry.getTracer(INSTRUMENTATION_NAME);
-
-        // Extract any existing context from the message (e.g., set by client)
         Context parentContext = propagator.extract(Context.current(), messageSend, ActiveMQMessageTextMapGetter.INSTANCE);
 
         String destinationName = messageSend.getDestination().getPhysicalName();
         SpanBuilder spanBuilder = tracer.spanBuilder(destinationName + " publish")
                 .setSpanKind(SpanKind.PRODUCER)
                 .setParent(parentContext)
-                .setAttribute("messaging.system", "activemq")
+                .setAttribute("messaging.system.name", "activemq")
                 .setAttribute("messaging.destination.name", destinationName)
-                .setAttribute("messaging.operation", "publish");
+                .setAttribute("messaging.operation.type", "publish");
 
         if (messageSend.getMessageId() != null) {
             spanBuilder.setAttribute("messaging.message.id", messageSend.getMessageId().toString());
         }
         if (producerExchange.getConnectionContext() != null
                 && producerExchange.getConnectionContext().getClientId() != null) {
-            spanBuilder.setAttribute("messaging.client_id", producerExchange.getConnectionContext().getClientId());
+            spanBuilder.setAttribute("messaging.client.id", producerExchange.getConnectionContext().getClientId());
         }
 
         Span span = spanBuilder.startSpan();
         try {
-            // Inject trace context into the message for downstream propagation
             Context contextWithSpan = parentContext.with(span);
             propagator.inject(contextWithSpan, messageSend, ActiveMQMessageTextMapSetter.INSTANCE);
 
@@ -126,9 +149,6 @@ public class OpenTelemetryBrokerPlugin extends BrokerPluginSupport {
     public void preProcessDispatch(MessageDispatch messageDispatch) {
         if (traceConsumer && messageDispatch != null && messageDispatch.getMessage() != null) {
             try {
-                TextMapPropagator propagator = GlobalOpenTelemetry.getPropagators().getTextMapPropagator();
-                Tracer tracer = GlobalOpenTelemetry.getTracer(INSTRUMENTATION_NAME);
-
                 Message message = messageDispatch.getMessage();
                 Context extractedContext = propagator.extract(Context.current(), message, ActiveMQMessageTextMapGetter.INSTANCE);
 
@@ -136,9 +156,9 @@ public class OpenTelemetryBrokerPlugin extends BrokerPluginSupport {
                 SpanBuilder spanBuilder = tracer.spanBuilder(destinationName + " deliver")
                         .setSpanKind(SpanKind.CONSUMER)
                         .setParent(extractedContext)
-                        .setAttribute("messaging.system", "activemq")
+                        .setAttribute("messaging.system.name", "activemq")
                         .setAttribute("messaging.destination.name", destinationName)
-                        .setAttribute("messaging.operation", "deliver");
+                        .setAttribute("messaging.operation.type", "deliver");
 
                 if (message.getMessageId() != null) {
                     spanBuilder.setAttribute("messaging.message.id", message.getMessageId().toString());
@@ -171,21 +191,19 @@ public class OpenTelemetryBrokerPlugin extends BrokerPluginSupport {
             return;
         }
 
-        Tracer tracer = GlobalOpenTelemetry.getTracer(INSTRUMENTATION_NAME);
-
         String destinationName = ack.getDestination() != null ? ack.getDestination().getPhysicalName() : "unknown";
         SpanBuilder spanBuilder = tracer.spanBuilder(destinationName + " ack")
                 .setSpanKind(SpanKind.INTERNAL)
-                .setAttribute("messaging.system", "activemq")
+                .setAttribute("messaging.system.name", "activemq")
                 .setAttribute("messaging.destination.name", destinationName)
-                .setAttribute("messaging.operation", "ack");
+                .setAttribute("messaging.operation.type", "ack");
 
         if (ack.getLastMessageId() != null) {
             spanBuilder.setAttribute("messaging.message.id", ack.getLastMessageId().toString());
         }
         if (consumerExchange.getConnectionContext() != null
                 && consumerExchange.getConnectionContext().getClientId() != null) {
-            spanBuilder.setAttribute("messaging.client_id", consumerExchange.getConnectionContext().getClientId());
+            spanBuilder.setAttribute("messaging.client.id", consumerExchange.getConnectionContext().getClientId());
         }
 
         Span span = spanBuilder.startSpan();
