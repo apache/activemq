@@ -43,6 +43,7 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerPlugin;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
+import org.apache.activemq.util.Wait;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -106,18 +107,15 @@ public class OpenTelemetryBrokerPluginTest {
         producer.send(message);
         producer.close();
 
-        // Allow async broker processing to complete
-        Thread.sleep(500);
+        assertTrue("Expected at least one span", Wait.waitFor(() -> spanExporter.getFinishedSpanItems().size() >= 1));
 
         List<SpanData> spans = spanExporter.getFinishedSpanItems();
-        assertTrue("Expected at least one span", spans.size() >= 1);
-
         SpanData publishSpan = findSpan(spans, queueName + " publish");
         assertNotNull("Publish span should exist", publishSpan);
         assertEquals(SpanKind.PRODUCER, publishSpan.getKind());
-        assertEquals("activemq", publishSpan.getAttributes().get(io.opentelemetry.api.common.AttributeKey.stringKey("messaging.system")));
+        assertEquals("activemq", publishSpan.getAttributes().get(io.opentelemetry.api.common.AttributeKey.stringKey("messaging.system.name")));
         assertEquals(queueName, publishSpan.getAttributes().get(io.opentelemetry.api.common.AttributeKey.stringKey("messaging.destination.name")));
-        assertEquals("publish", publishSpan.getAttributes().get(io.opentelemetry.api.common.AttributeKey.stringKey("messaging.operation")));
+        assertEquals("publish", publishSpan.getAttributes().get(io.opentelemetry.api.common.AttributeKey.stringKey("messaging.operation.type")));
     }
 
     @Test
@@ -133,7 +131,6 @@ public class OpenTelemetryBrokerPluginTest {
         jakarta.jms.Message received = consumer.receive(5000);
         assertNotNull("Should receive message", received);
 
-        // The message should have traceparent property injected by the plugin
         String traceparent = received.getStringProperty("traceparent");
         assertNotNull("traceparent property should be set", traceparent);
         assertTrue("traceparent should follow W3C format", traceparent.startsWith("00-"));
@@ -154,15 +151,14 @@ public class OpenTelemetryBrokerPluginTest {
         assertNotNull("Should receive message", received);
         consumer.close();
 
-        // Allow time for postProcessDispatch
-        Thread.sleep(500);
+        assertTrue("Expected deliver span", Wait.waitFor(() -> findSpan(spanExporter.getFinishedSpanItems(), queueName + " deliver") != null));
 
         List<SpanData> spans = spanExporter.getFinishedSpanItems();
         SpanData deliverSpan = findSpan(spans, queueName + " deliver");
         assertNotNull("Deliver span should exist", deliverSpan);
         assertEquals(SpanKind.CONSUMER, deliverSpan.getKind());
-        assertEquals("activemq", deliverSpan.getAttributes().get(io.opentelemetry.api.common.AttributeKey.stringKey("messaging.system")));
-        assertEquals("deliver", deliverSpan.getAttributes().get(io.opentelemetry.api.common.AttributeKey.stringKey("messaging.operation")));
+        assertEquals("activemq", deliverSpan.getAttributes().get(io.opentelemetry.api.common.AttributeKey.stringKey("messaging.system.name")));
+        assertEquals("deliver", deliverSpan.getAttributes().get(io.opentelemetry.api.common.AttributeKey.stringKey("messaging.operation.type")));
     }
 
     @Test
@@ -178,20 +174,18 @@ public class OpenTelemetryBrokerPluginTest {
         assertNotNull("Should receive message", received);
         consumer.close();
 
-        // Allow time for ack processing
-        Thread.sleep(500);
+        assertTrue("Expected ack span", Wait.waitFor(() -> findSpan(spanExporter.getFinishedSpanItems(), queueName + " ack") != null));
 
         List<SpanData> spans = spanExporter.getFinishedSpanItems();
         SpanData ackSpan = findSpan(spans, queueName + " ack");
         assertNotNull("Ack span should exist", ackSpan);
         assertEquals(SpanKind.INTERNAL, ackSpan.getKind());
-        assertEquals("activemq", ackSpan.getAttributes().get(io.opentelemetry.api.common.AttributeKey.stringKey("messaging.system")));
-        assertEquals("ack", ackSpan.getAttributes().get(io.opentelemetry.api.common.AttributeKey.stringKey("messaging.operation")));
+        assertEquals("activemq", ackSpan.getAttributes().get(io.opentelemetry.api.common.AttributeKey.stringKey("messaging.system.name")));
+        assertEquals("ack", ackSpan.getAttributes().get(io.opentelemetry.api.common.AttributeKey.stringKey("messaging.operation.type")));
     }
 
     @Test
     public void testDisabledProducerTracing() throws Exception {
-        // Stop and reconfigure with tracing disabled
         connection.close();
         broker.stop();
         broker.waitUntilStopped();
@@ -224,7 +218,8 @@ public class OpenTelemetryBrokerPluginTest {
         consumer.receive(5000);
         consumer.close();
 
-        Thread.sleep(500);
+        // Brief wait then assert nothing was traced
+        Wait.waitFor(() -> false, 500, 100);
 
         List<SpanData> spans = spanExporter.getFinishedSpanItems();
         assertFalse("Should have no publish spans when tracing disabled",
