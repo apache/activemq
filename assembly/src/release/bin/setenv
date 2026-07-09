@@ -31,7 +31,7 @@
 
 # Set jvm memory configuration (minimal/maximum amount of memory)
 if [ -z "$ACTIVEMQ_OPTS_MEMORY" ] ; then
-    ACTIVEMQ_OPTS_MEMORY="-Xms512M -Xmx2G"
+    ACTIVEMQ_OPTS_MEMORY="-Xms64M -Xmx2G"
 fi
 
 # Terminate the JVM on OutOfMemoryError so the broker is not left running in a degraded state.
