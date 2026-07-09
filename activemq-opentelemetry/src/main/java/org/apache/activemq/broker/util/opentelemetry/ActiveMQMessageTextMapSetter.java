@@ -33,6 +33,7 @@ public class ActiveMQMessageTextMapSetter implements TextMapSetter<Message> {
     public void set(Message message, String key, String value) {
         try {
             message.setProperty(key, value);
+            // Clear the cached marshalled form so the injected property is included on next serialization.
             message.setMarshalledProperties(null);
         } catch (IOException e) {
             LOG.warn("Failed to set trace context property '{}' on message", key, e);
