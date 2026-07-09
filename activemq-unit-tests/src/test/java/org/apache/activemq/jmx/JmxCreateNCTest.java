@@ -80,6 +80,8 @@ public class JmxCreateNCTest {
 
         assertNotNull(nc);
         assertEquals("NC", nc.getName());
+        assertEquals("static:(tcp://localhost:61617)", nc.getUri());
+        assertNotNull(nc.getLocalUri());
     }
 
     @Test
