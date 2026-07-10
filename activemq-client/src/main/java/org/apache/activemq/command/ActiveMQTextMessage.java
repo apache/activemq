@@ -68,13 +68,17 @@ public class ActiveMQTextMessage extends ActiveMQMessage implements TextMessage 
         return "jms/text-message";
     }
 
+    // add sync
     @Override
-    public void setText(String text) throws MessageNotWriteableException {
+    public synchronized void compress() throws IOException {
+        super.compress();
+    }
+
+    @Override
+    public synchronized void setText(String text) throws MessageNotWriteableException {
         checkReadOnlyBody();
-        synchronized (this) {
-            this.text = text;
-            setContent(null);
-        }
+        this.text = text;
+        setContent(null);
     }
 
     // Synchronize this to prevent setting content if another mutation operation
@@ -137,15 +141,13 @@ public class ActiveMQTextMessage extends ActiveMQMessage implements TextMessage 
         storeContentAndClear();
     }
 
+    // always lock to simplify things because if this method is being called
+    // it's right before send so it's very likely to need to mutate state
+    // This should generally be uncontested lock so it will be fast
     @Override
-    public void storeContentAndClear() {
-        // always lock to simplify things because if this method is being called
-        // it's right before send so it's very likely to need to mutate state
-        // This should generally be uncontested lock so it will be fast
-        synchronized (this) {
-            storeContent();
-            text = null;
-        }
+    public synchronized void storeContentAndClear() {
+        storeContent();
+        text = null;
     }
 
     @Override
@@ -178,15 +180,12 @@ public class ActiveMQTextMessage extends ActiveMQMessage implements TextMessage 
     // see https://issues.apache.org/activemq/browse/AMQ-2103
     // and https://issues.apache.org/activemq/browse/AMQ-2966
     @Override
-    public void clearUnMarshalledState() throws JMSException {
-        super.clearUnMarshalledState();
-        if (this.text != null) {
-            synchronized (this) {
-                // This is volatile but another locking makes sure another thread
-                // isn't attempting to read this value to marshal to the content at the
-                // same time
-                this.text = null;
-            }
+    public synchronized void clearUnMarshalledState() throws JMSException {
+        // Double check this under lock, we should only clear if
+        // the text/properties are marshaled
+        if (isMarshalled()) {
+            super.clearUnMarshalledState();
+            this.text = null;
         }
     }
 
@@ -208,11 +207,9 @@ public class ActiveMQTextMessage extends ActiveMQMessage implements TextMessage 
      *                 due to some internal error.
      */
     @Override
-    public void clearBody() throws JMSException {
-        synchronized (this) {
-            super.clearBody();
-            this.text = null;
-        }
+    public synchronized void clearBody() throws JMSException {
+        super.clearBody();
+        this.text = null;
     }
 
     @Override
