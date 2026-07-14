@@ -17,7 +17,8 @@
 package org.apache.activemq.transport.ws;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -29,14 +30,14 @@ import java.nio.charset.StandardCharsets;
 
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportListener;
-import org.eclipse.jetty.ee9.websocket.api.RemoteEndpoint;
-import org.eclipse.jetty.ee9.websocket.api.Session;
+import org.eclipse.jetty.websocket.api.Callback;
+import org.eclipse.jetty.websocket.api.Session;
 import org.junit.Test;
 
 /**
  * Unit tests for {@link WSTransportProxy} frame handling. In particular that outbound
  * text is emitted as a WebSocket TEXT frame and outbound binary as a BINARY frame -
- * a regression guard: outbound text was previously sent via sendBytes (a binary frame).
+ * a regression guard: outbound text was previously sent as a binary frame.
  */
 public class WSTransportProxyTest {
 
@@ -46,8 +47,8 @@ public class WSTransportProxyTest {
 
         WSTransportProxy proxy = new WSTransportProxy("ws://localhost:61614", transport);
         proxy.setTransportListener(mock(TransportListener.class));
-        proxy.start();                     // counts down the "started" latch so sends don't block
-        proxy.onWebSocketConnect(session); // installs the session used by the outbound sends
+        proxy.start();                  // counts down the "started" latch so sends don't block
+        proxy.onWebSocketOpen(session); // installs the session used by the outbound sends
         return proxy;
     }
 
@@ -55,32 +56,33 @@ public class WSTransportProxyTest {
     public void testOutboundTextIsSentAsTextFrame() throws Exception {
         WSTransport wsTransport = mock(WSTransport.class);
         Session session = mock(Session.class);
-        RemoteEndpoint remote = mock(RemoteEndpoint.class);
-        when(session.getRemote()).thenReturn(remote);
+        // The proxy blocks on the send callback, so complete it when sendText is invoked.
+        doAnswer(inv -> { inv.getArgument(1, Callback.class).succeed(); return null; })
+            .when(session).sendText(any(), any(Callback.class));
 
         WSTransportProxy proxy = startedProxy(wsTransport, session);
 
         proxy.onSocketOutboundText("CONNECTED\n");
 
-        // Must be a WebSocket TEXT frame (sendString), never a binary frame.
-        verify(remote, times(1)).sendString("CONNECTED\n");
-        verify(remote, never()).sendBytes(any(ByteBuffer.class));
+        // Must be a WebSocket TEXT frame (sendText), never a binary frame.
+        verify(session, times(1)).sendText(eq("CONNECTED\n"), any(Callback.class));
+        verify(session, never()).sendBinary(any(ByteBuffer.class), any(Callback.class));
     }
 
     @Test
     public void testOutboundBinaryIsSentAsBinaryFrame() throws Exception {
         WSTransport wsTransport = mock(WSTransport.class);
         Session session = mock(Session.class);
-        RemoteEndpoint remote = mock(RemoteEndpoint.class);
-        when(session.getRemote()).thenReturn(remote);
+        doAnswer(inv -> { inv.getArgument(1, Callback.class).succeed(); return null; })
+            .when(session).sendBinary(any(ByteBuffer.class), any(Callback.class));
 
         WSTransportProxy proxy = startedProxy(wsTransport, session);
 
         ByteBuffer payload = ByteBuffer.wrap("frame-bytes".getBytes(StandardCharsets.UTF_8));
         proxy.onSocketOutboundBinary(payload);
 
-        // Must be a WebSocket BINARY frame (sendBytes), never a text frame.
-        verify(remote, times(1)).sendBytes(any(ByteBuffer.class));
-        verify(remote, never()).sendString(anyString());
+        // Must be a WebSocket BINARY frame (sendBinary), never a text frame.
+        verify(session, times(1)).sendBinary(any(ByteBuffer.class), any(Callback.class));
+        verify(session, never()).sendText(any(), any(Callback.class));
     }
 }

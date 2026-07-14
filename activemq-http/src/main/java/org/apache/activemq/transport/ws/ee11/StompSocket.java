@@ -14,9 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.transport.ws.jetty12;
+package org.apache.activemq.transport.ws.ee11;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
@@ -24,15 +25,15 @@ import org.apache.activemq.transport.stomp.Stomp;
 import org.apache.activemq.transport.stomp.StompFrame;
 import org.apache.activemq.transport.ws.AbstractStompSocket;
 import org.apache.activemq.util.IOExceptionSupport;
-import org.eclipse.jetty.ee9.websocket.api.Session;
-import org.eclipse.jetty.ee9.websocket.api.WebSocketListener;
+import org.eclipse.jetty.websocket.api.Callback;
+import org.eclipse.jetty.websocket.api.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * Implements web socket and mediates between servlet and the broker
  */
-public class StompSocket extends AbstractStompSocket implements WebSocketListener {
+public class StompSocket extends AbstractStompSocket implements Session.Listener.AutoDemanding {
 
     private static final Logger LOG = LoggerFactory.getLogger(StompSocket.class);
 
@@ -47,9 +48,10 @@ public class StompSocket extends AbstractStompSocket implements WebSocketListene
     @Override
     public void sendToStomp(StompFrame command) throws IOException {
         try {
-            //timeout after a period of time so we don't wait forever and hold the protocol lock
-            // FIXME: convert to timeout async get(getDefaultSendTimeOut(), TimeUnit.SECONDS)
-            session.getRemote().sendString(getWireFormat().marshalToString(command));
+            // Block on the async send but time out so we don't wait forever holding the protocol lock.
+            Callback.Completable callback = new Callback.Completable();
+            session.sendText(getWireFormat().marshalToString(command), callback);
+            callback.get(getDefaultSendTimeOut(), TimeUnit.SECONDS);
         } catch (Exception e) {
             throw IOExceptionSupport.create(e);
         }
@@ -65,7 +67,9 @@ public class StompSocket extends AbstractStompSocket implements WebSocketListene
     //----- WebSocketListener event callbacks --------------------------------//
 
     @Override
-    public void onWebSocketBinary(byte[] arg0, int arg1, int arg2) {
+    public void onWebSocketBinary(ByteBuffer payload, Callback callback) {
+        // STOMP over WebSocket uses text frames; ignore binary but release the frame.
+        callback.succeed();
     }
 
     @Override
@@ -85,7 +89,7 @@ public class StompSocket extends AbstractStompSocket implements WebSocketListene
     }
 
     @Override
-    public void onWebSocketConnect(Session session) {
+    public void onWebSocketOpen(Session session) {
         this.session = session;
         this.session.setIdleTimeout(Duration.ZERO);
     }

@@ -86,7 +86,7 @@
   <!-- Admin Web Application -->
   <Call name="addHandler">
     <Arg>
-      <New class="org.eclipse.jetty.ee9.webapp.WebAppContext">
+      <New class="org.eclipse.jetty.ee11.webapp.WebAppContext">
         <Set name="contextPath">/admin</Set>
         <Set name="baseResourceAsString">src/test/resources/webapps/admin</Set>
         <Set name="logUrlOnStart">true</Set>
@@ -94,7 +94,7 @@
              runs and TLDs are discovered (otherwise JSP compilation fails with a null TldCache). -->
         <Call name="setAttribute">
           <Arg>org.eclipse.jetty.server.webapp.ContainerIncludeJarPattern</Arg>
-          <Arg>.*/jetty-ee9-[^/]*\.jar$|.*/jetty-jakarta-servlet-api-[^/]*\.jar$|.*/jakarta\.servlet\.jsp\.jstl.*\.jar$</Arg>
+          <Arg>.*/jetty-ee11-[^/]*\.jar$|.*/jetty-jakarta-servlet-api-[^/]*\.jar$|.*/jakarta\.servlet\.jsp\.jstl.*\.jar$</Arg>
         </Call>
       </New>
     </Arg>
@@ -103,7 +103,7 @@
   <!-- API Web Application -->
   <Call name="addHandler">
     <Arg>
-      <New class="org.eclipse.jetty.ee9.webapp.WebAppContext">
+      <New class="org.eclipse.jetty.ee11.webapp.WebAppContext">
         <Set name="contextPath">/api</Set>
         <Set name="baseResourceAsString">src/test/resources/webapps/api</Set>
         <Set name="logUrlOnStart">true</Set>
@@ -111,7 +111,7 @@
              runs and TLDs are discovered (otherwise JSP compilation fails with a null TldCache). -->
         <Call name="setAttribute">
           <Arg>org.eclipse.jetty.server.webapp.ContainerIncludeJarPattern</Arg>
-          <Arg>.*/jetty-ee9-[^/]*\.jar$|.*/jetty-jakarta-servlet-api-[^/]*\.jar$|.*/jakarta\.servlet\.jsp\.jstl.*\.jar$</Arg>
+          <Arg>.*/jetty-ee11-[^/]*\.jar$|.*/jetty-jakarta-servlet-api-[^/]*\.jar$|.*/jakarta\.servlet\.jsp\.jstl.*\.jar$</Arg>
         </Call>
       </New>
     </Arg>

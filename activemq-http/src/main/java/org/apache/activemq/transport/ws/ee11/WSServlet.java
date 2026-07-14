@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.apache.activemq.transport.ws.jetty12;
+package org.apache.activemq.transport.ws.ee11;
 
 import java.io.IOException;
 import java.net.URI;
@@ -38,12 +38,12 @@ import org.apache.activemq.transport.TransportAcceptListener;
 import org.apache.activemq.transport.TransportFactory;
 import org.apache.activemq.transport.util.HttpTransportUtils;
 import org.apache.activemq.transport.ws.WSTransportProxy;
-import org.eclipse.jetty.ee9.websocket.api.WebSocketListener;
-import org.eclipse.jetty.ee9.websocket.server.JettyServerUpgradeRequest;
-import org.eclipse.jetty.ee9.websocket.server.JettyServerUpgradeResponse;
-import org.eclipse.jetty.ee9.websocket.server.JettyWebSocketCreator;
-import org.eclipse.jetty.ee9.websocket.server.JettyWebSocketServlet;
-import org.eclipse.jetty.ee9.websocket.server.JettyWebSocketServletFactory;
+import org.eclipse.jetty.websocket.api.Session;
+import org.eclipse.jetty.ee11.websocket.server.JettyServerUpgradeRequest;
+import org.eclipse.jetty.ee11.websocket.server.JettyServerUpgradeResponse;
+import org.eclipse.jetty.ee11.websocket.server.JettyWebSocketCreator;
+import org.eclipse.jetty.ee11.websocket.server.JettyWebSocketServlet;
+import org.eclipse.jetty.ee11.websocket.server.JettyWebSocketServletFactory;
 
 /**
  * Handle connection upgrade requests and creates web sockets
@@ -93,7 +93,7 @@ public class WSServlet extends JettyWebSocketServlet implements BrokerServiceAwa
         factory.setCreator(new JettyWebSocketCreator() {
             @Override
             public Object createWebSocket(JettyServerUpgradeRequest req, JettyServerUpgradeResponse resp) {
-                WebSocketListener socket;
+                Session.Listener socket;
                 Protocol requestedProtocol = Protocol.UNKNOWN;
 
                 // When no sub-protocol is requested we default to STOMP for legacy reasons.
@@ -141,7 +141,7 @@ public class WSServlet extends JettyWebSocketServlet implements BrokerServiceAwa
         });
     }
 
-    private WebSocketListener findWSTransport(JettyServerUpgradeRequest request, JettyServerUpgradeResponse response) {
+    private Session.Listener findWSTransport(JettyServerUpgradeRequest request, JettyServerUpgradeResponse response) {
         WSTransportProxy proxy = null;
 
         for (String subProtocol : request.getSubProtocols()) {

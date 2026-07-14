@@ -22,7 +22,7 @@ import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.ContextHandlerCollection;
 import org.eclipse.jetty.util.resource.ResourceFactory;
-import org.eclipse.jetty.ee9.webapp.WebAppContext;
+import org.eclipse.jetty.ee11.webapp.WebAppContext;
 
 /**
  * A simple bootstrap class for starting Jetty in your IDE using the local web

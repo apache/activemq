@@ -34,8 +34,8 @@ import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.wireformat.WireFormat;
-import org.eclipse.jetty.ee9.websocket.api.Session;
-import org.eclipse.jetty.ee9.websocket.api.WebSocketListener;
+import org.eclipse.jetty.websocket.api.Callback;
+import org.eclipse.jetty.websocket.api.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,7 +43,7 @@ import org.slf4j.LoggerFactory;
  * A proxy class that manages sending WebSocket events to the wrapped protocol level
  * WebSocket Transport.
  */
-public final class WSTransportProxy extends TransportSupport implements Transport, WebSocketListener, BrokerServiceAware, WSTransportSink {
+public final class WSTransportProxy extends TransportSupport implements Transport, Session.Listener.AutoDemanding, BrokerServiceAware, WSTransportSink {
 
     private static final Logger LOG = LoggerFactory.getLogger(WSTransportProxy.class);
 
@@ -159,7 +159,7 @@ public final class WSTransportProxy extends TransportSupport implements Transpor
     //----- WebSocket methods being proxied to the WS Transport --------------//
 
     @Override
-    public void onWebSocketBinary(byte[] payload, int offset, int length) {
+    public void onWebSocketBinary(ByteBuffer payload, Callback callback) {
         if (!transportStartedAtLeastOnce()) {
             LOG.debug("Waiting for WebSocket to be properly started...");
             try {
@@ -171,8 +171,13 @@ public final class WSTransportProxy extends TransportSupport implements Transpor
 
         protocolLock.lock();
         try {
-            wsTransport.onWebSocketBinary(ByteBuffer.wrap(payload, offset, length));
+            // Copy the frame: Jetty may reuse the pooled buffer once the callback succeeds.
+            ByteBuffer copy = ByteBuffer.allocate(payload.remaining());
+            copy.put(payload).flip();
+            wsTransport.onWebSocketBinary(copy);
+            callback.succeed();
         } catch (Exception e) {
+            callback.fail(e);
             onException(IOExceptionSupport.create(e));
         } finally {
             protocolLock.unlock();
@@ -217,7 +222,7 @@ public final class WSTransportProxy extends TransportSupport implements Transpor
     }
 
     @Override
-    public void onWebSocketConnect(Session session) {
+    public void onWebSocketOpen(Session session) {
         this.session = session;
         this.session.setIdleTimeout(Duration.ZERO);
 
@@ -245,10 +250,11 @@ public final class WSTransportProxy extends TransportSupport implements Transpor
 
         LOG.trace("WS Proxy sending string of size {} out", data.length());
         try {
-            // FIXME: Convert to async API w/ tiemeout getDefaultSendTimeOut(), TimeUnit.SECONDS);
-            // Outbound text must be sent as a WebSocket TEXT frame (sendString), not a binary
-            // frame; sendString also encodes as UTF-8 per the WebSocket spec.
-            session.getRemote().sendString(data);
+            // Outbound text must be sent as a WebSocket TEXT frame (sendText), not a binary frame;
+            // sendText also encodes as UTF-8 per the WebSocket spec. Block with a timeout.
+            Callback.Completable callback = new Callback.Completable();
+            session.sendText(data, callback);
+            callback.get(getDefaultSendTimeOut(), TimeUnit.SECONDS);
         } catch (Exception e) {
             throw IOExceptionSupport.create(e);
         }
@@ -268,8 +274,9 @@ public final class WSTransportProxy extends TransportSupport implements Transpor
         LOG.trace("WS Proxy sending {} bytes out", data.remaining());
         int limit = data.limit();
         try {
-            // FIXME: Convert to async API w/ tiemeout getDefaultSendTimeOut(), TimeUnit.SECONDS);
-            session.getRemote().sendBytes(data);
+            Callback.Completable callback = new Callback.Completable();
+            session.sendBinary(data, callback);
+            callback.get(getDefaultSendTimeOut(), TimeUnit.SECONDS);
         } catch (Exception e) {
             throw IOExceptionSupport.create(e);
         }
