@@ -27,15 +27,15 @@ import org.apache.activemq.transport.WebTransportServerSupport;
 import org.apache.activemq.transport.util.TextWireFormat;
 import org.apache.activemq.transport.xstream.XStreamWireFormat;
 import org.apache.activemq.util.ServiceStopper;
-import org.eclipse.jetty.ee9.security.ConstraintSecurityHandler;
+import org.eclipse.jetty.ee11.servlet.security.ConstraintSecurityHandler;
 import org.eclipse.jetty.server.ConnectionFactory;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.HttpConnectionFactory;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.Handler.Wrapper;
-import org.eclipse.jetty.ee9.servlet.ServletContextHandler;
-import org.eclipse.jetty.ee9.servlet.ServletHolder;
+import org.eclipse.jetty.ee11.servlet.ServletContextHandler;
+import org.eclipse.jetty.ee11.servlet.ServletHolder;
 
 public class HttpTransportServer extends WebTransportServerSupport {
 
@@ -92,8 +92,11 @@ public class HttpTransportServer extends WebTransportServerSupport {
 
         URI boundTo = bind();
 
+        // EE11 dropped the (Server, contextPath, options) constructor (no nested layer); create the
+        // context then set it as the server handler explicitly.
         ServletContextHandler contextHandler =
-            new ServletContextHandler(server, "/", ServletContextHandler.SECURITY);
+            new ServletContextHandler("/", ServletContextHandler.SECURITY);
+        server.setHandler(contextHandler);
 
         ServletHolder holder = new ServletHolder();
         holder.setServlet(new HttpTunnelServlet());

@@ -18,6 +18,7 @@
 package org.apache.activemq.web;
 
 import jakarta.jms.*;
+import jakarta.servlet.DispatcherType;
 import jakarta.servlet.ServletConfig;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -189,11 +190,12 @@ public class MessageServlet extends MessageServletSupport {
                 throw new NoDestinationSuppliedException();
             }
             consumer = (MessageAvailableConsumer) client.getConsumer(destination, request.getHeader(WebClient.selectorName));
-            final AsyncServletRequest asyncRequest = AsyncServletRequest.getAsyncRequest(request);
-
-            // Don't allow concurrent use of the consumer. Do make sure to allow
-            // subsequent calls on asyncRequest to use the consumer.
-            if (asyncRequest.isInitial() && !activeConsumers.add(consumer)) {
+            // Don't allow concurrent use of the consumer on the initial dispatch. Subsequent async
+            // re-dispatches (DispatcherType.ASYNC) reuse the already-registered consumer. Determine
+            // "initial" from the CURRENT request: EE11 does not update the stored original request's
+            // dispatcher type on an async re-dispatch (EE9 reused the same request object), so
+            // AsyncServletRequest.isInitial() would wrongly report true on re-dispatch.
+            if (request.getDispatcherType() != DispatcherType.ASYNC && !activeConsumers.add(consumer)) {
                 throw new ServletException("Concurrent access to consumer is not supported");
             }
 

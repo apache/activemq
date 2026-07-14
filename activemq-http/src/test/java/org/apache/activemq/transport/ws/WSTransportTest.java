@@ -42,7 +42,7 @@ import org.eclipse.jetty.io.ClientConnector;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
-import org.eclipse.jetty.ee9.webapp.WebAppContext;
+import org.eclipse.jetty.ee11.webapp.WebAppContext;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -74,7 +74,7 @@ public class WSTransportTest extends WSTransportTestSupport {
         Connector connector = createJettyConnector(server);
 
         WebAppContext context = new WebAppContext();
-        context.setResourceBase("src/test/webapp");
+        context.setBaseResourceAsString("src/test/webapp");
         context.setContextPath("/");
         context.setServer(server);
 

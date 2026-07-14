@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.activemq.transport.ws.jetty12;
+package org.apache.activemq.transport.ws.ee11;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -26,8 +26,8 @@ import org.apache.activemq.transport.mqtt.MQTTCodec;
 import org.apache.activemq.transport.ws.AbstractMQTTSocket;
 import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.util.IOExceptionSupport;
-import org.eclipse.jetty.ee9.websocket.api.WebSocketListener;
-import org.eclipse.jetty.ee9.websocket.api.Session;
+import org.eclipse.jetty.websocket.api.Callback;
+import org.eclipse.jetty.websocket.api.Session;
 import org.fusesource.hawtbuf.Buffer;
 import org.fusesource.hawtbuf.DataByteArrayInputStream;
 import org.fusesource.mqtt.codec.DISCONNECT;
@@ -35,7 +35,7 @@ import org.fusesource.mqtt.codec.MQTTFrame;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class MQTTSocket extends AbstractMQTTSocket implements MQTTCodec.MQTTFrameSink, WebSocketListener {
+public class MQTTSocket extends AbstractMQTTSocket implements MQTTCodec.MQTTFrameSink, Session.Listener.AutoDemanding {
 
     private static final Logger LOG = LoggerFactory.getLogger(MQTTSocket.class);
 
@@ -55,9 +55,10 @@ public class MQTTSocket extends AbstractMQTTSocket implements MQTTCodec.MQTTFram
     public void sendToMQTT(MQTTFrame command) throws IOException {
         ByteSequence bytes = wireFormat.marshal(command);
         try {
-            //timeout after a period of time so we don't wait forever and hold the protocol lock
-            // FIXME: convert to async .get(getDefaultSendTimeOut(), TimeUnit.SECONDS)
-            session.getRemote().sendBytes(ByteBuffer.wrap(bytes.getData(), 0, bytes.getLength()));
+            // Block on the async send but time out so we don't wait forever holding the protocol lock.
+            Callback.Completable callback = new Callback.Completable();
+            session.sendBinary(ByteBuffer.wrap(bytes.getData(), 0, bytes.getLength()), callback);
+            callback.get(getDefaultSendTimeOut(), TimeUnit.SECONDS);
         } catch (Exception e) {
             throw IOExceptionSupport.create(e);
         }
@@ -73,7 +74,7 @@ public class MQTTSocket extends AbstractMQTTSocket implements MQTTCodec.MQTTFram
     //----- WebSocket.OnTextMessage callback handlers ------------------------//
 
     @Override
-    public void onWebSocketBinary(byte[] bytes, int offset, int length) {
+    public void onWebSocketBinary(ByteBuffer payload, Callback callback) {
         if (!transportStartedAtLeastOnce()) {
             LOG.debug("Waiting for MQTTSocket to be properly started...");
             try {
@@ -85,9 +86,14 @@ public class MQTTSocket extends AbstractMQTTSocket implements MQTTCodec.MQTTFram
 
         protocolLock.lock();
         try {
+            int length = payload.remaining();
+            byte[] bytes = new byte[length];
+            payload.get(bytes);
             receiveCounter += length;
-            codec.parse(new DataByteArrayInputStream(new Buffer(bytes, offset, length)), length);
+            codec.parse(new DataByteArrayInputStream(new Buffer(bytes, 0, length)), length);
+            callback.succeed();
         } catch (Exception e) {
+            callback.fail(e);
             onException(IOExceptionSupport.create(e));
         } finally {
             protocolLock.unlock();
@@ -115,7 +121,7 @@ public class MQTTSocket extends AbstractMQTTSocket implements MQTTCodec.MQTTFram
     }
 
     @Override
-    public void onWebSocketConnect(Session session) {
+    public void onWebSocketOpen(Session session) {
         this.session = session;
         this.session.setIdleTimeout(Duration.ZERO);
     }

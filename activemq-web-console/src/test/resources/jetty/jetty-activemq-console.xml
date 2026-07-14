@@ -16,7 +16,7 @@
     limitations under the License.
 -->
 <!DOCTYPE Configure PUBLIC "-//Jetty//Configure//EN" "https://www.eclipse.org/jetty/configure_12_0.dtd">
-<Configure class="org.eclipse.jetty.ee9.webapp.WebAppContext">
+<Configure class="org.eclipse.jetty.ee11.webapp.WebAppContext">
   <Set name="contextPath">/console</Set>
   <Set name="resourceBase">webapps/admin</Set>
 </Configure>
