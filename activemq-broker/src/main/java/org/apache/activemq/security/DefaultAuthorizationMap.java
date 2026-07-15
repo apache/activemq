@@ -266,8 +266,15 @@ public class DefaultAuthorizationMap extends DestinationMap implements Authoriza
         return instance;
     }
 
-    class WildcardAwareSet<T> extends HashSet<T> {
+    static class WildcardAwareSet<T> extends HashSet<T> {
         boolean hasWildcard = false;
+
+        public WildcardAwareSet(Collection<? extends T> c) {
+            super(c);
+        }
+
+        public WildcardAwareSet() {
+        }
 
         @Override
         public boolean contains(Object e) {
