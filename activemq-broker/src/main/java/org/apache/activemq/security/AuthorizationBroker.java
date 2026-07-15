@@ -35,6 +35,8 @@ import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.command.DestinationInfo;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.ProducerInfo;
+import org.apache.activemq.filter.DestinationMap;
+import org.apache.activemq.security.DefaultAuthorizationMap.WildcardAwareSet;
 
 /**
  * Verifies if a authenticated user can do an operation against the broker using
@@ -91,12 +93,7 @@ public class AuthorizationBroker extends BrokerFilter implements SecurityAdminMB
 
     protected boolean checkDestinationAdmin(SecurityContext securityContext, ActiveMQDestination destination) {
         if (!securityContext.isBrokerContext()) {
-            Set<?> allowedACLs = null;
-            if (!destination.isTemporary()) {
-                allowedACLs = authorizationMap.getAdminACLs(destination);
-            } else {
-                allowedACLs = authorizationMap.getTempDestinationAdminACLs();
-            }
+            final Set<?> allowedACLs = getAdminACLs(destination);
 
             if (allowedACLs != null && !securityContext.isInOneOf(allowedACLs)) {
                 return false;
@@ -157,37 +154,11 @@ public class AuthorizationBroker extends BrokerFilter implements SecurityAdminMB
     public Subscription addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
         final SecurityContext securityContext = checkSecurityContext(context);
 
-        Set<?> allowedACLs = null;
-        if (!info.getDestination().isTemporary()) {
-            allowedACLs = authorizationMap.getReadACLs(info.getDestination());
-        } else {
-            allowedACLs = authorizationMap.getTempDestinationReadACLs();
-        }
+        final Set<?> allowedACLs = getReadACLs(info.getDestination());
 
         if (!securityContext.isBrokerContext() && allowedACLs != null && !securityContext.isInOneOf(allowedACLs) ) {
             throw new SecurityException("User " + securityContext.getUserName() + " is not authorized to read from: " + info.getDestination());
         }
-
-        /*
-         * Need to think about this a little more. We could do per message
-         * security checking to implement finer grained security checking. For
-         * example a user can only see messages with price>1000 . Perhaps this
-         * should just be another additional broker filter that installs this
-         * type of feature. If we did want to do that, then we would install a
-         * predicate. We should be careful since there may be an existing
-         * predicate already assigned and the consumer info may be sent to a
-         * remote broker, so it also needs to support being marshaled.
-         * info.setAdditionalPredicate(new BooleanExpression() { public boolean
-         * matches(MessageEvaluationContext message) throws JMSException { if(
-         * !subject.getAuthorizedReadDests().contains(message.getDestination()) ) {
-         * Set allowedACLs =
-         * authorizationMap.getReadACLs(message.getDestination());
-         * if(allowedACLs!=null && !subject.isInOneOf(allowedACLs)) return
-         * false; subject.getAuthorizedReadDests().put(message.getDestination(),
-         * message.getDestination()); } return true; } public Object
-         * evaluate(MessageEvaluationContext message) throws JMSException {
-         * return matches(message) ? Boolean.TRUE : Boolean.FALSE; } });
-         */
 
         return super.addConsumer(context, info);
     }
@@ -197,13 +168,8 @@ public class AuthorizationBroker extends BrokerFilter implements SecurityAdminMB
         final SecurityContext securityContext = checkSecurityContext(context);
 
         if (!securityContext.isBrokerContext() && info.getDestination() != null) {
+            final Set<?> allowedACLs = getWriteACLs(info.getDestination());
 
-            Set<?> allowedACLs = null;
-            if (!info.getDestination().isTemporary()) {
-                allowedACLs = authorizationMap.getWriteACLs(info.getDestination());
-            } else {
-                allowedACLs = authorizationMap.getTempDestinationWriteACLs();
-            }
             if (allowedACLs != null && !securityContext.isInOneOf(allowedACLs)) {
                 throw new SecurityException("User " + securityContext.getUserName() + " is not authorized to write to: " + info.getDestination());
             }
@@ -217,14 +183,8 @@ public class AuthorizationBroker extends BrokerFilter implements SecurityAdminMB
     public void send(ProducerBrokerExchange producerExchange, Message messageSend) throws Exception {
         final SecurityContext securityContext = checkSecurityContext(producerExchange.getConnectionContext());
 
-        if (!securityContext.isBrokerContext() && !securityContext.getAuthorizedWriteDests().containsValue(messageSend.getDestination())) {
-
-            Set<?> allowedACLs = null;
-            if (!messageSend.getDestination().isTemporary()) {
-                allowedACLs = authorizationMap.getWriteACLs(messageSend.getDestination());
-            } else {
-                allowedACLs = authorizationMap.getTempDestinationWriteACLs();
-            }
+        if (!securityContext.isBrokerContext() && !securityContext.getAuthorizedWriteDests().containsKey(messageSend.getDestination())) {
+            final Set<?> allowedACLs = getWriteACLs(messageSend.getDestination());
 
             if (allowedACLs != null && !securityContext.isInOneOf(allowedACLs)) {
                 throw new SecurityException("User " + securityContext.getUserName() + " is not authorized to write to: " + messageSend.getDestination());
@@ -233,6 +193,73 @@ public class AuthorizationBroker extends BrokerFilter implements SecurityAdminMB
         }
 
         super.send(producerExchange, messageSend);
+    }
+
+    protected Set<?> getReadACLs(ActiveMQDestination destination) {
+        Set<?> allowedACLs;
+
+        if (!destination.isTemporary()) {
+            // DefaultAuthorizationMap already handles composite destinations by
+            // returning the union of all the dests
+            allowedACLs = wcaSet(authorizationMap.getReadACLs(destination));
+        } else {
+            allowedACLs = wcaSet(authorizationMap.getTempDestinationReadACLs());
+
+            // For temporary destinations we need to compute the union if composite
+            if (destination.isComposite()) {
+                for (ActiveMQDestination cd : destination.getCompositeDestinations()) {
+                    allowedACLs = DestinationMap.union(allowedACLs, getReadACLs(cd));
+                }
+            }
+        }
+
+        return allowedACLs;
+    }
+
+    protected Set<?> getWriteACLs(ActiveMQDestination destination) {
+        Set<?> allowedACLs;
+        if (!destination.isTemporary()) {
+            // DefaultAuthorizationMap already handles composite destinations by
+            // returning the union of all the dests
+            allowedACLs = wcaSet(authorizationMap.getWriteACLs(destination));
+        } else {
+            allowedACLs = wcaSet(authorizationMap.getTempDestinationWriteACLs());
+            // For temporary destinations we need to compute the union if composite
+            if (destination.isComposite()) {
+                for (ActiveMQDestination cd : destination.getCompositeDestinations()) {
+                    allowedACLs = DestinationMap.union(allowedACLs, getWriteACLs(cd));
+                }
+            }
+        }
+
+        return allowedACLs;
+    }
+
+    protected Set<?> getAdminACLs(ActiveMQDestination destination) {
+        Set<?> allowedACLs;
+
+        if (!destination.isTemporary()) {
+            // DefaultAuthorizationMap already handles composite destinations by
+            // returning the union of all the dests
+            allowedACLs = wcaSet(authorizationMap.getAdminACLs(destination));
+        } else {
+            allowedACLs = wcaSet(authorizationMap.getTempDestinationAdminACLs());
+            // For temporary destinations we need to compute the union if composite
+            if (destination.isComposite()) {
+                for (ActiveMQDestination cd : destination.getCompositeDestinations()) {
+                    allowedACLs = DestinationMap.union(allowedACLs, getAdminACLs(cd));
+                }
+            }
+        }
+
+        return allowedACLs;
+    }
+
+    private static WildcardAwareSet<?> wcaSet(Set<?> acls) {
+        if (acls != null && !(acls instanceof WildcardAwareSet)) {
+            return new WildcardAwareSet<>(acls);
+        }
+        return (WildcardAwareSet<?>) acls;
     }
 
     // SecurityAdminMBean interface
