@@ -126,6 +126,16 @@ public class SslTransportFactory extends TcpTransportFactory {
     }
 
     @Override
+    public Transport doCompositeConnect(URI location, SslContext sslContext) throws Exception {
+        this.sslContext = sslContext;
+        try {
+            return doCompositeConnect(location);
+        } finally {
+            this.sslContext = null;
+        }
+    }
+
+    @Override
     protected Transport createTransport(URI location, WireFormat wf) throws UnknownHostException, IOException {
         URI localLocation = null;
         String path = location.getPath();
