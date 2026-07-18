@@ -828,6 +828,17 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
         jmsXGroupFirstForConsumer = val;
     }
 
+    /**
+     * @openwire:property version=13
+     */
+    public long getDeliveryTime() {
+        return deliveryTime;
+    }
+
+    public void setDeliveryTime(long deliveryTime) {
+        this.deliveryTime = deliveryTime;
+    }
+
     public void compress() throws IOException {
         if (!isCompressed()) {
             storeContent();

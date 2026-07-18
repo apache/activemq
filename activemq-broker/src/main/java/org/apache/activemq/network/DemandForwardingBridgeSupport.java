@@ -938,7 +938,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
 
     private void serviceRemoteConsumerAdvisory(DataStructure data) throws IOException {
         final int networkTTL = configuration.getConsumerTTL();
-        if (data.getClass() == ConsumerInfo.class) {
+        if (data instanceof ConsumerInfo) {
             // Create a new local subscription
             ConsumerInfo info = (ConsumerInfo) data;
             BrokerId[] path = info.getBrokerPath();
@@ -1650,6 +1650,16 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
     protected DemandSubscription createDemandSubscription(ConsumerInfo info) throws IOException {
         // add our original id to ourselves
         info.addNetworkConsumerId(info.getConsumerId());
+        // Generate a unique subscription name per remote consumer so that
+        // multiple consumers sharing the same subscription name (JMS shared
+        // subscriptions) do not collide as durable subscriptions on the
+        // local broker. ConduitBridge/DurableConduitBridge override this
+        // method entirely and use their own destination-based naming.
+        if (info.getSubscriptionName() != null) {
+            info.setSubscriptionName(DURABLE_SUB_PREFIX + configuration.getBrokerName()
+                    + "_" + info.getDestination().getPhysicalName()
+                    + "_" + info.getConsumerId());
+        }
         return doCreateDemandSubscription(info);
     }
 
