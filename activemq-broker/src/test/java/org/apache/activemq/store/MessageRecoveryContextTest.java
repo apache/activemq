@@ -39,17 +39,17 @@ public class MessageRecoveryContextTest {
         assertNotNull(messageRecoveryContext.getMessageRecoveryListener());
         assertEquals(Long.valueOf(10_000l), Long.valueOf(messageRecoveryContext.getOffset()));
         assertNull(messageRecoveryContext.getStartMessageId());
-        assertTrue(messageRecoveryContext.isUseDedicatedCursor());
+        assertTrue(messageRecoveryContext.isUseIsolatedCursor());
     }
 
     @Test
-    public void testConfigOffsetNoDedicatedCursor() {
+    public void testConfigOffsetNoIsolatedCursor() {
         MessageRecoveryContext messageRecoveryContext =
                 new MessageRecoveryContext.Builder()
                     .maxMessageCountReturned(999)
                     .messageRecoveryListener(new TestMessageRecoveryListener())
                     .offset(10_000)
-                    .useDedicatedCursor(false)
+                    .useIsolatedCursor(false)
                     .build();
 
         assertNotNull(messageRecoveryContext);
@@ -58,7 +58,7 @@ public class MessageRecoveryContextTest {
         assertNotNull(messageRecoveryContext.getMessageRecoveryListener());
         assertEquals(Long.valueOf(10_000l), Long.valueOf(messageRecoveryContext.getOffset()));
         assertNull(messageRecoveryContext.getStartMessageId());
-        assertFalse(messageRecoveryContext.isUseDedicatedCursor());
+        assertFalse(messageRecoveryContext.isUseIsolatedCursor());
     }
 
     @Test
@@ -77,7 +77,7 @@ public class MessageRecoveryContextTest {
         assertNotNull(messageRecoveryContext.getMessageRecoveryListener());
         assertNull(messageRecoveryContext.getOffset());
         assertEquals("ID-start-12", messageRecoveryContext.getStartMessageId());
-        assertTrue(messageRecoveryContext.isUseDedicatedCursor());
+        assertTrue(messageRecoveryContext.isUseIsolatedCursor());
     }
 
     @Test(expected = IllegalArgumentException.class)
