@@ -353,7 +353,10 @@ public class ActiveMQProducer implements JMSProducer {
     public boolean getBooleanProperty(String name) {
         Object value = getCreatedMessageProperties().get(name);
         if (value == null) {
-            throw new NullPointerException("property " + name + " was null");
+            // A property that was never set must behave as if it exists with a
+            // null value, i.e. Boolean.valueOf(null) == false. Matches
+            // ActiveMQMessage.getBooleanProperty.
+            return false;
         }
         Boolean rc = (Boolean)TypeConversionSupport.convert(value, Boolean.class);
         if (rc == null) {
@@ -366,7 +369,8 @@ public class ActiveMQProducer implements JMSProducer {
     public byte getByteProperty(String name) {
         Object value = getCreatedMessageProperties().get(name);
         if (value == null) {
-            throw new NullPointerException("property " + name + " was null");
+            // Byte.valueOf(null) throws NumberFormatException.
+            throw new NumberFormatException("property " + name + " was null");
         }
         Byte rc = (Byte)TypeConversionSupport.convert(value, Byte.class);
         if (rc == null) {
@@ -379,7 +383,8 @@ public class ActiveMQProducer implements JMSProducer {
     public short getShortProperty(String name) {
         Object value = getCreatedMessageProperties().get(name);
         if (value == null) {
-            throw new NullPointerException("property " + name + " was null");
+            // Short.valueOf(null) throws NumberFormatException.
+            throw new NumberFormatException("property " + name + " was null");
         }
         Short rc = (Short)TypeConversionSupport.convert(value, Short.class);
         if (rc == null) {
@@ -392,7 +397,8 @@ public class ActiveMQProducer implements JMSProducer {
     public int getIntProperty(String name) {
         Object value = getCreatedMessageProperties().get(name);
         if (value == null) {
-            throw new NullPointerException("property " + name + " was null");
+            // Integer.valueOf(null) throws NumberFormatException.
+            throw new NumberFormatException("property " + name + " was null");
         }
         Integer rc = (Integer)TypeConversionSupport.convert(value, Integer.class);
         if (rc == null) {
@@ -405,7 +411,8 @@ public class ActiveMQProducer implements JMSProducer {
     public long getLongProperty(String name) {
         Object value = getCreatedMessageProperties().get(name);
         if (value == null) {
-            throw new NullPointerException("property " + name + " was null");
+            // Long.valueOf(null) throws NumberFormatException.
+            throw new NumberFormatException("property " + name + " was null");
         }
         Long rc = (Long)TypeConversionSupport.convert(value, Long.class);
         if (rc == null) {
@@ -444,7 +451,8 @@ public class ActiveMQProducer implements JMSProducer {
     public String getStringProperty(String name) {
         Object value = getCreatedMessageProperties().get(name);
         if (value == null) {
-            throw new NullPointerException("property " + name + " was null");
+            // A missing property converts to a null String, as on Message.
+            return null;
         }
         String rc = (String)TypeConversionSupport.convert(value, String.class);
         if (rc == null) {
