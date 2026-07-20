@@ -2401,6 +2401,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 dataOut.writeLong(object.getMessageSize().getMaxSize());
                 dataOut.writeLong(object.getMessageSize().getMinSize());
                 dataOut.writeLong(object.getMessageSize().getCount());
+                dataOut.writeLong(object.getCreatedTimestamp());
             }
         }
 
@@ -2417,6 +2418,12 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             messageStoreStatistics.getMessageSize().setMaxSize(dataIn.readLong());
             messageStoreStatistics.getMessageSize().setMinSize(dataIn.readLong());
             messageStoreStatistics.getMessageSize().setCount(dataIn.readLong());
+
+            try {
+                messageStoreStatistics.setCreatedTimestamp(dataIn.readLong());
+            } catch (EOFException e) {
+                // pre-existing store without createdTimestamp field
+            }
 
             return messageStoreStatistics;
         }
@@ -2614,6 +2621,10 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             }
 
             rc.messageStoreStatistics = new StoredMessageStoreStatistics(tx.allocate());
+
+            MessageStoreStatistics initialStats = new MessageStoreStatistics();
+            initialStats.setCreatedTimestamp(System.currentTimeMillis());
+            rc.messageStoreStatistics.put(tx, initialStats);
 
             metadata.destinations.put(tx, key, rc);
         }
