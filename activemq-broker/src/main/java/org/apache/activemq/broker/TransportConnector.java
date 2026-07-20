@@ -22,6 +22,7 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 import java.util.StringTokenizer;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -338,8 +339,8 @@ public class TransportConnector implements Connector, BrokerServiceAware {
             throw new IllegalArgumentException(
                     "You must specify the brokerService property. Maybe this connector should be added to a broker?");
         }
-        SslContext ctx = sslContext != null ? sslContext : brokerService.getSslContext();
-        return TransportFactorySupport.bind(brokerService, uri, ctx);
+        return TransportFactorySupport.bind(brokerService, uri,
+                Optional.ofNullable(sslContext).orElse(brokerService.getSslContext()));
     }
 
     public DiscoveryAgent getDiscoveryAgent() throws IOException {

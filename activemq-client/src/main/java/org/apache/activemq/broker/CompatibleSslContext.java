@@ -49,7 +49,7 @@ public class CompatibleSslContext extends SslContext {
     protected SecureRandom secureRandom;
 
     private volatile boolean initialized;
-    private SSLContext sslContext;
+    private volatile SSLContext sslContext;
 
     public CompatibleSslContext() {
     }

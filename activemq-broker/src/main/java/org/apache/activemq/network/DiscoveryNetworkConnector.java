@@ -21,6 +21,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -119,7 +120,7 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
 
             LOG.info("Establishing network connection from {} to {}", localURI, connectUri);
 
-            SslContext sslContext = getSslContext() != null ? getSslContext() : getBrokerService().getSslContext();
+            SslContext sslContext = Optional.ofNullable(getSslContext()).orElse(getBrokerService().getSslContext());
 
             Transport remoteTransport;
             Transport localTransport;
