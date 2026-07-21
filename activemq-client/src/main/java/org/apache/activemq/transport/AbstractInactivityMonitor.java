@@ -426,19 +426,7 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
                     }
                 }
                 CHECKER_COUNTER++;
-                try {
-                    READ_CHECK_TIMER.schedule(connectCheckerTask, connectionTimeout);
-                } catch (IllegalStateException e) {
-                    // The timer thread may have exited due to an unhandled Error in a previous task.
-                    // Cancel the dead timer so its thread can exit, replace it, and reschedule.
-                    // Note: tasks from other active connections that were on the old timer will no
-                    // longer fire; those connections lose timeout enforcement until they reconnect.
-                    LOG.warn("Read check timer was in a cancelled state, creating new timer instance: {}", e.getMessage());
-                    Timer oldTimer = READ_CHECK_TIMER;
-                    READ_CHECK_TIMER = new Timer(READ_CHECK_THREAD_NAME, true);
-                    READ_CHECK_TIMER.schedule(connectCheckerTask, connectionTimeout);
-                    oldTimer.cancel();
-                }
+                READ_CHECK_TIMER.schedule(connectCheckerTask, connectionTimeout);
             }
         }
     }
@@ -497,26 +485,10 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
 
                 CHECKER_COUNTER++;
                 if (readCheckTime > 0) {
-                    try {
-                        READ_CHECK_TIMER.schedule(readCheckerTask, initialDelayTime, readCheckTime);
-                    } catch (IllegalStateException e) {
-                        LOG.warn("Read check timer was in a cancelled state, creating new timer instance: {}", e.getMessage());
-                        Timer oldTimer = READ_CHECK_TIMER;
-                        READ_CHECK_TIMER = new Timer(READ_CHECK_THREAD_NAME, true);
-                        READ_CHECK_TIMER.schedule(readCheckerTask, initialDelayTime, readCheckTime);
-                        oldTimer.cancel();
-                    }
+                    READ_CHECK_TIMER.schedule(readCheckerTask, initialDelayTime, readCheckTime);
                 }
                 if (writeCheckTime > 0) {
-                    try {
-                        WRITE_CHECK_TIMER.schedule(writeCheckerTask, initialDelayTime, writeCheckTime);
-                    } catch (IllegalStateException e) {
-                        LOG.warn("Write check timer was in a cancelled state, creating new timer instance: {}", e.getMessage());
-                        Timer oldTimer = WRITE_CHECK_TIMER;
-                        WRITE_CHECK_TIMER = new Timer(WRITE_CHECK_THREAD_NAME, true);
-                        WRITE_CHECK_TIMER.schedule(writeCheckerTask, initialDelayTime, writeCheckTime);
-                        oldTimer.cancel();
-                    }
+                    WRITE_CHECK_TIMER.schedule(writeCheckerTask, initialDelayTime, writeCheckTime);
                 }
             }
         }
