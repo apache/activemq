@@ -39,10 +39,16 @@ public class WSSTransportFactory extends TransportFactory implements BrokerServi
     private BrokerService brokerService;
 
     @Override
+    @SuppressWarnings("deprecation")
     public TransportServer doBind(URI location) throws IOException {
+        return doBind(location, SslContext.getCurrentSslContext());
+    }
+
+    @Override
+    public TransportServer doBind(URI location, SslContext sslContext) throws IOException {
         try {
             Map<String, String> options = new HashMap<String, String>(URISupport.parseParameters(location));
-            WSSTransportServer result = new WSSTransportServer(location, SslContext.getCurrentSslContext());
+            WSSTransportServer result = new WSSTransportServer(location, sslContext);
             Map<String, Object> httpOptions = IntrospectionSupport.extractProperties(options, "http.");
             Map<String, Object> transportOptions = IntrospectionSupport.extractProperties(options, "");
             IntrospectionSupport.setProperties(result, transportOptions);

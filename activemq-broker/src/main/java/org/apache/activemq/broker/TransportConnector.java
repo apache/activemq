@@ -22,6 +22,7 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 import java.util.StringTokenizer;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -82,6 +83,7 @@ public class TransportConnector implements Connector, BrokerServiceAware {
     private boolean warnOnRemoteClose = false;
     private boolean displayStackTrace = false;
     private boolean autoStart = true;
+    private SslContext sslContext;
 
     LinkedList<String> peerBrokers = new LinkedList<String>();
     private AtomicBoolean started = new AtomicBoolean(false);
@@ -337,7 +339,8 @@ public class TransportConnector implements Connector, BrokerServiceAware {
             throw new IllegalArgumentException(
                     "You must specify the brokerService property. Maybe this connector should be added to a broker?");
         }
-        return TransportFactorySupport.bind(brokerService, uri);
+        return TransportFactorySupport.bind(brokerService, uri,
+                Optional.ofNullable(sslContext).orElse(brokerService.getSslContext()));
     }
 
     public DiscoveryAgent getDiscoveryAgent() throws IOException {
@@ -702,6 +705,14 @@ public class TransportConnector implements Connector, BrokerServiceAware {
     @Override
     public boolean isAutoStart() {
         return autoStart;
+    }
+
+    public SslContext getSslContext() {
+        return sslContext;
+    }
+
+    public void setSslContext(SslContext sslContext) {
+        this.sslContext = sslContext;
     }
 
     @Override

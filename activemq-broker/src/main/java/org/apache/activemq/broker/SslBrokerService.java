@@ -90,14 +90,8 @@ public class SslBrokerService extends BrokerService {
             // If given an SSL URI, use an SSL TransportFactory and configure
             // it to use the given key and trust managers.
             SslTransportFactory transportFactory = new SslTransportFactory();
-            
-            SslContext ctx = new SslContext(km, tm, random);
-            SslContext.setCurrentSslContext(ctx);
-            try {
-                return transportFactory.doBind(brokerURI);
-            } finally {
-                SslContext.setCurrentSslContext(null);
-            }
+            SslContext ctx = new DefaultSslContext(km, tm, random);
+            return transportFactory.doBind(brokerURI, ctx);
             
         } else {
             // Else, business as usual.

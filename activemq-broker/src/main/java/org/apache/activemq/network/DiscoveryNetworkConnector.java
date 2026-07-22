@@ -21,6 +21,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -119,43 +120,35 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
 
             LOG.info("Establishing network connection from {} to {}", localURI, connectUri);
 
+            SslContext sslContext = Optional.ofNullable(getSslContext()).orElse(getBrokerService().getSslContext());
+
             Transport remoteTransport;
             Transport localTransport;
             try {
-                // Allows the transport to access the broker's ssl configuration.
-                if (getSslContext() != null) {
-                    SslContext.setCurrentSslContext(getSslContext());
-                } else {
-                    SslContext.setCurrentSslContext(getBrokerService().getSslContext());
-                }
+                remoteTransport = TransportFactory.connect(connectUri, sslContext);
+            } catch (Exception e) {
+                LOG.warn("Could not connect to remote URI: {}: {}", connectUri, e.getMessage());
+                LOG.debug("Connection failure exception: ", e);
                 try {
-                    remoteTransport = TransportFactory.connect(connectUri);
-                } catch (Exception e) {
-                    LOG.warn("Could not connect to remote URI: {}: {}", connectUri, e.getMessage());
-                    LOG.debug("Connection failure exception: ", e);
-                    try {
-                        discoveryAgent.serviceFailed(event);
-                    } catch (IOException e1) {
-                        LOG.debug("Failure while handling create remote transport failure event: {}", e1.getMessage(), e1);
-                    }
-                    return;
+                    discoveryAgent.serviceFailed(event);
+                } catch (IOException e1) {
+                    LOG.debug("Failure while handling create remote transport failure event: {}", e1.getMessage(), e1);
                 }
-                try {
-                    localTransport = createLocalTransport();
-                } catch (Exception e) {
-                    ServiceSupport.dispose(remoteTransport);
-                    LOG.warn("Could not connect to local URI: {}: {}", localURI, e.getMessage());
-                    LOG.debug("Connection failure exception: ", e);
+                return;
+            }
+            try {
+                localTransport = createLocalTransport();
+            } catch (Exception e) {
+                ServiceSupport.dispose(remoteTransport);
+                LOG.warn("Could not connect to local URI: {}: {}", localURI, e.getMessage());
+                LOG.debug("Connection failure exception: ", e);
 
-                    try {
-                        discoveryAgent.serviceFailed(event);
-                    } catch (IOException e1) {
-                        LOG.debug("Failure while handling create local transport failure event: {}", e1.getMessage(), e1);
-                    }
-                    return;
+                try {
+                    discoveryAgent.serviceFailed(event);
+                } catch (IOException e1) {
+                    LOG.debug("Failure while handling create local transport failure event: {}", e1.getMessage(), e1);
                 }
-            } finally {
-                SslContext.setCurrentSslContext(null);
+                return;
             }
             NetworkBridge bridge = createBridge(localTransport, remoteTransport, event);
             try {

@@ -39,6 +39,7 @@ import junit.textui.TestRunner;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.SslBrokerService;
 import org.apache.activemq.broker.SslContext;
+import org.apache.activemq.broker.DefaultSslContext;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.transport.TransportBrokerTestSupport;
 import org.apache.activemq.transport.TransportFactory;
@@ -76,7 +77,7 @@ public class SslBrokerServiceTest extends TransportBrokerTestSupport {
         
         // for client side
         SslTransportFactory sslFactory = new SslTransportFactory();
-        SslContext ctx = new SslContext(km, tm, null);
+        SslContext ctx = new DefaultSslContext(km, tm, null);
         SslContext.setCurrentSslContext(ctx);
         TransportFactory.registerTransportFactory("ssl", sslFactory);
         

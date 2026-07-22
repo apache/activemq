@@ -51,16 +51,28 @@ public class SslTransportFactory extends TcpTransportFactory {
 
     private static final Logger LOG = LoggerFactory.getLogger(SslTransportFactory.class);
 
-    /**
-     * Overriding to use SslTransportServer and allow for proper reflection.
-     */
     @Override
+    @SuppressWarnings("deprecation")
     public TransportServer doBind(final URI location) throws IOException {
+        return doBind(location, SslContext.getCurrentSslContext());
+    }
+
+    @Override
+    public TransportServer doBind(final URI location, SslContext sslContext) throws IOException {
         try {
             Map<String, String> options = new HashMap<String, String>(URISupport.parseParameters(location));
 
-            ServerSocketFactory serverSocketFactory = createServerSocketFactory();
-            SslTransportServer server = createSslTransportServer(location, (SSLServerSocketFactory)serverSocketFactory);
+            SSLServerSocketFactory serverSocketFactory;
+            if (sslContext != null) {
+                try {
+                    serverSocketFactory = sslContext.getSSLContext().getServerSocketFactory();
+                } catch (Exception e) {
+                    throw IOExceptionSupport.create(e);
+                }
+            } else {
+                serverSocketFactory = (SSLServerSocketFactory) SSLServerSocketFactory.getDefault();
+            }
+            SslTransportServer server = createSslTransportServer(location, serverSocketFactory);
             server.setWireFormatFactory(createWireFormatFactory(options));
             IntrospectionSupport.setProperties(server, options);
             Map<String, Object> transportOptions = IntrospectionSupport.extractProperties(options, "transport.");
@@ -100,11 +112,48 @@ public class SslTransportFactory extends TcpTransportFactory {
         return super.compositeConfigure(transport, format, options);
     }
 
-    /**
-     * Overriding to use SslTransports.
-     */
+    @Override
+    public Transport doConnect(URI location, SslContext sslContext) throws Exception {
+        try {
+            Map<String, String> options = new HashMap<String, String>(URISupport.parseParameters(location));
+            if (!options.containsKey("wireFormat.host")) {
+                options.put("wireFormat.host", location.getHost());
+            }
+            WireFormat wf = createWireFormat(options);
+            Transport transport = createTransport(location, wf, sslContext);
+            Transport rc = configure(transport, wf, options);
+            IntrospectionSupport.extractProperties(options, "auto.");
+            if (!options.isEmpty()) {
+                throw new IllegalArgumentException("Invalid connect parameters: " + options);
+            }
+            return rc;
+        } catch (URISyntaxException e) {
+            throw IOExceptionSupport.create(e);
+        }
+    }
+
+    @Override
+    public Transport doCompositeConnect(URI location, SslContext sslContext) throws Exception {
+        try {
+            Map<String, String> options = new HashMap<String, String>(URISupport.parseParameters(location));
+            WireFormat wf = createWireFormat(options);
+            Transport transport = createTransport(location, wf, sslContext);
+            Transport rc = compositeConfigure(transport, wf, options);
+            if (!options.isEmpty()) {
+                throw new IllegalArgumentException("Invalid connect parameters: " + options);
+            }
+            return rc;
+        } catch (URISyntaxException e) {
+            throw IOExceptionSupport.create(e);
+        }
+    }
+
     @Override
     protected Transport createTransport(URI location, WireFormat wf) throws UnknownHostException, IOException {
+        return createTransport(location, wf, null);
+    }
+
+    protected Transport createTransport(URI location, WireFormat wf, SslContext sslContext) throws UnknownHostException, IOException {
         URI localLocation = null;
         String path = location.getPath();
         // see if the path is a local URI location
@@ -118,8 +167,19 @@ public class SslTransportFactory extends TcpTransportFactory {
                 LOG.warn("path isn't a valid local location for SslTransport to use", e);
             }
         }
-        SocketFactory socketFactory = createSocketFactory();
-        return new SslTransport(wf, (SSLSocketFactory)socketFactory, location, localLocation, false);
+        SSLSocketFactory socketFactory = createSslSocketFactory(sslContext);
+        return new SslTransport(wf, socketFactory, location, localLocation, false);
+    }
+
+    protected SSLSocketFactory createSslSocketFactory(SslContext sslContext) throws IOException {
+        if (sslContext != null) {
+            try {
+                return sslContext.getSSLContext().getSocketFactory();
+            } catch (Exception e) {
+                throw IOExceptionSupport.create(e);
+            }
+        }
+        return (SSLSocketFactory) SSLSocketFactory.getDefault();
     }
 
     /**
@@ -131,37 +191,12 @@ public class SslTransportFactory extends TcpTransportFactory {
      */
     @Override
     protected ServerSocketFactory createServerSocketFactory() throws IOException {
-        if( SslContext.getCurrentSslContext()!=null ) {
-            SslContext ctx = SslContext.getCurrentSslContext();
-            try {
-                return ctx.getSSLContext().getServerSocketFactory();
-            } catch (Exception e) {
-                throw IOExceptionSupport.create(e);
-            }
-        } else {
-            return SSLServerSocketFactory.getDefault();
-        }
+        return SSLServerSocketFactory.getDefault();
     }
 
-    /**
-     * Creates a new SSL SocketFactory. The given factory will use user-provided
-     * key and trust managers (if the user provided them).
-     *
-     * @return Newly created (Ssl)SocketFactory.
-     * @throws IOException
-     */
     @Override
     protected SocketFactory createSocketFactory() throws IOException {
-        if( SslContext.getCurrentSslContext()!=null ) {
-            SslContext ctx = SslContext.getCurrentSslContext();
-            try {
-                return ctx.getSSLContext().getSocketFactory();
-            } catch (Exception e) {
-                throw IOExceptionSupport.create(e);
-            }
-        } else {
-            return SSLSocketFactory.getDefault();
-        }
+        return SSLSocketFactory.getDefault();
     }
 
     @Override
