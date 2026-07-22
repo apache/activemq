@@ -41,7 +41,6 @@ import org.apache.activemq.store.MessageRecoveryContext;
 import org.apache.activemq.store.MessageRecoveryListener;
 import org.apache.activemq.store.MessageStore;
 import org.apache.activemq.store.ProxyMessageStore;
-import org.apache.activemq.test.annotations.ParallelTest;
 import org.apache.activemq.util.IOHelper;
 import org.junit.After;
 import org.junit.Before;
@@ -64,7 +63,6 @@ import org.junit.rules.TestName;
  * Also proves that a isolated-cursor vsite does not consume rolled-back
  * transactional acks that the live cursor must redeliver.
  */
-@Category(ParallelTest.class)
 public class KahaDBRecoverMessagesIsolatedCursorTest {
 
     protected BrokerService brokerService = null;
