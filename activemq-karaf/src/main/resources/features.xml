@@ -39,6 +39,7 @@
 
     <feature name="activemq-shell" version="${project.version}">
         <feature>shell-compat</feature>
+        <feature version="${project.version}">activemq-client</feature>
         <bundle>mvn:org.apache.activemq/activemq-karaf/${project.version}</bundle>
     </feature>
 
@@ -49,6 +50,10 @@
     <feature name="activemq-web-console" version="${project.version}">
       <feature>war</feature>
       <feature>eventadmin</feature>
+      <feature version="[7,8)">spring-web</feature>
+      <bundle dependency="true">mvn:jakarta.servlet/jakarta.servlet-api/5.0.0</bundle>
+      <bundle dependency="true">mvn:jakarta.el/jakarta.el-api/4.0.0</bundle>
+      <bundle dependency="true">mvn:jakarta.servlet.jsp/jakarta.servlet.jsp-api/3.0.0</bundle>
       <configfile finalname="${karaf.etc}/org.apache.activemq.webconsole.cfg">mvn:org.apache.activemq/activemq-karaf/${project.version}/cfg/activemq-webconsole</configfile>
       <bundle>mvn:org.apache.activemq/activemq-web-console/${project.version}/war</bundle>
     </feature>
@@ -62,12 +67,15 @@
     </feature>
 
     <feature name="activemq-amqp-client" version="${pom.version}" description="ActiveMQ AMQP protocol client libraries">
+      <bundle dependency="true">mvn:jakarta.jms/jakarta.jms-api/3.1.0</bundle>
       <bundle>mvn:io.netty/netty-common/${netty-version}</bundle>
       <bundle>mvn:io.netty/netty-transport/${netty-version}</bundle>
       <bundle>mvn:io.netty/netty-transport-native-epoll/${netty-version}</bundle>
       <bundle>mvn:io.netty/netty-transport-native-kqueue/${netty-version}</bundle>
       <bundle>mvn:io.netty/netty-transport-native-unix-common/${netty-version}</bundle>
       <bundle>mvn:io.netty/netty-buffer/${netty-version}</bundle>
+      <bundle>mvn:io.netty/netty-codec-base/${netty-version}</bundle>
+      <bundle>mvn:io.netty/netty-codec-compression/${netty-version}</bundle>
       <bundle>mvn:io.netty/netty-codec/${netty-version}</bundle>
       <bundle>mvn:io.netty/netty-codec-http/${netty-version}</bundle>
       <bundle>mvn:io.netty/netty-handler/${netty-version}</bundle>

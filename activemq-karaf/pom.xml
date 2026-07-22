@@ -218,6 +218,38 @@
           </execution>
         </executions>
       </plugin>
+      <plugin>
+        <groupId>org.apache.karaf.tooling</groupId>
+        <artifactId>karaf-maven-plugin</artifactId>
+        <version>${karaf-version}</version>
+        <executions>
+          <execution>
+            <id>verify</id>
+            <phase>verify</phase>
+            <goals>
+              <goal>verify</goal>
+            </goals>
+            <configuration>
+              <descriptors>
+                <descriptor>mvn:org.apache.karaf.features/framework/${karaf-version}/xml/features</descriptor>
+                <descriptor>mvn:org.apache.karaf.features/standard/${karaf-version}/xml/features</descriptor>
+                <descriptor>mvn:org.apache.karaf.features/spring/${karaf-version}/xml/features</descriptor>
+                <descriptor>mvn:org.apache.karaf.features/enterprise/${karaf-version}/xml/features</descriptor>
+                <descriptor>file:${project.build.directory}/classes/features-core.xml</descriptor>
+                <descriptor>file:${project.build.directory}/classes/features.xml</descriptor>
+              </descriptors>
+              <distribution>org.apache.karaf:apache-karaf:zip::${karaf-version}</distribution>
+              <javase>17</javase>
+              <framework>
+                <feature>framework</feature>
+              </framework>
+              <features>
+                <feature>activemq*</feature>
+              </features>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
   </build>
 </project>
