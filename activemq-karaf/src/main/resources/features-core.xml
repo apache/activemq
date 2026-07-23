@@ -35,7 +35,7 @@
     </feature>
 
     <feature name="spring-web" description="Spring 7.x Web support" version="${spring-version}">
-        <feature version="[7,8)">spring</feature>
+        <feature version="${spring-version-range}">spring</feature>
         <bundle dependency="true">mvn:jakarta.servlet/jakarta.servlet-api/${jakarta-servlet-api-version}</bundle>
         <bundle start-level="30">wrap:mvn:org.springframework/spring-web/${spring-version}$Bundle-SymbolicName=org.springframework.spring-web&amp;Bundle-Version=${spring-version}&amp;Export-Package=org.springframework.*;version=${spring-version}&amp;Import-Package=*;resolution:=optional</bundle>
         <bundle start-level="30">wrap:mvn:org.springframework/spring-webmvc/${spring-version}$Bundle-SymbolicName=org.springframework.spring-webmvc&amp;Bundle-Version=${spring-version}&amp;Export-Package=org.springframework.*;version=${spring-version}&amp;Import-Package=*;resolution:=optional</bundle>
@@ -43,7 +43,7 @@
 
     <!-- Bundles needed if only client will be deployed in the container -->
     <feature name="activemq-client" description="ActiveMQ client libraries" version="${project.version}">
-        <feature version="[7,8)">spring</feature>
+        <feature version="${spring-version-range}">spring</feature>
         <feature>aries-blueprint</feature>
         <feature>activemq-combined-jms-spec</feature>
         <bundle>mvn:jakarta.activation/jakarta.activation-api/2.1.2</bundle>

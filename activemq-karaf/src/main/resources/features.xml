@@ -50,7 +50,7 @@
     <feature name="activemq-web-console" version="${project.version}">
       <feature>war</feature>
       <feature>eventadmin</feature>
-      <feature version="[7,8)">spring-web</feature>
+      <feature version="${spring-version-range}">spring-web</feature>
       <bundle dependency="true">mvn:org.ow2.asm/asm/${asm-version}</bundle>
       <bundle dependency="true">mvn:jakarta.servlet/jakarta.servlet-api/${jakarta-servlet-api-version}</bundle>
       <bundle dependency="true">mvn:jakarta.el/jakarta.el-api/${jakarta-el-api-version}</bundle>
