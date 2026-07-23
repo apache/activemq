@@ -51,9 +51,10 @@
       <feature>war</feature>
       <feature>eventadmin</feature>
       <feature version="[7,8)">spring-web</feature>
-      <bundle dependency="true">mvn:jakarta.servlet/jakarta.servlet-api/5.0.0</bundle>
-      <bundle dependency="true">mvn:jakarta.el/jakarta.el-api/4.0.0</bundle>
-      <bundle dependency="true">mvn:jakarta.servlet.jsp/jakarta.servlet.jsp-api/3.0.0</bundle>
+      <bundle dependency="true">mvn:org.ow2.asm/asm/${asm-version}</bundle>
+      <bundle dependency="true">mvn:jakarta.servlet/jakarta.servlet-api/${jakarta-servlet-api-version}</bundle>
+      <bundle dependency="true">mvn:jakarta.el/jakarta.el-api/${jakarta-el-api-version}</bundle>
+      <bundle dependency="true">mvn:jakarta.servlet.jsp/jakarta.servlet.jsp-api/${jakarta-servlet-jsp-api-version}</bundle>
       <configfile finalname="${karaf.etc}/org.apache.activemq.webconsole.cfg">mvn:org.apache.activemq/activemq-karaf/${project.version}/cfg/activemq-webconsole</configfile>
       <bundle>mvn:org.apache.activemq/activemq-web-console/${project.version}/war</bundle>
     </feature>
@@ -67,7 +68,7 @@
     </feature>
 
     <feature name="activemq-amqp-client" version="${pom.version}" description="ActiveMQ AMQP protocol client libraries">
-      <bundle dependency="true">mvn:jakarta.jms/jakarta.jms-api/3.1.0</bundle>
+      <bundle dependency="true">mvn:jakarta.jms/jakarta.jms-api/${jakarta-jms-api-version}</bundle>
       <bundle>mvn:io.netty/netty-common/${netty-version}</bundle>
       <bundle>mvn:io.netty/netty-transport/${netty-version}</bundle>
       <bundle>mvn:io.netty/netty-transport-native-epoll/${netty-version}</bundle>

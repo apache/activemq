@@ -36,7 +36,7 @@
 
     <feature name="spring-web" description="Spring 7.x Web support" version="${spring-version}">
         <feature version="[7,8)">spring</feature>
-        <bundle dependency="true">mvn:jakarta.servlet/jakarta.servlet-api/5.0.0</bundle>
+        <bundle dependency="true">mvn:jakarta.servlet/jakarta.servlet-api/${jakarta-servlet-api-version}</bundle>
         <bundle start-level="30">wrap:mvn:org.springframework/spring-web/${spring-version}$Bundle-SymbolicName=org.springframework.spring-web&amp;Bundle-Version=${spring-version}&amp;Export-Package=org.springframework.*;version=${spring-version}&amp;Import-Package=*;resolution:=optional</bundle>
         <bundle start-level="30">wrap:mvn:org.springframework/spring-webmvc/${spring-version}$Bundle-SymbolicName=org.springframework.spring-webmvc&amp;Bundle-Version=${spring-version}&amp;Export-Package=org.springframework.*;version=${spring-version}&amp;Import-Package=*;resolution:=optional</bundle>
     </feature>
@@ -48,11 +48,11 @@
         <feature>activemq-combined-jms-spec</feature>
         <bundle>mvn:jakarta.activation/jakarta.activation-api/2.1.2</bundle>
         <bundle>mvn:jakarta.xml.bind/jakarta.xml.bind-api/4.0.0</bundle>
-        <bundle>mvn:jakarta.jms/jakarta.jms-api/3.1.0</bundle>
+        <bundle>mvn:jakarta.jms/jakarta.jms-api/${jakarta-jms-api-version}</bundle>
         <bundle>mvn:jakarta.activation/jakarta.activation-api/2.1.2</bundle>
-        <bundle>mvn:jakarta.annotation/jakarta.annotation-api/2.1.1</bundle>
+        <bundle>mvn:jakarta.annotation/jakarta.annotation-api/${jakarta-annotation-api-version}</bundle>
         <bundle>mvn:jakarta.enterprise/jakarta.enterprise.lang-model/4.0.1</bundle>
-        <bundle>mvn:jakarta.el/jakarta.el-api/5.0.1</bundle>
+        <bundle>mvn:jakarta.el/jakarta.el-api/${jakarta-el-api-version}</bundle>
         <bundle>mvn:jakarta.inject/jakarta.inject-api/2.0.1</bundle>
         <bundle>mvn:jakarta.interceptor/jakarta.interceptor-api/2.1.0</bundle>
         <bundle>mvn:jakarta.enterprise/jakarta.enterprise.cdi-api/4.0.1</bundle>
