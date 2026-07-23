@@ -87,6 +87,8 @@ public abstract class NetworkConnector extends NetworkBridgeConfiguration implem
         this.localURI = localURI;
     }
 
+    public abstract URI getUri();
+
     public URI getLocalUri() throws URISyntaxException {
         return localURI;
     }
