@@ -16,21 +16,16 @@
  */
 package org.apache.activemq.web;
 
-import jakarta.servlet.http.HttpServletRequest;
-
 import org.apache.activemq.broker.jmx.BrokerViewMBean;
 import org.apache.activemq.broker.jmx.QueueViewMBean;
 import org.apache.activemq.command.ActiveMQDestination;
-import org.springframework.web.servlet.ModelAndView;
 
-/**
- *
- */
 public class DestinationFacade {
 
     private String jmsDestination;
     private String jmsDestinationType;
-    private BrokerFacade brokerFacade;
+
+    private final BrokerFacade brokerFacade;
 
     public DestinationFacade(BrokerFacade brokerFacade) {
         this.brokerFacade = brokerFacade;
@@ -117,19 +112,6 @@ public class DestinationFacade {
     protected QueueViewMBean getQueueView() throws Exception {
         String name = getPhysicalDestinationName();
         return getBrokerFacade().getQueue(name);
-    }
-
-    protected ModelAndView redirectToRequest(HttpServletRequest request) {
-        String view = "redirect:" + request.getRequestURI();
-        return new ModelAndView(view);
-    }
-
-    protected ModelAndView redirectToBrowseView() {
-        return new ModelAndView("redirect:" + (isQueue() ? "queues.jsp" : "topics.jsp"));
-    }
-
-    protected ModelAndView redirectToDestinationView() {        
-        return new ModelAndView("redirect:browse.jsp?JMSDestination=" + jmsDestination);
     }
 
     protected String getPhysicalDestinationName() {
