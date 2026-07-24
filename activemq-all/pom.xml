@@ -292,7 +292,7 @@
         <dependency>
           <groupId>org.apache.activemq.protobuf</groupId>
           <artifactId>activemq-protobuf</artifactId>
-          <version>${activemq-protobuf-version}</version>
+          <version>${project.version}</version>
           <classifier>sources</classifier>
           <optional>true</optional>
         </dependency>
