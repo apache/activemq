@@ -34,6 +34,25 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
+    target-branch: "activemq-6.3.x"
+    commit-message:
+      prefix: "[6.3.x] "
+  - package-ecosystem: "maven"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    target-branch: "activemq-6.3.x"
+    commit-message:
+      prefix: "[6.3.x] "
+    open-pull-requests-limits: 50
+    ignore:
+      - dependency-name: "*"
+        update-types:
+          - "version-update:semver-major"
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "daily"
     target-branch: "activemq-6.2.x"
     commit-message:
       prefix: "[6.2.x] "
