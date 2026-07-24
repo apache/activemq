@@ -69,6 +69,11 @@
     <jackson-version>2.22.1</jackson-version>
     <jackson-annotations-version>2.22</jackson-annotations-version>
     <jakarta-jms-api-version>3.1.0</jakarta-jms-api-version>
+    <jakarta-annotation-api-version>3.0.0</jakarta-annotation-api-version>
+    <jakarta-servlet-api-version>6.1.0</jakarta-servlet-api-version>
+    <jakarta-servlet-jsp-api-version>4.0.0</jakarta-servlet-jsp-api-version>
+    <jakarta-el-api-version>6.0.0</jakarta-el-api-version>
+    <asm-version>9.10.1</asm-version>
     <jasypt-version>1.9.3</jasypt-version>
     <jaxb-version>4.0.9</jaxb-version>
     <jetty-version>12.1.11</jetty-version>
@@ -94,8 +99,8 @@
     <rome-version>2.1.0</rome-version>
     <shiro-version>2.2.1</shiro-version>
     <slf4j-version>2.0.18</slf4j-version>
-    <spring-version>6.2.19</spring-version>
-    <spring-version-range>[6,7)</spring-version-range>
+    <spring-version>7.0.8</spring-version>
+    <spring-version-range>[7,8)</spring-version-range>
     <taglibs-version>1.2.5</taglibs-version>
     <xpp3-version>1.1.4c</xpp3-version>
     <xstream-version>1.4.21</xstream-version>
@@ -448,19 +453,24 @@
       <dependency>
         <groupId>org.ow2.asm</groupId>
         <artifactId>asm</artifactId>
-        <version>9.10.1</version>
+        <version>${asm-version}</version>
       </dependency>
 
-     <!-- Servlet 6.1 and JSP (Jakarta EE 11) -->
+     <!-- Servlet and JSP (Jakarta EE 11, required by Spring 7) -->
      <dependency>
        <groupId>jakarta.servlet.jsp</groupId>
        <artifactId>jakarta.servlet.jsp-api</artifactId>
-       <version>4.0.0</version>
+       <version>${jakarta-servlet-jsp-api-version}</version>
      </dependency>
      <dependency>
        <groupId>jakarta.servlet</groupId>
        <artifactId>jakarta.servlet-api</artifactId>
-       <version>6.1.0</version>
+       <version>${jakarta-servlet-api-version}</version>
+     </dependency>
+     <dependency>
+       <groupId>jakarta.el</groupId>
+       <artifactId>jakarta.el-api</artifactId>
+       <version>${jakarta-el-api-version}</version>
      </dependency>
      <dependency>
        <groupId>jakarta.websocket</groupId>
@@ -940,7 +950,7 @@
       <dependency>
         <groupId>jakarta.annotation</groupId>
         <artifactId>jakarta.annotation-api</artifactId>
-        <version>3.0.0</version>
+        <version>${jakarta-annotation-api-version}</version>
       </dependency>
 
       <!-- JMH for micro-benchmarks -->
