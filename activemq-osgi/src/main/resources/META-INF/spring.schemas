@@ -99,6 +99,7 @@ http\://activemq.apache.org/schema/core/activemq-core-5.19.6.xsd=activemq.xsd
 http\://activemq.apache.org/schema/core/activemq-core-5.19.7.xsd=activemq.xsd
 http\://activemq.apache.org/schema/core/activemq-core-5.19.8.xsd=activemq.xsd
 http\://activemq.apache.org/schema/core/activemq-core-5.19.9.xsd=activemq.xsd
+http\://activemq.apache.org/schema/core/activemq-core-5.19.10.xsd=activemq.xsd
 
 http\://camel.apache.org/schema/spring/camel-spring.xsd=camel-spring.xsd
 
