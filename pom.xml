@@ -25,7 +25,7 @@
 
   <groupId>org.apache.activemq</groupId>
   <artifactId>activemq-parent</artifactId>
-  <version>6.3.0-SNAPSHOT</version>
+  <version>6.3.0</version>
   <packaging>pom</packaging>
   <name>ActiveMQ</name>
   <inceptionYear>2005</inceptionYear>
@@ -33,8 +33,8 @@
   <properties>
     <javaVersion>17</javaVersion>
 
-    <surefire.argLine></surefire.argLine>
-    <maven.surefire.allow.securitymanager></maven.surefire.allow.securitymanager>
+    <surefire.argLine />
+    <maven.surefire.allow.securitymanager />
     <javadoc.options>-Xdoclint:none</javadoc.options>
     <!-- Per-class JVM timeout (reuseForks=false means one JVM per test class).
          Kills a forked JVM that has been running longer than this many seconds,
@@ -234,7 +234,7 @@
     <connection>scm:git:http://gitbox.apache.org/repos/asf/activemq.git</connection>
     <developerConnection>scm:git:https://gitbox.apache.org/repos/asf/activemq.git</developerConnection>
     <url>https://github.com/apache/activemq</url>
-    <tag>activemq-6.2.0</tag>
+    <tag>activemq-6.3.0</tag>
   </scm>
 
   <dependencyManagement>

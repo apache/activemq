@@ -22,7 +22,7 @@
   <parent>
     <groupId>org.apache.activemq</groupId>
     <artifactId>activemq-parent</artifactId>
-    <version>6.3.0-SNAPSHOT</version>
+    <version>6.3.0</version>
   </parent>
 
   <artifactId>activemq-unit-tests</artifactId>
@@ -436,8 +436,7 @@
           <consoleOutputReporter>
             <disable>true</disable>
           </consoleOutputReporter>
-          <statelessTestsetInfoReporter
-            implementation="org.apache.maven.plugin.surefire.extensions.junit5.JUnit5StatelessTestsetInfoTreeReporter">
+          <statelessTestsetInfoReporter implementation="org.apache.maven.plugin.surefire.extensions.junit5.JUnit5StatelessTestsetInfoTreeReporter">
             <printStacktraceOnError>true</printStacktraceOnError>
             <printStacktraceOnFailure>true</printStacktraceOnFailure>
             <printStdoutOnError>true</printStdoutOnError>
@@ -483,7 +482,7 @@
             </goals>
             <configuration>
               <!-- drop the default excludedGroups -->
-              <excludedGroups combine.self="override"/>
+              <excludedGroups combine.self="override" />
               <groups>org.apache.activemq.test.annotations.ParallelTest</groups>
               <forkCount>2C</forkCount>
               <enableProcessChecker>all</enableProcessChecker>
@@ -496,7 +495,7 @@
                 <!-- when running tests in parallel in the CI (quite slow) we need to bump the wireformat negotiation timeout (5s by default) -->
                 <org.apache.activemq.transport.wireFormatNegotiationTimeout>30000</org.apache.activemq.transport.wireFormatNegotiationTimeout>
               </systemPropertyVariables>
-              <excludes combine.children="append"/>
+              <excludes combine.children="append" />
             </configuration>
           </execution>
         </executions>
