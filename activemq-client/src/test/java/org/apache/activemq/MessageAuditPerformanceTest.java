@@ -24,9 +24,11 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.concurrent.locks.StampedLock;
+import java.util.function.IntConsumer;
 
 import org.apache.activemq.util.AtomicBitArrayBin;
 import org.apache.activemq.util.BitArrayBin;
@@ -391,6 +393,55 @@ public class MessageAuditPerformanceTest {
             assertFalse("Fresh producer should not be a duplicate",
                     caffeine.isDuplicate(freshIds[p][0]));
         }
+    }
+
+    @Test
+    public void verifySetMaximumDuringTrafficPreservesState() throws Exception {
+        var producers = 8;
+        var messagesPerProducer = 2_000;
+
+        var concurrent = new ConcurrentMessageAudit(2048, 64);
+        runSetMaxDuringTraffic("ConcurrentMessageAudit", concurrent::isDuplicate,
+                concurrent::setMaximumNumberOfProducersToTrack,
+                generateStringIds(producers, messagesPerProducer));
+
+        var caffeine = new CaffeineMessageAudit(2048, 64);
+        runSetMaxDuringTraffic("CaffeineMessageAudit", caffeine::isDuplicate,
+                caffeine::setMaximumNumberOfProducersToTrack,
+                generateStringIds(producers, messagesPerProducer));
+    }
+
+    /**
+     * Churns setMaximumNumberOfProducersToTrack between 32 and 64 while ids
+     * are inserted. With only 8 producers no eviction is ever legitimate, so
+     * every id must be detected as a duplicate afterwards — any miss means
+     * the resize lost audit state.
+     */
+    private void runSetMaxDuringTraffic(String label, StringAudit fn, IntConsumer setMax,
+                                        String[][] ids) throws Exception {
+        var producers = ids.length;
+        var threads = 2;
+        var stop = new AtomicBoolean(false);
+        var resizer = new Thread(() -> {
+            var flip = false;
+            while (!stop.get()) {
+                setMax.accept(flip ? 32 : 64);
+                flip = !flip;
+            }
+        });
+        resizer.start();
+        try {
+            var firstPass = new AtomicInteger();
+            runConcurrentPass(fn, ids, threads, producers / threads, firstPass);
+        } finally {
+            stop.set(true);
+            resizer.join();
+        }
+
+        var duplicates = new AtomicInteger();
+        runConcurrentPass(fn, ids, threads, producers / threads, duplicates);
+        assertEquals(label + ": resize during traffic must not lose audit state",
+                producers * ids[0].length, duplicates.get());
     }
 
     // ========================================================================

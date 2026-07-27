@@ -85,12 +85,11 @@ public class ConcurrentMessageAudit {
         if (seed == null) {
             return false;
         }
-        var bab = getOrCreate(seed);
         var index = IdGenerator.getSequenceFromId(id);
-        if (index >= 0) {
-            return bab.setBit(index, true);
+        if (index < 0) {
+            return false;
         }
-        return false;
+        return markSeen(seed, index);
     }
 
     public boolean isDuplicate(final MessageId id) {
@@ -101,8 +100,21 @@ public class ConcurrentMessageAudit {
         if (pid == null) {
             return false;
         }
-        var bab = getOrCreate(pid.toString());
-        return bab.setBit(id.getProducerSequenceId(), true);
+        return markSeen(pid.toString(), id.getProducerSequenceId());
+    }
+
+    /**
+     * Record the index against the bin for the key. If the bin is evicted
+     * between lookup and the bit write, the write lands in an orphaned bin
+     * and the next occurrence of the id is not detected as a duplicate.
+     * This residual race is accepted: eviction only fires under producer
+     * oversubscription, membership re-check-and-retry in that regime was
+     * measured at a 2-5x throughput cost while the recreated entry is
+     * immediately evicted again, and the failure direction (duplicate
+     * redelivery) is tolerable under at-least-once delivery.
+     */
+    private boolean markSeen(String key, long index) {
+        return getOrCreate(key).setBit(index, true);
     }
 
     public void rollback(final MessageId id) {
@@ -113,10 +125,11 @@ public class ConcurrentMessageAudit {
         if (pid == null) {
             return;
         }
-        var bab = map.get(pid.toString());
-        if (bab != null) {
-            bab.setBit(id.getProducerSequenceId(), false);
-        }
+        var seqId = id.getProducerSequenceId();
+        map.computeIfPresent(pid.toString(), (k, bab) -> {
+            bab.setBit(seqId, false);
+            return bab;
+        });
     }
 
     public void rollback(final String id) {
@@ -124,11 +137,14 @@ public class ConcurrentMessageAudit {
         if (seed == null) {
             return;
         }
-        var bab = map.get(seed);
-        if (bab != null) {
-            long index = IdGenerator.getSequenceFromId(id);
-            bab.setBit(index, false);
+        var index = IdGenerator.getSequenceFromId(id);
+        if (index < 0) {
+            return;
         }
+        map.computeIfPresent(seed, (k, bab) -> {
+            bab.setBit(index, false);
+            return bab;
+        });
     }
 
     public boolean isInOrder(final String id) {
@@ -185,6 +201,12 @@ public class ConcurrentMessageAudit {
         return bab;
     }
 
+    /**
+     * Trim the map to the configured maximum. Eviction follows CHM iteration
+     * order (approximate FIFO, not LRU). Concurrent callers may transiently
+     * remove more entries than strictly required; the bound is approximate
+     * by design and self-corrects on subsequent inserts.
+     */
     private void evictExcess() {
         var max = maximumNumberOfProducersToTrack;
         while (map.size() > max) {

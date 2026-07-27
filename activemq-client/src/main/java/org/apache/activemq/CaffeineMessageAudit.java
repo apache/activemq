@@ -47,7 +47,7 @@ public class CaffeineMessageAudit {
 
     private volatile int auditDepth;
     private volatile int maximumNumberOfProducersToTrack;
-    private volatile Cache<String, AtomicBitArrayBin> cache;
+    private final Cache<String, AtomicBitArrayBin> cache;
 
     public CaffeineMessageAudit() {
         this(DEFAULT_WINDOW_SIZE, MAXIMUM_PRODUCER_COUNT);
@@ -73,9 +73,10 @@ public class CaffeineMessageAudit {
 
     public void setMaximumNumberOfProducersToTrack(int maximumNumberOfProducersToTrack) {
         this.maximumNumberOfProducersToTrack = maximumNumberOfProducersToTrack;
-        var newCache = buildCache(maximumNumberOfProducersToTrack);
-        newCache.putAll(this.cache.asMap());
-        this.cache = newCache;
+        // Resize in place: rebuilding and swapping the cache would lose
+        // entries inserted concurrently with the copy
+        cache.policy().eviction()
+                .ifPresent(eviction -> eviction.setMaximum(maximumNumberOfProducersToTrack));
     }
 
     public boolean isDuplicate(String id) {
@@ -83,12 +84,11 @@ public class CaffeineMessageAudit {
         if (seed == null) {
             return false;
         }
-        var bab = cache.get(seed, k -> new AtomicBitArrayBin(auditDepth));
         var index = IdGenerator.getSequenceFromId(id);
-        if (index >= 0) {
-            return bab.setBit(index, true);
+        if (index < 0) {
+            return false;
         }
-        return false;
+        return markSeen(seed, index);
     }
 
     public boolean isDuplicate(final MessageId id) {
@@ -99,8 +99,21 @@ public class CaffeineMessageAudit {
         if (pid == null) {
             return false;
         }
-        var bab = cache.get(pid.toString(), k -> new AtomicBitArrayBin(auditDepth));
-        return bab.setBit(id.getProducerSequenceId(), true);
+        return markSeen(pid.toString(), id.getProducerSequenceId());
+    }
+
+    /**
+     * Record the index against the bin for the key. If the bin is evicted
+     * between lookup and the bit write, the write lands in an orphaned bin
+     * and the next occurrence of the id is not detected as a duplicate.
+     * This residual race is accepted: eviction only fires under producer
+     * oversubscription, membership re-check-and-retry in that regime was
+     * measured at a 2-5x throughput cost while the recreated entry is
+     * immediately evicted again, and the failure direction (duplicate
+     * redelivery) is tolerable under at-least-once delivery.
+     */
+    private boolean markSeen(String key, long index) {
+        return cache.get(key, k -> new AtomicBitArrayBin(auditDepth)).setBit(index, true);
     }
 
     public void rollback(final MessageId id) {
@@ -111,10 +124,11 @@ public class CaffeineMessageAudit {
         if (pid == null) {
             return;
         }
-        var bab = cache.getIfPresent(pid.toString());
-        if (bab != null) {
-            bab.setBit(id.getProducerSequenceId(), false);
-        }
+        var seqId = id.getProducerSequenceId();
+        cache.asMap().computeIfPresent(pid.toString(), (k, bab) -> {
+            bab.setBit(seqId, false);
+            return bab;
+        });
     }
 
     public void rollback(final String id) {
@@ -122,11 +136,14 @@ public class CaffeineMessageAudit {
         if (seed == null) {
             return;
         }
-        var bab = cache.getIfPresent(seed);
-        if (bab != null) {
-            var index = IdGenerator.getSequenceFromId(id);
-            bab.setBit(index, false);
+        var index = IdGenerator.getSequenceFromId(id);
+        if (index < 0) {
+            return;
         }
+        cache.asMap().computeIfPresent(seed, (k, bab) -> {
+            bab.setBit(index, false);
+            return bab;
+        });
     }
 
     public boolean isInOrder(final String id) {

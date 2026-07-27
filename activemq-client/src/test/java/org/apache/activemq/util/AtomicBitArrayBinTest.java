@@ -27,7 +27,9 @@ import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.junit.Test;
 
@@ -93,15 +95,20 @@ public class AtomicBitArrayBinTest {
     }
 
     @Test
-    public void testBehindWindowReturnsTrueOnSet() {
+    public void testBehindWindowSetIsNoOpAndGetReturnsTrue() {
         var bin = new AtomicBitArrayBin(128);
 
         bin.setBit(0, true);
         // Advance window far past index 0
         bin.setBit(500, true);
 
-        // Setting a behind-window bit should return true (treated as already set)
-        assertTrue("behind-window setBit should return true", bin.setBit(0, true));
+        // Behind-window setBit is a no-op returning false (BitArrayBin parity):
+        // a late message is accepted rather than dropped as a duplicate
+        assertFalse("behind-window setBit should be a no-op returning false",
+                bin.setBit(0, true));
+
+        // Behind-window getBit still reports the range as seen
+        assertTrue("behind-window getBit should return true", bin.getBit(0));
     }
 
     @Test
@@ -401,6 +408,226 @@ public class AtomicBitArrayBinTest {
         // windowSize 1 → capacity = max(1, ((1+1)/64)+1) = 1
         var bin3 = new AtomicBitArrayBin(1);
         assertEquals(1, bin3.getCapacity());
+    }
+
+    @Test
+    public void testBehindWindowSetBitMatchesBitArrayBin() {
+        var windowSize = 128;
+        var original = new BitArrayBin(windowSize);
+        var atomic = new AtomicBitArrayBin(windowSize);
+
+        assertEquals(original.setBit(0, true), atomic.setBit(0, true));
+        // Advance both windows far past index 0 (both land on origin 320)
+        assertEquals(original.setBit(500, true), atomic.setBit(500, true));
+
+        // Behind-window semantics must match BitArrayBin: setBit is a no-op
+        // returning false. Reporting "duplicate" here would drop a legitimate
+        // late message.
+        assertEquals("behind-window setBit(true) parity",
+                original.setBit(0, true), atomic.setBit(0, true));
+        assertEquals("behind-window setBit(false) parity",
+                original.setBit(0, false), atomic.setBit(0, false));
+        assertEquals("behind-window getBit parity",
+                original.getBit(0), atomic.getBit(0));
+    }
+
+    @Test
+    public void testRollbackThenResendAfterWindowJump() {
+        var bin = new AtomicBitArrayBin(128);
+
+        assertFalse("first delivery is not a duplicate", bin.setBit(100, true));
+
+        // An unrelated large sequence advances the window past index 100
+        bin.setBit(10_000, true);
+
+        // Rollback of the failed delivery: behind window, no-op
+        bin.setBit(100, false);
+
+        // The resend must NOT be reported as a duplicate — that would make
+        // the rolled-back message undeliverable forever
+        assertFalse("resend after rollback must not be dropped as duplicate",
+                bin.setBit(100, true));
+    }
+
+    @Test
+    public void testIsInOrderNegativeIndexDoesNotPoison() {
+        var bin = new AtomicBitArrayBin(512);
+
+        assertTrue(bin.isInOrder(0));
+        assertTrue(bin.isInOrder(1));
+
+        // -1 is what IdGenerator.getSequenceFromId returns for unparseable ids.
+        // It must not be reported in-order and must not reset order tracking
+        // to the initial "anything is in order" state.
+        assertFalse("negative index is never in order", bin.isInOrder(-1));
+        assertFalse("gap after invalid index must not be in order", bin.isInOrder(50));
+        assertTrue("sequence resumes after the gap", bin.isInOrder(51));
+    }
+
+    /**
+     * Cross-epoch ABA plant detector.
+     *
+     * <p>capacity=2 ring: epochs f and f-2 share a slot. Writers hammer the
+     * trailing in-window epoch (frontier-1) at offsets 0..15 while the jumper
+     * advances the window one epoch per round. A writer that is mid-setBit
+     * when its slot is recycled must NOT leave a bit in the new epoch.
+     *
+     * <p>Writers never target the leading epoch f, so any bit in offsets 0..15
+     * of a freshly recycled leading epoch is a planted bit — a future message
+     * at that index would be falsely reported duplicate and dropped.
+     */
+    @Test(timeout = 60_000)
+    public void testNoCrossEpochBitPlantDuringRecycle() throws Exception {
+        var bin = new AtomicBitArrayBin(64);
+        assertEquals("test requires a 2-slot ring", 2, bin.getCapacity());
+
+        var rounds = 50_000;
+        var writerThreads = 2;
+        var frontier = new AtomicLong(1);
+        var stop = new AtomicBoolean(false);
+        var executor = Executors.newFixedThreadPool(writerThreads);
+
+        var writers = new ArrayList<Future<?>>();
+        for (var t = 0; t < writerThreads; t++) {
+            writers.add(executor.submit(() -> {
+                while (!stop.get()) {
+                    var trailing = frontier.get() - 1;
+                    var base = trailing * 64;
+                    for (var o = 0; o < 16; o++) {
+                        bin.setBit(base + o, true);
+                    }
+                }
+            }));
+        }
+
+        var plantedAt = -1L;
+        try {
+            for (var f = 2L; f <= rounds; f++) {
+                // Recycles the slot previously holding epoch f-2 while
+                // writers may be mid-flight on trailing epochs
+                bin.setBit(f * 64 + 63, true);
+
+                // Probe the freshly recycled epoch before writers can
+                // legitimately reach it (they only ever target frontier-1 < f)
+                for (var scan = 0; scan < 3 && plantedAt < 0; scan++) {
+                    for (var o = 0; o < 16; o++) {
+                        if (bin.getBit(f * 64 + o)) {
+                            plantedAt = f * 64 + o;
+                            break;
+                        }
+                    }
+                    Thread.onSpinWait();
+                }
+                if (plantedAt >= 0) {
+                    break;
+                }
+                frontier.set(f);
+            }
+        } finally {
+            stop.set(true);
+            for (var w : writers) w.get();
+            executor.shutdown();
+        }
+
+        assertEquals("bit planted into recycled epoch (cross-epoch ABA) at index "
+                + plantedAt, -1L, plantedAt);
+    }
+
+    /**
+     * Fabricated-index detector for getLastSetIndex.
+     *
+     * <p>Every written index is logged before the write. A concurrent scanner
+     * asserts every getLastSetIndex() result was actually written. A torn
+     * epoch/bits read across a slot recycle reconstructs an index (old epoch
+     * &times; new bits) that exists in neither.
+     */
+    @Test(timeout = 60_000)
+    public void testGetLastSetIndexNeverFabricatesIndex() throws Exception {
+        var bin = new AtomicBitArrayBin(64);
+        assertEquals("test requires a 2-slot ring", 2, bin.getCapacity());
+
+        var rounds = 50_000;
+        var frontier = new AtomicLong(1);
+        var stop = new AtomicBoolean(false);
+        var writeLog = ConcurrentHashMap.<Long>newKeySet();
+        var executor = Executors.newFixedThreadPool(2);
+
+        var fabricated = new AtomicLong(-1);
+
+        // Writer: hammers the trailing epoch, offset encodes the epoch (e % 16)
+        var writer = executor.submit(() -> {
+            while (!stop.get()) {
+                var trailing = frontier.get() - 1;
+                var index = trailing * 64 + (trailing % 16);
+                writeLog.add(index);
+                bin.setBit(index, true);
+            }
+        });
+
+        // Scanner: every result of getLastSetIndex must have been written
+        var scanner = executor.submit(() -> {
+            while (!stop.get()) {
+                var last = bin.getLastSetIndex();
+                if (last >= 0 && !writeLog.contains(last)) {
+                    fabricated.compareAndSet(-1, last);
+                    return;
+                }
+            }
+        });
+
+        try {
+            // Jumper: offset also encodes the epoch (32 + f % 16), so an old
+            // epoch paired with new bits yields an unlogged index
+            for (var f = 2L; f <= rounds && fabricated.get() < 0; f++) {
+                var index = f * 64 + 32 + (f % 16);
+                writeLog.add(index);
+                bin.setBit(index, true);
+                frontier.set(f);
+            }
+        } finally {
+            stop.set(true);
+            writer.get();
+            scanner.get();
+            executor.shutdown();
+        }
+
+        assertEquals("getLastSetIndex returned an index that was never written: "
+                + fabricated.get(), -1L, fabricated.get());
+    }
+
+    @Test(timeout = 30_000)
+    public void testCapacityOneConcurrentChurn() throws Exception {
+        // Degenerate single-slot ring: every 64-index step recycles the slot
+        var bin = new AtomicBitArrayBin(1);
+        assertEquals(1, bin.getCapacity());
+
+        var threadCount = 2;
+        var perThread = 20_000;
+        var executor = Executors.newFixedThreadPool(threadCount);
+        var barrier = new CyclicBarrier(threadCount);
+
+        var futures = new ArrayList<Future<?>>();
+        for (var t = 0; t < threadCount; t++) {
+            final var threadId = t;
+            futures.add(executor.submit(() -> {
+                try {
+                    barrier.await();
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+                for (var i = 0; i < perThread; i++) {
+                    bin.setBit((long) i * threadCount + threadId, true);
+                }
+            }));
+        }
+
+        for (var f : futures) f.get();
+        executor.shutdown();
+
+        // Terminates without hang (timeout) and the ring is still coherent
+        var last = bin.getLastSetIndex();
+        assertTrue("last set index should be near the top of the range, was " + last,
+                last >= (long) (perThread - 64) * threadCount - 64);
     }
 
     @Test
