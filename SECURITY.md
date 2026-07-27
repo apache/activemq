@@ -73,9 +73,9 @@ The Apache ActiveMQ team has initiated a security hardening project to move from
 
 1. Enhancements to the SSL authentication plugin to fix wantAuth mode
 
-2. Updates to SSL handling to allow configuring per-transport and per-network connector SSL keys
+2. [#2133] Updates to SSL handling to allow configuring per-transport and per-network connector SSL keys
 
-3. Refactoring of Jetty service to use Jetty-provided configurations instead of Spring-style configuration for Jetty service used by API and web console.
+3. [Done] Refactoring of Jetty service to use Jetty-provided configurations instead of Spring-style configuration for Jetty service used by API and web console.
 
 4. [Done] Limiting XBean URI schemes
 
