@@ -256,12 +256,6 @@ public final class AmqpMessageSupport {
                      InputStream iis = MarshallingSupport.createInflaterInputStream(
                             message.getMaxInflatedDataSize(), is)) {
 
-                    // Keep the value as an int and don't cast to a byte.
-                    // The read() method can return a int between -1 and 255 and
-                    // previously the returned value was being cast to a byte.
-                    // If the returned int happens to be 255, then casting that to a byte
-                    // causes the value to become -1 (java use's Two's Complement for ints)
-                    // so the loop will think we reached end of stream too early
                     int value;
                     while ((value = iis.read()) != -1) {
                         os.write(value);
