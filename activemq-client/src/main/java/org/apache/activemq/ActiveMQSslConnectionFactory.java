@@ -54,7 +54,7 @@ import org.apache.activemq.util.JMSExceptionSupport;
  *
  * Call <code>setKeyAndTrustManagers</code>.
  *
- * @author sepandm@gmail.com
+ *
  */
 public class ActiveMQSslConnectionFactory extends ActiveMQConnectionFactory {
 
@@ -104,7 +104,7 @@ public class ActiveMQSslConnectionFactory extends ActiveMQConnectionFactory {
      * SslConnectionFactory is used and it is given the needed key and trust
      * managers.
      *
-     * @author sepandm@gmail.com
+     *
      */
     @Override
     protected Transport createTransport() throws JMSException {

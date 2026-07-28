@@ -656,9 +656,8 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
                 pageFile.tx().execute(tx -> {
                     StoredDestination sd = getStoredDestination(dest, tx);
                     recoverRolledBackAcks(destination.getPhysicalName(), sd, tx, Integer.MAX_VALUE, listener);
-                    sd.orderIndex.resetCursorPosition();
                     for (Iterator<Entry<Long, MessageKeys>> iterator =
-                            sd.orderIndex.iterator(tx, new MessageOrderCursor()); listener.hasSpace() &&
+                            sd.orderIndex.iteratorIsolated(tx); listener.hasSpace() &&
                             iterator.hasNext(); ) {
                         Entry<Long, MessageKeys> entry = iterator.next();
                         Set<String> ackedAndPrepared = ackedAndPreparedMap.get(destination.getPhysicalName());
@@ -703,10 +702,28 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
             }
         }
 
+        /**
+         * Recover messages non-destructively by offset or messageId range.
+         *
+         * <p>With {@code useIsolatedCursor=true} (the default) the iteration is
+         * fully isolated from the destination: it does not move the destination
+         * cursor, does not record iteration bookmarks, and does not consume
+         * rolled-back transactional acks pending redelivery through the live
+         * cursor. With {@code useIsolatedCursor=false} the iteration behaves
+         * like a live batch: it starts at the destination cursor (the start
+         * offset/messageId is ignored), replays rolled-back acks, and advances
+         * the destination cursor when done.
+         *
+         * <p>Range semantics: the {@code startMessageId} (or {@code offset}) and
+         * {@code endMessageId} are both inclusive. A {@code startMessageId} that
+         * is not found in the index falls back to the head of the store; an
+         * {@code endMessageId} that is not found falls back to
+         * {@code start + maxMessageCountReturned}.
+         */
         @Override
         public void recoverMessages(final MessageRecoveryContext messageRecoveryContext) throws Exception {
 
-            if(messageRecoveryContext == null || 
+            if(messageRecoveryContext == null ||
                (messageRecoveryContext.getStartMessageId() != null &&
                 messageRecoveryContext.getOffset() != null)) {
                 LOG.warn("Invalid messageRecoveryContext:{}", messageRecoveryContext);
@@ -759,10 +776,19 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
                     }
 
                     Entry<Long, MessageKeys> entry;
-                    recoverRolledBackAcks(destination.getPhysicalName(), sd, tx, messageRecoveryContext.getMaxMessageCountReturned(), messageRecoveryContext);
+                    // [AMQ-9773] Rolled-back acks are pending redelivery through the live cursor.
+                    // Only replay them in shared-cursor mode (live-cursor semantics); an isolated-cursor
+                    // visit must not consume them or the live cursor never redelivers those messages.
+                    if(!messageRecoveryContext.isUseIsolatedCursor()) {
+                        recoverRolledBackAcks(destination.getPhysicalName(), sd, tx, messageRecoveryContext.getMaxMessageCountReturned(), messageRecoveryContext);
+                    }
                     Set<String> ackedAndPrepared = ackedAndPreparedMap.get(destination.getPhysicalName());
-                    Iterator<Entry<Long, MessageKeys>> iterator = (messageRecoveryContext.isUseDedicatedCursor() ? sd.orderIndex.iterator(tx,
-                            new MessageOrderCursor(startSequenceOffset)) : sd.orderIndex.iterator(tx));
+                    // [AMQ-9773] An isolated cursor uses IsolatedMessageOrderIterator so no lastXxxKey
+                    // bookmarks are recorded on the shared order index — a later zero-entry live batch
+                    // would otherwise commit them via stoppedIterating() and corrupt the destination cursor.
+                    Iterator<Entry<Long, MessageKeys>> iterator = (messageRecoveryContext.isUseIsolatedCursor() ?
+                            sd.orderIndex.iteratorIsolated(tx, new MessageOrderCursor(startSequenceOffset)) :
+                            sd.orderIndex.iterator(tx));
 
                     while (iterator.hasNext()) {
                         entry = iterator.next();
@@ -781,7 +807,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
                     }
 
                     // [AMQ-9773] The sd.orderIndex uses the destination's cursor
-                    if(!messageRecoveryContext.isUseDedicatedCursor()) {
+                    if(!messageRecoveryContext.isUseIsolatedCursor()) {
                         sd.orderIndex.stoppedIterating();
                     }
                 });
@@ -1280,7 +1306,6 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
             try {
                 return pageFile.tx().execute(tx -> {
                         StoredDestination sd = getStoredDestination(dest, tx);
-                        sd.orderIndex.resetCursorPosition();
                         int count = 0;
                         final Map<SubscriptionKey, List<Message>> expired = new HashMap<>();
                         final Map<String, SubscriptionKey> subKeys = new HashMap<>();
@@ -1297,7 +1322,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
                         // hit the max browse limit, or if the listener returns false for hasSpace()
                         final Set<Long> uniqueExpired = new HashSet<>();
                         for (Iterator<Entry<Long, MessageKeys>> iterator =
-                            sd.orderIndex.iterator(tx, new MessageOrderCursor()); count < maxBrowse && iterator.hasNext() && listener.hasSpace(); ) {
+                            sd.orderIndex.iteratorIsolated(tx); count < maxBrowse && iterator.hasNext() && listener.hasSpace(); ) {
                             count++;
                             Entry<Long, MessageKeys> entry = iterator.next();
                             Set<String> ackedAndPrepared = ackedAndPreparedMap.get(destination.getPhysicalName());

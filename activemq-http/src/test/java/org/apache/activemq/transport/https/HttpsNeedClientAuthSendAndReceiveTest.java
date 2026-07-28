@@ -22,7 +22,7 @@ import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
 
 /**
- * @author <a href="http://www.christianposta.com/blog">Christian Posta</a>
+ *
  */
 public class HttpsNeedClientAuthSendAndReceiveTest extends JmsTopicSendReceiveTest {
 

@@ -73,6 +73,7 @@ public class StompConnection {
         InputStream is = stompSocket.getInputStream();
         StompWireFormat wf = new StompWireFormat();
         wf.setStompVersion(version);
+        wf.setServerMode(false);
         DataInputStream dis = new DataInputStream(is);
         return (StompFrame)wf.unmarshal(dis);
     }

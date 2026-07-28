@@ -30,6 +30,7 @@ import org.apache.activemq.transport.amqp.message.InboundTransformer;
 import org.apache.activemq.util.ByteArrayInputStream;
 import org.apache.activemq.util.ByteArrayOutputStream;
 import org.apache.activemq.util.ByteSequence;
+import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.wireformat.WireFormat;
 import org.fusesource.hawtbuf.Buffer;
 import org.slf4j.Logger;
@@ -109,11 +110,7 @@ public class AmqpWireFormat implements WireFormat {
             return new AmqpHeader(magic, false);
         } else {
             int size = dataIn.readInt();
-            if (size > maxFrameSize) {
-                throw new AmqpProtocolException("Frame size exceeded max frame length.");
-            } else if (size <= 0) {
-                throw new AmqpProtocolException("Frame size value was invalid: " + size);
-            }
+            validateFrameSize(size, maxFrameSize);
             Buffer frame = new Buffer(size);
             frame.bigEndianEditor().writeInt(size);
             frame.readFrom(dataIn);
@@ -260,5 +257,15 @@ public class AmqpWireFormat implements WireFormat {
 
     public void setIdleTimeout(int idelTimeout) {
         this.idelTimeout = idelTimeout;
+    }
+
+    static void validateFrameSize(int frameSize, long maxFrameSize) throws IOException {
+        if (frameSize < 0) {
+            throw new AmqpProtocolException("Frame size of " + frameSize + " exceeds the maximum frame configured or supported frame size limit");
+        } else if (Integer.toUnsignedLong(frameSize) > maxFrameSize) {
+            throw IOExceptionSupport.createFrameSizeException(frameSize, maxFrameSize);
+        } else if (Integer.compareUnsigned(frameSize, 8) < 0) {
+            throw new AmqpProtocolException("Frame size of " + frameSize + " is smaller than the minimally viable frame size value");
+        }
     }
 }

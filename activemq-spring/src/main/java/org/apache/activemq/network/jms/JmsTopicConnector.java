@@ -22,7 +22,7 @@ import org.springframework.jndi.JndiTemplate;
  * A Bridge to other JMS Topic providers
  *
  * @org.apache.xbean.XBean
- * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
+ *
  */
 public class JmsTopicConnector extends SimpleJmsTopicConnector {
 

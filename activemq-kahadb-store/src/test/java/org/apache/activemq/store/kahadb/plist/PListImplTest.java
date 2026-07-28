@@ -32,7 +32,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 /**
- * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
+ *
  */
 @Category(ParallelTest.class)
 public class PListImplTest extends PListTestSupport {

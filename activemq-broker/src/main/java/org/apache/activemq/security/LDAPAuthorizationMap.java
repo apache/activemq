@@ -47,7 +47,7 @@ import org.slf4j.LoggerFactory;
  * An {@link AuthorizationMap} which uses LDAP
  *
  * @org.apache.xbean.XBean
- * @author ngcutura
+ *
  */
 public class LDAPAuthorizationMap implements AuthorizationMap {
 

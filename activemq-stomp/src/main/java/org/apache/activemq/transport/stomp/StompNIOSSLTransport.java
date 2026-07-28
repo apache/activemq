@@ -74,10 +74,7 @@ public class StompNIOSSLTransport extends NIOSSLTransport {
 
     @Override
     protected void processCommand(ByteBuffer plain) throws Exception {
-        byte[] fill = new byte[plain.remaining()];
-        plain.get(fill);
-        ByteArrayInputStream input = new ByteArrayInputStream(fill);
-        codec.parse(input, fill.length);
+        codec.parse(plain, plain.remaining());
     }
 
     @Override

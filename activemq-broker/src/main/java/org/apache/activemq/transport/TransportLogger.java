@@ -25,7 +25,7 @@ import org.slf4j.Logger;
  * as it intercepts commands / events before sending them to the
  * following layer in the Transport stack.
  * 
- * @author David Martin Clavo david(dot)martin(dot)clavo(at)gmail.com
+ *
  * 
  */
 public class TransportLogger extends TransportFilter {

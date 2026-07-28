@@ -36,7 +36,7 @@ import org.apache.logging.log4j.core.layout.MessageLayout;
 
 /**
  * 
- * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
+ *
  */
 public class KahaDBPersistenceAdapterTest extends PersistenceAdapterTestSupport {
     

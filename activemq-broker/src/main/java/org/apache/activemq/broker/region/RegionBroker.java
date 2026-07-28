@@ -29,6 +29,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -255,6 +256,10 @@ public class RegionBroker extends EmptyBroker {
             throw new InvalidClientIDException("No clientID specified for connection request");
         }
 
+        // Clean up existing duplex network connection if this is a reconnect attempt
+        // This was moved from TransportConnection
+        cleanupExistingDuplexNetworkConnection(context);
+
         ConnectionContext oldContext = null;
 
         synchronized (clientIdSet) {
@@ -287,6 +292,38 @@ public class RegionBroker extends EmptyBroker {
         }
 
         connections.add(context.getConnection());
+    }
+
+    // We first look if existing network connection already exists for the same broker Id and network connector name
+    // It's possible in case of brief network fault to have this transport connector side of the connection always active
+    // and the duplex network connector side wanting to open a new one
+    // In this case, the old connection must be broken
+    private void cleanupExistingDuplexNetworkConnection(ConnectionContext context) {
+        try {
+            if (context.isNetworkConnection()
+                    && context.getConnection() instanceof TransportConnection) {
+                final TransportConnection newConn = (TransportConnection) context.getConnection();
+                if (newConn.getDuplexNetworkConnectorId() != null) {
+                    for (Connection c : connections) {
+                        if (c instanceof TransportConnection) {
+                            final TransportConnection existingConn = (TransportConnection) c;
+                            if (newConn.getDuplexNetworkConnectorId()
+                                    .equals(existingConn.getDuplexNetworkConnectorId())) {
+                                LOG.warn("Stopping an existing active duplex connection [{}] for network connector ({}).",
+                                        c, existingConn.getDuplexNetworkConnectorId());
+                                existingConn.stopAsync();
+                                // better to wait for a bit rather than get connection id already in use and failure to start new bridge
+                                existingConn.getStopped().await(2, TimeUnit.SECONDS);
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            LOG.warn("Error cleaning up Duplex connection: {}" , e.getMessage());
+            LOG.debug(e.getMessage(), e);
+        }
     }
 
     @Override

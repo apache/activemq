@@ -26,7 +26,7 @@ import javax.security.auth.callback.Callback;
  * 
  * Will return a certificate chain to its client.
  * 
- * @author sepandm@gmail.com (Sepand)
+ *
  *
  */
 public class CertificateCallback implements Callback {

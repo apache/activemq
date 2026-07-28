@@ -99,6 +99,21 @@ public class NetworkBridgeView implements NetworkBridgeViewMBean {
         }
     }
 
+    @Override
+    public long getStartedTimestamp() {
+        return bridge.getStartedTimestamp();
+    }
+
+    @Override
+    public long getLocalExceptionCount() {
+        return bridge.getLocalExceptionCount();
+    }
+
+    @Override
+    public long getRemoteExceptionCount() {
+        return bridge.getRemoteExceptionCount();
+    }
+
     public void addNetworkDestinationView(NetworkDestinationView networkDestinationView){
         networkDestinationViewList.add(networkDestinationView);
     }

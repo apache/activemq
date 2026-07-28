@@ -26,7 +26,7 @@ import jakarta.jms.TextMessage;
 import jakarta.jms.Topic;
 
 /**
- * @author James Strachan
+ *
  * 
  */
 public class Consumer extends BenchmarkSupport implements MessageListener {

@@ -21,7 +21,7 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import jakarta.jms.*;
 
 /**
- * @author <a href="http://www.christianposta.com/blog">Christian Posta</a>
+ *
  */
 public class Producer {
 

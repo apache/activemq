@@ -45,18 +45,17 @@ public class ActiveMQTextMessage extends ActiveMQMessage implements TextMessage 
 
     public static final byte DATA_STRUCTURE_TYPE = CommandTypes.ACTIVEMQ_TEXT_MESSAGE;
 
-    protected String text;
+    // This is package scope (instead of private) for testing purposes
+    volatile String text;
 
     @Override
     public Message copy() {
         ActiveMQTextMessage copy = new ActiveMQTextMessage();
-        copy(copy);
+        synchronized (this) {
+            super.copy(copy);
+            copy.text = text;
+        }
         return copy;
-    }
-
-    private void copy(ActiveMQTextMessage copy) {
-        super.copy(copy);
-        copy.text = text;
     }
 
     @Override
@@ -69,22 +68,42 @@ public class ActiveMQTextMessage extends ActiveMQMessage implements TextMessage 
         return "jms/text-message";
     }
 
+    // add sync
     @Override
-    public void setText(String text) throws MessageNotWriteableException {
+    public synchronized void compress() throws IOException {
+        super.compress();
+    }
+
+    @Override
+    public synchronized void setText(String text) throws MessageNotWriteableException {
         checkReadOnlyBody();
         this.text = text;
         setContent(null);
     }
 
+    // Synchronize this to prevent setting content if another mutation operation
+    // is happening concurrently.
+    @Override
+    public synchronized void setContent(ByteSequence content) {
+        super.setContent(content);
+    }
+
     @Override
     public String getText() throws JMSException {
-        ByteSequence content = getContent();
+        String text = this.text;
 
-        if (text == null && content != null) {
-            text = decodeContent(content);
-            setContent(null);
-            setCompressed(false);
+        if (text == null) {
+            synchronized (this) {
+                text = this.text;
+                // Double-checked locking, re-check under lock if we need to decode
+                if (text == null && content != null) {
+                    this.text = text = decodeContent(content);
+                    setContent(null);
+                    setCompressed(false);
+                }
+            }
         }
+
         return text;
     }
 
@@ -95,7 +114,8 @@ public class ActiveMQTextMessage extends ActiveMQMessage implements TextMessage 
             try {
                 is = new ByteArrayInputStream(bodyAsBytes);
                 if (isCompressed()) {
-                    is = new InflaterInputStream(is);
+                    // wrap the stream so we don't inflate past maxInflatedDataSize
+                    is = MarshallingSupport.createInflaterInputStream(getMaxInflatedDataSize(), is);
                 }
                 DataInputStream dataIn = new DataInputStream(is);
                 text = MarshallingSupport.readUTF8(dataIn);
@@ -121,29 +141,36 @@ public class ActiveMQTextMessage extends ActiveMQMessage implements TextMessage 
         storeContentAndClear();
     }
 
+    // always lock to simplify things because if this method is being called
+    // it's right before send so it's very likely to need to mutate state
+    // This should generally be uncontested lock so it will be fast
     @Override
-    public void storeContentAndClear() {
+    public synchronized void storeContentAndClear() {
         storeContent();
-        text=null;
+        text = null;
     }
 
     @Override
     public void storeContent() {
         try {
-            ByteSequence content = getContent();
-            String text = this.text;
-            if (content == null && text != null) {
-                ByteArrayOutputStream bytesOut = new ByteArrayOutputStream();
-                OutputStream os = bytesOut;
-                ActiveMQConnection connection = getConnection();
-                if (connection != null && connection.isUseCompression()) {
-                    compressed = true;
-                    os = new DeflaterOutputStream(os);
+            // Content is volatile so if it's not null we can skip and do nothing
+            if (content == null) {
+                synchronized (this) {
+                    // Double-checked locking, re-check state under lock
+                    if (content == null && text != null) {
+                        ByteArrayOutputStream bytesOut = new ByteArrayOutputStream();
+                        OutputStream os = bytesOut;
+                        ActiveMQConnection connection = getConnection();
+                        if (connection != null && connection.isUseCompression()) {
+                            compressed = true;
+                            os = new DeflaterOutputStream(os);
+                        }
+                        DataOutputStream dataOut = new DataOutputStream(os);
+                        MarshallingSupport.writeUTF8(dataOut, text);
+                        dataOut.close();
+                        setContent(bytesOut.toByteSequence());
+                    }
                 }
-                DataOutputStream dataOut = new DataOutputStream(os);
-                MarshallingSupport.writeUTF8(dataOut, text);
-                dataOut.close();
-                setContent(bytesOut.toByteSequence());
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -153,13 +180,18 @@ public class ActiveMQTextMessage extends ActiveMQMessage implements TextMessage 
     // see https://issues.apache.org/activemq/browse/AMQ-2103
     // and https://issues.apache.org/activemq/browse/AMQ-2966
     @Override
-    public void clearUnMarshalledState() throws JMSException {
-        super.clearUnMarshalledState();
-        this.text = null;
+    public synchronized void clearUnMarshalledState() throws JMSException {
+        // Double check this under lock, we should only clear if
+        // the text/properties are marshaled
+        if (isMarshalled()) {
+            super.clearUnMarshalledState();
+            this.text = null;
+        }
     }
 
+    // We need to sync because both variables need to be read independently
     @Override
-    public boolean isContentMarshalled() {
+    public synchronized boolean isContentMarshalled() {
         return content != null || text == null;
     }
 
@@ -175,20 +207,30 @@ public class ActiveMQTextMessage extends ActiveMQMessage implements TextMessage 
      *                 due to some internal error.
      */
     @Override
-    public void clearBody() throws JMSException {
+    public synchronized void clearBody() throws JMSException {
         super.clearBody();
         this.text = null;
     }
 
     @Override
     public int getSize() {
-        String text = this.text;
-        if (size == 0 && content == null && text != null) {
-            size = getMinimumMessageSize();
-            if (marshalledProperties != null) {
-                size += marshalledProperties.getLength();
+        int size = this.size;
+        if (size == 0) {
+            synchronized (this) {
+                size = this.size;
+                String text = this.text;
+                ByteSequence content = getContent();
+                if (size == 0 && content == null && text != null) {
+                    size = getMinimumMessageSize();
+                    ByteSequence marshalledProperties = this.marshalledProperties;
+                    if (marshalledProperties != null) {
+                        size += marshalledProperties.getLength();
+                    }
+                    size += text.length() * 2;
+                    this.size = size;
+                }
+                return super.getSize();
             }
-            size += text.length() * 2;
         }
         return super.getSize();
     }
@@ -197,7 +239,7 @@ public class ActiveMQTextMessage extends ActiveMQMessage implements TextMessage 
     public String toString() {
         try {
             String text = this.text;
-            if( text == null ) {
+            if (text == null) {
                 text = decodeContent(getContent());
             }
             if (text != null) {

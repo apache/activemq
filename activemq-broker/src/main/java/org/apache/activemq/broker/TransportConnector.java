@@ -42,6 +42,7 @@ import org.apache.activemq.transport.TransportFactorySupport;
 import org.apache.activemq.transport.TransportServer;
 import org.apache.activemq.transport.discovery.DiscoveryAgent;
 import org.apache.activemq.transport.discovery.DiscoveryAgentFactory;
+import org.apache.activemq.util.ExceptionUtils;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.util.ServiceSupport;
 import org.slf4j.Logger;
@@ -258,10 +259,10 @@ public class TransportConnector implements Connector, BrokerServiceAware {
 
             private void onAcceptError(Exception error, String remoteHost) {
                 if (brokerService != null && brokerService.isStopping()) {
-                    LOG.info("Could not accept connection during shutdown {} : {} ({})", (remoteHost == null ? "" : "from " + remoteHost), error.getLocalizedMessage(), getRootCause(error).getMessage());
+                    LOG.info("Could not accept connection during shutdown {} : {} ({})", (remoteHost == null ? "" : "from " + remoteHost), error.getLocalizedMessage(),  ExceptionUtils.getRootCause(error).getMessage());
                 } else {
-                    LOG.warn("Could not accept connection {}: {} ({})", (remoteHost == null ? "" : "from " + remoteHost), error.getMessage(), getRootCause(error).getMessage());
-                    LOG.debug("Reason: " + error.getMessage(), error);
+                    LOG.warn("Could not accept connection {}: {} ({})", (remoteHost == null ? "" : "from " + remoteHost), error.getMessage(), ExceptionUtils.getRootCause(error).getMessage());
+                    LOG.debug("Reason: {}", error.getMessage(), error);
                 }
             }
         });
@@ -280,20 +281,6 @@ public class TransportConnector implements Connector, BrokerServiceAware {
 
         started.set(true);
         LOG.info("Connector {} started", getName());
-    }
-
-    public static Throwable getRootCause(final Throwable throwable) {
-        final List<Throwable> list = getThrowableList(throwable);
-        return list.isEmpty() ? null : list.get(list.size() - 1);
-    }
-
-    static List<Throwable> getThrowableList(Throwable throwable) {
-        final List<Throwable> list = new ArrayList<>();
-        while (throwable != null && !list.contains(throwable)) {
-            list.add(throwable);
-            throwable = throwable.getCause();
-        }
-        return list;
     }
 
     public String getPublishableConnectString() throws Exception {

@@ -16,6 +16,8 @@
  */
 package org.apache.activemq.config;
 
+import static org.apache.activemq.util.VmTransportTestUtils.resetVmTransportFactory;
+
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.test.JmsTopicSendReceiveWithTwoConnectionsTest;
 
@@ -28,6 +30,20 @@ import java.util.Hashtable;
  *
  */
 public class BrokerXmlConfigFromJNDITest extends JmsTopicSendReceiveWithTwoConnectionsTest {
+
+    @Override
+    protected void setUp() throws Exception {
+        // reset before each test
+        resetVmTransportFactory("xbean");
+        super.setUp();
+    }
+
+    @Override
+    protected void tearDown() throws Exception {
+        super.tearDown();
+        resetVmTransportFactory();
+    }
+
     @Override
     protected ActiveMQConnectionFactory createConnectionFactory() throws Exception {
         assertBaseDirectoryContainsSpaces();

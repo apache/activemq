@@ -45,8 +45,13 @@
               <authorizationEntry topic=">" read="admins" write="admins" admin="admins" />
               <authorizationEntry topic="USERS.>" read="users" write="users" admin="users" />
               <authorizationEntry topic="GUEST.>" read="guests" write="guests,users" admin="guests,users" />
-              
-              <authorizationEntry topic="ActiveMQ.Advisory.>" read="*" write="guests,users" admin="guests,users"/>
+
+              <!-- Grant only admins the ability to create/delete advisory destinations -->
+              <authorizationEntry topic="ActiveMQ.Advisory.>" read="admins" write="admins" admin="admins"/>
+
+              <!-- All users need read access to temporary destination advisories -->
+              <authorizationEntry topic="ActiveMQ.Advisory.TempQueue" read="*" write="admin" admin="admin"/>
+              <authorizationEntry topic="ActiveMQ.Advisory.TempTopic" read="*" write="admin" admin="admin"/>
             </authorizationEntries>
             
             <!-- let's assign roles to temporary destinations. comment this entry if we don't want any roles assigned to temp destinations  -->

@@ -63,7 +63,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(Parameterized.class)
-public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
+public class DurableSyncNetworkBridgeTest extends AbstractDurableSyncNetworkBridgeTest {
 
     protected static final Logger LOG = LoggerFactory.getLogger(DurableSyncNetworkBridgeTest.class);
 
@@ -706,14 +706,6 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
         return compositeTopic;
     }
 
-    protected void restartBroker(BrokerService broker, boolean startNetworkConnector) throws Exception {
-        if (broker.getBrokerName().equals("localBroker")) {
-            restartLocalBroker(startNetworkConnector);
-        } else  {
-            restartRemoteBroker();
-        }
-    }
-
     protected void restartBrokers(boolean startNetworkConnector) throws Exception {
         doTearDown();
         doSetUp(false, startNetworkConnector, localBroker.getDataDirectoryFile(),
@@ -732,73 +724,6 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
         if (startNetworkConnector) {
             waitForBridgeFullyStarted();
         }
-    }
-
-    private void waitForBridgeFullyStarted() throws Exception {
-        // Wait for the local bridge to be fully started (advisory consumers registered)
-        assertTrue("Local bridge should be fully started", Wait.waitFor(() -> {
-            if (localBroker.getNetworkConnectors().get(0).activeBridges().isEmpty()) {
-                return false;
-            }
-            final NetworkBridge bridge = localBroker.getNetworkConnectors().get(0).activeBridges().iterator().next();
-            if (bridge instanceof DemandForwardingBridgeSupport) {
-                return ((DemandForwardingBridgeSupport) bridge).startedLatch.getCount() == 0;
-            }
-            return true;
-        }, TimeUnit.SECONDS.toMillis(15), 100));
-
-        // Also wait for the duplex bridge on the remote broker to be fully started.
-        // The duplex connector creates a separate DemandForwardingBridge on the remote side
-        // that also needs its advisory consumers registered before it can process events.
-        assertTrue("Duplex bridge should be fully started", Wait.waitFor(() -> {
-            final DemandForwardingBridge duplexBridge = findDuplexBridge(
-                remoteBroker.getTransportConnectors().get(0));
-            return duplexBridge != null && duplexBridge.startedLatch.getCount() == 0;
-        }, TimeUnit.SECONDS.toMillis(15), 100));
-    }
-
-    protected void restartLocalBroker(boolean startNetworkConnector) throws Exception {
-        stopLocalBroker();
-        doSetUpLocalBroker(false, startNetworkConnector, localBroker.getDataDirectoryFile());
-    }
-
-    protected void restartRemoteBroker() throws Exception {
-        final int previousPort = remoteBroker.getTransportConnectors().get(0).getConnectUri().getPort();
-        final File dataDir = remoteBroker.getDataDirectoryFile();
-        stopRemoteBroker();
-        try {
-            doSetUpRemoteBroker(false, dataDir, previousPort);
-        } catch (final IOException e) {
-            if (e.getCause() instanceof java.net.BindException) {
-                // Previous port still in TIME_WAIT — use a new ephemeral port
-                doSetUpRemoteBroker(false, dataDir, 0);
-                // Update the local broker's network connector to point to the new port
-                updateLocalNetworkConnectorUri();
-            } else {
-                throw e;
-            }
-        }
-    }
-
-    /**
-     * When the remote broker restarts on a new ephemeral port (BindException fallback),
-     * any existing network connector on the local broker still points to the old port.
-     * This method stops the old connector and replaces it with one targeting the new URI.
-     */
-    private void updateLocalNetworkConnectorUri() throws Exception {
-        if (localBroker == null) {
-            return;
-        }
-        final List<NetworkConnector> connectors = localBroker.getNetworkConnectors();
-        if (connectors.isEmpty()) {
-            return;
-        }
-        final NetworkConnector oldConnector = connectors.get(0);
-        oldConnector.stop();
-        localBroker.removeNetworkConnector(oldConnector);
-        final NetworkConnector newConnector = configureLocalNetworkConnector();
-        localBroker.addNetworkConnector(newConnector);
-        newConnector.start();
     }
 
     protected void doSetUpLocalBroker(boolean deleteAllMessages, boolean startNetworkConnector,
@@ -882,6 +807,7 @@ public class DurableSyncNetworkBridgeTest extends DynamicNetworkTestSupport {
         return brokerService;
     }
 
+    @Override
     protected NetworkConnector configureLocalNetworkConnector() throws Exception {
         List<TransportConnector> transportConnectors = remoteBroker.getTransportConnectors();
         URI remoteURI = transportConnectors.get(0).getConnectUri();

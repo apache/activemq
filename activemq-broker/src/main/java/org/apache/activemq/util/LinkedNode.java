@@ -20,7 +20,7 @@ package org.apache.activemq.util;
  * Provides a base class for you to extend when you want object to maintain a
  * doubly linked list to other objects without using a collection class.
  *
- * @author chirino
+ *
  */
 public class LinkedNode {
 

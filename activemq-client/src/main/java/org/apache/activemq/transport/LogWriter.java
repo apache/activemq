@@ -29,7 +29,7 @@ import org.slf4j.Logger;
  * "default") and including the line
  * class=org.apache.activemq.transport.logwriters.(Name of the LogWriter class)
  * 
- * @author David Martin Clavo david(dot)martin(dot)clavo(at)gmail.com
+ *
  * 
  */
 public interface LogWriter {

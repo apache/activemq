@@ -20,7 +20,7 @@ package org.apache.activemq.console.command;
  * This interface is used to allow people to provide a mechanism to override where the password comes from.
  * Implementors of this interface will typically use the specified password to look up the real password in a
  * keystore of some sort.
- * @author areese@yahoo-inc.com
+ *
  *
  */
 public interface PasswordFactory {

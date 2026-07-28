@@ -20,6 +20,10 @@ import org.apache.activemq.Service;
 
 public interface NetworkConnectorViewMBean extends Service {
 
+    String getUri();
+
+    String getLocalUri();
+
     String getName();
 
     int getMessageTTL();
@@ -90,4 +94,14 @@ public interface NetworkConnectorViewMBean extends Service {
     void setRemotePassword(String remotePassword);
 
     boolean isAutoStart();
+
+    long getStartedTimestamp();
+
+    long getStoppedTimestamp();
+
+    long getBridgeExceptionCount();
+
+    long getLocalExceptionCount();
+
+    long getRemoteExceptionCount();
 }

@@ -29,7 +29,7 @@ import jakarta.jms.MessageProducer;
 import jakarta.jms.Session;
 
 /**
- * @author James Strachan
+ *
  * 
  */
 public class Producer extends BenchmarkSupport {

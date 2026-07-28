@@ -31,7 +31,7 @@ import org.objectweb.jtests.jms.framework.TestConfig;
 /**
  * Tests on message body.
  *
- * @author Jeff Mesnil (jmesnil@gmail.com)
+ *
  * @version $Id: MessageBodyTest.java,v 1.1 2007/03/29 04:28:37 starksm Exp $
  */
 public class MessageBodyTest extends PTPTestCase

@@ -21,7 +21,7 @@ import org.springframework.jndi.JndiTemplate;
 import javax.naming.NamingException;
 
 /**
-* @author <a href="http://hiramchirino.com">Hiram Chirino</a>
+*
 */
 public class JndiTemplateLookupFactory extends JndiLookupFactory {
     private final JndiTemplate template;

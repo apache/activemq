@@ -50,7 +50,7 @@ import org.fusesource.hawtbuf.UTF8Buffer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
- * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
+ *
  */
 public class StoreExporter {
 

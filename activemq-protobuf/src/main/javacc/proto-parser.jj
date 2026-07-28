@@ -1,0 +1,599 @@
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+options {
+STATIC=false;
+}
+
+PARSER_BEGIN(ProtoParser)
+/**
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.apache.activemq.protobuf.compiler.parser;
+
+import org.apache.activemq.protobuf.compiler.*;
+import java.util.LinkedHashMap;
+import java.util.ArrayList;
+import java.util.Hashtable;
+import java.util.Iterator;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+
+/**
+ * This class is generated with JavaCC. Do not modify manually.
+ */
+public class ProtoParser {
+}
+
+PARSER_END(ProtoParser)
+
+SKIP :
+{
+  " "
+| "\t"
+| "\n"
+| "\r"
+}
+
+SPECIAL_TOKEN :
+{
+  "//" : COMMENT
+}
+
+<COMMENT> SPECIAL_TOKEN :
+{
+  <("\n" | "\r" | "\r\n" | "|")> : DEFAULT
+}
+
+<COMMENT> MORE :
+{
+  <~[]>
+}
+
+TOKEN :
+{
+    <IMPORT:"import">
+  | <PACKAGE:"package">
+  | <SERVICE:"service">
+  | <RPC:"rpc">
+  | <OPTION:"option">
+  | <MESSAGE:"message">
+  | <EXTENSIONS:"extensions">
+  | <EXTEND:"extend">
+  | <ENUM:"enum">
+  | <GROUP:"group">
+  | <REQURIED:"required">
+  | <OPTIONAL:"optional">
+  | <REPEATED:"repeated">
+  | <RETURNS:"returns">
+  | <TO:"to">
+  | <MAX:"max">
+
+  | <LBRACE: "{">
+  | <RBRACE: "}">
+  | <EQUALS: "=">
+  | <SEMICOLON: ";">
+  | <LBRACKET: "[">
+  | <RBRACKET: "]">
+  | <LPAREN: "(">
+  | <RPAREN: ")">
+  | <PERIOD: ".">
+  | <COMMA: ",">
+  
+  | < INTEGER: ("-")? (
+        <DECIMAL_LITERAL> (["l","L"])?
+      | <HEX_LITERAL> (["l","L"])?
+      | <OCTAL_LITERAL> (["l","L"])? 
+    ) >
+  | < #DECIMAL_LITERAL: ["1"-"9"] (["0"-"9"])* >
+  | < #HEX_LITERAL: "0" ["x","X"] (["0"-"9","a"-"f","A"-"F"])+ >
+  | < #OCTAL_LITERAL: "0" (["0"-"7"])* >
+  | < FLOAT: ("-")? (
+        (["0"-"9"])+ "." (["0"-"9"])* (<EXPONENT>)? (["f","F","d","D"])?
+      | "." (["0"-"9"])+ (<EXPONENT>)? (["f","F","d","D"])?
+      | (["0"-"9"])+ <EXPONENT> (["f","F","d","D"])?
+      | (["0"-"9"])+ (<EXPONENT>)? ["f","F","d","D"]
+    )>
+  | < #EXPONENT: ["e","E"] (["+","-"])? (["0"-"9"])+ >
+  | <STRING:
+      "\""
+      (   (~["\"","\\","\n","\r"])
+        | ("\\"
+            ( ["a","v","n","t","b","r","f","\\","'","\""]
+            | ["x","X"]["0"-"9","A"-"F","a"-"f"]["0"-"9","A"-"F","a"-"f"]
+            | ["0"-"7"] ( ["0"-"7"] )?
+            | ["0"-"3"] ["0"-"7"] ["0"-"7"]
+            )
+          )
+      )*
+      "\"">
+  | <ID: ["A"-"Z","a"-"z"] (["a"-"z","A"-"Z","0"-"9","_"])*>
+}
+
+ProtoDescriptor ProtoDescriptor() :
+{
+  	ProtoDescriptor proto = new ProtoDescriptor();
+	String packageName=null;
+    LinkedHashMap<String,OptionDescriptor> opts = new LinkedHashMap<String,OptionDescriptor>();
+    LinkedHashMap<String,MessageDescriptor> messages = new LinkedHashMap<String,MessageDescriptor>();
+    LinkedHashMap<String,EnumDescriptor> enums = new LinkedHashMap<String,EnumDescriptor>();
+    ArrayList<MessageDescriptor> extendsList = new ArrayList<MessageDescriptor>();
+    LinkedHashMap<String,ServiceDescriptor> services = new LinkedHashMap<String,ServiceDescriptor>();
+    ArrayList<String> imports = new ArrayList<String>();
+    
+    OptionDescriptor optionD;
+    MessageDescriptor messageD;
+    EnumDescriptor enumD;
+    ServiceDescriptor serviceD;
+    MessageDescriptor extendD;
+    String o;
+}
+{
+    (
+		<PACKAGE> packageName=PackageID() <SEMICOLON>
+	|	
+        <OPTION> optionD = OptionDescriptor() <SEMICOLON>
+        { opts.put(optionD.getName(),optionD); }
+    |   
+        <IMPORT> 
+        o = StringLitteral()
+        <SEMICOLON>
+        { imports.add((String)o); }
+    |   
+        messageD = MessageDescriptor(proto, null) (<SEMICOLON>)?
+        { messages.put(messageD.getName(),messageD); }
+        
+    |   
+        enumD = EnumDescriptor(proto, null) (<SEMICOLON>)?
+        { enums.put(enumD.getName(),enumD); }
+    |   
+        serviceD = ServiceDescriptor(proto) (<SEMICOLON>)?
+        { services.put(serviceD.getName(),serviceD); }
+    |   
+        extendD = ExtendDescriptor(proto, null) (<SEMICOLON>)?
+        { extendsList.add(extendD); }
+    )+
+    <EOF>
+    { 
+    	proto.setPackageName(packageName);
+    	proto.setImports(imports);
+    	proto.setOptions(opts);
+    	proto.setMessages(messages);
+    	proto.setEnums(enums);
+    	proto.setServices(services);
+    	proto.setExtends(extendsList);
+    	return proto; 
+    }
+}
+
+
+MessageDescriptor MessageDescriptor(ProtoDescriptor proto, MessageDescriptor parent) :
+{
+    String name;
+    LinkedHashMap<String,FieldDescriptor> fields = new LinkedHashMap<String,FieldDescriptor>();
+    LinkedHashMap<String,MessageDescriptor> messages = new LinkedHashMap<String,MessageDescriptor>();
+    LinkedHashMap<String,EnumDescriptor> enums = new LinkedHashMap<String,EnumDescriptor>();
+    ArrayList<MessageDescriptor> extendsList = new ArrayList<MessageDescriptor>();
+    LinkedHashMap<String,OptionDescriptor> opts = new LinkedHashMap<String,OptionDescriptor>();
+
+  	MessageDescriptor rc = new MessageDescriptor(proto, parent);
+    OptionDescriptor optionD;
+    ExtensionsDescriptor extensionsD=null;
+	FieldDescriptor fieldD;
+	MessageDescriptor messageD;
+	EnumDescriptor enumD;
+	MessageDescriptor extendD;
+}
+{
+    <MESSAGE> name = ID() <LBRACE>
+    (
+        <OPTION> optionD = OptionDescriptor() <SEMICOLON>
+        { opts.put(optionD.getName(),optionD); }
+	|	
+    	fieldD = FieldDescriptor(rc)
+    	{ fields.put(fieldD.getName(), fieldD); }
+    |   
+        messageD = MessageDescriptor(proto, rc) (<SEMICOLON>)?
+        { messages.put(messageD.getName(),messageD); }
+    |   
+        enumD = EnumDescriptor(proto, rc) (<SEMICOLON>)?
+        { enums.put(enumD.getName(), enumD); }
+    |   
+        extensionsD = ExtensionsDescriptor(rc) <SEMICOLON>
+    |   
+        extendD = ExtendDescriptor(proto, rc) (<SEMICOLON>)?
+        { extendsList.add(extendD); }
+    )*
+    <RBRACE>
+    {
+    	rc.setName(name);
+    	rc.setFields(fields);
+    	rc.setMessages(messages);
+    	rc.setEnums(enums);
+    	rc.setExtensions(extensionsD);
+    	rc.setOptions(opts);
+    	return rc;
+    }
+}
+
+/**
+ * Parses something like:
+ * optional string foo = 1;
+ */
+FieldDescriptor FieldDescriptor(MessageDescriptor parent) :
+{
+    String rule;
+    String type;
+    String name;
+    int tag;
+    LinkedHashMap<String,OptionDescriptor> opts = new LinkedHashMap<String,OptionDescriptor>();
+    LinkedHashMap<String,FieldDescriptor> fields = new LinkedHashMap<String,FieldDescriptor>();
+    OptionDescriptor optionD;
+	FieldDescriptor fieldD;
+	FieldDescriptor rc = new FieldDescriptor(parent);
+   	MessageDescriptor group = new MessageDescriptor(parent.getProtoDescriptor(), parent);
+}
+{
+
+    rule = Rule()
+    (
+        // We have to go through the look ahead trouble because based on if 'type' is 'group' 
+        // we need to look ahead to see if it looks like a group declaration instead it being 
+        // message type called group.
+        
+	    LOOKAHEAD(5)
+		type = PackageID()
+	    name = ID()
+	    <EQUALS>
+	    tag = Integer()
+	    (
+	    	<LBRACKET>
+	    	optionD = OptionDescriptor()
+	    	{
+	    		opts.put(optionD.getName(), optionD);
+	    	}
+	    	(
+	    		<COMMA>
+		    	optionD = OptionDescriptor()
+		    	{
+	    			opts.put(optionD.getName(), optionD);
+	    		}
+	    	)*
+	    	<RBRACKET>
+	    )?
+	    <SEMICOLON>    
+    	|
+	    {
+	    }
+		<GROUP>
+	    name = ID()
+	    <EQUALS>
+	    tag = Integer()
+	    <LBRACE>
+	    (
+	       	fieldD = FieldDescriptor(group)
+	    	{
+	    		fields.put(fieldD.getName(), fieldD); 
+	    	}
+	    )*
+	    <RBRACE> 
+	    ( <SEMICOLON> )?  
+	    {
+	    	type = name;    	
+	    	group.setName(name);
+	    	group.setFields(fields);
+	    	rc.setGroup(group);
+	    }
+    )
+    {
+    	rc.setName(name);
+    	rc.setType(type);
+    	rc.setRule(rule);
+    	rc.setTag(tag);
+    	rc.setOptions(opts);
+		return rc;
+    }
+}
+
+ServiceDescriptor ServiceDescriptor(ProtoDescriptor proto) :
+{
+    String name;
+    ArrayList<MethodDescriptor> methods = new ArrayList<MethodDescriptor>();
+    MethodDescriptor method;
+}
+{
+    <SERVICE> name = ID() <LBRACE>
+    (
+    	method = MethodDescriptor(proto) <SEMICOLON>
+    	{
+    		methods.add(method);
+    	}
+    )*
+    <RBRACE> 
+    {
+    	ServiceDescriptor rc = new ServiceDescriptor(proto);
+    	rc.setName(name);
+    	rc.setMethods(methods);
+    	return rc;
+    }
+}
+
+MethodDescriptor MethodDescriptor(ProtoDescriptor proto) :
+{
+    String name;
+    String input;
+    String output;
+}
+{
+    <RPC> name = ID() <LPAREN> input = PackageID() <RPAREN> <RETURNS> <LPAREN> output = PackageID() <RPAREN>    
+    {
+    	MethodDescriptor rc = new MethodDescriptor(proto);
+    	rc.setName(name);
+    	rc.setParameter(input);
+    	rc.setReturns(output);
+    	return rc;
+    }
+}
+
+OptionDescriptor OptionDescriptor() :
+{
+    String name;
+    String value;
+}
+{
+    name = ID() 
+    <EQUALS> 
+    value=Value() 
+    {
+    	OptionDescriptor rc = new OptionDescriptor();
+    	rc.setName(name);
+    	rc.setValue(value);
+    	return rc;
+    }
+}
+
+MessageDescriptor ExtendDescriptor(ProtoDescriptor proto, MessageDescriptor parent) :
+{
+    String name;
+    LinkedHashMap<String, FieldDescriptor> fields = new LinkedHashMap<String,FieldDescriptor>();
+  	MessageDescriptor rc = new MessageDescriptor(proto, parent);
+    FieldDescriptor fieldD;
+}
+{
+    <EXTEND> name = ID() <LBRACE>
+    (
+    	fieldD = FieldDescriptor(rc)
+    	{ fields.put(fieldD.getName(), fieldD); }
+    )*
+    <RBRACE>
+    {
+    	rc.setName(name);
+    	rc.setFields(fields);
+    	return rc;
+    }
+}
+
+ExtensionsDescriptor ExtensionsDescriptor(MessageDescriptor parent) :
+{
+	int first;
+	int last;
+}
+{
+    <EXTENSIONS> 
+    first = Integer() 
+    <TO> 
+    (
+    	last = Integer()
+    	|
+    	<MAX>
+    	{
+    		last=536870911;
+    	}
+    )
+    {
+    	ExtensionsDescriptor rc = new ExtensionsDescriptor(parent);
+    	rc.setFirst(first);
+    	rc.setLast(last);
+    	return rc;
+    }
+}
+
+EnumDescriptor EnumDescriptor(ProtoDescriptor proto, MessageDescriptor parent) :
+{
+    Token name;
+    LinkedHashMap<String,EnumFieldDescriptor> fields = new LinkedHashMap<String,EnumFieldDescriptor>();
+   	EnumDescriptor rc = new EnumDescriptor(proto, parent);
+    LinkedHashMap<String,OptionDescriptor> opts = new LinkedHashMap<String,OptionDescriptor>();
+
+    EnumFieldDescriptor enumD;
+    OptionDescriptor optionD;
+}
+{
+    <ENUM> name = <ID> <LBRACE>
+    (
+    	LOOKAHEAD(2)
+        <OPTION> optionD = OptionDescriptor() <SEMICOLON>
+        { opts.put(optionD.getName(),optionD); }
+    	|
+    	enumD = EnumFieldDescriptor(rc) <SEMICOLON>
+    	{ fields.put(enumD.getName(),enumD); }
+    )*
+    <RBRACE>
+    {
+    	rc.setName(name.image);
+    	rc.setFields(fields);
+    	rc.setOptions(opts);
+    	return rc;
+    }
+}
+
+/**
+ * Parses something like:
+ * optional string foo = 1;
+ */
+EnumFieldDescriptor EnumFieldDescriptor(EnumDescriptor parent) :
+{
+    String name;
+    int value=0;
+}
+{
+
+    name = ID()
+    <EQUALS>
+    value = Integer()
+    {
+    	EnumFieldDescriptor rc = new EnumFieldDescriptor(parent);
+    	rc.setName(name);
+    	rc.setValue(value);
+    	return rc;
+    }
+}
+
+int Integer() :
+{
+    Token t;
+}
+{
+  	t = <INTEGER>
+    {
+    	return Integer.parseInt(t.image);
+    }
+}
+
+
+String Rule() :
+{
+    Token t;
+}
+{
+    (
+    	t = <REQURIED>
+    	|
+    	t = <OPTIONAL>
+    	|
+    	t = <REPEATED>
+    )
+    {
+    	return t.image;
+    }
+}
+
+String Value() :
+{
+    Token t;
+    String value=null;
+}
+{
+    (
+    	value = StringLitteral()
+    	|
+  		value = ID()
+  		|
+  		t = <INTEGER>
+  		{
+  			value = t.image;
+  		}
+  		|
+  		t = <FLOAT>
+  		{
+  			value = t.image;
+  		}
+    )
+    {
+    	return value;
+    }
+}
+
+String ID() :
+{
+    Token t;
+}
+{
+    (
+          t = <ID>
+        | t = <GROUP>
+        | t = <IMPORT>
+        | t = <PACKAGE>
+        | t = <SERVICE>
+        | t = <RPC>
+        | t = <OPTION>
+        | t = <MESSAGE>
+        | t = <EXTENSIONS>
+        | t = <EXTEND>
+        | t = <ENUM>
+        | t = <REQURIED>
+        | t = <OPTIONAL>
+        | t = <REPEATED>
+        | t = <RETURNS>
+        | t = <TO>
+        | t = <MAX>
+    )
+    {
+    	return t.image;
+    }
+}
+
+String PackageID() :
+{
+    String t;
+    StringBuffer sb = new StringBuffer();
+}
+{
+	(
+	    t = ID()
+	    {
+	    	sb.append(t);
+	    }
+	    (
+	    	<PERIOD>
+	    	t=ID()
+	    	{
+	    		sb.append(".");
+	    		sb.append(t);
+	    	}
+	    )*
+	)
+	{
+		return sb.toString();
+	}
+}
+
+
+String StringLitteral() :
+{
+    Token t;
+}
+{
+    t = <STRING> 
+    {
+	    return ParserSupport.decodeString(t);
+    }    
+}

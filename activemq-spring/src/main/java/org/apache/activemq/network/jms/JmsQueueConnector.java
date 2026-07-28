@@ -22,7 +22,7 @@ import org.springframework.jndi.JndiTemplate;
  * A Bridge to other JMS Queue providers
  *
  * @org.apache.xbean.XBean
- * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
+ *
  */
 public class JmsQueueConnector extends SimpleJmsQueueConnector {
     public void setJndiLocalTemplate(JndiTemplate template) {

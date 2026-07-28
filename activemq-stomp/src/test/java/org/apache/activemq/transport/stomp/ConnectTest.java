@@ -84,7 +84,7 @@ public class ConnectTest {
         assertTrue("no dangling connections", Wait.waitFor(new Wait.Condition() {
             @Override
             public boolean isSatisified() throws Exception {
-                return 0 == brokerService.getTransportConnectors().get(0).connectionCount();
+                return 0 == brokerService.getTransportConnectors().get(0).getConnectionCount();
             }
         }, TimeUnit.SECONDS.toMillis(15), TimeUnit.MILLISECONDS.toMillis(200)));
 
@@ -121,7 +121,7 @@ public class ConnectTest {
         assertTrue("one connection", Wait.waitFor(new Wait.Condition() {
             @Override
             public boolean isSatisified() throws Exception {
-                return 1 == brokerService.getTransportConnectors().get(0).connectionCount();
+                return 1 == brokerService.getTransportConnectors().get(0).getConnectionCount();
             }
         }, TimeUnit.SECONDS.toMillis(15), TimeUnit.MILLISECONDS.toMillis(200)));
 
@@ -164,7 +164,7 @@ public class ConnectTest {
         assertTrue("one connection", Wait.waitFor(new Wait.Condition() {
              @Override
              public boolean isSatisified() throws Exception {
-                 return 1 == brokerService.getTransportConnectors().get(0).connectionCount();
+                 return 1 == brokerService.getTransportConnectors().get(0).getConnectionCount();
              }
          }, TimeUnit.SECONDS.toMillis(15), TimeUnit.MILLISECONDS.toMillis(200)));
 
@@ -172,7 +172,7 @@ public class ConnectTest {
         assertTrue("no dangling connections", Wait.waitFor(new Wait.Condition() {
             @Override
             public boolean isSatisified() throws Exception {
-                return 0 == brokerService.getTransportConnectors().get(0).connectionCount();
+                return 0 == brokerService.getTransportConnectors().get(0).getConnectionCount();
             }
         }, TimeUnit.SECONDS.toMillis(15), TimeUnit.MILLISECONDS.toMillis(200)));
 

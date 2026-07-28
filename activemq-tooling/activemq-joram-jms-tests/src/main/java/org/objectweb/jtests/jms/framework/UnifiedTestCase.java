@@ -39,7 +39,7 @@ import javax.naming.Context;
  * Classes which want that convenience should extend <code>UnifiedTestCase</code> instead of 
  * <code>JMSTestCase</code>.
  *
- * @author Jeff Mesnil (jmesnil@gmail.com)
+ *
  * @version $Id: UnifiedTestCase.java,v 1.1 2007/03/29 04:28:35 starksm Exp $
  * @since JMS 1.1
  */

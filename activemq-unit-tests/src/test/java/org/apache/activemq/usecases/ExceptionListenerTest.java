@@ -44,7 +44,7 @@ import org.junit.experimental.categories.Category;
 import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
- * @author Oliver Belikan
+ *
  */
 @Category(ParallelTest.class)
 public class ExceptionListenerTest implements ExceptionListener {

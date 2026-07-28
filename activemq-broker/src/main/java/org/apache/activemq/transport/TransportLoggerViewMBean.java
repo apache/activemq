@@ -22,7 +22,7 @@ package org.apache.activemq.transport;
  * by setting the logging property or by using the operations
  * enableLogging() and disableLogging().
  * 
- * @author David Martin Clavo david(dot)martin(dot)clavo(at)gmail.com
+ *
  * 
  */
 public interface TransportLoggerViewMBean {

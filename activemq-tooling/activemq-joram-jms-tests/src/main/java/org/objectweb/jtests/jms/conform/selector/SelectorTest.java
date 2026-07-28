@@ -29,7 +29,7 @@ import org.objectweb.jtests.jms.framework.TestConfig;
 /**
  * Test the message selector features of JMS
  *
- * @author Jeff Mesnil (jmesnil@)
+ *
  * @version $Id: SelectorTest.java,v 1.3 2007/10/02 14:59:35 csuconic Exp $
  */
 public class SelectorTest extends PTPTestCase

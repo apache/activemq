@@ -26,7 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * @author <a href="mailto:michael.gaffney@panacya.com">Michael Gaffney </a>
+ *
  */
 public class MessageEndpointProxy implements MessageListener, MessageEndpoint {
 

@@ -58,7 +58,7 @@ import org.junit.experimental.categories.Category;
 import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
- * @author gtully
+ *
  * @see https://issues.apache.org/activemq/browse/AMQ-2020
  **/
 @Category(ParallelTest.class)

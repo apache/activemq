@@ -29,7 +29,7 @@ import org.apache.activemq.command.MessageId;
 
 /**
  * 
- * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
+ *
  */
 abstract public class PersistenceAdapterTestSupport extends TestCase {
 

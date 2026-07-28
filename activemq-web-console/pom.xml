@@ -22,7 +22,7 @@
   <parent>
     <groupId>org.apache.activemq</groupId>
     <artifactId>activemq-parent</artifactId>
-    <version>6.3.0-SNAPSHOT</version>
+    <version>6.4.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>activemq-web-console</artifactId>
@@ -52,20 +52,18 @@
         </configuration>
       </plugin>
       <plugin>
-          <groupId>${jetty.maven.groupid}</groupId>
-        <artifactId>jetty-maven-plugin</artifactId>
+        <groupId>org.eclipse.jetty.ee11</groupId>
+        <artifactId>jetty-ee11-maven-plugin</artifactId>
         <version>${jetty-version}</version>
         <configuration>
-          <connectors>
-            <connector implementation="org.eclipse.jetty.server.ServerConnector">
-              <port>${jetty.port}</port>
-              <maxIdleTime>60000</maxIdleTime>
-            </connector>
-          </connectors>
-
-          <webAppConfig>
+          <httpConnector>
+            <port>${jetty.port}</port>
+            <idleTimeout>60000</idleTimeout>
+          </httpConnector>
+          <scan>10</scan>
+          <webApp>
             <contextPath>/</contextPath>
-          </webAppConfig>
+          </webApp>
 
           <systemProperties>
             <!-- enable easy connection to JConsole -->
@@ -100,7 +98,6 @@
                         </systemProperty>
             -->
           </systemProperties>
-          <scanIntervalSeconds>10</scanIntervalSeconds>
         </configuration>
       </plugin>
       <plugin>
@@ -142,12 +139,12 @@
               javax.management.remote,
               javax.naming,
               org.w3c.dom,
-              jakarta.servlet;version="[5,6)",
-              jakarta.servlet.annotation;version="[5,6)",
-              jakarta.servlet.http;version="[5,6)",
-              jakarta.servlet.jsp,
-              jakarta.servlet.jsp.tagext,
-              jakarta.servlet.jsp.el,
+              jakarta.servlet;version="[6,7)",
+              jakarta.servlet.annotation;version="[6,7)",
+              jakarta.servlet.http;version="[6,7)",
+              jakarta.servlet.jsp;version="[3,5)",
+              jakarta.servlet.jsp.tagext;version="[3,5)",
+              jakarta.servlet.jsp.el;version="[3,5)",
               javax.management,
               javax.management.openmbean,
               javax.net,
@@ -160,8 +157,8 @@
               org.slf4j.spi;version="[1.6,2)";resolution:=optional,
               org.apache.log4j;version="[2,3)";resolution:=optional,
               org.apache.log4j.spi;version="[2,3)";resolution:=optional,
-              org.eclipse.jetty*;resolution:=optional;version="[9.0,10)",
-              org.objectweb.asm*;version="[6,8)"
+              org.eclipse.jetty*;resolution:=optional;version="${jetty-version-range}",
+              org.objectweb.asm*;version="[6,10)"
             </Import-Package>
             <_contract>!*</_contract>
             <_noee>true</_noee>
@@ -206,10 +203,6 @@
               <groupId>${project.groupId}</groupId>
               <artifactId>activemq-all</artifactId>
           </exclusion>
-          <exclusion>
-              <groupId>org.eclipse.jetty.websocket</groupId>
-              <artifactId>websocket-server</artifactId>
-          </exclusion>
       </exclusions>
     </dependency>
     <dependency>
@@ -249,8 +242,18 @@
 
     <!-- web container -->
     <dependency>
+      <groupId>org.eclipse.jetty.ee11</groupId>
+      <artifactId>jetty-ee11-webapp</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
       <groupId>org.eclipse.jetty</groupId>
       <artifactId>jetty-server</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty</groupId>
+      <artifactId>jetty-rewrite</artifactId>
       <scope>test</scope>
     </dependency>
      <dependency>
@@ -277,24 +280,29 @@
     <!-- JSTL support -->
     
     <dependency>
-      <groupId>org.eclipse.jetty</groupId>
-      <artifactId>apache-jstl</artifactId>
-      <version>11.0.0</version>
+      <groupId>org.eclipse.jetty.ee11</groupId>
+      <artifactId>jetty-ee11-glassfish-jstl</artifactId>
       <scope>provided</scope>
     </dependency>
     
-     <!-- Tag Libs -->
+    <!-- Tag Libs -->
+    <!--
+      These two should be available either in the WAR itself or from the container. We can't configure
+      jetty-ee11-maven-plugin with <useProvidedScope>true</useProvidedScope> because we don't need ALL provided
+      dependencies. But we shouldn't build the WAR with these two included either, because _full_ web container
+      may provide own taglibs... Not me to decide ;)
+    -->
     <dependency>
       <groupId>jakarta.servlet.jsp.jstl</groupId>
       <artifactId>jakarta.servlet.jsp.jstl-api</artifactId>
       <version>3.0.2</version>
-      <scope>provided</scope>
+<!--      <scope>provided</scope>-->
     </dependency>
     <dependency>
       <groupId>org.glassfish.web</groupId>
       <artifactId>jakarta.servlet.jsp.jstl</artifactId>
       <version>3.0.1</version>
-      <scope>provided</scope>
+<!--      <scope>provided</scope>-->
     </dependency>
     <!--
     <dependency>
@@ -330,8 +338,8 @@
     </dependency>
     
     <dependency>
-      <groupId>org.eclipse.jetty</groupId>
-      <artifactId>apache-jsp</artifactId>
+      <groupId>org.eclipse.jetty.ee11</groupId>
+      <artifactId>jetty-ee11-apache-jsp</artifactId>
       <scope>provided</scope>
       <exclusions>
           <exclusion>

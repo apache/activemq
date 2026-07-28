@@ -1,0 +1,46 @@
+<?xml version="1.0"?>
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one or more
+    contributor license agreements.  See the NOTICE file distributed with
+    this work for additional information regarding copyright ownership.
+    The ASF licenses this file to You under the Apache License, Version 2.0
+    (the "License"); you may not use this file except in compliance with
+    the License.  You may obtain a copy of the License at
+    
+    http://www.apache.org/licenses/LICENSE-2.0
+    
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+-->
+<!DOCTYPE Configure PUBLIC "-//Jetty//Configure//EN" "https://jetty.org/configure_10_0.dtd">
+
+<!--
+  Apache ActiveMQ fix: this is a minimal, standalone-loadable adaptation of Jetty's
+  distribution jetty-dos.xml. The canonical file is written for Jetty's start.jar
+  module system and does NOT construct when loaded directly via XmlConfiguration
+  (as JettyServerBean does): its DoSHandler <New> passes 5 constructor arguments
+  (getId, trackerFactory, rejectHandler, maxTrackers, rejectUntracked) which match
+  no DoSHandler(...) constructor in 12.1.x, and its named <Arg name="..."> elements
+  break positional matching because jetty-server is not compiled with -parameters.
+
+  This adaptation uses the DoSHandler(Tracker.Factory) constructor with a
+  LeakingBucketTracker, rate-limiting per remote address and rejecting excess
+  requests with the DoSHandler default (HTTP 429). Tune the rate via
+  jetty.dos.leakingBucketTracker.maxRequestsPerSecond.
+-->
+<Configure id="Server" class="org.eclipse.jetty.server.Server">
+  <Call name="insertHandler">
+    <Arg>
+      <New id="DosHandler" class="org.eclipse.jetty.server.handler.DoSHandler">
+        <Arg>
+          <New class="org.eclipse.jetty.server.handler.DoSHandler$LeakingBucketTrackerFactory">
+            <Arg type="int"><Property name="jetty.dos.leakingBucketTracker.maxRequestsPerSecond" default="100"/></Arg>
+          </New>
+        </Arg>
+      </New>
+    </Arg>
+  </Call>
+</Configure>

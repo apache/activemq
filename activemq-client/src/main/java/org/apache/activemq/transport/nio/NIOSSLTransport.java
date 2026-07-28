@@ -374,6 +374,12 @@ public class NIOSSLTransport extends NIOTransport {
                 }
             }
 
+            // This isn't strictly necessary as ByteBuffer.allocate() would also throw the same
+            // IllegalArgumentException but this provides a better error.
+            if (nextFrameSize < 0) {
+                throw new IllegalArgumentException("Frame size value " + nextFrameSize + " may not be negative.");
+            }
+
             // now we got the data, lets reallocate and store the size for the marshaler.
             // if there's more data in plain, then the next call will start processing it.
             currentBuffer = ByteBuffer.allocate(nextFrameSize + 4);

@@ -59,7 +59,7 @@ import org.slf4j.LoggerFactory;
  * samples the production and consumption stats every second and if the flow of messages
  * get stuck then this tast fails.  The test monitors the flow of messages for 1 min.
  *  
- * @author chirino
+ *
  */
 public class NetworkLoadTest extends TestCase {
 

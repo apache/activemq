@@ -28,7 +28,7 @@ import org.objectweb.jtests.jms.framework.PTPTestCase;
 /**
  * Test the syntax of of message selector of JMS
  *
- * @author Jeff Mesnil (jmesnil@gmail.com)
+ *
  * @version $Id: SelectorSyntaxTest.java,v 1.1 2007/03/29 04:28:35 starksm Exp $
  */
 public class SelectorSyntaxTest extends PTPTestCase

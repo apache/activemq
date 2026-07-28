@@ -25,7 +25,7 @@ import org.apache.activemq.transport.http.HttpTransportBrokerTest;
 import java.net.URI;
 
 /**
- * @author <a href="http://www.christianposta.com/blog">Christian Posta</a>
+ *
  */
 public class HttpsNeedClientAuthBrokerTest extends HttpTransportBrokerTest {
 

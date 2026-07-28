@@ -439,6 +439,11 @@ public class DestinationFilter implements Destination {
         }
     }
 
+    @Override
+    public int getMaxInflatedDataSize() {
+        return next.getMaxInflatedDataSize();
+    }
+
     public Destination getNext() {
         return next;
     }

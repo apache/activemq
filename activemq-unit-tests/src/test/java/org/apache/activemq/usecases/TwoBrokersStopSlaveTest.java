@@ -29,7 +29,7 @@ import org.junit.experimental.categories.Category;
 import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
- * @author Carlo Dapor
+ *
  */
 @Category(ParallelTest.class)
 public class TwoBrokersStopSlaveTest extends TestCase {

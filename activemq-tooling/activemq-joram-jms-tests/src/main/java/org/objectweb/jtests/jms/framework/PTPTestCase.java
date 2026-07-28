@@ -35,7 +35,7 @@ import javax.naming.Context;
  * Classes which want that convenience should extend <code>PTPTestCase</code> instead of 
  * <code>JMSTestCase</code>.
  *
- * @author Jeff Mesnil (jmesnil@gmail.com)
+ *
  * @version $Id: PTPTestCase.java,v 1.1 2007/03/29 04:28:35 starksm Exp $
  */
 public abstract class PTPTestCase extends JMSTestCase

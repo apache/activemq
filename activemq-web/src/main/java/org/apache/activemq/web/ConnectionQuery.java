@@ -25,7 +25,7 @@ import org.apache.activemq.broker.jmx.SubscriptionViewMBean;
 /**
  * Query for a single connection.
  * 
- * @author ms
+ *
  */
 public class ConnectionQuery {
 

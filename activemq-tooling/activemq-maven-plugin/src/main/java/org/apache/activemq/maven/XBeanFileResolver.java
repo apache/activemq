@@ -23,7 +23,7 @@ import java.net.URL;
 /**
  * Helper to convert relative paths to XBean description files to URL-compliant absolute paths.
  * 
- * @author Marc CARRE <carre.marc@gmail.com>
+ *
  */
 public class XBeanFileResolver {
     private static final String XBEAN_FILE = "xbean:file:";

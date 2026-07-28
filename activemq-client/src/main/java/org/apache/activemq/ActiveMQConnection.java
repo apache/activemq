@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -119,7 +120,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
 
     private static final Logger LOG = LoggerFactory.getLogger(ActiveMQConnection.class);
 
-    public final ConcurrentMap<ActiveMQTempDestination, ActiveMQTempDestination> activeTempDestinations = new ConcurrentHashMap<>();
+    final Set<ActiveMQTempDestination> activeTempDestinations = ConcurrentHashMap.newKeySet();
 
     protected boolean dispatchAsync=true;
     protected boolean alwaysSessionAsync = true;
@@ -151,6 +152,9 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     private boolean optimizedMessageDispatch = true;
     private boolean copyMessageOnSend = true;
     private boolean useCompression;
+    private double maxInflatedDataSizeRatio = ActiveMQConnectionFactory.DEFAULT_MAX_INFLATED_DATA_SIZE_RATIO;
+    // This will be configured during negotiation if maxFrameSize has been configured.
+    private int maxInflatedDataSize = Integer.MAX_VALUE;
     private boolean objectMessageSerializationDefered;
     private boolean useAsyncSend;
     private boolean optimizeAcknowledge;
@@ -2033,6 +2037,15 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
         if(tmpMaxFrameSize > 0) {
             maxFrameSize.set(tmpMaxFrameSize);
         }
+
+        // Compute the maxInflatedData size as a ratio of maxFrameSize
+        // This prevents overflow and sets to Integer.MAX_VALUE if too large
+        double updatedMaxInflated = (double)tmpMaxFrameSize * maxInflatedDataSizeRatio;
+        if (Double.isInfinite(updatedMaxInflated) || updatedMaxInflated > Integer.MAX_VALUE) {
+            this.maxInflatedDataSize = Integer.MAX_VALUE;
+        } else {
+            this.maxInflatedDataSize = (int) updatedMaxInflated;
+        }
     }
 
     /**
@@ -2151,7 +2164,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
         syncSendPacket(info);
 
         dest.setConnection(this);
-        activeTempDestinations.put(dest, dest);
+        activeTempDestinations.add(dest);
         return dest;
     }
 
@@ -2187,7 +2200,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
             return false;
         }
 
-        return !activeTempDestinations.containsValue(dest);
+        return !activeTempDestinations.contains(dest);
     }
 
     public boolean isCopyMessageOnSend() {
@@ -2207,6 +2220,18 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      */
     public void setUseCompression(boolean useCompression) {
         this.useCompression = useCompression;
+    }
+
+    public int getMaxInflatedDataSize() {
+        return maxInflatedDataSize;
+    }
+
+    public double getMaxInflatedDataSizeRatio() {
+        return maxInflatedDataSizeRatio;
+    }
+
+    public void setMaxInflatedDataSizeRatio(double maxInflatedDataSizeRatio) {
+        this.maxInflatedDataSizeRatio = maxInflatedDataSizeRatio;
     }
 
     public void destroyDestination(ActiveMQDestination destination) throws JMSException {
@@ -2575,21 +2600,17 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      */
     public void cleanUpTempDestinations() {
 
-        if (this.activeTempDestinations == null || this.activeTempDestinations.isEmpty()) {
+        if (this.activeTempDestinations.isEmpty()) {
             return;
         }
 
-        Iterator<ConcurrentMap.Entry<ActiveMQTempDestination, ActiveMQTempDestination>> entries
-            = this.activeTempDestinations.entrySet().iterator();
-        while(entries.hasNext()) {
-            ConcurrentMap.Entry<ActiveMQTempDestination, ActiveMQTempDestination> entry = entries.next();
+        for (ActiveMQTempDestination dest : activeTempDestinations) {
             try {
                 // Only delete this temp destination if it was created from this connection. The connection used
                 // for the advisory consumer may also have a reference to this temp destination.
-                ActiveMQTempDestination dest = entry.getValue();
                 String thisConnectionId = (info.getConnectionId() == null) ? "" : info.getConnectionId().toString();
                 if (dest.getConnectionId() != null && dest.getConnectionId().equals(thisConnectionId)) {
-                    this.deleteTempDestination(entry.getValue());
+                    this.deleteTempDestination(dest);
                 }
             } catch (Exception ex) {
                 // the temp dest is in use so it can not be deleted.

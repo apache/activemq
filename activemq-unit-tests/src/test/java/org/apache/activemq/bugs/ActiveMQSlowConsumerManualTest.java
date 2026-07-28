@@ -41,7 +41,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 /**
- * @author James Furness
+ *
  *         https://issues.apache.org/jira/browse/AMQ-3607
  */
 public class ActiveMQSlowConsumerManualTest {

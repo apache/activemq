@@ -34,8 +34,8 @@ import org.objectweb.jtests.jms.framework.UnifiedTestCase;
  * Test unified JMS 1.1 sessions.
  * <br />
  * See JMS 1.1 specifications
- * 
- * @author Jeff Mesnil (jmesnil@gmail.com)
+ *
+ *
  * @version $Id: UnifiedSessionTest.java,v 1.1 2007/03/29 04:28:37 starksm Exp $
  * @since JMS 1.1
  */

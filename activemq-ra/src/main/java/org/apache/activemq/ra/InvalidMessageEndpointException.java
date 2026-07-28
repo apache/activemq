@@ -20,7 +20,7 @@ package org.apache.activemq.ra;
  * Thrown to indicate that a MessageEndpoint is no longer valid
  * and should be discarded. 
  *  
- * @author <a href="mailto:michael.gaffney@panacya.com">Michael Gaffney </a>
+ *
  */
 public class InvalidMessageEndpointException extends RuntimeException {
 

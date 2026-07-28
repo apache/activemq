@@ -40,7 +40,7 @@ import org.apache.activemq.test.annotations.ParallelTest;
 import org.junit.experimental.categories.Category;
 
 /**
- * @author chirino
+ *
  */
 @Category(ParallelTest.class)
 public class KahaDBVersionTest extends TestCase {

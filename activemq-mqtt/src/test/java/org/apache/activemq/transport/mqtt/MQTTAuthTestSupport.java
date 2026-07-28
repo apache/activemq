@@ -103,10 +103,16 @@ public class MQTTAuthTestSupport extends MQTTTestSupport {
         entry.setAdmin("guests,users,anonymous");
         authorizationEntries.add(entry);
         entry = new AuthorizationEntry();
-        entry.setTopic("ActiveMQ.Advisory.>");
+        entry.setTopic("ActiveMQ.Advisory.TempQueue");
         entry.setRead("guests,users,anonymous");
-        entry.setWrite("guests,users,anonymous");
-        entry.setAdmin("guests,users,anonymous");
+        entry.setWrite("admins");
+        entry.setAdmin("admins");
+        authorizationEntries.add(entry);
+        entry = new AuthorizationEntry();
+        entry.setTopic("ActiveMQ.Advisory.TempTopic");
+        entry.setRead("guests,users,anonymous");
+        entry.setWrite("admins");
+        entry.setAdmin("admins");
         authorizationEntries.add(entry);
 
         TempDestinationAuthorizationEntry tempEntry = new TempDestinationAuthorizationEntry();

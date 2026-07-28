@@ -17,14 +17,19 @@
 package org.apache.activemq.transport.amqp.protocol;
 
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
+import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.activemq.transport.amqp.AmqpHeader;
 import org.apache.activemq.transport.amqp.AmqpWireFormat;
 import org.apache.activemq.transport.amqp.AmqpWireFormat.ResetListener;
 import org.apache.activemq.transport.amqp.ParallelTest;
+import org.apache.activemq.util.ByteSequence;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -32,6 +37,11 @@ import org.junit.experimental.categories.Category;
 public class AmqpWireFormatTest {
 
     private final AmqpWireFormat wireFormat = new AmqpWireFormat();
+
+    @Before
+    public void setUp() throws Exception {
+        wireFormat.setMaxFrameSize(AmqpWireFormat.DEFAULT_MAX_FRAME_SIZE);
+    }
 
     @Test
     public void testWhenSaslNotAllowedNonSaslHeaderIsInvliad() {
@@ -81,4 +91,39 @@ public class AmqpWireFormatTest {
         wireFormat.resetMagicRead();
         assertTrue(reset.get());
     }
+
+
+    @Test
+    public void testNegativeFrameSize() throws Exception {
+        AmqpHeader inputHeader = new AmqpHeader();
+        wireFormat.unmarshal(new ByteSequence(inputHeader.getBuffer().toByteArray()));
+
+        ByteSequence bs = new ByteSequence(ByteBuffer.allocate(Integer.BYTES).putInt(-100).array());
+        IOException e = assertThrows(IOException.class, () -> wireFormat.unmarshal(bs));
+        assertTrue(e.getMessage().contains("exceeds the maximum frame configured or supported frame size limit"));
+    }
+
+    @Test
+    public void testFrameSizeTooSmall() throws Exception {
+        AmqpHeader inputHeader = new AmqpHeader();
+        wireFormat.unmarshal(new ByteSequence(inputHeader.getBuffer().toByteArray()));
+
+        // less than 8
+        ByteSequence bs = new ByteSequence(ByteBuffer.allocate(Integer.BYTES).putInt(3).array());
+        IOException e = assertThrows(IOException.class, () -> wireFormat.unmarshal(bs));
+        assertTrue(e.getMessage().contains("is smaller than the minimally viable frame size value"));
+    }
+
+    @Test
+    public void testFrameSizeTooLarge() throws Exception {
+        wireFormat.setMaxFrameSize(100);
+        AmqpHeader inputHeader = new AmqpHeader();
+        wireFormat.unmarshal(new ByteSequence(inputHeader.getBuffer().toByteArray()));
+
+        // size 300 is larger than maxFrameSize
+        ByteSequence bs = new ByteSequence(ByteBuffer.allocate(Integer.BYTES).putInt(300).array());
+        IOException e = assertThrows(IOException.class, () -> wireFormat.unmarshal(bs));
+        assertTrue(e.getMessage().contains("larger than max allowed"));
+    }
+
 }

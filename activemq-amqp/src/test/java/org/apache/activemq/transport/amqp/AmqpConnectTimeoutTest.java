@@ -126,7 +126,7 @@ public class AmqpConnectTimeoutTest extends AmqpTestSupport {
         assertTrue("one connection", Wait.waitFor(new Wait.Condition() {
              @Override
              public boolean isSatisified() throws Exception {
-                 return 1 == brokerService.getTransportConnectorByScheme(getConnectorScheme()).connectionCount();
+                 return 1 == brokerService.getTransportConnectorByScheme(getConnectorScheme()).getConnectionCount();
              }
         }, TimeUnit.SECONDS.toMillis(15), TimeUnit.MILLISECONDS.toMillis(250)));
 
@@ -134,7 +134,7 @@ public class AmqpConnectTimeoutTest extends AmqpTestSupport {
         assertTrue("no dangling connections", Wait.waitFor(new Wait.Condition() {
             @Override
             public boolean isSatisified() throws Exception {
-                return 0 == brokerService.getTransportConnectorByScheme(getConnectorScheme()).connectionCount();
+                return 0 == brokerService.getTransportConnectorByScheme(getConnectorScheme()).getConnectionCount();
             }
         }, TimeUnit.SECONDS.toMillis(15), TimeUnit.MILLISECONDS.toMillis(500)));
 

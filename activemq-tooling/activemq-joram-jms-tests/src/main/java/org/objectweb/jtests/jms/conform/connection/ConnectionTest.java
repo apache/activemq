@@ -34,7 +34,7 @@ import org.objectweb.jtests.jms.framework.TestConfig;
  * 
  * See JMS specifications, sec. 4.3.5 Closing a Connection
  *
- * @author Jeff Mesnil (jmesnil@gmail.com)
+ *
  * @version $Id: ConnectionTest.java,v 1.2 2007/06/15 20:55:20 csuconic Exp $
  */
 public class ConnectionTest extends PTPTestCase

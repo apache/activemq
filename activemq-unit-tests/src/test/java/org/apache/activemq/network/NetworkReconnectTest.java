@@ -44,7 +44,7 @@ import org.slf4j.LoggerFactory;
  * These test cases are used to verifiy that network connections get re
  * established in all broker restart scenarios.
  * 
- * @author chirino
+ *
  */
 public class NetworkReconnectTest extends TestCase {
 

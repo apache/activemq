@@ -39,7 +39,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 /**
- * @author <a href="http://www.christianposta.com/blog">Christian Posta</a>
+ *
  */
 public class ThreeBrokerTempDestDemandSubscriptionCleanupTest extends JmsMultipleBrokersTestSupport {
     private static final Logger LOG = LoggerFactory.getLogger(ThreeBrokerTempDestDemandSubscriptionCleanupTest.class);

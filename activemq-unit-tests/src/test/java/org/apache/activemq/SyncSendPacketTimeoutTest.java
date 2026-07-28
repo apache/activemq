@@ -34,6 +34,7 @@ import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.transport.RequestTimedOutIOException;
+import org.apache.activemq.util.ExceptionUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -170,7 +171,7 @@ public class SyncSendPacketTimeoutTest {
             }
             assertNotNull("Should have caught a JMSException", exception);
             assertEquals(RequestTimedOutIOException.class,
-                    TransportConnector.getRootCause(exception).getClass());
+                    ExceptionUtils.getRootCause(exception).getClass());
         }
     }
 

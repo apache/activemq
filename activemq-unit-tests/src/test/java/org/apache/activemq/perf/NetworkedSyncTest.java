@@ -177,7 +177,7 @@ public class NetworkedSyncTest extends TestCase {
 /**
  * Message producer running as a separate thread, connecting to broker1
  *
- * @author tmielke
+ *
  *
  */
 class Producer implements Runnable {
@@ -244,7 +244,7 @@ class Producer implements Runnable {
 
 /*
  * * Message consumer running as a separate thread, connecting to broker2
- * @author tmielke
+ *
  *
  */
 class Consumer implements Runnable {

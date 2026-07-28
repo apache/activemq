@@ -33,6 +33,7 @@ import jakarta.jms.JMSException;
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.region.MessageReference;
+import org.apache.activemq.openwire.OpenWireFormat;
 import org.apache.activemq.usage.MemoryUsage;
 import org.apache.activemq.util.ByteArrayInputStream;
 import org.apache.activemq.util.ByteArrayOutputStream;
@@ -80,12 +81,12 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
     protected boolean compressed;
     protected String userID;
 
-    protected ByteSequence content;
+    protected volatile ByteSequence content;
     protected volatile ByteSequence marshalledProperties;
     protected DataStructure dataStructure;
     protected int redeliveryCounter;
 
-    protected int size;
+    protected volatile int size;
     protected Map<String, Object> properties;
     protected boolean readOnlyProperties;
     protected boolean readOnlyBody;
@@ -102,9 +103,10 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
     private BrokerId[] brokerPath;
     private BrokerId[] cluster;
 
-    public static interface MessageDestination {
+    public interface MessageDestination {
         int getMinimumMessageSize();
         MemoryUsage getMemoryUsage();
+        int getMaxInflatedDataSize();
     }
 
     public abstract Message copy();
@@ -713,14 +715,18 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
     @Override
 	public int getSize() {
         int minimumMessageSize = getMinimumMessageSize();
+        ByteSequence content = this.content;
+        int size = this.size;
         if (size < minimumMessageSize || size == 0) {
             size = minimumMessageSize;
+            ByteSequence marshalledProperties = this.marshalledProperties;
             if (marshalledProperties != null) {
                 size += marshalledProperties.getLength();
             }
             if (content != null) {
                 size += content.getLength();
             }
+            this.size = size;
         }
         return size;
     }
@@ -870,5 +876,16 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
             this.processAsExpired = new AtomicBoolean();
         }
         return this;
+    }
+
+    public int getMaxInflatedDataSize() {
+        // If this is set then this is on a broker
+        if (regionDestination != null) {
+            return regionDestination.getMaxInflatedDataSize();
+            // connection is set on Clients
+        } else if (connection != null) {
+            return connection.getMaxInflatedDataSize();
+        }
+        return OpenWireFormat.DEFAULT_MAX_INFLATED_DATA_SIZE;
     }
 }

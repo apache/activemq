@@ -16,9 +16,12 @@
  */
 package org.apache.activemq;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import javax.management.ObjectName;
 import org.apache.activemq.network.DiscoveryNetworkConnector;
+import org.apache.activemq.network.NetworkConnector;
 import org.apache.activemq.plugin.RuntimeConfigurationBroker;
 import org.apache.activemq.plugin.jmx.RuntimeConfigurationViewMBean;
 import org.apache.activemq.util.IntrospectionSupport;
@@ -142,6 +145,49 @@ public class SpringBeanTest extends RuntimeConfigTestSupport {
         assertNotEquals("unknown", props.get(propOfInterest));
 
 
+    }
+
+    @Test
+    public void testRemovePropertyRefNetworkConnector() throws Exception {
+
+        System.setProperty("network.uri", "static:(tcp://localhost:8888)");
+        System.setProperty("network.user", "guest");
+        System.setProperty("network.password", "secret");
+
+        final String brokerConfig = "SpringPropertyRemoveTest-broker";
+        applyNewConfig(brokerConfig, "emptyUpdatableConfig1000-spring-property-two-nc");
+        startBroker(brokerConfig);
+        assertTrue("broker alive", brokerService.isStarted());
+        assertEquals("two network connectors", 2, brokerService.getNetworkConnectors().size());
+
+        for (DiscoveryNetworkConnector nc : asDiscoveryConnectors(brokerService.getNetworkConnectors())) {
+            assertEquals("uri resolved", System.getProperty("network.uri"), nc.getUri().toASCIIString());
+            assertEquals("userName resolved", System.getProperty("network.user"), nc.getUserName());
+            assertEquals("password resolved", System.getProperty("network.password"), nc.getPassword());
+        }
+
+        applyNewConfig(brokerConfig, "emptyUpdatableConfig1000-spring-property-one-nc", SLEEP);
+
+        assertTrue("one network connector remains", Wait.waitFor(new Wait.Condition() {
+            @Override
+            public boolean isSatisified() throws Exception {
+                return 1 == brokerService.getNetworkConnectors().size();
+            }
+        }));
+
+        DiscoveryNetworkConnector remaining = (DiscoveryNetworkConnector) brokerService.getNetworkConnectors().get(0);
+        assertEquals("kept the one named 'one'", "one", remaining.getName());
+        assertEquals("uri still resolved", System.getProperty("network.uri"), remaining.getUri().toASCIIString());
+        assertEquals("userName still resolved", System.getProperty("network.user"), remaining.getUserName());
+        assertEquals("password still resolved", System.getProperty("network.password"), remaining.getPassword());
+    }
+
+    private static List<DiscoveryNetworkConnector> asDiscoveryConnectors(List<NetworkConnector> connectors) {
+        List<DiscoveryNetworkConnector> result = new ArrayList<>(connectors.size());
+        for (NetworkConnector nc : connectors) {
+            result.add((DiscoveryNetworkConnector) nc);
+        }
+        return result;
     }
 
     @Test

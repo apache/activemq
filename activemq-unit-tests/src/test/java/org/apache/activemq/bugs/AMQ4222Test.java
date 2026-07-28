@@ -49,7 +49,7 @@ import org.junit.experimental.categories.Category;
 import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
- * @author <a href="http://www.christianposta.com/blog">Christian Posta</a>
+ *
  */
 @Category(ParallelTest.class)
 public class AMQ4222Test extends TestSupport {

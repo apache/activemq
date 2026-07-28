@@ -57,7 +57,7 @@ import org.objectweb.jtests.jms.framework.PTPTestCase;
  * The cases marked with a Y should throw a <code>java.lang.MessageFormatException</code> <strong>if</strong> the
  * String is not a correct representation of the column type (otherwise, it returns the property). 
  *
- * @author Jeff Mesnil (jmesnil@gmail.com)
+ *
  * @version $Id: MessagePropertyConversionTest.java,v 1.1 2007/03/29 04:28:34 starksm Exp $
  */
 public class MessagePropertyConversionTest extends PTPTestCase

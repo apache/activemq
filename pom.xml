@@ -19,13 +19,13 @@
   <parent>
     <groupId>org.apache</groupId>
     <artifactId>apache</artifactId>
-    <version>37</version>
+    <version>39</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>org.apache.activemq</groupId>
   <artifactId>activemq-parent</artifactId>
-  <version>6.3.0-SNAPSHOT</version>
+  <version>6.4.0-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>ActiveMQ</name>
   <inceptionYear>2005</inceptionYear>
@@ -41,6 +41,8 @@
          preventing CI from hanging indefinitely on Windows file-lock issues or
          any other test that never terminates. Override per-module if needed. -->
     <surefire.forkedProcessTimeout>300</surefire.forkedProcessTimeout>
+    <!-- Set to 'ping' on Windows 11+ where wmic is unavailable: -Dsurefire.enableProcessChecker=ping -->
+    <surefire.enableProcessChecker>all</surefire.enableProcessChecker>
 
     <siteId>activemq-${project.version}</siteId>
     <projectName>Apache ActiveMQ</projectName>
@@ -48,65 +50,70 @@
     <staging.siteURL>scp://people.apache.org/x1/www/activemq.apache.org</staging.siteURL>
 
     <!-- JAR dependency versions -->
-    <activemq-protobuf-version>1.1</activemq-protobuf-version>
     <activesoap-version>1.3</activesoap-version>
     <annogen-version>0.1.0</annogen-version>
     <ant-version>1.10.17</ant-version>
     <aries-version>1.1.0</aries-version>
-    <camel-version>4.18.1</camel-version>
+    <camel-version>4.21.0</camel-version>
     <commons-beanutils-version>1.11.0</commons-beanutils-version>
     <commons-collections-version>3.2.2</commons-collections-version>
     <commons-dbcp2-version>2.14.0</commons-dbcp2-version>
     <commons-io-version>2.22.0</commons-io-version>
-    <commons-logging-version>1.3.6</commons-logging-version>
+    <commons-logging-version>1.4.0</commons-logging-version>
     <commons-pool2-version>2.13.1</commons-pool2-version>
     <commons-text-version>1.15.0</commons-text-version>
     <directory-version>2.0.0.AM25</directory-version>
-    <ecj.version>3.45.0</ecj.version>
+    <ecj.version>3.46.0</ecj.version>
     <hawtbuf-version>1.11</hawtbuf-version>
     <hawtdispatch-version>1.22</hawtdispatch-version>
     <httpclient-version>4.5.14</httpclient-version>
     <httpcore-version>4.4.16</httpcore-version>
-    <jackson-version>2.21.2</jackson-version>
-    <jackson-annotations-version>2.21</jackson-annotations-version>
+    <jackson-version>2.22.1</jackson-version>
+    <jackson-annotations-version>2.22</jackson-annotations-version>
     <jakarta-jms-api-version>3.1.0</jakarta-jms-api-version>
+    <jakarta-annotation-api-version>3.0.0</jakarta-annotation-api-version>
+    <jakarta-servlet-api-version>6.1.0</jakarta-servlet-api-version>
+    <jakarta-servlet-jsp-api-version>4.0.0</jakarta-servlet-jsp-api-version>
+    <jakarta-el-api-version>6.0.0</jakarta-el-api-version>
+    <asm-version>9.10.1</asm-version>
     <jasypt-version>1.9.3</jasypt-version>
-    <jaxb-version>4.0.7</jaxb-version>
-    <jetty-version>11.0.26</jetty-version>
-    <jetty-version-range>[11,13)</jetty-version-range>
+    <jaxb-version>4.0.9</jaxb-version>
+    <jetty-version>12.1.11</jetty-version>
+    <jetty-version-range>[12,13)</jetty-version-range>
     <jmdns-version>3.6.3</jmdns-version>
-    <javassist-version>3.31.0-GA</javassist-version>
-    <jettison-version>1.5.5</jettison-version>
-    <jolokia-version>2.5.1</jolokia-version>
+    <javassist-version>3.32.0-GA</javassist-version>
+    <jettison-version>1.5.7</jettison-version>
+    <jolokia-version>2.6.0</jolokia-version>
+    <jmh-version>1.37</jmh-version>
     <junit-version>4.13.2</junit-version>
     <h2-version>2.4.240</h2-version>
     <hamcrest-version>1.3</hamcrest-version>
-    <karaf-version>4.4.10</karaf-version>
-    <log4j-version>2.25.4</log4j-version>
+    <karaf-version>4.4.11</karaf-version>
+    <log4j-version>2.26.1</log4j-version>
     <mockito-version>5.23.0</mockito-version>
-    <owasp-dependency-check-version>12.2.1</owasp-dependency-check-version>
+    <owasp-dependency-check-version>12.2.2</owasp-dependency-check-version>
     <mqtt-client-version>1.16</mqtt-client-version>
     <org-apache-derby-version>10.16.1.1</org-apache-derby-version>
     <osgi-version>7.0.0</osgi-version>
     <qpid-proton-version>0.34.1</qpid-proton-version>
     <qpid-jms-version>2.10.0</qpid-jms-version>
-    <netty-version>4.2.12.Final</netty-version>
+    <netty-version>4.2.16.Final</netty-version>
     <rome-version>2.1.0</rome-version>
-    <shiro-version>2.1.0</shiro-version>
-    <slf4j-version>2.0.17</slf4j-version>
-    <spring-version>6.2.17</spring-version>
-    <spring-version-range>[6,7)</spring-version-range>
+    <shiro-version>2.2.1</shiro-version>
+    <slf4j-version>2.0.18</slf4j-version>
+    <spring-version>7.0.8</spring-version>
+    <spring-version-range>[7,8)</spring-version-range>
     <taglibs-version>1.2.5</taglibs-version>
     <xpp3-version>1.1.4c</xpp3-version>
     <xstream-version>1.4.21</xstream-version>
-    <xbean-version>4.30</xbean-version>
+    <xbean-version>4.31</xbean-version>
     <xerces-version>2.12.2</xerces-version>
-    <jaxb-tools-version>4.0.12</jaxb-tools-version>
+    <jaxb-tools-version>4.0.16</jaxb-tools-version>
     <stompjms-version>3.1.0</stompjms-version>
 
     <pax-logging-version>2.1.3</pax-logging-version>
     <pax-exam-version>4.14.0</pax-exam-version>
-    <pax-url-version>3.0.2</pax-url-version>
+    <pax-url-version>3.0.3</pax-url-version>
     <felix-framework-version>5.6.12</felix-framework-version>
 
     <site-repo-url>scpexe://people.apache.org/www/activemq.apache.org/maven/</site-repo-url>
@@ -120,19 +127,19 @@
     <maven-eclipse-plugin-version>2.10</maven-eclipse-plugin-version>
     <maven-rar-plugin-version>3.1.0</maven-rar-plugin-version>
     <exec-maven-plugin-version>3.1.0</exec-maven-plugin-version>
-    <flatten-maven-plugin-version>1.7.3</flatten-maven-plugin-version>
+    <flatten-maven-plugin-version>1.8.0</flatten-maven-plugin-version>
     <javacc-maven-plugin-version>3.2.0</javacc-maven-plugin-version>
     <cobertura-maven-plugin-version>2.7</cobertura-maven-plugin-version>
     <taglist-maven-plugin-version>3.2.2</taglist-maven-plugin-version>
     <build-helper-maven-plugin-version>3.6.1</build-helper-maven-plugin-version>
     <replacer-maven-plugin-version>1.5.3</replacer-maven-plugin-version>
-    <sonar-maven-plugin-version>5.6.0.6792</sonar-maven-plugin-version>
+    <sonar-maven-plugin-version>5.7.0.6970</sonar-maven-plugin-version>
     <tools-maven-plugin-version>1.4</tools-maven-plugin-version>
     <depends-maven-plugin-version>1.5.0</depends-maven-plugin-version>
     <docker-maven-plugin-version>0.48.1</docker-maven-plugin-version>
     <docker-java-version>17</docker-java-version>
     <maven-project-info-reports-plugin-version>3.9.0</maven-project-info-reports-plugin-version>
-    <maven-core-version>3.9.15</maven-core-version>
+    <maven-core-version>3.9.16</maven-core-version>
     <maven-surefire-plugin-version>3.5.3</maven-surefire-plugin-version>
     <maven-surefire-junit5-tree-reporter-version>1.5.1</maven-surefire-junit5-tree-reporter-version>
     <!-- OSGi bundles properties -->
@@ -189,6 +196,8 @@
   <modules>
     <module>bom</module>
     <module>activemq-openwire-generator</module>
+    <module>activemq-protobuf</module>
+    <module>activemq-protobuf-test</module>
     <module>activemq-client</module>
     <module>activemq-openwire-legacy</module>
     <module>activemq-broker</module>
@@ -407,7 +416,7 @@
       <dependency>
         <groupId>org.apache.activemq.protobuf</groupId>
         <artifactId>activemq-protobuf</artifactId>
-        <version>${activemq-protobuf-version}</version>
+        <version>${project.version}</version>
       </dependency>
 
       <!-- =============================== -->
@@ -446,19 +455,24 @@
       <dependency>
         <groupId>org.ow2.asm</groupId>
         <artifactId>asm</artifactId>
-        <version>9.9.1</version>
+        <version>${asm-version}</version>
       </dependency>
 
-     <!-- Servlet 5.0 and JSP -->
+     <!-- Servlet and JSP (Jakarta EE 11, required by Spring 7) -->
      <dependency>
        <groupId>jakarta.servlet.jsp</groupId>
        <artifactId>jakarta.servlet.jsp-api</artifactId>
-       <version>3.1.1</version>
+       <version>${jakarta-servlet-jsp-api-version}</version>
      </dependency>
      <dependency>
        <groupId>jakarta.servlet</groupId>
        <artifactId>jakarta.servlet-api</artifactId>
-       <version>5.0.0</version>
+       <version>${jakarta-servlet-api-version}</version>
+     </dependency>
+     <dependency>
+       <groupId>jakarta.el</groupId>
+       <artifactId>jakarta.el-api</artifactId>
+       <version>${jakarta-el-api-version}</version>
      </dependency>
      <dependency>
        <groupId>jakarta.websocket</groupId>
@@ -830,6 +844,14 @@
       </dependency>
 
       <dependency>
+        <groupId>org.eclipse.jetty.ee11</groupId>
+        <artifactId>jetty-ee11-bom</artifactId>
+        <version>${jetty-version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+
+      <dependency>
         <groupId>org.apache.httpcomponents</groupId>
         <artifactId>httpclient</artifactId>
         <version>${httpclient-version}</version>
@@ -930,7 +952,19 @@
       <dependency>
         <groupId>jakarta.annotation</groupId>
         <artifactId>jakarta.annotation-api</artifactId>
-        <version>2.1.1</version>
+        <version>${jakarta-annotation-api-version}</version>
+      </dependency>
+
+      <!-- JMH for micro-benchmarks -->
+      <dependency>
+        <groupId>org.openjdk.jmh</groupId>
+        <artifactId>jmh-core</artifactId>
+        <version>${jmh-version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.openjdk.jmh</groupId>
+        <artifactId>jmh-generator-annprocess</artifactId>
+        <version>${jmh-version}</version>
       </dependency>
 
     </dependencies>
@@ -943,7 +977,7 @@
         <plugin>
           <groupId>org.apache.activemq.protobuf</groupId>
           <artifactId>activemq-protobuf</artifactId>
-          <version>${activemq-protobuf-version}</version>
+          <version>${project.version}</version>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
@@ -967,7 +1001,7 @@
             <forkCount>1</forkCount>
             <reuseForks>false</reuseForks>
             <forkedProcessTimeoutInSeconds>${surefire.forkedProcessTimeout}</forkedProcessTimeoutInSeconds>
-            <enableProcessChecker>all</enableProcessChecker>
+            <enableProcessChecker>${surefire.enableProcessChecker}</enableProcessChecker>
             <failIfNoTests>false</failIfNoTests>
             <systemPropertyVariables>
                 <java.awt.headless>true</java.awt.headless>
@@ -1015,8 +1049,8 @@
           <version>${javacc-maven-plugin-version}</version>
         </plugin>
         <plugin>
-          <groupId>org.eclipse.jetty</groupId>
-          <artifactId>jetty-maven-plugin</artifactId>
+          <groupId>org.eclipse.jetty.ee11</groupId>
+          <artifactId>jetty-ee11-maven-plugin</artifactId>
           <version>${jetty-version}</version>
         </plugin>
         <plugin>

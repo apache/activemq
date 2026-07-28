@@ -22,7 +22,7 @@
   <parent>
     <groupId>org.apache.activemq</groupId>
     <artifactId>activemq-parent</artifactId>
-    <version>6.3.0-SNAPSHOT</version>
+    <version>6.4.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>activemq-http</artifactId>
@@ -65,8 +65,8 @@
       <artifactId>jetty-xml</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.eclipse.jetty</groupId>
-      <artifactId>jetty-webapp</artifactId>
+      <groupId>org.eclipse.jetty.ee11</groupId>
+      <artifactId>jetty-ee11-webapp</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.httpcomponents</groupId>
@@ -115,13 +115,37 @@
     </dependency>
     <dependency>
       <groupId>org.eclipse.jetty.websocket</groupId>
-      <artifactId>websocket-jetty-client</artifactId>
+      <artifactId>jetty-websocket-core-client</artifactId>
       <scope>provided</scope>
       <optional>true</optional>
     </dependency>
     <dependency>
       <groupId>org.eclipse.jetty.websocket</groupId>
-      <artifactId>websocket-jetty-server</artifactId>
+      <artifactId>jetty-websocket-core-server</artifactId>
+      <scope>provided</scope>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+        <groupId>org.eclipse.jetty.websocket</groupId>
+        <artifactId>jetty-websocket-jetty-client</artifactId>
+        <scope>provided</scope>
+        <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty.websocket</groupId>
+      <artifactId>jetty-websocket-jetty-api</artifactId>
+      <scope>provided</scope>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty.ee11.websocket</groupId>
+      <artifactId>jetty-ee11-websocket-jakarta-client</artifactId>
+      <scope>provided</scope>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty.ee11.websocket</groupId>
+      <artifactId>jetty-ee11-websocket-jetty-server</artifactId>
       <scope>provided</scope>
       <optional>true</optional>
     </dependency>
@@ -153,7 +177,7 @@
               org.apache.activemq.transport.https*;version=${project.version};-noimport:=;-split-package:=merge-last
             </Export-Package>
             <Import-Package>
-              org.eclipse.jetty*;version="[9.0,10.0)";resolution:=optional,
+              org.eclipse.jetty*;version="${jetty-version-range}";resolution:=optional,
               !org.apache.activemq.transport.ws*;version=${project.version},
               !org.apache.activemq.transport.xstream;version=${project.version},
               !org.apache.activemq.transport.util;version=${project.version},

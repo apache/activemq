@@ -59,7 +59,7 @@ import org.junit.experimental.categories.Category;
  * updated to the passed queue destination and thus the memory usage of the
  * topic was being updated instead.
  *
- * @author Claudio Corsi
+ *
  */
 @Category(ParallelTest.class)
 public class MirroredQueueCorrectMemoryUsageTest extends EmbeddedBrokerTestSupport {

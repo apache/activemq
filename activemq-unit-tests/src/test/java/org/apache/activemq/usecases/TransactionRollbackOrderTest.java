@@ -42,7 +42,7 @@ import org.apache.activemq.test.annotations.ParallelTest;
 /**
  * Test case for AMQ-268
  * 
- * @author Paul Smith
+ *
  * 
  */
 @Category(ParallelTest.class)

@@ -19,11 +19,14 @@ package org.apache.activemq.transport.vm;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import java.util.stream.Collectors;
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerFactoryHandler;
 import org.apache.activemq.broker.BrokerRegistry;
@@ -44,12 +47,29 @@ import org.slf4j.MDC;
 
 public class VMTransportFactory extends TransportFactory {
 
+    public static final String VM_TRANSPORT_FACTORY_SCHEMES_ENABLED_PROP =
+            "org.apache.activemq.transport.VM_TRANSPORT_FACTORY_SCHEMES_ENABLED";
+    public static final String DEFAULT_ALLOWED_SCHEMES = "broker,properties";
+
     public static final ConcurrentMap<String, BrokerService> BROKERS = new ConcurrentHashMap<String, BrokerService>();
     public static final ConcurrentMap<String, TransportConnector> CONNECTORS = new ConcurrentHashMap<String, TransportConnector>();
     public static final ConcurrentMap<String, VMTransportServer> SERVERS = new ConcurrentHashMap<String, VMTransportServer>();
     private static final Logger LOG = LoggerFactory.getLogger(VMTransportFactory.class);
 
     BrokerFactoryHandler brokerFactoryHandler;
+    private final Set<String> allowedSchemes;
+
+    public VMTransportFactory() {
+        final String allowedSchemes = System.getProperty(VM_TRANSPORT_FACTORY_SCHEMES_ENABLED_PROP,
+                DEFAULT_ALLOWED_SCHEMES);
+
+        // Asterisk will map to null which will allow all and skip checking
+        // Empty string will map to an empty set and will deny all
+        this.allowedSchemes = !allowedSchemes.equals("*") ?
+                Arrays.stream(allowedSchemes.split("\\s*,\\s*"))
+                .filter(s -> !s.isBlank())
+                .collect(Collectors.toUnmodifiableSet()) : null;
+    }
 
     @Override
     public Transport doConnect(URI location) throws Exception {
@@ -119,6 +139,7 @@ public class VMTransportFactory extends TransportFactory {
                         throw new IOException("Broker named '" + host + "' does not exist.");
                     }
                     try {
+                        validateBrokerCreationSchema(host, brokerURI);
                         if (brokerFactoryHandler != null) {
                             broker = brokerFactoryHandler.createBroker(brokerURI);
                         } else {
@@ -160,6 +181,20 @@ public class VMTransportFactory extends TransportFactory {
             throw new IllegalArgumentException("Invalid connect parameters: " + options);
         }
         return transport;
+    }
+
+    private void validateBrokerCreationSchema(String host, URI brokerURI) {
+        if (allowedSchemes != null) {
+            final String detectedScheme = brokerURI.getScheme();
+            if (detectedScheme == null) {
+                throw new IllegalArgumentException("Could not detect scheme in given URI [" + brokerURI + "]");
+            }
+            if (!allowedSchemes.contains(detectedScheme)){
+                throw new IllegalArgumentException("Broker named '" + host + "' does not exist and "
+                        + "broker creation using the scheme '" + detectedScheme + "' is not enabled via the VMTransportFactory. "
+                        + "To allow creation, configure the system property " + VM_TRANSPORT_FACTORY_SCHEMES_ENABLED_PROP);
+            }
+        }
     }
 
    private static String extractHost(URI location) {

@@ -22,7 +22,7 @@ import jakarta.jms.ExceptionListener;
  * <p>
  * </p>
  *
- * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
+ *
  */
 public interface AsyncCallback extends ExceptionListener {
     public void onSuccess();

@@ -35,7 +35,7 @@ import java.util.LinkedList;
 import static org.apache.activemq.TestSupport.*;
 
 /**
- * @author <a href="http://www.christianposta.com/blog">Christian Posta</a>
+ *
  */
 public class TwoBrokerVirtualTopicForwardingTest extends JmsMultipleBrokersTestSupport {
 

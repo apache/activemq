@@ -18,6 +18,7 @@ package org.apache.activemq.transport.amqp.message;
 
 import java.io.DataInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.nio.charset.Charset;
@@ -38,6 +39,7 @@ import org.apache.activemq.util.ByteArrayInputStream;
 import org.apache.activemq.util.ByteArrayOutputStream;
 import org.apache.activemq.util.ByteSequence;
 import org.apache.activemq.util.JMSExceptionSupport;
+import org.apache.activemq.util.MarshallingSupport;
 import org.apache.qpid.proton.amqp.Binary;
 import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.messaging.Data;
@@ -213,6 +215,12 @@ public final class AmqpMessageSupport {
 
             if (message.isCompressed()) {
                 int length = (int) message.getBodyLength();
+                // before we allocate the buffer ensure it's not too large
+                try {
+                    MarshallingSupport.validateMaxInflatedDataSize(message.getMaxInflatedDataSize(), length);
+                } catch (IOException cause) {
+                    throw JMSExceptionSupport.create(cause);
+                }
                 byte[] uncompressed = new byte[length];
                 message.readBytes(uncompressed);
 
@@ -244,7 +252,9 @@ public final class AmqpMessageSupport {
             if (message.isCompressed()) {
                 try (ByteArrayOutputStream os = new ByteArrayOutputStream();
                      ByteArrayInputStream is = new ByteArrayInputStream(contents);
-                     InflaterInputStream iis = new InflaterInputStream(is);) {
+                     // wrap to prevent allocating more than maxInflatedDataSize
+                     InputStream iis = MarshallingSupport.createInflaterInputStream(
+                            message.getMaxInflatedDataSize(), is)) {
 
                     byte value;
                     while ((value = (byte) iis.read()) != -1) {
@@ -282,10 +292,14 @@ public final class AmqpMessageSupport {
 
             if (message.isCompressed()) {
                 try (ByteArrayInputStream is = new ByteArrayInputStream(contents);
+                     // We do not need to wrap this stream, the size is validated below
+                     // before allocation
                      InflaterInputStream iis = new InflaterInputStream(is);
                      DataInputStream dis = new DataInputStream(iis);) {
 
                     int size = dis.readInt();
+                    // before we allocate the buffer ensure it's not too large
+                    MarshallingSupport.validateMaxInflatedDataSize(message.getMaxInflatedDataSize(), size);
                     byte[] uncompressed = new byte[size];
                     dis.readFully(uncompressed);
 

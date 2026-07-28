@@ -23,7 +23,7 @@ import org.apache.activemq.command.Response;
 /**
  * Interface used by the ProtocolConverter for callbacks.
  * 
- * @author <a href="http://hiramchirino.com">chirino</a> 
+ *
  */
 interface ResponseHandler {
     void onResponse(ProtocolConverter converter, Response response) throws IOException;

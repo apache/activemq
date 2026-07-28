@@ -32,7 +32,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Manages PUBLISH packet ids for clients.
  *
- * @author Dhiraj Bokde
+ *
  */
 public class MQTTPacketIdGenerator extends ServiceSupport {
 

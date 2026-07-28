@@ -40,7 +40,7 @@ import org.apache.activemq.test.annotations.ParallelTest;
 import org.junit.experimental.categories.Category;
 
 /**
- * @author <a href="http://www.christianposta.com/blog">Christian Posta</a>
+ *
  */
 @Category(ParallelTest.class)
 public class BrowseDLQTest {

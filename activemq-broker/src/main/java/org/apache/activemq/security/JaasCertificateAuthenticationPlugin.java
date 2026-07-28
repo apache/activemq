@@ -24,7 +24,7 @@ import org.apache.activemq.broker.Broker;
  * 
  * @org.apache.xbean.XBean description="Provides a JAAS based SSL certificate authentication plugin"
  * 
- * @author sepandm@gmail.com (Sepand)
+ *
  *
  */
 public class JaasCertificateAuthenticationPlugin extends JaasAuthenticationPlugin {

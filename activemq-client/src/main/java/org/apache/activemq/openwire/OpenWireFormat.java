@@ -43,6 +43,7 @@ public final class OpenWireFormat implements WireFormat {
     public static final int DEFAULT_WIRE_VERSION = CommandTypes.PROTOCOL_VERSION;
     public static final int DEFAULT_LEGACY_VERSION = CommandTypes.PROTOCOL_LEGACY_STORE_VERSION;
     public static final long DEFAULT_MAX_FRAME_SIZE = Long.MAX_VALUE;
+    public static final int DEFAULT_MAX_INFLATED_DATA_SIZE = 1024 * 1024 * 100;
 
     static final byte NULL_TYPE = CommandTypes.NULL;
     private static final int MARSHAL_CACHE_SIZE = Short.MAX_VALUE / 2;
@@ -210,6 +211,7 @@ public final class OpenWireFormat implements WireFormat {
                 if (maxFrameSizeEnabled && size > maxFrameSize) {
                     throw IOExceptionSupport.createFrameSizeException(size, maxFrameSize);
                 }
+                // This will also verify size is not negative
                 context.setFrameSize(size);
             }
             return doUnmarshal(bytesIn);
@@ -285,11 +287,12 @@ public final class OpenWireFormat implements WireFormat {
             final var context = new MarshallingContext();
             marshallingContext.set(context);
 
-          if (!sizePrefixDisabled) {
+            if (!sizePrefixDisabled) {
                 int size = dis.readInt();
                 if (maxFrameSizeEnabled && size > maxFrameSize) {
                     throw IOExceptionSupport.createFrameSizeException(size, maxFrameSize);
                 }
+                // This will also verify size is not negative
                 context.setFrameSize(size);
             }
             return doUnmarshal(dis);

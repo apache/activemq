@@ -22,7 +22,7 @@
   <parent>
     <groupId>org.apache.activemq</groupId>
     <artifactId>activemq-parent</artifactId>
-    <version>6.3.0-SNAPSHOT</version>
+    <version>6.4.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>activemq-karaf-itest</artifactId>
@@ -200,6 +200,44 @@
             <karafVersion>${karaf-version}</karafVersion>
           </systemPropertyVariables>
         </configuration>
+      </plugin>
+      <!--
+        Statically verify that the ActiveMQ Karaf features resolve against the Karaf
+        distribution. This runs here (last in the reactor) so all referenced ActiveMQ
+        artifacts (activemq-osgi, activemq-blueprint, activemq-karaf, ...) are already
+        installed in the local repository.
+      -->
+      <plugin>
+        <groupId>org.apache.karaf.tooling</groupId>
+        <artifactId>karaf-maven-plugin</artifactId>
+        <version>${karaf-version}</version>
+        <executions>
+          <execution>
+            <id>verify-features</id>
+            <phase>verify</phase>
+            <goals>
+              <goal>verify</goal>
+            </goals>
+            <configuration>
+              <descriptors>
+                <descriptor>mvn:org.apache.karaf.features/framework/${karaf-version}/xml/features</descriptor>
+                <descriptor>mvn:org.apache.karaf.features/standard/${karaf-version}/xml/features</descriptor>
+                <descriptor>mvn:org.apache.karaf.features/spring/${karaf-version}/xml/features</descriptor>
+                <descriptor>mvn:org.apache.karaf.features/enterprise/${karaf-version}/xml/features</descriptor>
+                <descriptor>mvn:org.apache.activemq/activemq-karaf/${project.version}/xml/features-core</descriptor>
+                <descriptor>mvn:org.apache.activemq/activemq-karaf/${project.version}/xml/features</descriptor>
+              </descriptors>
+              <distribution>org.apache.karaf:apache-karaf:zip::${karaf-version}</distribution>
+              <javase>17</javase>
+              <framework>
+                <feature>framework</feature>
+              </framework>
+              <features>
+                <feature>activemq*</feature>
+              </features>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
     <pluginManagement>

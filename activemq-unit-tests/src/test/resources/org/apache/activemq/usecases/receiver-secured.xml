@@ -73,6 +73,14 @@
       <transportConnector uri="tcp://localhost:62002"/>
     </transportConnectors>
 
+    <destinationPolicy>
+      <policyMap>
+        <policyEntries>
+          <policyEntry tempQueue="true" allowTempDestinationStealing="true"/>
+        </policyEntries>
+      </policyMap>
+    </destinationPolicy>
+
   </broker>
 
 </beans>

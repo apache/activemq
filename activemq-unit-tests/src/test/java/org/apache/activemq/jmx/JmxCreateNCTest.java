@@ -27,7 +27,7 @@ import javax.management.ObjectName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.apache.activemq.broker.jmx.BrokerView.DENIED_TRANSPORT_SCHEMES;
+import static org.apache.activemq.util.TransportValidationUtils.DENIED_TRANSPORT_SCHEMES;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
@@ -80,6 +80,33 @@ public class JmxCreateNCTest {
 
         assertNotNull(nc);
         assertEquals("NC", nc.getName());
+        assertEquals("static:(tcp://localhost:61617)", nc.getUri());
+        assertNotNull(nc.getLocalUri());
+    }
+
+    @Test
+    public void testTransportSchemeBridgeAllowed() throws Exception {
+        // Test composite network connector uri
+        String name = proxy.addNetworkConnector("static:(tcp://localhost,amqp://localhost)");
+        proxy.removeNetworkConnector(name);
+
+        // Test composite with missing parens
+        name = proxy.addNetworkConnector("static:amqp://localhost,tcp://127.0.0.1:0");
+        proxy.removeNetworkConnector(name);
+
+        // verify direct connector as well
+        name = proxy.addNetworkConnector("static:stomp://localhost");
+        proxy.removeNetworkConnector(name);
+
+        // verify nested composite URI
+        name = proxy.addNetworkConnector(
+                "static:(static:(static:(tcp+ssl://localhost:0,auto+nio+ssl://localhost)))");
+        proxy.removeNetworkConnector(name);
+
+        // verify nested composite URI is not blocked when not using parens
+        name = proxy.addNetworkConnector(
+                "static:static:static:123://localhost:0,auto+nio+ssl://localhost");
+        proxy.removeNetworkConnector(name);
     }
 
     @Test
@@ -94,6 +121,14 @@ public class JmxCreateNCTest {
         // Test composite network connector uri
         try {
             proxy.addNetworkConnector("static:(" + scheme + "://localhost)");
+            fail("Should have failed trying to add connector bridge with scheme: " + scheme);
+        } catch (IllegalArgumentException e) {
+            assertEquals("Transport scheme '" + scheme + "' is not allowed", e.getMessage());
+        }
+
+        // Test composite with missing parens
+        try {
+            proxy.addNetworkConnector("static:" + scheme + "://localhost,tcp://127.0.0.1:0");
             fail("Should have failed trying to add connector bridge with scheme: " + scheme);
         } catch (IllegalArgumentException e) {
             assertEquals("Transport scheme '" + scheme + "' is not allowed", e.getMessage());
@@ -114,6 +149,14 @@ public class JmxCreateNCTest {
         } catch (IllegalArgumentException e) {
             assertEquals("Transport scheme '" + scheme + "' is not allowed", e.getMessage());
         }
+
+        try {
+            // verify nested composite URI is blocked when not using parens
+            proxy.addNetworkConnector("static:static:static:tcp://localhost:0," + scheme + "://localhost");
+            fail("Should have failed trying to add connector bridge with scheme: " + scheme);
+        } catch (IllegalArgumentException e) {
+            assertEquals("Transport scheme '" + scheme + "' is not allowed", e.getMessage());
+        }
     }
 
     @Test
@@ -124,9 +167,18 @@ public class JmxCreateNCTest {
 
         try {
             // verify nested composite URI with more than 5 levels is blocked. This has 6 nested
-            // (not including first wrapper url
+            // (not including first wrapper url)
             proxy.addNetworkConnector(
                     "static:(static:(static:(static:(static:(static:(tcp://localhost:0))))))");
+            fail("Should have failed trying to add more than 5 connector bridges");
+        } catch (IllegalArgumentException e) {
+            assertEquals("URI can't contain more than 5 nested composite URIs", e.getMessage());
+        }
+
+        try {
+            // verify nested composite URI with more than 5 levels is blocked without parens
+            proxy.addNetworkConnector(
+                    "static:static:static:static:static:static:tcp://localhost:0");
             fail("Should have failed trying to add more than 5 connector bridges");
         } catch (IllegalArgumentException e) {
             assertEquals("URI can't contain more than 5 nested composite URIs", e.getMessage());

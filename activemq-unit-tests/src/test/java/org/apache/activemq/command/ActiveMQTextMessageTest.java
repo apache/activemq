@@ -16,6 +16,9 @@
  */
 package org.apache.activemq.command;
 
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import java.beans.Transient;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -28,10 +31,14 @@ import jakarta.jms.MessageNotWriteableException;
 import junit.framework.TestCase;
 import junit.textui.TestRunner;
 
+import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.test.annotations.ParallelTest;
 import org.apache.activemq.util.ByteArrayOutputStream;
 import org.apache.activemq.util.ByteSequence;
+import org.apache.activemq.util.ByteSequenceData;
 import org.apache.activemq.util.MarshallingSupport;
+import org.apache.activemq.util.MarshallingSupport.ActiveMQUnmarshalEOFException;
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.junit.experimental.categories.Category;
 
 /**
@@ -157,6 +164,42 @@ public class ActiveMQTextMessageTest extends TestCase {
     public void testTransient() throws Exception {
         Method method = ActiveMQTextMessage.class.getMethod("getRegionDestination");
         assertTrue(method.isAnnotationPresent(Transient.class));
+    }
+
+
+    public void testUnCompressedUnmarshalException() throws Exception {
+        testUnmarshalException(false);
+    }
+
+    public void testCompressedUnmarshalException() throws Exception {
+        testUnmarshalException(true);
+    }
+
+    // For text messages both compressed and uncompressed need to be unmarshalled
+    private void testUnmarshalException(boolean compressed) throws Exception {
+        ActiveMQConnection connection = mock(ActiveMQConnection.class);
+        when(connection.isUseCompression()).thenReturn(compressed);
+
+        ActiveMQTextMessage msg = new ActiveMQTextMessage();
+        msg.setConnection(connection);
+        msg.setText("content");
+
+        // store and marshal
+        msg.storeContentAndClear();
+        assertNull(msg.text);
+        assertEquals(compressed, msg.isCompressed());
+
+        // corrupt the buffer
+        ByteSequenceData.writeIntBig(msg.content, 1000);
+
+        try {
+            msg.getText();
+            fail("Should have thrown exception");
+        } catch (JMSException e) {
+            // expected
+            assertTrue(
+                    ExceptionUtils.getRootCause(e) instanceof ActiveMQUnmarshalEOFException);
+        }
     }
     
     protected void setContent(Message message, String text) throws Exception {

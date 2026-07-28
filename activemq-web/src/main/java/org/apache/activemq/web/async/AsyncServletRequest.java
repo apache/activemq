@@ -114,9 +114,12 @@ public class AsyncServletRequest implements AsyncListener  {
             LOG.debug("ActiveMQAsyncRequest " + event + " timeout.");
         }
 
+        // Use the context's request/response rather than event.getSuppliedRequest(): the listener
+        // is registered via addListener(this) (no supplied request/response), so getSuppliedRequest()
+        // is null under EE11's spec-compliant behavior (EE9 happened to populate it).
         final AsyncContext context = event.getAsyncContext();
-        if (context != null && event.getSuppliedRequest().isAsyncStarted()) {
-            // We must call dispatch to finish the request on timeout.
+        if (context != null && context.getRequest().isAsyncStarted()) {
+            // We must call dispatch to finish the request on timeout,
             // then set the status code to prevent a 500 error.
             context.dispatch();
             final ServletResponse response = context.getResponse();

@@ -36,7 +36,7 @@ import org.slf4j.LoggerFactory;
  * When a TransportLogger object is finalized because the Transport Stack
  * where it resides is no longer in use, the method unregister() will be called.
  * 
- * @author David Martin Clavo david(dot)martin(dot)clavo(at)gmail.com
+ *
  *  
  * @see TransportLoggerViewMBean
  */

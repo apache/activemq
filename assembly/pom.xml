@@ -22,7 +22,7 @@
   <parent>
     <groupId>org.apache.activemq</groupId>
     <artifactId>activemq-parent</artifactId>
-    <version>6.3.0-SNAPSHOT</version>
+    <version>6.4.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>apache-activemq</artifactId>
@@ -272,7 +272,7 @@
     <dependency>
       <groupId>commons-codec</groupId>
       <artifactId>commons-codec</artifactId>
-      <version>1.21.0</version>
+      <version>1.22.0</version>
     </dependency>
     <dependency>
       <groupId>org.apache.commons</groupId>
@@ -371,20 +371,37 @@
       <optional>false</optional>
     </dependency>
     <dependency>
-        <groupId>org.springframework</groupId>
-        <artifactId>spring-oxm</artifactId>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-oxm</artifactId>
     </dependency>
     <dependency>
       <groupId>org.codehaus.jettison</groupId>
       <artifactId>jettison</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.eclipse.jetty</groupId>
-      <artifactId>jetty-annotations</artifactId>
+      <groupId>org.eclipse.jetty.ee11</groupId>
+      <artifactId>jetty-ee11-webapp</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty.ee11</groupId>
+      <artifactId>jetty-ee11-annotations</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty.ee11</groupId>
+      <artifactId>jetty-ee11-servlet</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty.ee</groupId>
+      <artifactId>jetty-ee-webapp</artifactId>
+      <version>${jetty-version}</version>
     </dependency>
     <dependency>
       <groupId>org.eclipse.jetty</groupId>
-      <artifactId>jetty-jaas</artifactId>
+      <artifactId>jetty-security</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty</groupId>
+      <artifactId>jetty-session</artifactId>
     </dependency>
     <dependency>
       <groupId>org.eclipse.jetty</groupId>
@@ -400,8 +417,60 @@
     </dependency>
     <dependency>
       <groupId>org.eclipse.jetty</groupId>
+      <artifactId>jetty-server</artifactId>
+      <classifier>config</classifier>
+      <version>${jetty-version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty</groupId>
       <artifactId>jetty-rewrite</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty.websocket</groupId>
+      <artifactId>jetty-websocket-core-client</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty.websocket</groupId>
+      <artifactId>jetty-websocket-core-common</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty.websocket</groupId>
+      <artifactId>jetty-websocket-core-server</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty.websocket</groupId>
+      <artifactId>jetty-websocket-jetty-client</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty.websocket</groupId>
+      <artifactId>jetty-websocket-jetty-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty.ee11.websocket</groupId>
+      <artifactId>jetty-ee11-websocket-jakarta-client</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty.websocket</groupId>
+      <artifactId>jetty-websocket-jetty-common</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty.ee11.websocket</groupId>
+      <artifactId>jetty-ee11-websocket-jetty-server</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty.ee11.websocket</groupId>
+      <artifactId>jetty-ee11-websocket-servlet</artifactId>
+    </dependency>
+<!--
+o  'org.eclipse.jetty.websocket:websocket-core-common'
+o  'org.eclipse.jetty.websocket:websocket-core-server'
+o  'org.eclipse.jetty.websocket:websocket-jetty-api'
+o  'org.eclipse.jetty.websocket:websocket-jetty-common'
+o  'org.eclipse.jetty.websocket:websocket-jetty-server'
+o  'org.eclipse.jetty.websocket:websocket-servlet'
+o  'org.eclipse.jetty.orbit:javax.security.auth.message'
+o  'org.eclipse.jetty:apache-jsp'
+-->
     <dependency>
       <groupId>org.eclipse.jdt</groupId>
       <artifactId>ecj</artifactId>
@@ -446,18 +515,26 @@
     </dependency>
 
     <dependency>
-        <groupId>org.eclipse.jetty</groupId>
-        <artifactId>apache-jsp</artifactId>
+        <groupId>org.eclipse.jetty.ee11</groupId>
+        <artifactId>jetty-ee11-apache-jsp</artifactId>
     </dependency>
     <dependency>
-        <groupId>org.eclipse.jetty</groupId>
-        <artifactId>apache-jstl</artifactId>
-        <version>11.0.0</version>
+        <groupId>org.eclipse.jetty.ee11</groupId>
+        <artifactId>jetty-ee11-glassfish-jstl</artifactId>
     </dependency>
     <dependency>
       <groupId>jakarta.servlet.jsp.jstl</groupId>
       <artifactId>jakarta.servlet.jsp.jstl-api</artifactId>
       <version>3.0.2</version>
+    </dependency>
+    <dependency>
+      <groupId>jakarta.el</groupId>
+      <artifactId>jakarta.el-api</artifactId>
+      <version>6.0.1</version>
+    </dependency>
+    <dependency>
+      <groupId>jakarta.servlet.jsp</groupId>
+      <artifactId>jakarta.servlet.jsp-api</artifactId>
     </dependency>
     <dependency>
       <groupId>org.glassfish.web</groupId>
@@ -571,6 +648,22 @@
               <overWriteSnapshots>true</overWriteSnapshots>
             </configuration>
           </execution>
+          <execution>
+            <id>unpack-jetty-config</id>
+            <phase>package</phase>
+            <goals>
+              <goal>unpack-dependencies</goal>
+            </goals>
+            <configuration>
+              <includeGroupIds>org.eclipse.jetty</includeGroupIds>
+              <includeArtifactIds>jetty-server</includeArtifactIds>
+              <includeClassifiers>config</includeClassifiers>
+              <outputDirectory>${project.build.outputDirectory}/jetty-server-config</outputDirectory>
+              <overWriteReleases>false</overWriteReleases>
+              <overWriteSnapshots>true</overWriteSnapshots>
+              <includes>**/jetty.xml,**/jetty-bytebufferpool.xml,**/jetty-http.xml,**/jetty-requestlog.xml,**/jetty-threadpool.xml</includes>
+            </configuration>
+          </execution>
         </executions>
       </plugin>
       <plugin>
@@ -652,6 +745,24 @@
                 </resource>
                 <resource>
                   <directory>src/release/examples/conf</directory>
+                </resource>
+              </resources>
+            </configuration>
+          </execution>
+          <!-- Stage the webapps skeleton (admin/api/root) so the web-console contexts started by
+               BrokerXmlConfigStartTest (validate-config) have a valid base resource. Jetty 12 fails
+               hard when a WebAppContext base resource is missing, where Jetty 11 tolerated it. -->
+          <execution>
+            <id>copy-webapps</id>
+            <phase>process-test-resources</phase>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>target/webapps</outputDirectory>
+              <resources>
+                <resource>
+                  <directory>src/release/webapps</directory>
                 </resource>
               </resources>
             </configuration>

@@ -29,9 +29,11 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import java.util.stream.Collectors;
+import org.apache.activemq.ActiveMQMessageFormatException;
 import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.ConnectionContext;
@@ -63,6 +65,7 @@ import org.apache.activemq.thread.Task;
 import org.apache.activemq.thread.TaskRunner;
 import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.transaction.Synchronization;
+import org.apache.activemq.util.ExceptionUtils;
 import org.apache.activemq.util.SubscriptionKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -87,6 +90,7 @@ public class Topic extends BaseDestination implements Task {
     private final ConcurrentMap<SubscriptionKey, DurableTopicSubscription> durableSubscribers = new ConcurrentHashMap<SubscriptionKey, DurableTopicSubscription>();
     private final TaskRunner taskRunner;
     private final TaskRunnerFactory taskRunnerFactor;
+    private final ReentrantLock sendLock = new ReentrantLock();
     private final LinkedList<Runnable> messagesWaitingForSpace = new LinkedList<Runnable>();
     private final Runnable sendMessagesWaitingForSpaceTask = new Runnable() {
         @Override
@@ -99,7 +103,7 @@ public class Topic extends BaseDestination implements Task {
     };
 
     public Topic(BrokerService brokerService, ActiveMQDestination destination, TopicMessageStore store,
-            DestinationStatistics parentStats, TaskRunnerFactory taskFactory) throws Exception {
+                 DestinationStatistics parentStats, TaskRunnerFactory taskFactory) throws Exception {
         super(brokerService, store, destination, parentStats);
         this.topicStore = store;
         subscriptionRecoveryPolicy = new RetainedMessageSubscriptionRecoveryPolicy(null);
@@ -521,40 +525,59 @@ public class Topic extends BaseDestination implements Task {
     }
 
     /**
-     * do send the message - this needs to be synchronized to ensure messages
-     * are stored AND dispatched in the right order
+     * Sends a message to this topic. Uses a ReentrantLock instead of
+     * synchronized to avoid lock convoys and biased locking overhead under
+     * high contention (many concurrent producers with slow persistence or
+     * many subscribers).
+     *
+     * The write lock is held only during persistence (to guarantee message
+     * ordering via brokerSequenceId). Dispatch to subscribers and persistence
+     * completion wait happen outside the lock, allowing concurrent dispatch
+     * for messages from different producers.
+     *
+     * This is valid per Jakarta Messaging 3.1 Section 6.2.9: message ordering
+     * is guaranteed per-session/per-producer only. A JMS Session is not
+     * thread-safe, so a single producer cannot have concurrent send() calls.
      *
      * @param producerExchange
      * @param message
      * @throws IOException
      * @throws Exception
      */
-    synchronized void doMessageSend(final ProducerBrokerExchange producerExchange, final Message message)
+    void doMessageSend(final ProducerBrokerExchange producerExchange, final Message message)
             throws IOException, Exception {
         final ConnectionContext context = producerExchange.getConnectionContext();
-        message.getMessageId().setBrokerSequenceId(getDestinationSequenceId());
         Future<Object> result = null;
 
-        if (topicStore != null && message.isPersistent() && !canOptimizeOutPersistence()) {
-            if (systemUsage.getStoreUsage().isFull(getStoreUsageHighWaterMark())) {
-                final String logMessage = "Persistent store is Full, " + getStoreUsageHighWaterMark() + "% of "
-                        + systemUsage.getStoreUsage().getLimit() + ". Stopping producer (" + message.getProducerId()
-                        + ") to prevent flooding " + getActiveMQDestination().getQualifiedName() + "."
-                        + " See http://activemq.apache.org/producer-flow-control.html for more info";
-                if (!context.isNetworkConnection() && systemUsage.isSendFailIfNoSpace()) {
-                    throw new jakarta.jms.ResourceAllocationException(logMessage);
+        // Write lock: serialize persistence for message ordering
+        sendLock.lock();
+        try {
+            message.getMessageId().setBrokerSequenceId(getDestinationSequenceId());
+
+            if (topicStore != null && message.isPersistent() && !canOptimizeOutPersistence()) {
+                if (systemUsage.getStoreUsage().isFull(getStoreUsageHighWaterMark())) {
+                    final String logMessage = "Persistent store is Full, " + getStoreUsageHighWaterMark() + "% of "
+                            + systemUsage.getStoreUsage().getLimit() + ". Stopping producer (" + message.getProducerId()
+                            + ") to prevent flooding " + getActiveMQDestination().getQualifiedName() + "."
+                            + " See http://activemq.apache.org/producer-flow-control.html for more info";
+                    if (!context.isNetworkConnection() && systemUsage.isSendFailIfNoSpace()) {
+                        throw new jakarta.jms.ResourceAllocationException(logMessage);
+                    }
+
+                    waitForSpace(context, producerExchange, systemUsage.getStoreUsage(), getStoreUsageHighWaterMark(), logMessage);
                 }
-
-                waitForSpace(context,producerExchange, systemUsage.getStoreUsage(), getStoreUsageHighWaterMark(), logMessage);
+                result = topicStore.asyncAddTopicMessage(context, message, isOptimizeStorage());
             }
-            result = topicStore.asyncAddTopicMessage(context, message,isOptimizeStorage());
 
-            //Moved the reduceMemoryfootprint clearing to the dispatch method
+            message.incrementReferenceCount();
+        } finally {
+            sendLock.unlock();
         }
 
-        message.incrementReferenceCount();
-
+        // Dispatch and persistence wait outside the lock — concurrent for
+        // messages from different producers
         if (context.isInTransaction() && (context.getTransaction() != null)) {
+            final Future<Object> pendingResult = result;
             context.getTransaction().addSynchronization(new Synchronization() {
                 @Override
                 public void afterCommit() throws Exception {
@@ -574,6 +597,7 @@ public class Topic extends BaseDestination implements Task {
                     } finally {
                         message.decrementReferenceCount();
                     }
+                    awaitPersistence(pendingResult);
                 }
 
                 @Override
@@ -588,8 +612,11 @@ public class Topic extends BaseDestination implements Task {
             } finally {
                 message.decrementReferenceCount();
             }
+            awaitPersistence(result);
         }
+    }
 
+    private void awaitPersistence(final Future<Object> result) throws Exception {
         if (result != null && !result.isCancelled()) {
             try {
                 result.get();
@@ -611,14 +638,14 @@ public class Topic extends BaseDestination implements Task {
 
     @Override
     public void acknowledge(ConnectionContext context, Subscription sub, final MessageAck ack,
-            final MessageReference node) throws IOException {
+                            final MessageReference node) throws IOException {
         if (topicStore != null && node.isPersistent()) {
             if (sub instanceof DurableTopicSubscription) {
                 DurableTopicSubscription dsub = (DurableTopicSubscription) sub;
                 SubscriptionKey key = dsub.getSubscriptionKey();
                 topicStore.acknowledge(context, key.getClientId(), key.getSubscriptionName(),
-                    node.getMessageId(),
-                    convertToNonRangedAck(ack, node));
+                        node.getMessageId(),
+                        convertToNonRangedAck(ack, node));
             }
         }
         messageConsumed(context, node);
@@ -639,7 +666,12 @@ public class Topic extends BaseDestination implements Task {
             if (memoryUsage != null) {
                 memoryUsage.start();
             }
-
+            if (systemUsage.getStoreUsage() != null) {
+                systemUsage.getStoreUsage().start();
+            }
+            if (systemUsage.getTempUsage() != null) {
+                systemUsage.getTempUsage().start();
+            }
             if (getExpireMessagesPeriod() > 0 && !AdvisorySupport.isAdvisoryTopic(getActiveMQDestination())) {
                 scheduler.executePeriodically(expireMessagesTask, getExpireMessagesPeriod());
             }
@@ -655,6 +687,12 @@ public class Topic extends BaseDestination implements Task {
             this.subscriptionRecoveryPolicy.stop();
             if (memoryUsage != null) {
                 memoryUsage.stop();
+            }
+            if (systemUsage.getStoreUsage() != null) {
+                systemUsage.getStoreUsage().stop();
+            }
+            if (this.systemUsage.getTempUsage() != null) {
+                this.systemUsage.getTempUsage().stop();
             }
             if (this.topicStore != null) {
                 this.topicStore.stop();
@@ -802,9 +840,26 @@ public class Topic extends BaseDestination implements Task {
 
         dispatchLock.readLock().lock();
         try {
-            if (!subscriptionRecoveryPolicy.add(context, message)) {
-                return;
+            try {
+                if (!subscriptionRecoveryPolicy.add(context, message)) {
+                    return;
+                }
+            } catch (Exception e) {
+                // In this case couldn't read the header properties so we need to catch and continue.
+                // We still need to let dispatchPolicy.dispatch(message, msgContext, consumers)
+                // run. If subs set a selector then they won't be matched if it can't read
+                // the properites and that code will take care of any removal/acks for durables
+                // by calling sub.unmatched(). If no subs match at all then onMessageWithNoConsumers()
+                // will be called which allows sending an adivsory if enabled (or if someone wanted to
+                // do something special like the DLQ).
+                ActiveMQMessageFormatException formatError = ExceptionUtils.createMessageFormatException(e);
+                if (formatError != null) {
+                    LOG.warn("Failed to check recovery policy, message is corrupt: {}", e.getMessage(), e);
+                } else {
+                    throw e;
+                }
             }
+
             synchronized (consumers) {
                 if (consumers.isEmpty()) {
                     onMessageWithNoConsumers(context, message);
@@ -873,8 +928,8 @@ public class Topic extends BaseDestination implements Task {
 
                 // get the sub keys that should be checked for expired messages
                 final var subs = durableSubscribers.entrySet().stream()
-                    .filter(entry -> isEligibleForExpiration(entry.getValue()))
-                    .map(Entry::getKey).collect(Collectors.toSet());
+                        .filter(entry -> isEligibleForExpiration(entry.getValue()))
+                        .map(Entry::getKey).collect(Collectors.toSet());
 
                 if (subs.isEmpty()) {
                     LOG.debug("Skipping topic expiration check for {}, no eligible subscriptions to check", destination);
@@ -884,7 +939,7 @@ public class Topic extends BaseDestination implements Task {
                 // For each eligible subscription, return the messages in the store that are expired
                 // The same message refs are shared between subs if duplicated so this is efficient
                 var expired = store.recoverExpired(subs, getMaxExpirePageSize(),
-                    expiryListener);
+                        expiryListener);
 
                 final ConnectionContext connectionContext = createConnectionContext();
                 // Go through any expired messages and remove for each sub
@@ -962,25 +1017,25 @@ public class Topic extends BaseDestination implements Task {
         boolean result = false;
 
         if (isDoOptimzeMessageStorage() && durableSubscribers.isEmpty()==false){
-                result = true;
-                for (DurableTopicSubscription s : durableSubscribers.values()) {
-                    if (s.isActive()== false){
-                        result = false;
-                        break;
-                    }
-                    if (s.getPrefetchSize()==0){
-                        result = false;
-                        break;
-                    }
-                    if (s.isSlowConsumer()){
-                        result = false;
-                        break;
-                    }
-                    if (s.getInFlightUsage() > getOptimizeMessageStoreInFlightLimit()){
-                        result = false;
-                        break;
-                    }
+            result = true;
+            for (DurableTopicSubscription s : durableSubscribers.values()) {
+                if (s.isActive()== false){
+                    result = false;
+                    break;
                 }
+                if (s.getPrefetchSize()==0){
+                    result = false;
+                    break;
+                }
+                if (s.isSlowConsumer()){
+                    result = false;
+                    break;
+                }
+                if (s.getInFlightUsage() > getOptimizeMessageStoreInFlightLimit()){
+                    result = false;
+                    break;
+                }
+            }
         }
         return result;
     }

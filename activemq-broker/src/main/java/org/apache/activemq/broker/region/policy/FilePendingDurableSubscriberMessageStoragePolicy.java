@@ -44,6 +44,6 @@ public class FilePendingDurableSubscriberMessageStoragePolicy implements Pending
      * @return the Pending Message cursor
      */
     public PendingMessageCursor getSubscriberPendingMessageCursor(Broker broker,String clientId, String name, int maxBatchSize, DurableTopicSubscription sub) {
-        return new FilePendingMessageCursor(broker,name,AbstractPendingMessageCursor.isPrioritizedMessageSubscriber(broker, sub));
+        return new FilePendingMessageCursor(broker,name,AbstractPendingMessageCursor.isPrioritizedMessageSubscriber(broker, sub), sub);
     }
 }

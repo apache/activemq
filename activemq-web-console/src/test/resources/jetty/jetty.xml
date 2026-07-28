@@ -1,0 +1,59 @@
+<?xml version="1.0"?>
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one or more
+    contributor license agreements.  See the NOTICE file distributed with
+    this work for additional information regarding copyright ownership.
+    The ASF licenses this file to You under the Apache License, Version 2.0
+    (the "License"); you may not use this file except in compliance with
+    the License.  You may obtain a copy of the License at
+    
+    http://www.apache.org/licenses/LICENSE-2.0
+    
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+-->
+<!DOCTYPE Configure PUBLIC "-//Jetty//Configure//EN" "https://jetty.org/configure_10_0.dtd">
+
+<!-- =============================================================== -->
+<!-- Configures a Jetty Server instance with an ID "Server".         -->
+<!-- Other configuration files may also configure the "Server"       -->
+<!-- ID, in which case they are adding configuration to the same     -->
+<!-- instance.  If other configuration have a different ID, they     -->
+<!-- will create and configure another Jetty Server instance.        -->
+<!-- =============================================================== -->
+<Configure id="Server" class="org.eclipse.jetty.server.Server">
+  <Arg><Ref refid="threadPool"/></Arg>
+  <Arg><Ref refid="scheduler"/></Arg>
+  <Arg><Ref refid="byteBufferPool"/></Arg>
+
+  <Set name="defaultHandler">
+    <New id="DefaultHandler" class="org.eclipse.jetty.server.handler.DefaultHandler">
+      <Arg name="serveFavIcon" type="boolean"><Property name="jetty.server.default.serveFavIcon" default="true"/></Arg>
+      <Arg name="showContexts" type="boolean"><Property name="jetty.server.default.showContexts" default="true"/></Arg>
+    </New>
+  </Set>
+  <Set name="handler">
+    <New id="Contexts" class="org.eclipse.jetty.server.handler.ContextHandlerCollection">
+      <Set name="dynamic" property="jetty.server.contexts.dynamic"/>
+    </New>
+  </Set>
+  <!--
+    Apache ActiveMQ fix: the canonical jetty.xml adds Jetty's ShutdownService here
+    (<Call name="addBean"><Ref refid="ShutdownService"/></Call>). That service opens a
+    TCP socket to receive external FORCESTOP/STOPEXIT commands - a stop mechanism for
+    standalone Jetty. ActiveMQ owns the console lifecycle (the broker starts/stops the
+    embedded Jetty via JettyServerBean, and bin/activemq stop drives JVM shutdown), so
+    the external stop-monitor is unnecessary and an extra listening surface. It is
+    omitted here (jetty-shutdown-service.xml is not shipped). JVM-exit shutdown is still
+    handled by stopAtShutdown below.
+  -->
+
+  <Set name="stopAtShutdown"><Property name="jetty.server.stopAtShutdown" default="true"/></Set>
+  <Set name="dumpAfterStart" property="jetty.server.dumpAfterStart"/>
+  <Set name="dumpBeforeStop" property="jetty.server.dumpBeforeStop"/>
+  <Set name="tempDirectory" property="jetty.server.tempDirectory"/>
+
+</Configure>

@@ -140,7 +140,7 @@ public class MQTTConnectTest extends MQTTTestSupport {
         assertTrue("one connection", Wait.waitFor(new Wait.Condition() {
              @Override
              public boolean isSatisified() throws Exception {
-                 return 1 == brokerService.getTransportConnectors().get(0).connectionCount();
+                 return 1 == brokerService.getTransportConnectors().get(0).getConnectionCount();
              }
          }, TimeUnit.SECONDS.toMillis(30), TimeUnit.MILLISECONDS.toMillis(100)));
 
@@ -148,7 +148,7 @@ public class MQTTConnectTest extends MQTTTestSupport {
         assertTrue("no dangling connections", Wait.waitFor(new Wait.Condition() {
             @Override
             public boolean isSatisified() throws Exception {
-                return 0 == brokerService.getTransportConnectors().get(0).connectionCount();
+                return 0 == brokerService.getTransportConnectors().get(0).getConnectionCount();
             }
         }, TimeUnit.SECONDS.toMillis(30), TimeUnit.MILLISECONDS.toMillis(100)));
 

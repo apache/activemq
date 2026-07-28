@@ -67,7 +67,11 @@ import static org.apache.activemq.broker.jmx.BrokerMBeanSupport.createPersistenc
 public class KahaDBPersistenceAdapter extends LockableServiceSupport implements PersistenceAdapter,
     JournaledStore, TransactionIdTransformerAware, NoLocalSubscriptionAware {
 
-    private final KahaDBStore letter = new KahaDBStore();
+    private final KahaDBStore letter = createStore();
+
+    protected KahaDBStore createStore() {
+        return new KahaDBStore();
+    }
 
     /**
      * @param context

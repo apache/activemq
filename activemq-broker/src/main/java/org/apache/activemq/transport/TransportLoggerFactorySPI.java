@@ -21,7 +21,7 @@ import org.apache.activemq.TransportLoggerSupport;
 import java.io.IOException;
 
 /**
- * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
+ *
  */
 public class TransportLoggerFactorySPI implements TransportLoggerSupport.SPI {
     @Override

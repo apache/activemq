@@ -33,7 +33,7 @@ import org.objectweb.jtests.jms.framework.TestConfig;
 /**
  * Test the <code>jakarta.jms.QueueBrowser</code> features.
  *
- * @author Jeff Mesnil (jmesnil@gmail.com)
+ *
  * @version $Id: QueueBrowserTest.java,v 1.2 2007/06/19 23:32:35 csuconic Exp $
  */
 public class QueueBrowserTest extends PTPTestCase

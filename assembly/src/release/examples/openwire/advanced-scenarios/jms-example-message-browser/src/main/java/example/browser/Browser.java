@@ -23,7 +23,7 @@ import java.util.Enumeration;
 import java.util.concurrent.TimeUnit;
 
 /**
- * @author <a href="http://www.christianposta.com/blog">Christian Posta</a>
+ *
  */
 public class Browser {
     private static final String BROKER_URL = "tcp://localhost:61616";

@@ -25,7 +25,7 @@ import org.springframework.beans.factory.InitializingBean;
  *
  * @org.apache.xbean.XBean
  *
- * @author <a href="http://hiramchirino.com">Hiram Chirino</a>
+ *
  */
 public class CachedLDAPAuthorizationMap extends SimpleCachedLDAPAuthorizationMap implements InitializingBean, DisposableBean {
 

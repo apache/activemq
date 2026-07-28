@@ -27,7 +27,7 @@ import org.apache.activemq.command.SubscriptionInfo;
 /**
  * Used to create Destinations. One instance of DestinationFactory is used per BrokerService. 
  * 
- * @author fateev@amazon.com
+ *
  * 
  */
 public abstract class DestinationFactory {

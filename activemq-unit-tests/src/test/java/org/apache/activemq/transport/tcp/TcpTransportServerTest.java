@@ -24,7 +24,7 @@ import java.net.URI;
 import java.util.HashMap;
 
 /**
- * @author <a href="http://www.christianposta.com/blog">Christian Posta</a>
+ *
  */
 public class TcpTransportServerTest extends TestCase{
 

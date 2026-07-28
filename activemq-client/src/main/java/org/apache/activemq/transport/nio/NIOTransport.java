@@ -148,6 +148,12 @@ public class NIOTransport extends TcpTransport {
                         }
                     }
 
+                    // This isn't strictly necessary as ByteBuffer.allocateDirect() would also throw the same
+                    // IllegalArgumentException, but this provides a better error. OpenWire
+                    if (nextFrameSize < 0) {
+                        throw new IllegalArgumentException("Frame size value " + nextFrameSize + " may not be negative.");
+                    }
+
                     if (nextFrameSize > inputBuffer.capacity()) {
                         currentBuffer = ByteBuffer.allocateDirect(nextFrameSize);
                         currentBuffer.putInt(nextFrameSize);

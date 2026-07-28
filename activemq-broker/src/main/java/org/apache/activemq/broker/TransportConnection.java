@@ -27,7 +27,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -38,6 +37,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import javax.transaction.xa.XAResource;
 
 import org.apache.activemq.advisory.AdvisorySupport;
+import org.apache.activemq.broker.region.BaseDestination;
 import org.apache.activemq.broker.region.ConnectionStatistics;
 import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.command.ActiveMQDestination;
@@ -97,6 +97,8 @@ import org.apache.activemq.transport.ResponseCorrelator;
 import org.apache.activemq.transport.TransmitCallback;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportDisposedIOException;
+import org.apache.activemq.util.ExceptionUtils;
+import org.apache.activemq.ActiveMQMessageFormatException;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.MarshallingSupport;
 import org.apache.activemq.util.NetworkBridgeUtils;
@@ -104,7 +106,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
-import jakarta.jms.ResourceAllocationException;
 
 public class TransportConnection implements Connection, Task, CommandVisitor {
     private static final Logger LOG = LoggerFactory.getLogger(TransportConnection.class);
@@ -852,6 +853,9 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
 
         try {
             broker.addConnection(context, info);
+            // If we completed broker.addConnection() successfully we can now
+            // continue the required extra setup for any network connections
+            addNetworkConnection();
         } catch (Exception e) {
             synchronized (brokerConnectionStates) {
                 brokerConnectionStates.remove(info.getConnectionId());
@@ -992,6 +996,18 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                 if (sub != null) {
                     sub.onFailure();
                 }
+                // Check if this is a type of message format error which indicates the
+                // message was corrupt and there was some problem unmarshaling. For these
+                // errors we can handle by acking with a poison ack (which will send to the DLQ
+                // if durable/queue sub) and remove them from the consumer so the consumer can
+                // continue. We do not want to throw the exception as that would close the connection.
+                ActiveMQMessageFormatException marshallingError = ExceptionUtils.createMessageFormatException(e);
+                if (marshallingError != null) {
+                    handleMessageFormatError(marshallingError, messageDispatch);
+                    // must set to null so when we return the finally block is skipped
+                    messageDispatch = null;
+                    return;
+                }
                 messageDispatch = null;
                 throw e;
             } else {
@@ -1008,6 +1024,49 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                     sub.onSuccess();
                 }
             }
+        }
+    }
+
+    private void handleMessageFormatError(ActiveMQMessageFormatException e, MessageDispatch messageDispatch) {
+        if (TRANSPORTLOG.isDebugEnabled()) {
+            TRANSPORTLOG.debug("{} had an unexpected Message format error: {}", this, e.getMessage(), e);
+        } else if (TRANSPORTLOG.isWarnEnabled()) {
+            if (connector.isDisplayStackTrace()) {
+                TRANSPORTLOG.warn("{} had an unexpected Message format  error", this, e);
+            } else {
+                TRANSPORTLOG.warn("{} had an unexpected Message format  error: {}", this, e.getMessage());
+            }
+        }
+
+        ConsumerBrokerExchange consumerExchange = getConsumerBrokerExchange(messageDispatch.getConsumerId());
+        try {
+            // acknowledge with the consumer exchange for this dispatch
+            // This should exist because this error happened during dispatch, but if for some
+            // reason it is null it should get handled when delivery is attempted again
+            if (consumerExchange != null) {
+                MessageAck ack = new MessageAck();
+                // Acking with a poison ack will send to the DLQ
+                ack.setAckType(MessageAck.POISON_ACK_TYPE);
+                ack.setPoisonCause(e);
+                ack.setConsumerId(messageDispatch.getConsumerId());
+                ack.setDestination(messageDispatch.getDestination());
+                ack.setMessageID(messageDispatch.getMessage().getMessageId());
+                broker.acknowledge(consumerExchange, ack);
+
+                // Send discarded advisory (if enabled). This calls directly on the broker
+                // and not messageDiscarded() on the destination itself so that it will
+                // not send to the DLQ, because that is eventually handled by the subs
+                // when acking with a poison ack above
+                final Message.MessageDestination dest = messageDispatch.getMessage()
+                        .getRegionDestination();
+                if (dest instanceof BaseDestination && ((BaseDestination) dest).isAdvisoryForDiscardingMessages()) {
+                    broker.messageDiscarded(consumerExchange.getConnectionContext(),
+                            consumerExchange.getSubscription(), messageDispatch.getMessage());
+                }
+            }
+        } catch (Exception ex) {
+            TRANSPORTLOG.warn("{} could not acknowledge and send message to the DLQ after"
+                    + " ActiveMQMessageFormatException: {}", this, e.getMessage());
         }
     }
 
@@ -1385,51 +1444,84 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
     }
 
     @Override
-    public Response processBrokerInfo(BrokerInfo info) {
+    public Response processBrokerInfo(BrokerInfo info) throws IOException {
+        // We only expect to get at most one broker info command per connection
+        // Log and throw an IOException to close the connection if we receive more
+        // one because this is a protocol violation
+        if (this.brokerInfo != null) {
+            LOG.warn("Unexpected extra broker info command received: {}", info);
+            throw new IOException("Unexpected extra broker info command received from: " + info.getBrokerId());
+        }
         if (info.isSlaveBroker()) {
-            LOG.error(" Slave Brokers are no longer supported - slave trying to attach is: {}", info.getBrokerName());
-        } else if (info.isNetworkConnection() && !info.isDuplexConnection()) {
+            LOG.error("Slave Brokers are no longer supported - slave trying to attach is: {}", info.getBrokerName());
+            throw new IOException("Slave Brokers are no longer supported - slave trying to attach is: " + info.getBrokerName());
+        }
+
+        // The only thing this method now does is capture the BrokerInfo object and mark as a network connection.
+        // Actual processing for starting up duplex bridges and for durable sync has been moved until
+        // after ConnectionInfo has been received.
+
+        // If this is duplex we need to get the ID configured so we can use it
+        // to close existing connections later that match the same ID
+        // This will be done inside the RegionBroker
+        if (info.isNetworkConnection() && info.isDuplexConnection()) {
+            NetworkBridgeConfiguration config = getNetworkConfiguration(info);
+            config.setBrokerName(broker.getBrokerName());
+            String duplexNetworkConnectorId = config.getName() + "@" + info.getBrokerId();
+            setDuplexNetworkConnectorId(duplexNetworkConnectorId);
+        }
+
+        this.brokerInfo = info;
+        networkConnection = true;
+        List<TransportConnectionState> connectionStates = listConnectionStates();
+        for (TransportConnectionState cs : connectionStates) {
+            cs.getContext().setNetworkConnection(true);
+        }
+        return null;
+    }
+
+    // Process the network connection set up
+    private void addNetworkConnection() throws Exception {
+        final BrokerInfo info = this.brokerInfo;
+        if (info == null || !info.isNetworkConnection()){
+            return;
+        }
+
+        // For a one way bridge we need to respond on bridge creation by sending back the durable
+        // subs if durable sync is enabled via BrokerSubscriptionInfo command. The bridge is only
+        // initialized on one broker, so if this is the passive side we know it's initialized and
+        // we can respond.
+        //
+        // For a duplex bridge, we do NOT send back the durable subs. To simplify and ensure
+        // the bridge is fully initialized, the bridge startup will now handle sending
+        // BrokerSubscriptionInfo to the remote broker once fully started.
+        if (!info.isDuplexConnection()) {
             try {
                 NetworkBridgeConfiguration config = getNetworkConfiguration(info);
                 if (config.isSyncDurableSubs() && protocolVersion.get() >= CommandTypes.PROTOCOL_VERSION_DURABLE_SYNC) {
                     LOG.debug("SyncDurableSubs is enabled, Sending BrokerSubscriptionInfo");
+                    // Send back the durable subs as this is a one way bridge
                     dispatchSync(NetworkBridgeUtils.getBrokerSubscriptionInfo(this.broker.getBrokerService(), config));
                 }
             } catch (Exception e) {
                 LOG.error("Failed to respond to network bridge creation from broker {}", info.getBrokerId(), e);
-                return null;
+                throw e;
             }
-        } else if (info.isNetworkConnection() && info.isDuplexConnection()) {
+        } else {
+            // duplex
             // so this TransportConnection is the rear end of a network bridge
             // We have been requested to create a two way pipe ...
             try {
                 NetworkBridgeConfiguration config = getNetworkConfiguration(info);
                 config.setBrokerName(broker.getBrokerName());
 
-                if (config.isSyncDurableSubs() && protocolVersion.get() >= CommandTypes.PROTOCOL_VERSION_DURABLE_SYNC) {
-                    LOG.debug("SyncDurableSubs is enabled, Sending BrokerSubscriptionInfo");
-                    dispatchSync(NetworkBridgeUtils.getBrokerSubscriptionInfo(this.broker.getBrokerService(), config));
-                }
+                // Note: Durable sync used to be here and was moved to DemandForwardingBridgeSupport
+                // inside doStartLocalAndRemoteBridges()
 
-                // check for existing duplex connection hanging about
+                //The logic to clean up existing network connections for the same ID
+                // has been moved to the RegionBroker where it will check if the broker
+                // needs to close the connection before trying to create a duplicate connection
 
-                // We first look if existing network connection already exists for the same broker Id and network connector name
-                // It's possible in case of brief network fault to have this transport connector side of the connection always active
-                // and the duplex network connector side wanting to open a new one
-                // In this case, the old connection must be broken
-                String duplexNetworkConnectorId = config.getName() + "@" + info.getBrokerId();
-                CopyOnWriteArrayList<TransportConnection> connections = this.connector.getConnections();
-                synchronized (connections) {
-                    for (TransportConnection c : connections) {
-                        if ((c != this) && (duplexNetworkConnectorId.equals(c.getDuplexNetworkConnectorId()))) {
-                            LOG.warn("Stopping an existing active duplex connection [{}] for network connector ({}).", c, duplexNetworkConnectorId);
-                            c.stopAsync();
-                            // better to wait for a bit rather than get connection id already in use and failure to start new bridge
-                            c.getStopped().await(1, TimeUnit.SECONDS);
-                        }
-                    }
-                    setDuplexNetworkConnectorId(duplexNetworkConnectorId);
-                }
                 Transport localTransport = NetworkBridgeFactory.createLocalTransport(config, broker.getVmConnectorURI());
                 Transport remoteBridgeTransport = transport;
                 if (! (remoteBridgeTransport instanceof ResponseCorrelator)) {
@@ -1453,26 +1545,13 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                 duplexBridge.setCreatedByDuplex(true);
                 duplexBridge.duplexStart(this, brokerInfo, info);
                 LOG.info("Started responder end of duplex bridge {}", duplexNetworkConnectorId);
-                return null;
             } catch (TransportDisposedIOException e) {
                 LOG.warn("Duplex bridge {} was stopped before it was correctly started.", duplexNetworkConnectorId);
-                return null;
             } catch (Exception e) {
                 LOG.error("Failed to create responder end of duplex network bridge {}", duplexNetworkConnectorId, e);
-                return null;
+                throw e;
             }
         }
-        // We only expect to get one broker info command per connection
-        if (this.brokerInfo != null) {
-            LOG.warn("Unexpected extra broker info command received: {}", info);
-        }
-        this.brokerInfo = info;
-        networkConnection = true;
-        List<TransportConnectionState> connectionStates = listConnectionStates();
-        for (TransportConnectionState cs : connectionStates) {
-            cs.getContext().setNetworkConnection(true);
-        }
-        return null;
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
@@ -1678,7 +1757,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         this.duplexNetworkConnectorId = duplexNetworkConnectorId;
     }
 
-    protected synchronized String getDuplexNetworkConnectorId() {
+    public synchronized String getDuplexNetworkConnectorId() {
         return this.duplexNetworkConnectorId;
     }
 
@@ -1686,7 +1765,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         return stopping.get();
     }
 
-    protected CountDownLatch getStopped() {
+    public CountDownLatch getStopped() {
         return stopped;
     }
 

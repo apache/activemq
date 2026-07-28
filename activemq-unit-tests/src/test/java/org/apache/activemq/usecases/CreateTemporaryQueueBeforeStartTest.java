@@ -33,7 +33,7 @@ import org.junit.experimental.categories.Category;
 import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
- * @author Peter Henning
+ *
  *
  */
 @Category(ParallelTest.class)

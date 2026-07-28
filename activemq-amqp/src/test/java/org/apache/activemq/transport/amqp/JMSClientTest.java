@@ -815,7 +815,7 @@ public class JMSClientTest extends JMSClientTestSupport {
         ActiveMQAdmin.enableJMSFrameTracing();
 
         final ConnectorViewMBean connector = getProxyToConnectionView(getTargetConnectorName());
-        LOG.info("Current number of Connections is: {}", connector.connectionCount());
+        LOG.info("Current number of Connections is: {}", connector.getConnectionCount());
 
         ArrayList<Connection> connections = new ArrayList<>();
 
@@ -823,7 +823,7 @@ public class JMSClientTest extends JMSClientTestSupport {
             connections.add(createConnection(null));
         }
 
-        LOG.info("Current number of Connections is: {}", connector.connectionCount());
+        LOG.info("Current number of Connections is: {}", connector.getConnectionCount());
 
         for (Connection connection : connections) {
             connection.close();
@@ -833,8 +833,8 @@ public class JMSClientTest extends JMSClientTestSupport {
 
             @Override
             public boolean isSatisified() throws Exception {
-                LOG.info("Current number of Connections is: {}", connector.connectionCount());
-                return connector.connectionCount() == 0;
+                LOG.info("Current number of Connections is: {}", connector.getConnectionCount());
+                return connector.getConnectionCount() == 0;
             }
         }));
     }

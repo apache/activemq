@@ -20,7 +20,7 @@ package org.apache.activemq.store.kahadb.disk.util;
  * Convenience base class for Marshaller implementations which do not deepCopy and
  * which use variable size encodings.
  * 
- * @author chirino
+ *
  * @param <T>
  */
 abstract public class VariableMarshaller<T> implements Marshaller<T> {

@@ -32,6 +32,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -757,8 +758,23 @@ public class JMSMappingOutboundTransformerTest {
 
     @Test
     public void testConvertCompressedTextMessageCreatesDataSectionBody() throws Exception {
+        ActiveMQTextMessage outbound = createTextMessage("myTextMessageContent", true);
+        ActiveMQConnection connection = Mockito.mock(ActiveMQConnection.class);
+        Mockito.when(connection.isUseCompression()).thenReturn(true);
+        // override to trigger an error with decompression
+        Mockito.when(connection.getMaxInflatedDataSize()).thenReturn(10);
+        outbound.setConnection(connection);
+        assertThrows(JMSException.class, () -> testConvertCompressedTextMessageCreatesDataSectionBody(outbound));
+    }
+
+    @Test
+    public void testConvertCompressedTextMessageCreatesDataSectionBodyMaxInflatedSize() throws Exception {
+        ActiveMQTextMessage outbound = createTextMessage("myTextMessageContent", true);
+        testConvertCompressedTextMessageCreatesDataSectionBody(outbound);
+    }
+
+    private void testConvertCompressedTextMessageCreatesDataSectionBody(ActiveMQTextMessage outbound) throws Exception {
         String contentString = "myTextMessageContent";
-        ActiveMQTextMessage outbound = createTextMessage(contentString, true);
         outbound.setShortProperty(JMS_AMQP_ORIGINAL_ENCODING, AMQP_DATA);
         outbound.onSend();
         outbound.storeContent();
@@ -778,7 +794,8 @@ public class JMSMappingOutboundTransformerTest {
         String contents = new String(data.getArray(), data.getArrayOffset(), data.getLength(), StandardCharsets.UTF_8);
         assertEquals(contentString, contents);
     }
-    
+
+
     @Test 
     public void testConvertConnectionInfo() throws Exception {
     	String connectionId = "myConnectionId";
@@ -1017,6 +1034,7 @@ public class JMSMappingOutboundTransformerTest {
         if (compression) {
             ActiveMQConnection connection = Mockito.mock(ActiveMQConnection.class);
             Mockito.when(connection.isUseCompression()).thenReturn(true);
+            Mockito.when(connection.getMaxInflatedDataSize()).thenReturn(Integer.MAX_VALUE);
             message.setConnection(connection);
         }
 
@@ -1033,6 +1051,7 @@ public class JMSMappingOutboundTransformerTest {
         if (compression) {
             ActiveMQConnection connection = Mockito.mock(ActiveMQConnection.class);
             Mockito.when(connection.isUseCompression()).thenReturn(true);
+            Mockito.when(connection.getMaxInflatedDataSize()).thenReturn(Integer.MAX_VALUE);
             message.setConnection(connection);
         }
 
@@ -1049,6 +1068,7 @@ public class JMSMappingOutboundTransformerTest {
         if (compression) {
             ActiveMQConnection connection = Mockito.mock(ActiveMQConnection.class);
             Mockito.when(connection.isUseCompression()).thenReturn(true);
+            Mockito.when(connection.getMaxInflatedDataSize()).thenReturn(Integer.MAX_VALUE);
             message.setConnection(connection);
         }
 
@@ -1069,6 +1089,7 @@ public class JMSMappingOutboundTransformerTest {
         if (compression) {
             ActiveMQConnection connection = Mockito.mock(ActiveMQConnection.class);
             Mockito.when(connection.isUseCompression()).thenReturn(true);
+            Mockito.when(connection.getMaxInflatedDataSize()).thenReturn(Integer.MAX_VALUE);
             result.setConnection(connection);
         }
 
@@ -1103,6 +1124,7 @@ public class JMSMappingOutboundTransformerTest {
         if (compression) {
             ActiveMQConnection connection = Mockito.mock(ActiveMQConnection.class);
             Mockito.when(connection.isUseCompression()).thenReturn(true);
+            Mockito.when(connection.getMaxInflatedDataSize()).thenReturn(Integer.MAX_VALUE);
             result.setConnection(connection);
         }
 

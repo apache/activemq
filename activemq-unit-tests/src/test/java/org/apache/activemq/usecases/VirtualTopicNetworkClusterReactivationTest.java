@@ -30,7 +30,7 @@ import jakarta.jms.*;
 import java.net.URI;
 
 /**
- * @author <a href="http://www.christianposta.com/blog">Christian Posta</a>
+ *
  */
 public class VirtualTopicNetworkClusterReactivationTest extends JmsMultipleBrokersTestSupport {
 

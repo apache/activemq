@@ -1,0 +1,117 @@
+<?xml version="1.0"?>
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one or more
+    contributor license agreements.  See the NOTICE file distributed with
+    this work for additional information regarding copyright ownership.
+    The ASF licenses this file to You under the Apache License, Version 2.0
+    (the "License"); you may not use this file except in compliance with
+    the License.  You may obtain a copy of the License at
+    
+    http://www.apache.org/licenses/LICENSE-2.0
+    
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+-->
+<!DOCTYPE Configure PUBLIC "-//Jetty//Configure//EN" "https://jetty.org/configure_10_0.dtd">
+
+<!-- =============================================================== -->
+<!-- Web console security: JAAS authentication + path-based          -->
+<!-- authorization, plus IP-based access control.                    -->
+<!--                                                                 -->
+<!-- This inserts two handler wrappers in front of the existing      -->
+<!-- server handler (the "Contexts" tree from jetty.xml /            -->
+<!-- jetty-webapps.xml) so every console request passes through, in  -->
+<!-- order: InetAccessHandler (client-IP filtering) ->               -->
+<!-- SecurityHandler (JAAS BASIC auth + role checks) -> Contexts.    -->
+<!-- insertHandler() links the wrapper chain's tail to whatever      -->
+<!-- handler the Server already has, so load order is not fragile.   -->
+<!-- =============================================================== -->
+<Configure id="Server" class="org.eclipse.jetty.server.Server">
+
+  <!-- JAAS login service backed by ${activemq.conf}/login.config      -->
+  <!-- (the "activemq" login module, realm "ActiveMQRealm"), the same  -->
+  <!-- users.properties / groups.properties used by the broker.        -->
+  <New id="jaasLoginService" class="org.eclipse.jetty.security.jaas.JAASLoginService">
+    <Set name="name">ActiveMQRealm</Set>
+    <Set name="loginModuleName">activemq</Set>
+    <Set name="roleClassNames">
+      <Array type="java.lang.String">
+        <Item>org.apache.activemq.jaas.GroupPrincipal</Item>
+      </Array>
+    </Set>
+  </New>
+
+  <Call name="insertHandler">
+    <Arg>
+      <!-- Outermost: only allow configured client IPs to reach the console. -->
+      <New class="org.eclipse.jetty.server.handler.InetAccessHandler">
+        <Set name="handler">
+
+          <!-- Path-based authorization; its tail is linked to Contexts by insertHandler. -->
+          <New id="consoleSecurityHandler" class="org.eclipse.jetty.security.SecurityHandler$PathMapped">
+            <Set name="loginService"><Ref refid="jaasLoginService"/></Set>
+            <Set name="identityService">
+              <New class="org.eclipse.jetty.security.DefaultIdentityService"/>
+            </Set>
+            <Set name="authenticator">
+              <New class="org.eclipse.jetty.security.authentication.BasicAuthenticator"/>
+            </Set>
+
+            <!-- Web console UI (/admin/*) is restricted to the admins role. -->
+            <Call name="put">
+              <Arg>/admin/*</Arg>
+              <Arg>
+                <Call class="org.eclipse.jetty.security.Constraint" name="from">
+                  <Arg><Array type="java.lang.String"><Item>admins</Item></Array></Arg>
+                </Call>
+              </Arg>
+            </Call>
+
+            <!-- Jolokia JMX bridge (/api/jolokia/*) is restricted to admins   -->
+            <!-- to prevent privilege escalation via JMX.                      -->
+            <Call name="put">
+              <Arg>/api/jolokia/*</Arg>
+              <Arg>
+                <Call class="org.eclipse.jetty.security.Constraint" name="from">
+                  <Arg><Array type="java.lang.String"><Item>admins</Item></Array></Arg>
+                </Call>
+              </Arg>
+            </Call>
+
+            <!-- Everything else requires an authenticated user or admin. -->
+            <Call name="put">
+              <Arg>/*</Arg>
+              <Arg>
+                <Call class="org.eclipse.jetty.security.Constraint" name="from">
+                  <Arg>
+                    <Array type="java.lang.String">
+                      <Item>users</Item>
+                      <Item>admins</Item>
+                    </Array>
+                  </Arg>
+                </Call>
+              </Arg>
+            </Call>
+          </New>
+        </Set>
+
+        <!-- Allowed clients. With the default connector host binding of        -->
+        <!-- 127.0.0.1 only loopback is reachable anyway; broaden the includes  -->
+        <!-- (e.g. 10.0.0.0/8, or 192.168.1.0/24|/api) if the bind address is   -->
+        <!-- widened. Exclude rules take precedence over include rules.         -->
+        <Call name="include">
+          <Arg>
+            <Array type="java.lang.String">
+              <Item>127.0.0.1</Item>
+              <Item>::1</Item>
+            </Array>
+          </Arg>
+        </Call>
+      </New>
+    </Arg>
+  </Call>
+
+</Configure>
