@@ -256,8 +256,8 @@ public final class AmqpMessageSupport {
                      InputStream iis = MarshallingSupport.createInflaterInputStream(
                             message.getMaxInflatedDataSize(), is)) {
 
-                    byte value;
-                    while ((value = (byte) iis.read()) != -1) {
+                    int value;
+                    while ((value = iis.read()) != -1) {
                         os.write(value);
                     }
 
