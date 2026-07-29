@@ -584,8 +584,31 @@ public class JMSMappingOutboundTransformerTest {
     }
 
     @Test
+    public void testConvertCompressedObjectMessageToAmqpMessageByte255() throws Exception {
+        // This specific UUID tests a decompression edge case found for Objects messages and
+        // is used to verify AmqpMessageSupport.getBinaryFromMessageBody() is correct.
+        //
+        // Previously the decompression could stop early and not decompress the entire stream of
+        // data. This was due to the loop incorrectly casting the read int from the inflater
+        // stream as a byte before comparing to -1 to look for end of stream.
+        //
+        // This is incorrect because the read() method can return a value between -1 and 255.
+        // Java uses Two's Complement to represent signed ints, so if the returned value int
+        // is 255 and is cast to a byte it becomes -1. This meant that reading 255 would return -1
+        // leading to the code to exit thinking end of stream has been reached.
+        //
+        // This particular UUID includes a byte of 255 when decompressed to test this edge case.
+        testConvertCompressedObjectMessageToAmqpMessageWithDataBody(
+                UUID.fromString("14faffdc-387d-4e2e-8b44-748d47eaaf06"));
+    }
+
+    @Test
     public void testConvertCompressedObjectMessageToAmqpMessageWithDataBody() throws Exception {
-        ActiveMQObjectMessage outbound = createObjectMessage(TEST_OBJECT_VALUE, true);
+        testConvertCompressedObjectMessageToAmqpMessageWithDataBody(TEST_OBJECT_VALUE);
+    }
+
+    private void testConvertCompressedObjectMessageToAmqpMessageWithDataBody(UUID uuid) throws Exception {
+        ActiveMQObjectMessage outbound = createObjectMessage(uuid, true);
         outbound.onSend();
         outbound.storeContent();
 
