@@ -21,14 +21,12 @@ import java.util.List;
 import java.util.Map;
 
 import javax.management.MBeanServerInvocationHandler;
-import javax.management.ObjectInstance;
 import javax.management.ObjectName;
 import javax.management.openmbean.CompositeData;
 import javax.management.openmbean.TabularData;
 
 import org.apache.activemq.broker.jmx.BrokerViewMBean;
 import org.apache.activemq.broker.jmx.JobSchedulerViewMBean;
-import org.apache.activemq.console.util.JmxMBeansUtil;
 
 public class BrokerCommand extends AbstractJmxCommand {
 
@@ -119,7 +117,7 @@ public class BrokerCommand extends AbstractJmxCommand {
     }
 
     private void showBrokerInfo() throws Exception {
-        BrokerViewMBean broker = getBrokerMBean();
+        BrokerViewMBean broker = getBrokerViewMBean();
 
         context.print("Broker Name      : " + broker.getBrokerName());
         context.print("Broker ID        : " + broker.getBrokerId());
@@ -144,7 +142,7 @@ public class BrokerCommand extends AbstractJmxCommand {
     }
 
     private void listConnectors() throws Exception {
-        BrokerViewMBean broker = getBrokerMBean();
+        BrokerViewMBean broker = getBrokerViewMBean();
         Map<String, String> connectors = broker.getTransportConnectors();
 
         if (connectors == null || connectors.isEmpty()) {
@@ -162,12 +160,12 @@ public class BrokerCommand extends AbstractJmxCommand {
     }
 
     private void addConnector(String uri) throws Exception {
-        String connectorName = getBrokerMBean().addConnector(uri);
+        String connectorName = getBrokerViewMBean().addConnector(uri);
         context.print("Transport connector added: " + connectorName + " -> " + uri);
     }
 
     private void removeConnector(String name) throws Exception {
-        boolean removed = getBrokerMBean().removeConnector(name);
+        boolean removed = getBrokerViewMBean().removeConnector(name);
         if (removed) {
             context.print("Transport connector removed: " + name);
         } else {
@@ -176,7 +174,7 @@ public class BrokerCommand extends AbstractJmxCommand {
     }
 
     private void showSchedulerInfo() throws Exception {
-        BrokerViewMBean broker = getBrokerMBean();
+        BrokerViewMBean broker = getBrokerViewMBean();
         ObjectName schedulerName = broker.getJMSJobScheduler();
 
         if (schedulerName == null) {
@@ -214,25 +212,6 @@ public class BrokerCommand extends AbstractJmxCommand {
             }
             context.print("");
         }
-    }
-
-    @SuppressWarnings("unchecked")
-    private BrokerViewMBean getBrokerMBean() throws Exception {
-        List<ObjectInstance> brokers = JmxMBeansUtil.getAllBrokers(createJmxConnection());
-        if (brokers.isEmpty()) {
-            throw new Exception("No broker found in JMX context.");
-        }
-        ObjectName brokerName = brokers.get(0).getObjectName();
-        return MBeanServerInvocationHandler.newProxyInstance(
-                createJmxConnection(), brokerName, BrokerViewMBean.class, true);
-    }
-
-    private static String dashes(int count) {
-        StringBuilder sb = new StringBuilder(count);
-        for (int i = 0; i < count; i++) {
-            sb.append('-');
-        }
-        return sb.toString();
     }
 
     @Override

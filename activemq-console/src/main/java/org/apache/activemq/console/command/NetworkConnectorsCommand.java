@@ -22,7 +22,6 @@ import javax.management.MBeanServerInvocationHandler;
 import javax.management.ObjectInstance;
 import javax.management.ObjectName;
 
-import org.apache.activemq.broker.jmx.BrokerViewMBean;
 import org.apache.activemq.broker.jmx.NetworkConnectorViewMBean;
 import org.apache.activemq.console.util.JmxMBeansUtil;
 
@@ -119,36 +118,17 @@ public class NetworkConnectorsCommand extends AbstractJmxCommand {
     }
 
     private void addNetworkConnector(String uri) throws Exception {
-        String connectorName = getBrokerMBean().addNetworkConnector(uri);
+        String connectorName = getBrokerViewMBean().addNetworkConnector(uri);
         context.print("Network connector added: " + connectorName + " -> " + uri);
     }
 
     private void removeNetworkConnector(String name) throws Exception {
-        boolean removed = getBrokerMBean().removeNetworkConnector(name);
+        boolean removed = getBrokerViewMBean().removeNetworkConnector(name);
         if (removed) {
             context.print("Network connector removed: " + name);
         } else {
             context.printInfo("Network connector not found: " + name);
         }
-    }
-
-    @SuppressWarnings("unchecked")
-    private BrokerViewMBean getBrokerMBean() throws Exception {
-        List<ObjectInstance> brokers = JmxMBeansUtil.getAllBrokers(createJmxConnection());
-        if (brokers.isEmpty()) {
-            throw new Exception("No broker found in JMX context.");
-        }
-        ObjectName brokerName = brokers.get(0).getObjectName();
-        return MBeanServerInvocationHandler.newProxyInstance(
-                createJmxConnection(), brokerName, BrokerViewMBean.class, true);
-    }
-
-    private static String dashes(int count) {
-        StringBuilder sb = new StringBuilder(count);
-        for (int i = 0; i < count; i++) {
-            sb.append('-');
-        }
-        return sb.toString();
     }
 
     @Override

@@ -26,7 +26,6 @@ import javax.management.ObjectInstance;
 import javax.management.ObjectName;
 import javax.management.openmbean.CompositeData;
 
-import org.apache.activemq.broker.jmx.BrokerViewMBean;
 import org.apache.activemq.broker.jmx.QueueViewMBean;
 import org.apache.activemq.console.util.JmxMBeansUtil;
 
@@ -167,41 +166,29 @@ public class QueuesCommand extends AbstractJmxCommand {
     }
 
     private void createQueue(String queueName) throws Exception {
-        getBrokerMBean().addQueue(queueName);
+        getBrokerViewMBean().addQueue(queueName);
         context.print("Queue created: " + queueName);
     }
 
     private void deleteQueue(String queueName) throws Exception {
-        getBrokerMBean().removeQueue(queueName);
+        getBrokerViewMBean().removeQueue(queueName);
         context.print("Queue deleted: " + queueName);
     }
 
-    @SuppressWarnings("unchecked")
     private void purgeQueue(String queueName) throws Exception {
-        List<ObjectInstance> results = JmxMBeansUtil.queryMBeans(createJmxConnection(),
-                "type=Broker,brokerName=*,destinationType=Queue,destinationName=" + queueName);
-        if (results.isEmpty()) {
-            context.printInfo("Queue not found: " + queueName);
+        QueueViewMBean q = lookupQueue(queueName);
+        if (q == null) {
             return;
         }
-        ObjectName name = results.get(0).getObjectName();
-        QueueViewMBean q = MBeanServerInvocationHandler.newProxyInstance(
-                createJmxConnection(), name, QueueViewMBean.class, true);
         q.purge();
         context.print("Queue purged: " + queueName);
     }
 
-    @SuppressWarnings("unchecked")
     private void infoQueue(String queueName) throws Exception {
-        List<ObjectInstance> results = JmxMBeansUtil.queryMBeans(createJmxConnection(),
-                "type=Broker,brokerName=*,destinationType=Queue,destinationName=" + queueName);
-        if (results.isEmpty()) {
-            context.printInfo("Queue not found: " + queueName);
+        QueueViewMBean q = lookupQueue(queueName);
+        if (q == null) {
             return;
         }
-        ObjectName name = results.get(0).getObjectName();
-        QueueViewMBean q = MBeanServerInvocationHandler.newProxyInstance(
-                createJmxConnection(), name, QueueViewMBean.class, true);
 
         context.print("Name          : " + q.getName());
         context.print("Messages      : " + q.getQueueSize());
@@ -214,17 +201,11 @@ public class QueuesCommand extends AbstractJmxCommand {
         context.print("Paused        : " + q.isPaused());
     }
 
-    @SuppressWarnings("unchecked")
     private void browseQueue(String queueName) throws Exception {
-        List<ObjectInstance> results = JmxMBeansUtil.queryMBeans(createJmxConnection(),
-                "type=Broker,brokerName=*,destinationType=Queue,destinationName=" + queueName);
-        if (results.isEmpty()) {
-            context.printInfo("Queue not found: " + queueName);
+        QueueViewMBean q = lookupQueue(queueName);
+        if (q == null) {
             return;
         }
-        ObjectName name = results.get(0).getObjectName();
-        QueueViewMBean q = MBeanServerInvocationHandler.newProxyInstance(
-                createJmxConnection(), name, QueueViewMBean.class, true);
         CompositeData[] messages = q.browse();
         if (messages == null || messages.length == 0) {
             context.print("No messages in queue: " + queueName);
@@ -244,74 +225,50 @@ public class QueuesCommand extends AbstractJmxCommand {
         }
     }
 
-    @SuppressWarnings("unchecked")
     private void produceMessage(String queueName, String body) throws Exception {
-        List<ObjectInstance> results = JmxMBeansUtil.queryMBeans(createJmxConnection(),
-                "type=Broker,brokerName=*,destinationType=Queue,destinationName=" + queueName);
-        if (results.isEmpty()) {
-            context.printInfo("Queue not found: " + queueName);
+        QueueViewMBean q = lookupQueue(queueName);
+        if (q == null) {
             return;
         }
-        ObjectName name = results.get(0).getObjectName();
-        QueueViewMBean q = MBeanServerInvocationHandler.newProxyInstance(
-                createJmxConnection(), name, QueueViewMBean.class, true);
         String messageId = q.sendTextMessage(body);
         context.print("Message sent to " + queueName + ". ID: " + messageId);
     }
 
-    @SuppressWarnings("unchecked")
     private void pauseQueue(String queueName) throws Exception {
-        List<ObjectInstance> results = JmxMBeansUtil.queryMBeans(createJmxConnection(),
-                "type=Broker,brokerName=*,destinationType=Queue,destinationName=" + queueName);
-        if (results.isEmpty()) {
-            context.printInfo("Queue not found: " + queueName);
+        QueueViewMBean q = lookupQueue(queueName);
+        if (q == null) {
             return;
         }
-        ObjectName name = results.get(0).getObjectName();
-        QueueViewMBean q = MBeanServerInvocationHandler.newProxyInstance(
-                createJmxConnection(), name, QueueViewMBean.class, true);
         q.pause();
         context.print("Queue paused: " + queueName);
     }
 
-    @SuppressWarnings("unchecked")
     private void resumeQueue(String queueName) throws Exception {
-        List<ObjectInstance> results = JmxMBeansUtil.queryMBeans(createJmxConnection(),
-                "type=Broker,brokerName=*,destinationType=Queue,destinationName=" + queueName);
-        if (results.isEmpty()) {
-            context.printInfo("Queue not found: " + queueName);
+        QueueViewMBean q = lookupQueue(queueName);
+        if (q == null) {
             return;
         }
-        ObjectName name = results.get(0).getObjectName();
-        QueueViewMBean q = MBeanServerInvocationHandler.newProxyInstance(
-                createJmxConnection(), name, QueueViewMBean.class, true);
         q.resume();
         context.print("Queue resumed: " + queueName);
     }
 
     @SuppressWarnings("unchecked")
-    private BrokerViewMBean getBrokerMBean() throws Exception {
-        List<ObjectInstance> brokers = JmxMBeansUtil.getAllBrokers(createJmxConnection());
-        if (brokers.isEmpty()) {
-            throw new Exception("No broker found in JMX context.");
+    private QueueViewMBean lookupQueue(String queueName) throws Exception {
+        List<ObjectInstance> results = JmxMBeansUtil.queryMBeans(createJmxConnection(),
+                "type=Broker,brokerName=*,destinationType=Queue,destinationName=" + queueName);
+        if (results.isEmpty()) {
+            context.printInfo("Queue not found: " + queueName);
+            return null;
         }
-        ObjectName brokerName = brokers.get(0).getObjectName();
+        ObjectName name = results.get(0).getObjectName();
         return MBeanServerInvocationHandler.newProxyInstance(
-                createJmxConnection(), brokerName, BrokerViewMBean.class, true);
+                createJmxConnection(), name, QueueViewMBean.class, true);
     }
 
     private void requireQueueName(List<String> tokens, String action) throws Exception {
         if (tokens.isEmpty()) {
             throw new IllegalArgumentException("Queue name required for '" + action + "'.");
         }
-    }
-
-    private static String dashes(int count) {
-        StringBuilder sb = new StringBuilder(count);
-        for (int i = 0; i < count; i++) {
-            sb.append('-');
-        }
-        return sb.toString();
     }
 
     @Override

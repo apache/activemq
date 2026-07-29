@@ -25,7 +25,6 @@ import javax.management.MBeanServerInvocationHandler;
 import javax.management.ObjectInstance;
 import javax.management.ObjectName;
 
-import org.apache.activemq.broker.jmx.BrokerViewMBean;
 import org.apache.activemq.broker.jmx.TopicViewMBean;
 import org.apache.activemq.console.util.JmxMBeansUtil;
 
@@ -133,12 +132,12 @@ public class TopicsCommand extends AbstractJmxCommand {
     }
 
     private void createTopic(String topicName) throws Exception {
-        getBrokerMBean().addTopic(topicName);
+        getBrokerViewMBean().addTopic(topicName);
         context.print("Topic created: " + topicName);
     }
 
     private void deleteTopic(String topicName) throws Exception {
-        getBrokerMBean().removeTopic(topicName);
+        getBrokerViewMBean().removeTopic(topicName);
         context.print("Topic deleted: " + topicName);
     }
 
@@ -164,29 +163,10 @@ public class TopicsCommand extends AbstractJmxCommand {
         context.print("Memory usage  : " + t.getMemoryPercentUsage() + "%");
     }
 
-    @SuppressWarnings("unchecked")
-    private BrokerViewMBean getBrokerMBean() throws Exception {
-        List<ObjectInstance> brokers = JmxMBeansUtil.getAllBrokers(createJmxConnection());
-        if (brokers.isEmpty()) {
-            throw new Exception("No broker found in JMX context.");
-        }
-        ObjectName brokerName = brokers.get(0).getObjectName();
-        return MBeanServerInvocationHandler.newProxyInstance(
-                createJmxConnection(), brokerName, BrokerViewMBean.class, true);
-    }
-
     private void requireTopicName(List<String> tokens, String action) throws Exception {
         if (tokens.isEmpty()) {
             throw new IllegalArgumentException("Topic name required for '" + action + "'.");
         }
-    }
-
-    private static String dashes(int count) {
-        StringBuilder sb = new StringBuilder(count);
-        for (int i = 0; i < count; i++) {
-            sb.append('-');
-        }
-        return sb.toString();
     }
 
     @Override

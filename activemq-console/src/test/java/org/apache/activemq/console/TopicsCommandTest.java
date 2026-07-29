@@ -22,10 +22,7 @@ import static org.junit.Assert.assertTrue;
 import java.io.ByteArrayOutputStream;
 import java.util.LinkedList;
 
-import javax.management.ObjectName;
-
 import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.broker.jmx.TopicViewMBean;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.console.command.TopicsCommand;
@@ -152,11 +149,4 @@ public class TopicsCommandTest {
         return out.toString();
     }
 
-    private TopicViewMBean getTopicProxy(String topicName) throws Exception {
-        ObjectName objectName = new ObjectName(
-                "org.apache.activemq:type=Broker,brokerName=localhost" +
-                ",destinationType=Topic,destinationName=" + topicName);
-        return (TopicViewMBean) brokerService.getManagementContext()
-                .newProxyInstance(objectName, TopicViewMBean.class, true);
-    }
 }

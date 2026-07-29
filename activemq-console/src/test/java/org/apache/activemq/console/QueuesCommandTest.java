@@ -18,6 +18,7 @@ package org.apache.activemq.console;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 import java.io.ByteArrayOutputStream;
@@ -180,11 +181,8 @@ public class QueuesCommandTest {
 
     @Test(timeout = 30000)
     public void testProduceMissingBody() throws Exception {
-        try {
-            execute("produce", "Q1");
-        } catch (IllegalArgumentException e) {
-            assertTrue(e.getMessage().contains("body required"));
-        }
+        IllegalArgumentException e = assertThrows(IllegalArgumentException.class, () -> execute("produce", "Q1"));
+        assertTrue(e.getMessage().contains("body required"));
     }
 
     // --- pause / resume ---

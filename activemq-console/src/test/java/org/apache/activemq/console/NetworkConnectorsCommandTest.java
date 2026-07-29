@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.console;
 
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 import java.io.ByteArrayOutputStream;
@@ -91,20 +92,14 @@ public class NetworkConnectorsCommandTest {
 
     @Test(timeout = 30000)
     public void testAddMissingUriThrows() throws Exception {
-        try {
-            execute("add");
-        } catch (IllegalArgumentException e) {
-            assertTrue(e.getMessage().contains("URI required"));
-        }
+        IllegalArgumentException e = assertThrows(IllegalArgumentException.class, () -> execute("add"));
+        assertTrue(e.getMessage().contains("URI required"));
     }
 
     @Test(timeout = 30000)
     public void testRemoveMissingNameThrows() throws Exception {
-        try {
-            execute("remove");
-        } catch (IllegalArgumentException e) {
-            assertTrue(e.getMessage().contains("name required"));
-        }
+        IllegalArgumentException e = assertThrows(IllegalArgumentException.class, () -> execute("remove"));
+        assertTrue(e.getMessage().contains("name required"));
     }
 
     // --- helpers ---
