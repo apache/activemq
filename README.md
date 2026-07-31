@@ -20,7 +20,7 @@ To help you get started, try the following links:
 Getting Started
 - You need JDK17+ to run Apache ActiveMQ
 - After having extracted ActiveMQ binary distribution, you can start ActiveMQ with `./bin/activemq console` (foreground) or `./bin/activemq start`
-- Docker images are also available on Docker Hub (https://hub.docker.com/r/apache/activemq-classic)
+- Docker images are also available on Docker Hub (https://hub.docker.com/r/apache/activemq)
 
 Building
 - You can build (fast) using Apache Maven: `mvn clean install -DskipTests`
