@@ -72,7 +72,7 @@
     <jakarta-annotation-api-version>3.0.0</jakarta-annotation-api-version>
     <jakarta-servlet-api-version>6.1.0</jakarta-servlet-api-version>
     <jakarta-servlet-jsp-api-version>4.0.0</jakarta-servlet-jsp-api-version>
-    <jakarta-el-api-version>6.0.0</jakarta-el-api-version>
+    <jakarta-el-api-version>6.0.1</jakarta-el-api-version>
     <asm-version>9.10.1</asm-version>
     <jasypt-version>1.9.3</jasypt-version>
     <jaxb-version>4.0.9</jaxb-version>
