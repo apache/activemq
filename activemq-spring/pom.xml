@@ -251,7 +251,7 @@
           <dependency>
             <groupId>com.thoughtworks.qdox</groupId>
             <artifactId>qdox</artifactId>
-            <version>1.12.1</version>
+            <version>2.2.0</version>
           </dependency>
         </dependencies>
       </plugin>
