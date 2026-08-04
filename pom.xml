@@ -98,7 +98,7 @@
     <zookeeper-version>3.4.14</zookeeper-version>
     <qpid-proton-version>0.34.1</qpid-proton-version>
     <qpid-jms-version>1.9.0</qpid-jms-version>
-    <netty-version>4.1.133.Final</netty-version>
+    <netty-version>4.2.16.Final</netty-version>
     <regexp-version>1.4</regexp-version>
     <rome-version>2.1.0</rome-version>
     <shiro-version>1.13.0</shiro-version>
