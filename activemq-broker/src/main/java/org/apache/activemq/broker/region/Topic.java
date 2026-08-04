@@ -860,11 +860,12 @@ public class Topic extends BaseDestination implements Task {
                 }
             }
 
-            synchronized (consumers) {
-                if (consumers.isEmpty()) {
-                    onMessageWithNoConsumers(context, message);
-                    return;
-                }
+            // CopyOnWriteArrayList.isEmpty() is a volatile snapshot read; no
+            // monitor needed — the check is advisory at message granularity
+            // either way (subscription cutover is quiesced by dispatchLock).
+            if (consumers.isEmpty()) {
+                onMessageWithNoConsumers(context, message);
+                return;
             }
 
             // Clear memory before dispatch - need to clear here because the call to
