@@ -156,7 +156,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
 
     protected final NetworkBridgeStatistics networkBridgeStatistics = new NetworkBridgeStatistics();
 
-    private NetworkBridgeListener networkBridgeListener;
+    private volatile NetworkBridgeListener networkBridgeListener;
     private boolean createdByDuplex;
     private BrokerInfo localBrokerInfo;
     private BrokerInfo remoteBrokerInfo;
