@@ -92,7 +92,7 @@
     <mockito-version>4.8.1</mockito-version>
     <owasp-dependency-check-version>12.1.0</owasp-dependency-check-version>
     <mqtt-client-version>1.16</mqtt-client-version>
-    <org-apache-derby-version>10.15.2.0</org-apache-derby-version>
+    <org-apache-derby-version>10.17.1.0</org-apache-derby-version>
     <osgi-version>6.0.0</osgi-version>
     <linkedin-zookeeper-version>1.4.0</linkedin-zookeeper-version>
     <zookeeper-version>3.4.14</zookeeper-version>
