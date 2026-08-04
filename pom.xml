@@ -55,8 +55,8 @@
     <commons-dbcp2-version>2.13.0</commons-dbcp2-version>
     <commons-text-version>1.15.0</commons-text-version>
     <commons-io-version>2.20.0</commons-io-version>
-    <commons-lang-version>3.18.0</commons-lang-version>
-    <commons-logging-version>1.3.5</commons-logging-version>
+    <commons-lang-version>3.20.0</commons-lang-version>
+    <commons-logging-version>1.4.0</commons-logging-version>
     <commons-pool2-version>2.13.1</commons-pool2-version>
     <commons-primitives-version>1.0</commons-primitives-version>
     <directory-version>2.0.0.AM25</directory-version>
@@ -76,21 +76,21 @@
     <jaxb-bundle-version>2.3.2_1</jaxb-bundle-version>
     <jetty9-version>9.4.58.v20250814</jetty9-version>
     <jetty-version>${jetty9-version}</jetty-version>
-    <jmdns-version>3.6.2</jmdns-version>
-    <tomcat-api-version>9.0.100</tomcat-api-version>
+    <jmdns-version>3.6.3</jmdns-version>
+    <tomcat-api-version>9.0.120</tomcat-api-version>
     <javassist-version>3.30.2-GA</javassist-version>
-    <jettison-version>1.5.4</jettison-version>
+    <jettison-version>1.5.7</jettison-version>
     <jmock-version>2.13.1</jmock-version>
-    <jolokia-version>1.7.1</jolokia-version>
+    <jolokia-version>1.7.2</jolokia-version>
     <josql-version>1.5_5</josql-version>
     <!-- for json-simple use same version as jolokia uses -->
     <json-simple-version>1.1.1</json-simple-version>
     <junit-version>4.13.2</junit-version>
     <hamcrest-version>1.3</hamcrest-version>
     <karaf-version>4.3.10</karaf-version>
-    <log4j-version>2.25.3</log4j-version>
-    <mockito-version>4.8.1</mockito-version>
-    <owasp-dependency-check-version>12.1.0</owasp-dependency-check-version>
+    <log4j-version>2.26.1</log4j-version>
+    <mockito-version>4.11.0</mockito-version>
+    <owasp-dependency-check-version>12.2.2</owasp-dependency-check-version>
     <mqtt-client-version>1.16</mqtt-client-version>
     <org-apache-derby-version>10.15.2.0</org-apache-derby-version>
     <osgi-version>6.0.0</osgi-version>
@@ -98,18 +98,18 @@
     <zookeeper-version>3.4.14</zookeeper-version>
     <qpid-proton-version>0.34.1</qpid-proton-version>
     <qpid-jms-version>1.9.0</qpid-jms-version>
-    <netty-version>4.1.133.Final</netty-version>
+    <netty-version>4.2.16.Final</netty-version>
     <regexp-version>1.4</regexp-version>
     <rome-version>2.1.0</rome-version>
     <shiro-version>1.13.0</shiro-version>
-    <slf4j-version>2.0.17</slf4j-version>
+    <slf4j-version>2.0.18</slf4j-version>
     <snappy-version>1.1.10.8</snappy-version>
     <spring-version>5.3.39</spring-version>
     <taglibs-version>1.2.5</taglibs-version>
     <velocity-version>2.4.1</velocity-version>
     <xpp3-version>1.1.4c</xpp3-version>
     <xstream-version>1.4.21</xstream-version>
-    <xbean-version>4.28</xbean-version>
+    <xbean-version>4.31</xbean-version>
     <xerces-version>2.12.2</xerces-version>
     <jaxb-basics-version>0.12.0</jaxb-basics-version>
     <stompjms-version>1.19</stompjms-version>
@@ -127,25 +127,25 @@
 
     <!-- Maven Plugin Version for this Project -->
     <maven-bundle-plugin-version>5.1.9</maven-bundle-plugin-version>
-    <maven-surefire-plugin-version>3.5.2</maven-surefire-plugin-version>
+    <maven-surefire-plugin-version>3.5.6</maven-surefire-plugin-version>
     <maven-antrun-plugin-version>3.1.0</maven-antrun-plugin-version>
-    <maven-assembly-plugin-version>3.7.1</maven-assembly-plugin-version>
+    <maven-assembly-plugin-version>3.8.0</maven-assembly-plugin-version>
     <maven-clean-plugin-version>3.4.1</maven-clean-plugin-version>
     <maven-release-plugin-version>3.1.1</maven-release-plugin-version>
     <maven-eclipse-plugin-version>2.10</maven-eclipse-plugin-version>
     <maven-enforcer-plugin-version>3.5.0</maven-enforcer-plugin-version>
     <maven-war-plugin-version>3.4.0</maven-war-plugin-version>
-    <maven-compiler-plugin-version>3.14.0</maven-compiler-plugin-version>
+    <maven-compiler-plugin-version>3.15.0</maven-compiler-plugin-version>
     <maven-rar-plugin-version>3.0.0</maven-rar-plugin-version>
-    <maven-jar-plugin-version>3.4.2</maven-jar-plugin-version>
+    <maven-jar-plugin-version>3.5.1</maven-jar-plugin-version>
     <maven-source-plugin-version>3.3.1</maven-source-plugin-version>
-    <maven-javadoc-plugin-version>3.11.2</maven-javadoc-plugin-version>
+    <maven-javadoc-plugin-version>3.12.0</maven-javadoc-plugin-version>
     <maven-install-plugin-version>2.5.2</maven-install-plugin-version>
-    <maven-shade-plugin-version>3.6.0</maven-shade-plugin-version>
+    <maven-shade-plugin-version>3.6.2</maven-shade-plugin-version>
     <findbugs-maven-plugin-version>3.0.5</findbugs-maven-plugin-version>
     <javacc-maven-plugin-version>3.1.0</javacc-maven-plugin-version>
     <cobertura-maven-plugin-version>2.7</cobertura-maven-plugin-version>
-    <taglist-maven-plugin-version>3.2.1</taglist-maven-plugin-version>
+    <taglist-maven-plugin-version>3.2.2</taglist-maven-plugin-version>
     <build-helper-maven-plugin-version>3.6.1</build-helper-maven-plugin-version>
     <replacer-maven-plugin-version>1.5.3</replacer-maven-plugin-version>
     <apache-rat-plugin-version>0.16.1</apache-rat-plugin-version>
@@ -154,8 +154,8 @@
     <maven-dependency-plugin-version>3.6.1</maven-dependency-plugin-version>
     <maven-project-info-reports-plugin-version>3.9.0</maven-project-info-reports-plugin-version>
     <maven-graph-plugin-version>1.45</maven-graph-plugin-version>
-    <maven-plugin-plugin-version>3.15.1</maven-plugin-plugin-version>
-    <maven-core-version>3.8.6</maven-core-version>
+    <maven-plugin-plugin-version>3.15.2</maven-plugin-plugin-version>
+    <maven-core-version>3.9.16</maven-core-version>
     <!-- OSGi bundles properties -->
     <activemq.osgi.import.pkg>*</activemq.osgi.import.pkg>
     <activemq.osgi.export.pkg>org.apache.activemq*</activemq.osgi.export.pkg>
@@ -490,7 +490,7 @@
      <dependency>
        <groupId>org.ow2.asm</groupId>
        <artifactId>asm</artifactId>
-       <version>9.9</version>
+       <version>9.10.1</version>
      </dependency>
 
       <!-- Servlet 3.1 and JSP -->
