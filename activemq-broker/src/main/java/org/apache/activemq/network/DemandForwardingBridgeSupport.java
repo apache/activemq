@@ -1583,17 +1583,21 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         }
 
         List<ConsumerId> candidateConsumers = consumerInfo.getNetworkConsumerIds();
+        // null when the destination's region is not an AbstractRegion (no
+        // subscription view available) - nothing to compare against
         Collection<Subscription> currentSubs = getRegionSubscriptions(consumerInfo.getDestination());
-        for (Subscription sub : currentSubs) {
-            List<ConsumerId> networkConsumers = sub.getConsumerInfo().getNetworkConsumerIds();
-            if (!networkConsumers.isEmpty()) {
-                if (matchFound(candidateConsumers, networkConsumers)) {
-                    if (isInActiveDurableSub(sub)) {
-                        suppress = false;
-                    } else {
-                        suppress = hasLowerPriority(sub, candidate.getLocalInfo());
+        if (currentSubs != null) {
+            for (Subscription sub : currentSubs) {
+                List<ConsumerId> networkConsumers = sub.getConsumerInfo().getNetworkConsumerIds();
+                if (!networkConsumers.isEmpty()) {
+                    if (matchFound(candidateConsumers, networkConsumers)) {
+                        if (isInActiveDurableSub(sub)) {
+                            suppress = false;
+                        } else {
+                            suppress = hasLowerPriority(sub, candidate.getLocalInfo());
+                        }
+                        break;
                     }
-                    break;
                 }
             }
         }
