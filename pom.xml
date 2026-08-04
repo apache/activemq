@@ -80,7 +80,7 @@
     <jetty-version-range>[12,13)</jetty-version-range>
     <jmdns-version>3.6.3</jmdns-version>
     <javassist-version>3.32.0-GA</javassist-version>
-    <jettison-version>1.5.6</jettison-version>
+    <jettison-version>1.5.7</jettison-version>
     <jolokia-version>2.6.0</jolokia-version>
     <jmh-version>1.37</jmh-version>
     <junit-version>4.13.2</junit-version>
