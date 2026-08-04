@@ -148,7 +148,7 @@
     <taglist-maven-plugin-version>3.2.2</taglist-maven-plugin-version>
     <build-helper-maven-plugin-version>3.6.1</build-helper-maven-plugin-version>
     <replacer-maven-plugin-version>1.5.3</replacer-maven-plugin-version>
-    <apache-rat-plugin-version>0.16.1</apache-rat-plugin-version>
+    <apache-rat-plugin-version>0.17</apache-rat-plugin-version>
     <tools-maven-plugin-version>1.4</tools-maven-plugin-version>
     <depends-maven-plugin-version>1.5.0</depends-maven-plugin-version>
     <maven-dependency-plugin-version>3.6.1</maven-dependency-plugin-version>
