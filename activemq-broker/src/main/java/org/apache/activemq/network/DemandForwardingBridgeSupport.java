@@ -2007,7 +2007,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
      * Used to allow for async tasks to await receipt of the BrokerInfo from the local and
      * remote sides of the network bridge.
      */
-    private static class FutureBrokerInfo implements Future<BrokerInfo> {
+    static class FutureBrokerInfo implements Future<BrokerInfo> {
 
         private final CountDownLatch slot = new CountDownLatch(1);
         private final AtomicBoolean disposed;
