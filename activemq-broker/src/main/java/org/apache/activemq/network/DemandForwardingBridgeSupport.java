@@ -37,6 +37,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Pattern;
 
@@ -126,7 +127,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
     protected String remoteBrokerName = "Unknown";
     protected String localClientId;
     protected ConsumerInfo demandConsumerInfo;
-    protected int demandConsumerDispatched;
+    protected final AtomicInteger demandConsumerDispatched = new AtomicInteger();
     protected final AtomicBoolean localBridgeStarted = new AtomicBoolean(false);
     protected final AtomicBoolean remoteBridgeStarted = new AtomicBoolean(false);
     protected final AtomicBoolean bridgeFailed = new AtomicBoolean();
@@ -941,10 +942,13 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
     }
 
     void ackAdvisory(Message message) throws IOException {
-        demandConsumerDispatched++;
-        if (demandConsumerDispatched > (demandConsumerInfo.getPrefetchSize() *
-                (configuration.getAdvisoryAckPercentage() / 100f))) {
-            final MessageAck ack = new MessageAck(message, MessageAck.STANDARD_ACK_TYPE, demandConsumerDispatched);
+        final int dispatched = demandConsumerDispatched.incrementAndGet();
+        if (dispatched > (demandConsumerInfo.getPrefetchSize() *
+                (configuration.getAdvisoryAckPercentage() / 100f))
+                // the CAS claims the observed count for this ack; a losing thread's
+                // increment stays in the counter for a later advisory to claim
+                && demandConsumerDispatched.compareAndSet(dispatched, 0)) {
+            final MessageAck ack = new MessageAck(message, MessageAck.STANDARD_ACK_TYPE, dispatched);
             ack.setConsumerId(demandConsumerInfo.getConsumerId());
             brokerService.getTaskRunnerFactory().execute(new Runnable() {
                 @Override
@@ -956,7 +960,6 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                     }
                 }
             });
-            demandConsumerDispatched = 0;
         }
     }
 
