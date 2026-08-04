@@ -940,7 +940,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         }
     }
 
-    private void ackAdvisory(Message message) throws IOException {
+    void ackAdvisory(Message message) throws IOException {
         demandConsumerDispatched++;
         if (demandConsumerDispatched > (demandConsumerInfo.getPrefetchSize() *
                 (configuration.getAdvisoryAckPercentage() / 100f))) {
