@@ -460,6 +460,7 @@ public class BrokerService implements Service {
     public ProxyConnector addProxyConnector(ProxyConnector connector) throws Exception {
         URI uri = getVmConnectorURI();
         connector.setLocalUri(uri);
+        connector.setBrokerService(this);
         proxyConnectors.add(connector);
         if (isUseJmx()) {
             registerProxyConnectorMBean(connector);
