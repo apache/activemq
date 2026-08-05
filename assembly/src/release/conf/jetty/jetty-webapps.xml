@@ -176,6 +176,18 @@
       </New>
     </Arg>
   </Call>
+  <!-- Uncomment to serve Prometheus metrics -->
+  <!--
+  <Call name="addHandler">
+    <Arg>
+      <New class="org.eclipse.jetty.ee11.webapp.WebAppContext">
+        <Set name="contextPath">/metrics</Set>
+        <Set name="baseResourceAsString"><Property name="activemq.home" default="."/>/webapps/metrics</Set>
+        <Set name="logUrlOnStart">true</Set>
+      </New>
+    </Arg>
+  </Call>
+  -->
 
   <!-- Static Resource Handler -->
   <Call name="addHandler">
