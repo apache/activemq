@@ -218,6 +218,6 @@ public class InboundMessageProducerProxy implements MessageProducer, QueueSender
      */
     @Override
     public long getDeliveryDelay() throws JMSException {
-        throw new UnsupportedOperationException("getDeliveryDelay() is not supported");
+        return 0L;
     }
 }
