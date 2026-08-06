@@ -1,0 +1,216 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "id": 100,
+      "title": "Broker Overview",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 100 }, { "color": "red", "value": 500 }] } } },
+      "gridPos": { "h": 4, "w": 4, "x": 0, "y": 1 },
+      "id": 1,
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "title": "Connections",
+      "type": "stat",
+      "targets": [{ "expr": "activemq_broker_connections_count", "legendFormat": "{{broker}}" }]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 50 }, { "color": "red", "value": 80 }] } } },
+      "gridPos": { "h": 4, "w": 4, "x": 4, "y": 1 },
+      "id": 2,
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "title": "Memory %",
+      "type": "stat",
+      "targets": [{ "expr": "activemq_broker_memory_percent_usage", "legendFormat": "{{broker}}" }]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 50 }, { "color": "red", "value": 80 }] } } },
+      "gridPos": { "h": 4, "w": 4, "x": 8, "y": 1 },
+      "id": 3,
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "title": "Store %",
+      "type": "stat",
+      "targets": [{ "expr": "activemq_broker_store_percent_usage", "legendFormat": "{{broker}}" }]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 50 }, { "color": "red", "value": 80 }] } } },
+      "gridPos": { "h": 4, "w": 4, "x": 12, "y": 1 },
+      "id": 4,
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "title": "Temp %",
+      "type": "stat",
+      "targets": [{ "expr": "activemq_broker_temp_percent_usage", "legendFormat": "{{broker}}" }]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "steps": [{ "color": "green", "value": null }] } } },
+      "gridPos": { "h": 4, "w": 4, "x": 16, "y": 1 },
+      "id": 5,
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "title": "Consumers",
+      "type": "stat",
+      "targets": [{ "expr": "activemq_broker_consumers_count", "legendFormat": "{{broker}}" }]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "steps": [{ "color": "green", "value": null }] } } },
+      "gridPos": { "h": 4, "w": 4, "x": 20, "y": 1 },
+      "id": 6,
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "title": "Producers",
+      "type": "stat",
+      "targets": [{ "expr": "activemq_broker_producers_count", "legendFormat": "{{broker}}" }]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "unit": "short" } },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 5 },
+      "id": 10,
+      "options": { "legend": { "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "title": "Enqueue / Dequeue Rate",
+      "type": "timeseries",
+      "targets": [
+        { "expr": "rate(activemq_broker_messages_enqueued_total[1m])", "legendFormat": "enqueue/s" },
+        { "expr": "rate(activemq_broker_messages_dequeued_total[1m])", "legendFormat": "dequeue/s" }
+      ]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "unit": "short" } },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 5 },
+      "id": 11,
+      "options": { "legend": { "displayMode": "table", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "title": "Connections Over Time",
+      "type": "timeseries",
+      "targets": [
+        { "expr": "activemq_broker_connections_count", "legendFormat": "current" },
+        { "expr": "rate(activemq_broker_connections_total[5m])", "legendFormat": "new/s (5m)" }
+      ]
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 13 },
+      "id": 200,
+      "title": "Queues (requires ?per_object=true)",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "unit": "short", "custom": { "fillOpacity": 15 } } },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 14 },
+      "id": 20,
+      "options": { "legend": { "displayMode": "table", "placement": "right", "sortBy": "Last", "sortDesc": true }, "tooltip": { "mode": "multi" } },
+      "title": "Queue Depth",
+      "type": "timeseries",
+      "targets": [{ "expr": "activemq_queue_message_count", "legendFormat": "{{destination}} depth" }]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "unit": "short" } },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 14 },
+      "id": 21,
+      "options": { "legend": { "displayMode": "table", "placement": "right", "sortBy": "Last", "sortDesc": true }, "tooltip": { "mode": "multi" } },
+      "title": "Queue Enqueue Rate",
+      "type": "timeseries",
+      "targets": [{ "expr": "rate(activemq_queue_enqueue_count_total[1m])", "legendFormat": "{{destination}} enqueue/s" }]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "unit": "short" } },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 22 },
+      "id": 22,
+      "options": { "legend": { "displayMode": "table", "placement": "right", "sortBy": "Last", "sortDesc": true }, "tooltip": { "mode": "multi" } },
+      "title": "Queue In-Flight",
+      "type": "timeseries",
+      "targets": [{ "expr": "activemq_queue_message_inflight_count", "legendFormat": "{{destination}} inflight" }]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "unit": "short" } },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 22 },
+      "id": 23,
+      "options": { "legend": { "displayMode": "table", "placement": "right", "sortBy": "Last", "sortDesc": true }, "tooltip": { "mode": "multi" } },
+      "title": "Queue Consumers",
+      "type": "timeseries",
+      "targets": [{ "expr": "activemq_queue_consumer_count", "legendFormat": "{{destination}} consumers" }]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "unit": "percent" } },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 30 },
+      "id": 24,
+      "options": { "legend": { "displayMode": "table", "placement": "right" }, "tooltip": { "mode": "multi" } },
+      "title": "Queue Memory %",
+      "type": "timeseries",
+      "targets": [{ "expr": "activemq_queue_memory_percent_usage", "legendFormat": "{{destination}} mem%" }]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "unit": "ms" } },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 30 },
+      "id": 25,
+      "options": { "legend": { "displayMode": "table", "placement": "right", "sortBy": "Last", "sortDesc": true }, "tooltip": { "mode": "multi" } },
+      "title": "Queue Avg Enqueue Time",
+      "type": "timeseries",
+      "targets": [{ "expr": "activemq_queue_average_enqueue_time_milliseconds", "legendFormat": "{{destination}} avg ms" }]
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 38 },
+      "id": 300,
+      "title": "Topics (requires ?per_object=true)",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "unit": "short", "custom": { "fillOpacity": 15 } } },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 39 },
+      "id": 30,
+      "options": { "legend": { "displayMode": "table", "placement": "right", "sortBy": "Last", "sortDesc": true }, "tooltip": { "mode": "multi" } },
+      "title": "Topic Enqueue Rate",
+      "type": "timeseries",
+      "targets": [{ "expr": "rate(activemq_topic_enqueue_count_total[1m])", "legendFormat": "{{destination}} enqueue/s" }]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "unit": "short" } },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 39 },
+      "id": 31,
+      "options": { "legend": { "displayMode": "table", "placement": "right", "sortBy": "Last", "sortDesc": true }, "tooltip": { "mode": "multi" } },
+      "title": "Topic Consumers",
+      "type": "timeseries",
+      "targets": [{ "expr": "activemq_topic_consumer_count", "legendFormat": "{{destination}} consumers" }]
+    }
+  ],
+  "schemaVersion": 39,
+  "tags": ["activemq", "prometheus", "native-plugin"],
+  "templating": {
+    "list": [
+      {
+        "current": { "selected": false, "text": "Prometheus", "value": "Prometheus" },
+        "hide": 0,
+        "includeAll": false,
+        "name": "DS_PROMETHEUS",
+        "options": [],
+        "query": "prometheus",
+        "type": "datasource"
+      }
+    ]
+  },
+  "time": { "from": "now-30m", "to": "now" },
+  "title": "ActiveMQ Native Prometheus Plugin",
+  "uid": "activemq-native-prom",
+  "version": 1
+}
