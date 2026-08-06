@@ -35,6 +35,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.TreeMap;
 import java.util.concurrent.CountDownLatch;
@@ -137,8 +138,9 @@ public class PageFile {
     private final AtomicLong nextFreePageId = new AtomicLong();
     private SequenceSet freeList = new SequenceSet();
 
-    private AtomicReference<SequenceSet> recoveredFreeList = new AtomicReference<SequenceSet>();
-    private AtomicReference<SequenceSet> trackingFreeDuringRecovery = new AtomicReference<SequenceSet>();
+    // package visibility for testing
+    final AtomicReference<SequenceSet> recoveredFreeList = new AtomicReference<>();
+    private final AtomicReference<SequenceSet> trackingFreeDuringRecovery = new AtomicReference<>();
 
     private final AtomicLong nextTxid = new AtomicLong();
 
@@ -149,6 +151,33 @@ public class PageFile {
 
     private boolean useLFRUEviction = false;
     private float LFUEvictionFactor = 0.2f;
+
+    // Compaction config
+    private PageFileCompactionStrategy compactionStrategy = PageFileCompactionStrategy.NEVER;
+
+    // The ratio of the minimum amount of free pages to keep
+    // The default will keep a minimum of 10% of free pages, relative to the
+    // current size of the file when compaction is started.
+    // For example, if the file has 1000 pages and 500 are free at the end of the file,
+    // 400 would be removed and 100 would be kept (100 is 10% of 1000). This would leave
+    // a file with 500 pages used + 100 free
+    private float minFreePageCompactionRatio = .1F;
+
+    // The ratio of the maximum amount of free pages to allow before triggering compaction.
+    // The default will trigger a compaction attempt if the percentage of free pages
+    // hits 30% of the total file size.
+    // For example, if the file has 1000 pages and 350 are free at the end of the file, this
+    // is greater than 30% so we'd truncate the file. If minFreePageCompactionRatio is kept
+    // as the default of 10%, 250 pages would be removed leaving 100.
+    private float maxFreePageCompactionRatio = .3F;
+
+    public enum PageFileCompactionStrategy {
+        TRUNCATION, NEVER;
+
+        public boolean isNever() {
+            return this == NEVER;
+        }
+    }
 
     /**
      * Use to keep track of updated pages which have not yet been committed.
@@ -372,6 +401,9 @@ public class PageFile {
      */
     public void load() throws IOException, IllegalStateException {
         if (loaded.compareAndSet(false, true)) {
+            if (maxFreePageCompactionRatio < minFreePageCompactionRatio) {
+                throw new IllegalStateException("minFreePageCompactionRatio is greater than maxFreePageCompactionRatio");
+            }
 
             if (enablePageCaching) {
                 if (isUseLFRUEviction()) {
@@ -610,6 +642,150 @@ public class PageFile {
             InterruptedIOException ioe = new InterruptedIOException();
             ioe.initCause(e);
             throw ioe;
+        }
+    }
+
+    /**
+     * Compact the PageFile if needed. The only supported strategy is truncation,
+     * but future strategies may be added.
+     * <p>
+     * PageFile is a contiguous block of pages and new pages get allocated
+     * as space is needed. If pages are no longer needed anymore, they are
+     * marked as free so they can be re-used. This normally works well
+     * for workflows that are consistent.
+     * <p>
+     * However, sometimes it's possible to end up with a large number of free
+     * pages and wasted space. An example is an unusual backlog of data on
+     * a destination. This can cause a huge increase in the PageFile size to
+     * track the messages. Once the backlog is gone, the PageFile has a lot
+     * of free pages and is huge and will never shrink.
+     * <p>
+     * Truncation helps in this scenario by simply truncating the file and
+     * removing the excess free pages. This works well because all we need
+     * to do is remove the free pages from the tracking and then simply
+     * set the length of the file to the new size which is nearly instant time,
+     * so there is no noticeable performance impact.
+     * <p>
+     * One major limitation to note is that this strategy only works if the free pages are
+     * at the end of the file. If the free pages are in the middle of the file
+     * his won't work so we can't shrink the file. This could happen, for example, if a new
+     * destination was created while thre was a big backlog and it was written
+     * to the index. This situation will hopefully be addressed in a future
+     * compaction update as it is a more complex to handle and will likely require
+     * a different compaction strategy such as defragging first or rewriting the file.
+     *
+     * @throws IOException
+     */
+    public void compact() throws IOException {
+        if (compactionStrategy.isNever()) {
+            LOG.debug("Skipping PageFile compaction check, compaction is disabled.");
+            return;
+        }
+
+        LOG.debug("Beginning PageFile compaction check.");
+
+        // Don't compact if we have not finished free page recovery
+        if (trackingFreeDuringRecovery.get() != null) {
+            LOG.debug("Skipping compaction, async recovery not finished");
+            return;
+        }
+
+        // diskSize computed by checking nextFreePageId
+        long diskSize = getDiskSize();
+
+        // Disk size of the free pages in the page file
+        long freePageCount = getFreePageCount();
+        long totalPageCount = getPageCount();
+
+        // Percentage of pages that are free vs in use
+        double freePageRatio = Math.round((double)freePageCount / totalPageCount * 100d) / 100d;
+
+        // Only attempt to compact if we have reached the maximum ratio of free pages
+        // that is configured.
+        var tolerance = .001;
+        if (freePageRatio < maxFreePageCompactionRatio - tolerance) {
+            var formatted = Math.round((double)freePageCount / totalPageCount * 100d) / 100d;
+            LOG.debug("Skipping compaction, page file freePageRatio {} is less than "
+              + "configured maxFreePageCompactionRatio {}", String.format("%,.2f", formatted), maxFreePageCompactionRatio);
+            return;
+        }
+
+        // Get the last sequence of contiguous set of free pages in the file
+        // This block could be either in the middle of the file somewhere or
+        // at the end of the file
+        final Sequence lastFreeSeq = freeList.getTail();
+
+        // Sanity check, should not happen if we have a free page ratio
+        if (lastFreeSeq == null) {
+            LOG.warn("Skipping compaction, no free pages");
+            return;
+        }
+
+        // If we have a block of free pages then check if it is
+        // at the end of the file.
+        //
+        // If the offset of the last free page + the size of a page
+        // (to account for the nextFreePage that was allocated already)
+        // equals the disk size then there are no in use pages after this block.
+        if (toOffset(lastFreeSeq.getLast()) + pageSize != diskSize) {
+            LOG.info("Unable to compact, last free page block is not at the end of the file");
+            return;
+        }
+
+        long minFreePages = Math.round(totalPageCount * minFreePageCompactionRatio);
+
+        // we must keep a minimum number of free pages so find the point
+        // where we can truncate without removing too many pages
+        long maxPagesToTruncate = freePageCount - minFreePages;
+
+        final Sequence freePagesToDelete;
+        // If the block of free pages is larger than the max we need to truncate
+        // then we can split the sequence to only delete the max
+        if (lastFreeSeq.range() > maxPagesToTruncate) {
+            var last = lastFreeSeq.getLast();
+            var updatedFirst = (last - maxPagesToTruncate) + 1;
+            freePagesToDelete = new Sequence(updatedFirst, last);
+        } else {
+            freePagesToDelete = lastFreeSeq;
+        }
+
+        // sync on writes to block the async thread from trying to write while
+        // we are updating the file and truncating
+        synchronized (writes) {
+            // Generally this should be empty but need to verify
+            if (!writes.isEmpty()) {
+                LOG.warn("Skipping compaction, writes are in flight.");
+                return;
+            }
+
+            LOG.debug("Number of free pages to be deleted: {}", freePagesToDelete.range());
+            LOG.debug("Disk size of end of file free pages: {}", pageSize * freePagesToDelete.range());
+
+            if (enablePageCaching) {
+                pageCache.keySet().removeIf(freePagesToDelete::contains);
+            }
+
+            long newDiskSize = toOffset(freePagesToDelete.getFirst());
+            LOG.debug("Truncating page file to length: {}", newDiskSize);
+
+            // Remove the free pages from the freeList tracking
+            if (freePagesToDelete == lastFreeSeq) {
+                freeList.removeLastSequence();
+            } else {
+                freeList.remove(freePagesToDelete);
+            }
+            nextFreePageId.getAndAdd(-freePagesToDelete.range());
+
+            // Now that metadata is all updated, we can truncate the file
+            // This should be the last step to make sure there is no issue
+            // updating any of the metadata/tracking before truncation
+            writeFile.getRaf().setLength(newDiskSize);
+            if (enableDiskSyncs) {
+                writeFile.sync();
+            }
+
+            LOG.debug("Page file was compacted, new length: {}, old length:{}", newDiskSize, diskSize);
+            LOG.debug("New page count: {}, free page count: {}", getPageCount(), getFreePageCount());
         }
     }
 
@@ -887,6 +1063,57 @@ public class PageFile {
 
     public void setUseLFRUEviction(boolean useLFRUEviction) {
         this.useLFRUEviction = useLFRUEviction;
+    }
+
+    public PageFileCompactionStrategy getCompactionStrategy() {
+        return compactionStrategy;
+    }
+
+    public void setCompactionStrategy(PageFileCompactionStrategy compactionStrategy) {
+        assertNotLoaded();
+        this.compactionStrategy = Objects.requireNonNull(compactionStrategy);
+    }
+
+    public float getMinFreePageCompactionRatio() {
+        return minFreePageCompactionRatio;
+    }
+
+    /**
+     * The ratio of the minimum amount of free pages to keep.
+     * The default will keep a minimum of 10% of free pages, relative to the
+     * current size of the file when compaction is started.
+     *
+     * @param minFreePageCompactionRatio
+     */
+    public void setMinFreePageCompactionRatio(float minFreePageCompactionRatio) {
+        validateCompactionRatio(minFreePageCompactionRatio, "minFreePageCompactionRatio");
+        this.minFreePageCompactionRatio = minFreePageCompactionRatio;
+    }
+
+    public float getMaxFreePageCompactionRatio() {
+        return maxFreePageCompactionRatio;
+    }
+
+    /**
+     * The ratio of the maximum amount of free pages to allow before triggering compaction.
+     * The default will trigger a compaction attempt if the percentage of free pages
+     * hits 30% of the total file size.
+     *
+     * @param maxFreePageCompactionRatio
+     */
+    public void setMaxFreePageCompactionRatio(float maxFreePageCompactionRatio) {
+        validateCompactionRatio(maxFreePageCompactionRatio, "maxFreePageCompactionRatio");
+        this.maxFreePageCompactionRatio = maxFreePageCompactionRatio;
+    }
+
+    private void validateCompactionRatio(float ratio, String name) {
+        assertNotLoaded();
+        if (ratio < 0) {
+            throw new IllegalArgumentException(name + " must not be negative");
+        }
+        if  (ratio > 1) {
+            throw new IllegalArgumentException(name + " must not be greater than 1");
+        }
     }
 
     ///////////////////////////////////////////////////////////////////
