@@ -126,7 +126,14 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
     protected String remoteBrokerName = "Unknown";
     protected String localClientId;
     protected ConsumerInfo demandConsumerInfo;
-    protected int demandConsumerDispatched;
+    // Pending advisory dispatch accounting; guarded by advisoryAckLock. The count and
+    // the most recent counted dispatch are claimed together when building an ack so
+    // the STANDARD_ACK's lastMessageId always pairs with the batch it acknowledges.
+    private final Object advisoryAckLock = new Object();
+    private int demandConsumerDispatched;
+    private Message lastAdvisoryDispatch;
+    private long lastAdvisoryAckTime = System.currentTimeMillis();
+    private volatile Runnable advisoryAckFlushTask;
     protected final AtomicBoolean localBridgeStarted = new AtomicBoolean(false);
     protected final AtomicBoolean remoteBridgeStarted = new AtomicBoolean(false);
     protected final AtomicBoolean bridgeFailed = new AtomicBoolean();
@@ -284,6 +291,13 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
 
     @Override
     public void stop() throws Exception {
+        // cancel outside the started branch: the flush task is scheduled during
+        // startRemoteBridge and must not outlive a bridge torn down mid-start
+        Runnable flushTask = advisoryAckFlushTask;
+        if (flushTask != null) {
+            advisoryAckFlushTask = null;
+            brokerService.getScheduler().cancel(flushTask);
+        }
         if (started.compareAndSet(true, false)) {
             if (disposed.compareAndSet(false, true)) {
                 LOG.debug(" stopping {} bridge to {}", configuration.getBrokerName(), remoteBrokerName);
@@ -656,6 +670,23 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                     demandConsumerInfo.setDestination(new ActiveMQTopic(advisoryTopic));
                     configureConsumerPrefetch(demandConsumerInfo);
                     remoteBroker.oneway(demandConsumerInfo);
+
+                    final long advisoryAckInterval = configuration.getAdvisoryAckInterval();
+                    if (advisoryAckInterval > 0) {
+                        synchronized (advisoryAckLock) {
+                            lastAdvisoryAckTime = System.currentTimeMillis();
+                        }
+                        advisoryAckFlushTask = new Runnable() {
+                            @Override
+                            public void run() {
+                                flushPendingAdvisoryAcks();
+                            }
+                        };
+                        // check at half the interval so pending acks age at most ~1.5x
+                        // the interval before flushing
+                        brokerService.getScheduler().executePeriodically(advisoryAckFlushTask,
+                                Math.max(advisoryAckInterval / 2, 500));
+                    }
                 }
                 startedLatch.countDown();
             }
@@ -940,24 +971,71 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         }
     }
 
-    private void ackAdvisory(Message message) throws IOException {
-        demandConsumerDispatched++;
-        if (demandConsumerDispatched > (demandConsumerInfo.getPrefetchSize() *
-                (configuration.getAdvisoryAckPercentage() / 100f))) {
-            final MessageAck ack = new MessageAck(message, MessageAck.STANDARD_ACK_TYPE, demandConsumerDispatched);
-            ack.setConsumerId(demandConsumerInfo.getConsumerId());
-            brokerService.getTaskRunnerFactory().execute(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        remoteBroker.oneway(ack);
-                    } catch (IOException e) {
-                        LOG.warn("Failed to send advisory ack {}", ack, e);
-                    }
-                }
-            });
-            demandConsumerDispatched = 0;
+    void ackAdvisory(Message message) throws IOException {
+        final MessageAck ack;
+        synchronized (advisoryAckLock) {
+            demandConsumerDispatched++;
+            lastAdvisoryDispatch = message;
+            ack = claimPendingAdvisoryAcks(false);
         }
+        if (ack != null) {
+            sendAdvisoryAck(ack);
+        }
+    }
+
+    /**
+     * Acknowledges any pending advisory dispatches once the configured
+     * advisoryAckInterval has elapsed. Runs periodically so a quiet bridge
+     * holding a partial batch below the advisoryAckPercentage threshold does
+     * not sit unacked indefinitely and get aborted as a slow consumer.
+     */
+    void flushPendingAdvisoryAcks() {
+        final MessageAck ack;
+        synchronized (advisoryAckLock) {
+            ack = claimPendingAdvisoryAcks(true);
+        }
+        if (ack != null) {
+            sendAdvisoryAck(ack);
+        }
+    }
+
+    /**
+     * Claims the pending advisory dispatch count as a single ack when a
+     * trigger applies; callers must hold advisoryAckLock. The percentage
+     * threshold is the primary trigger on the dispatch path; the
+     * advisoryAckInterval is the trigger for the periodic flush and a
+     * secondary trigger on the dispatch path so a slow trickle of advisories
+     * cannot hold acks back indefinitely.
+     */
+    private MessageAck claimPendingAdvisoryAcks(boolean timerTriggered) {
+        if (demandConsumerDispatched == 0 || demandConsumerInfo == null) {
+            return null;
+        }
+        final long interval = configuration.getAdvisoryAckInterval();
+        final boolean intervalElapsed = interval > 0
+                && System.currentTimeMillis() - lastAdvisoryAckTime >= interval;
+        if (!intervalElapsed && (timerTriggered || demandConsumerDispatched <= (demandConsumerInfo.getPrefetchSize() *
+                (configuration.getAdvisoryAckPercentage() / 100f)))) {
+            return null;
+        }
+        final MessageAck ack = new MessageAck(lastAdvisoryDispatch, MessageAck.STANDARD_ACK_TYPE, demandConsumerDispatched);
+        ack.setConsumerId(demandConsumerInfo.getConsumerId());
+        demandConsumerDispatched = 0;
+        lastAdvisoryAckTime = System.currentTimeMillis();
+        return ack;
+    }
+
+    private void sendAdvisoryAck(final MessageAck ack) {
+        brokerService.getTaskRunnerFactory().execute(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    remoteBroker.oneway(ack);
+                } catch (IOException e) {
+                    LOG.warn("Failed to send advisory ack {}", ack, e);
+                }
+            }
+        });
     }
 
     private void serviceRemoteConsumerAdvisory(DataStructure data) throws IOException {
