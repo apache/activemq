@@ -60,7 +60,7 @@
     <commons-pool2-version>2.13.1</commons-pool2-version>
     <commons-primitives-version>1.0</commons-primitives-version>
     <directory-version>2.0.0.AM25</directory-version>
-    <ecj.version>3.46.0</ecj.version>
+    <ecj.version>3.33.0</ecj.version>
     <ftpserver-version>1.1.1</ftpserver-version>
     <hadoop-version>1.2.1</hadoop-version>
     <hawtbuf-version>1.11</hawtbuf-version>
