@@ -23,10 +23,10 @@ import org.apache.activemq.command.MessageId;
 public class MessageRecoveryContext implements MessageRecoveryListener {
 
     public static final int DEFAULT_MAX_MESSAGE_COUNT_RETURNED = 100;
-    public static final boolean DEFAULT_USE_DEDICATED_CURSOR = true;
+    public static final boolean DEFAULT_USE_ISOLATED_CURSOR = true;
 
     // Config
-    private final boolean useDedicatedCursor;
+    private final boolean useIsolatedCursor;
     private final int maxMessageCountReturned;
     private final Long offset;
     private final String startMessageId;
@@ -41,7 +41,7 @@ public class MessageRecoveryContext implements MessageRecoveryListener {
 
     MessageRecoveryContext(final MessageRecoveryListener messageRecoveryListener, final String startMessageId, 
             final String endMessageId, final Long offset, final Integer maxMessageCountReturned, 
-            final Boolean useDedicatedCursor) {
+            final Boolean useIsolatedCursor) {
         if(maxMessageCountReturned != null && maxMessageCountReturned < 0) {
             throw new IllegalArgumentException("maxMessageCountReturned must be a positive integer value");
         }
@@ -61,11 +61,16 @@ public class MessageRecoveryContext implements MessageRecoveryListener {
         this.messageRecoveryListener = messageRecoveryListener;
         this.offset = offset;
         this.startMessageId = startMessageId;
-        this.useDedicatedCursor = (useDedicatedCursor != null ? useDedicatedCursor : DEFAULT_USE_DEDICATED_CURSOR);
+        this.useIsolatedCursor = (useIsolatedCursor != null ? useIsolatedCursor : DEFAULT_USE_ISOLATED_CURSOR);
     }
 
+    public boolean isUseIsolatedCursor() {
+        return this.useIsolatedCursor;
+    }
+
+    @Deprecated(forRemoval = true)
     public boolean isUseDedicatedCursor() {
-        return this.useDedicatedCursor;
+        return isUseIsolatedCursor();
     }
 
     public int getMaxMessageCountReturned() {
@@ -133,7 +138,7 @@ public class MessageRecoveryContext implements MessageRecoveryListener {
 
     @Override
     public String toString() {
-        return "MessageRecoveryContext [useDedicatedCursor=" + useDedicatedCursor + ", maxMessageCountReturned="
+        return "MessageRecoveryContext [useIsolatedCursor=" + useIsolatedCursor + ", maxMessageCountReturned="
                 + maxMessageCountReturned + ", offset=" + offset + ", startMessageId=" + startMessageId
                 + ", endMessageId=" + endMessageId + ", messageRecoveryListener=" + messageRecoveryListener
                 + ", endSequenceId=" + endSequenceId + ", recoveredCount=" + recoveredCount + "]";
@@ -141,16 +146,21 @@ public class MessageRecoveryContext implements MessageRecoveryListener {
 
     public static class Builder {
 
-        private Boolean useDedicatedCursor;
+        private Boolean useIsolatedCursor;
         private Integer maxMessageCountReturned;
         private Long offset;
         private String startMessageId;
         private String endMessageId;
         private MessageRecoveryListener messageRecoveryListener;
 
-        public Builder useDedicatedCursor(final boolean useDedicatedCursor) {
-            this.useDedicatedCursor = useDedicatedCursor;
+        public Builder useIsolatedCursor(final boolean useIsolatedCursor) {
+            this.useIsolatedCursor = useIsolatedCursor;
             return this;
+        }
+
+        @Deprecated(forRemoval = true)
+        public Builder useDedicatedCursor(final boolean useDedicatedCursor) {
+            return useIsolatedCursor(useDedicatedCursor);
         }
 
         public Builder maxMessageCountReturned(final int maxMessageCountReturned) {
@@ -179,7 +189,7 @@ public class MessageRecoveryContext implements MessageRecoveryListener {
         }
 
         public MessageRecoveryContext build() {
-            return new MessageRecoveryContext(messageRecoveryListener, startMessageId, endMessageId, offset, maxMessageCountReturned, useDedicatedCursor);
+            return new MessageRecoveryContext(messageRecoveryListener, startMessageId, endMessageId, offset, maxMessageCountReturned, useIsolatedCursor);
         }
     }
 }

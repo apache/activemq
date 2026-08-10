@@ -14,7 +14,7 @@
   <parent>
     <groupId>org.apache.activemq</groupId>
     <artifactId>activemq-parent</artifactId>
-    <version>6.3.0-SNAPSHOT</version>
+    <version>6.4.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>activemq-all</artifactId>
@@ -292,7 +292,7 @@
         <dependency>
           <groupId>org.apache.activemq.protobuf</groupId>
           <artifactId>activemq-protobuf</artifactId>
-          <version>${activemq-protobuf-version}</version>
+          <version>${project.version}</version>
           <classifier>sources</classifier>
           <optional>true</optional>
         </dependency>

@@ -478,14 +478,17 @@ public class TwoBrokerVirtualTopicSelectorAwareForwardingTest extends
         brokerA.waitUntilStopped();
         deleteSelectorCacheFile("BrokerA");
 
-        assertEquals(0, destination.getConsumers().size());
+        // consumer close is async - wait for the broker to remove the subscription
+        assertTrue("consumer should be removed from BrokerB",
+                Wait.waitFor(() -> destination.getConsumers().isEmpty(), 5000, 10));
 
         remoteConsumer = createConsumer("BrokerB",
                 createDestination("Consumer.B.VirtualTopic.tempTopic", false),
                 "ceposta = 'redhat'");
 
 
-        assertEquals(1, destination.getConsumers().size());
+        assertTrue("new consumer should be registered on BrokerB",
+                Wait.waitFor(() -> destination.getConsumers().size() == 1, 5000, 10));
 
 
         // now let's start broker A back up

@@ -22,7 +22,7 @@
   <parent>
     <groupId>org.apache.activemq</groupId>
     <artifactId>activemq-parent</artifactId>
-    <version>6.3.0-SNAPSHOT</version>
+    <version>6.4.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>activemq-osgi</artifactId>
@@ -139,6 +139,11 @@
         <configuration>
           <instructions>
             <Bundle-Activator>org.apache.activemq.util.osgi.Activator</Bundle-Activator>
+            <!-- Strip any module-info.class dragged in via inlined multi-release jars.
+                 A stray META-INF/versions/9/module-info.class (e.g. slf4j's) would make
+                 tools such as the javadoc plugin treat this bundle as a JPMS module and
+                 build in modular mode, breaking the javadoc/attach-javadocs step. -->
+            <_donotcopy>(?:.*/)?module-info\.class</_donotcopy>
             <Embed-Dependency>
               *;groupId=org.apache.activemq;inline=META-INF/services/*,
               *;groupId=org.apache.activemq;inline=META-INF/versions/*,
@@ -449,7 +454,7 @@
         <dependency>
           <groupId>org.apache.activemq.protobuf</groupId>
           <artifactId>activemq-protobuf</artifactId>
-          <version>${activemq-protobuf-version}</version>
+          <version>${project.version}</version>
           <classifier>sources</classifier>
           <optional>true</optional>
         </dependency>

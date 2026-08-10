@@ -37,6 +37,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Pattern;
 
 import javax.management.ObjectName;
@@ -129,6 +130,8 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
     protected final AtomicBoolean localBridgeStarted = new AtomicBoolean(false);
     protected final AtomicBoolean remoteBridgeStarted = new AtomicBoolean(false);
     protected final AtomicBoolean bridgeFailed = new AtomicBoolean();
+    // Ensures a single bridge failure counts exactly one local/remote exception
+    protected final AtomicBoolean bridgeExceptionCounted = new AtomicBoolean();
     protected final AtomicBoolean disposed = new AtomicBoolean();
     protected BrokerId localBrokerId;
     protected ActiveMQDestination[] excludedDestinations;
@@ -171,6 +174,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
     private final ExecutorService syncExecutor = Executors.newSingleThreadExecutor();
     private Transport duplexInboundLocalBroker = null;
     private ProducerInfo duplexInboundLocalProducerInfo;
+    private final AtomicLong startedTimestamp = new AtomicLong(0L);
 
     public DemandForwardingBridgeSupport(NetworkBridgeConfiguration configuration, Transport localBroker, Transport remoteBroker) {
         this.configuration = configuration;
@@ -194,7 +198,15 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                 throw new IllegalArgumentException("BrokerService is null on " + this);
             }
 
-            networkBridgeStatistics.setEnabled(brokerService.isEnableStatistics());
+            if (brokerService.isEnableStatistics()) {
+                networkBridgeStatistics.setEnabled(true);
+                // Bridges are ephemeral - parent this bridge's statistics to the owning
+                // connector so its counts (including local/remote exceptions) roll up
+                // automatically and survive the bridge being torn down and recreated.
+                if (configuration instanceof NetworkConnector) {
+                    networkBridgeStatistics.setParent(((NetworkConnector) configuration).getNetworkBridgeStatistics());
+                }
+            }
 
             if (isDuplex()) {
                 duplexInboundLocalBroker = NetworkBridgeFactory.createLocalAsyncTransport(brokerService.getBroker().getVmConnectorURI());
@@ -260,6 +272,8 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                     triggerStartAsyncNetworkBridgeCreation();
                 } catch (IOException e) {
                     LOG.warn("Caught exception from remote start", e);
+                } finally {
+                    startedTimestamp.set(System.currentTimeMillis());
                 }
             } else {
                 LOG.warn("Bridge was disposed before the start() method was fully executed.");
@@ -336,6 +350,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                     startedLatch.countDown();
                     localStartedLatch.countDown();
                     staticDestinationsLatch.countDown();
+                    startedTimestamp.set(0L);
 
                     ss.throwFirstException();
                 }
@@ -650,12 +665,21 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
     @Override
     public void serviceRemoteException(Throwable error) {
         if (!disposed.get()) {
+            // Count the single genuine failure that trips disposal, not the peer exceptions
+            // fired during teardown nor a second callback racing in before disposal completes.
+            // This rolls up to the owning connector automatically via the parent statistics
+            // wired in start().
+            if (bridgeExceptionCounted.compareAndSet(false, true)) {
+                networkBridgeStatistics.getRemoteExceptionCount().increment();
+            }
+
             if (error instanceof SecurityException || error instanceof GeneralSecurityException) {
                 LOG.error("Network connection between {} and {} shutdown due to a remote error: {}", localBroker, remoteBroker, error.toString());
             } else {
                 LOG.warn("Network connection between {} and {} shutdown due to a remote error: {}", localBroker, remoteBroker, error.toString());
             }
             LOG.debug("The remote Exception was: {}", error, error);
+
             brokerService.getTaskRunnerFactory().execute(new Runnable() {
                 @Override
                 public void run() {
@@ -1114,6 +1138,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
 
     public void serviceLocalException(MessageDispatch messageDispatch, Throwable error) {
         LOG.trace("serviceLocalException: disposed {} ex", disposed.get(), error);
+
         if (!disposed.get()) {
             if (error instanceof DestinationDoesNotExistException && ((DestinationDoesNotExistException) error).isTemporary()) {
                 // not a reason to terminate the bridge - temps can disappear with
@@ -1132,6 +1157,14 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                     LOG.warn("Ignoring exception on forwarding to non existent temp dest: ", error);
                 }
                 return;
+            }
+
+            // Count the single genuine failure that trips disposal, not the peer exceptions
+            // fired during teardown, a second callback racing in before disposal completes,
+            // nor the ignorable temporary-destination errors handled above. This rolls up to
+            // the owning connector automatically via the parent statistics wired in start().
+            if (bridgeExceptionCounted.compareAndSet(false, true)) {
+                networkBridgeStatistics.getLocalExceptionCount().increment();
             }
 
             LOG.info("Network connection between {} and {} shutdown due to a local error: {}", localBroker, remoteBroker, error);
@@ -1550,17 +1583,21 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         }
 
         List<ConsumerId> candidateConsumers = consumerInfo.getNetworkConsumerIds();
+        // null when the destination's region is not an AbstractRegion (no
+        // subscription view available) - nothing to compare against
         Collection<Subscription> currentSubs = getRegionSubscriptions(consumerInfo.getDestination());
-        for (Subscription sub : currentSubs) {
-            List<ConsumerId> networkConsumers = sub.getConsumerInfo().getNetworkConsumerIds();
-            if (!networkConsumers.isEmpty()) {
-                if (matchFound(candidateConsumers, networkConsumers)) {
-                    if (isInActiveDurableSub(sub)) {
-                        suppress = false;
-                    } else {
-                        suppress = hasLowerPriority(sub, candidate.getLocalInfo());
+        if (currentSubs != null) {
+            for (Subscription sub : currentSubs) {
+                List<ConsumerId> networkConsumers = sub.getConsumerInfo().getNetworkConsumerIds();
+                if (!networkConsumers.isEmpty()) {
+                    if (matchFound(candidateConsumers, networkConsumers)) {
+                        if (isInActiveDurableSub(sub)) {
+                            suppress = false;
+                        } else {
+                            suppress = hasLowerPriority(sub, candidate.getLocalInfo());
+                        }
+                        break;
                     }
-                    break;
                 }
             }
         }
@@ -1921,6 +1958,21 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
     }
 
     @Override
+    public long getStartedTimestamp() {
+        return startedTimestamp.get();
+    }
+
+    @Override
+    public long getLocalExceptionCount() {
+        return networkBridgeStatistics.getLocalExceptionCount().getCount();
+    }
+
+    @Override
+    public long getRemoteExceptionCount() {
+        return networkBridgeStatistics.getRemoteExceptionCount().getCount();
+    }
+
+    @Override
     public NetworkBridgeStatistics getNetworkBridgeStatistics() {
         return networkBridgeStatistics;
     }
@@ -1959,7 +2011,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
      * Used to allow for async tasks to await receipt of the BrokerInfo from the local and
      * remote sides of the network bridge.
      */
-    private static class FutureBrokerInfo implements Future<BrokerInfo> {
+    static class FutureBrokerInfo implements Future<BrokerInfo> {
 
         private final CountDownLatch slot = new CountDownLatch(1);
         private final AtomicBoolean disposed;
@@ -2010,7 +2062,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                 if (info == null) {
                     long deadline = System.currentTimeMillis() + unit.toMillis(timeout);
 
-                    while (!disposed.get() || System.currentTimeMillis() - deadline < 0) {
+                    while (!disposed.get() && System.currentTimeMillis() - deadline < 0) {
                         if (slot.await(1, TimeUnit.MILLISECONDS)) {
                             break;
                         }

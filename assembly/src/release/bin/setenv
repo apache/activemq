@@ -31,10 +31,21 @@
 
 # Set jvm memory configuration (minimal/maximum amount of memory)
 if [ -z "$ACTIVEMQ_OPTS_MEMORY" ] ; then
-    ACTIVEMQ_OPTS_MEMORY="-Xms64M -Xmx1G"
+    ACTIVEMQ_OPTS_MEMORY="-Xms64M -Xmx2G"
 fi
+
+# Terminate the JVM on OutOfMemoryError so the broker is not left running in a degraded state.
+# Heap dump on OOM is disabled by default to avoid unexpected disk usage (especially with large
+# heap sizes). Uncomment ACTIVEMQ_OOM_DUMP_OPTS to enable heap dumps; -XX:HeapDumpGzipLevel=6
+# requires JDK 17+.
+if [ -z "$ACTIVEMQ_OOM_OPTS" ] ; then
+    ACTIVEMQ_OOM_OPTS="-XX:+ExitOnOutOfMemoryError"
+    #ACTIVEMQ_OOM_DUMP_OPTS="-XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=$ACTIVEMQ_DATA -XX:HeapDumpGzipLevel=6"
+    #ACTIVEMQ_OOM_OPTS="$ACTIVEMQ_OOM_OPTS $ACTIVEMQ_OOM_DUMP_OPTS"
+fi
+
 if [ -z "$ACTIVEMQ_OPTS" ] ; then
-    ACTIVEMQ_OPTS="$ACTIVEMQ_OPTS_MEMORY -Djava.util.logging.config.file=logging.properties -Djava.security.auth.login.config=$ACTIVEMQ_CONF/login.config"
+    ACTIVEMQ_OPTS="$ACTIVEMQ_OPTS_MEMORY $ACTIVEMQ_OOM_OPTS -Djava.util.logging.config.file=logging.properties -Djava.security.auth.login.config=$ACTIVEMQ_CONF/login.config"
 fi
 
 if [ -z "$ACTIVEMQ_OUT" ]; then

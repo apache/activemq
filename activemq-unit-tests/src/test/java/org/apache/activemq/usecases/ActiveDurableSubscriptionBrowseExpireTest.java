@@ -18,7 +18,6 @@ package org.apache.activemq.usecases;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -36,12 +35,13 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.TestSupport.PersistenceAdapterChoice;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.jmx.DurableSubscriptionViewMBean;
+import org.apache.activemq.broker.region.policy.PolicyEntry;
+import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.store.MessageRecoveryListener;
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.TopicMessageStore;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.command.MessageId;
-import org.apache.activemq.util.Wait;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -69,6 +69,17 @@ public class ActiveDurableSubscriptionBrowseExpireTest extends DurableSubscripti
     @Override
     public PersistenceAdapter setDefaultPersistenceAdapter(BrokerService broker) throws IOException {
         return super.setPersistenceAdapter(broker, PersistenceAdapterChoice.MEM);
+    }
+
+    @Override
+    public void configurePlugins(BrokerService broker) throws Exception {
+        // Disable the periodic expiry task so the JMX browse is the only expiry
+        // trigger and the expired count is deterministic
+        PolicyEntry policy = new PolicyEntry();
+        policy.setExpireMessagesPeriod(0);
+        PolicyMap policyMap = new PolicyMap();
+        policyMap.setDefaultEntry(policy);
+        broker.setDestinationPolicy(policyMap);
     }
 
     @Override
@@ -148,7 +159,7 @@ public class ActiveDurableSubscriptionBrowseExpireTest extends DurableSubscripti
         assertNotNull(data);
 
         if (enableExpiration) {
-            assertTrue(Wait.waitFor(() -> dest.getDestinationStatistics().getExpired().getCount() == messagesToExpire.size(), 5_000, 100));
+            assertEquals(messagesToExpire.size(), dest.getDestinationStatistics().getExpired().getCount());
         } else {
             assertEquals(0L, dest.getDestinationStatistics().getExpired().getCount());
         }

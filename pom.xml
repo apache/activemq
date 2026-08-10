@@ -25,7 +25,7 @@
 
   <groupId>org.apache.activemq</groupId>
   <artifactId>activemq-parent</artifactId>
-  <version>6.3.0-SNAPSHOT</version>
+  <version>6.4.0-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>ActiveMQ</name>
   <inceptionYear>2005</inceptionYear>
@@ -41,6 +41,8 @@
          preventing CI from hanging indefinitely on Windows file-lock issues or
          any other test that never terminates. Override per-module if needed. -->
     <surefire.forkedProcessTimeout>300</surefire.forkedProcessTimeout>
+    <!-- Set to 'ping' on Windows 11+ where wmic is unavailable: -Dsurefire.enableProcessChecker=ping -->
+    <surefire.enableProcessChecker>all</surefire.enableProcessChecker>
 
     <siteId>activemq-${project.version}</siteId>
     <projectName>Apache ActiveMQ</projectName>
@@ -69,13 +71,18 @@
     <jackson-version>2.22.1</jackson-version>
     <jackson-annotations-version>2.22</jackson-annotations-version>
     <jakarta-jms-api-version>3.1.0</jakarta-jms-api-version>
+    <jakarta-annotation-api-version>3.0.0</jakarta-annotation-api-version>
+    <jakarta-servlet-api-version>6.1.0</jakarta-servlet-api-version>
+    <jakarta-servlet-jsp-api-version>4.0.0</jakarta-servlet-jsp-api-version>
+    <jakarta-el-api-version>6.0.1</jakarta-el-api-version>
+    <asm-version>9.10.1</asm-version>
     <jasypt-version>1.9.3</jasypt-version>
     <jaxb-version>4.0.9</jaxb-version>
     <jetty-version>12.1.11</jetty-version>
     <jetty-version-range>[12,13)</jetty-version-range>
     <jmdns-version>3.6.3</jmdns-version>
     <javassist-version>3.32.0-GA</javassist-version>
-    <jettison-version>1.5.6</jettison-version>
+    <jettison-version>1.5.7</jettison-version>
     <jolokia-version>2.6.0</jolokia-version>
     <jmh-version>1.37</jmh-version>
     <junit-version>4.13.2</junit-version>
@@ -88,14 +95,14 @@
     <mqtt-client-version>1.16</mqtt-client-version>
     <org-apache-derby-version>10.16.1.1</org-apache-derby-version>
     <osgi-version>7.0.0</osgi-version>
-    <qpid-proton-version>0.34.1</qpid-proton-version>
+    <qpid-proton-version>0.35.0</qpid-proton-version>
     <qpid-jms-version>2.10.0</qpid-jms-version>
-    <netty-version>4.2.16.Final</netty-version>
+    <netty-version>4.2.17.Final</netty-version>
     <rome-version>2.1.0</rome-version>
     <shiro-version>2.2.1</shiro-version>
     <slf4j-version>2.0.18</slf4j-version>
-    <spring-version>6.2.19</spring-version>
-    <spring-version-range>[6,7)</spring-version-range>
+    <spring-version>7.0.8</spring-version>
+    <spring-version-range>[7,8)</spring-version-range>
     <taglibs-version>1.2.5</taglibs-version>
     <xpp3-version>1.1.4c</xpp3-version>
     <xstream-version>1.4.21</xstream-version>
@@ -116,11 +123,11 @@
     <javaee-javadoc-url>http://download.oracle.com/javaee/6/api/</javaee-javadoc-url>
 
     <!-- Maven Plugin Version for this Project -->
-    <maven-bundle-plugin-version>6.0.2</maven-bundle-plugin-version>
+    <maven-bundle-plugin-version>6.1.0</maven-bundle-plugin-version>
     <maven-eclipse-plugin-version>2.10</maven-eclipse-plugin-version>
     <maven-rar-plugin-version>3.1.0</maven-rar-plugin-version>
     <exec-maven-plugin-version>3.1.0</exec-maven-plugin-version>
-    <flatten-maven-plugin-version>1.7.3</flatten-maven-plugin-version>
+    <flatten-maven-plugin-version>1.8.0</flatten-maven-plugin-version>
     <javacc-maven-plugin-version>3.2.0</javacc-maven-plugin-version>
     <cobertura-maven-plugin-version>2.7</cobertura-maven-plugin-version>
     <taglist-maven-plugin-version>3.2.2</taglist-maven-plugin-version>
@@ -448,19 +455,24 @@
       <dependency>
         <groupId>org.ow2.asm</groupId>
         <artifactId>asm</artifactId>
-        <version>9.10.1</version>
+        <version>${asm-version}</version>
       </dependency>
 
-     <!-- Servlet 6.1 and JSP (Jakarta EE 11) -->
+     <!-- Servlet and JSP (Jakarta EE 11, required by Spring 7) -->
      <dependency>
        <groupId>jakarta.servlet.jsp</groupId>
        <artifactId>jakarta.servlet.jsp-api</artifactId>
-       <version>4.0.0</version>
+       <version>${jakarta-servlet-jsp-api-version}</version>
      </dependency>
      <dependency>
        <groupId>jakarta.servlet</groupId>
        <artifactId>jakarta.servlet-api</artifactId>
-       <version>6.1.0</version>
+       <version>${jakarta-servlet-api-version}</version>
+     </dependency>
+     <dependency>
+       <groupId>jakarta.el</groupId>
+       <artifactId>jakarta.el-api</artifactId>
+       <version>${jakarta-el-api-version}</version>
      </dependency>
      <dependency>
        <groupId>jakarta.websocket</groupId>
@@ -940,7 +952,7 @@
       <dependency>
         <groupId>jakarta.annotation</groupId>
         <artifactId>jakarta.annotation-api</artifactId>
-        <version>3.0.0</version>
+        <version>${jakarta-annotation-api-version}</version>
       </dependency>
 
       <!-- JMH for micro-benchmarks -->
@@ -989,7 +1001,7 @@
             <forkCount>1</forkCount>
             <reuseForks>false</reuseForks>
             <forkedProcessTimeoutInSeconds>${surefire.forkedProcessTimeout}</forkedProcessTimeoutInSeconds>
-            <enableProcessChecker>all</enableProcessChecker>
+            <enableProcessChecker>${surefire.enableProcessChecker}</enableProcessChecker>
             <failIfNoTests>false</failIfNoTests>
             <systemPropertyVariables>
                 <java.awt.headless>true</java.awt.headless>
