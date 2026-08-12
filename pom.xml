@@ -134,7 +134,7 @@
     <sonar-maven-plugin-version>5.7.0.6970</sonar-maven-plugin-version>
     <tools-maven-plugin-version>1.4</tools-maven-plugin-version>
     <depends-maven-plugin-version>1.5.0</depends-maven-plugin-version>
-    <docker-maven-plugin-version>0.48.1</docker-maven-plugin-version>
+    <docker-maven-plugin-version>0.49.0</docker-maven-plugin-version>
     <docker-java-version>17</docker-java-version>
     <maven-project-info-reports-plugin-version>3.9.0</maven-project-info-reports-plugin-version>
     <maven-core-version>3.9.16</maven-core-version>
