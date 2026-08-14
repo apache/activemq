@@ -209,11 +209,25 @@ public class TopicRegion extends AbstractRegion {
 
     @Override
     public void removeSubscription(ConnectionContext context, RemoveSubscriptionInfo info) throws Exception {
-        SubscriptionKey key = new SubscriptionKey(info.getClientId(), info.getSubscriptionName());
+        // The owning clientId is taken from the authenticated connection context, not
+        // from the command, so a connection cannot remove a durable subscription that
+        // belongs to another clientId. Mirrors removeConsumer above. Administrative,
+        // timer and network-bridge callers set the target clientId on the context.
+        final String clientId = context.getClientId();
+        if (info.getClientId() != null && !info.getClientId().equals(clientId)) {
+            // No legitimate caller sets a command clientId that differs from the
+            // connection's own; log it to surface a crafted/misbehaving client and to
+            // explain why the removal now targets the connection's clientId instead.
+            LOG.warn("Ignoring invalid clientId:{} in remove-subscription command for subscriptionName:{} "
+                    + "using connection clientId:{} as durable subscription can only be "
+                    + "removed by the connection clientId.",
+                    info.getClientId(), info.getSubscriptionName(), clientId);
+        }
+        SubscriptionKey key = new SubscriptionKey(clientId, info.getSubscriptionName());
         DurableTopicSubscription sub = durableSubscriptions.get(key);
         if (sub == null) {
             throw new InvalidDestinationException("No durable subscription exists for clientID: " +
-                                                  info.getClientId() + " and subscriptionName: " +
+                                                  clientId + " and subscriptionName: " +
                                                   info.getSubscriptionName());
         }
         if (sub.isActive()) {
