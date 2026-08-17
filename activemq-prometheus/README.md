@@ -40,13 +40,13 @@ Two endpoints because brokers with many destinations might produce large respons
 
 | Metric | Type | Description |
 |--------|------|-------------|
-| `connections_count` | gauge | Current number of connections |
+| `connections` | gauge | Current number of connections |
 | `connections_total` | counter | Total connections since last start |
 | `messages_enqueued_total` | counter | Total messages enqueued since last start |
 | `messages_dequeued_total` | counter | Total messages dequeued since last start |
-| `consumers_count` | gauge | Current number of consumers |
-| `producers_count` | gauge | Current number of producers |
-| `message_count` | gauge | Current number of messages across all destinations |
+| `consumers` | gauge | Current number of consumers |
+| `producers` | gauge | Current number of producers |
+| `messages` | gauge | Current number of messages across all destinations |
 | `memory_percent_usage` | gauge | Percent of memory limit used |
 | `memory_limit_bytes` | gauge | Memory limit in bytes |
 | `store_percent_usage` | gauge | Percent of store limit used |
@@ -54,6 +54,10 @@ Two endpoints because brokers with many destinations might produce large respons
 | `temp_percent_usage` | gauge | Percent of temp limit used |
 | `temp_limit_bytes` | gauge | Temp limit in bytes |
 | `uptime_milliseconds` | gauge | Broker uptime in milliseconds |
+| `queues` | gauge | Number of queues on the broker |
+| `topics` | gauge | Number of topics on the broker |
+| `job_scheduler_store_percent_usage` | gauge | Percent of job scheduler store limit used |
+| `job_scheduler_store_limit_bytes` | gauge | Job scheduler store limit in bytes |
 
 ### Destination metrics (`activemq_queue_*` / `activemq_topic_*`)
 
@@ -61,14 +65,14 @@ Returned only when `?per_object=true` is set.
 
 | Metric | Type | Description |
 |--------|------|-------------|
-| `message_count` | gauge | Number of messages in destination |
-| `enqueue_count_total` | counter | Total messages enqueued since last start |
-| `dequeue_count_total` | counter | Total messages dequeued since last start |
-| `dispatch_count_total` | counter | Total messages dispatched since last start |
+| `messages` | gauge | Number of messages in destination |
+| `enqueued_total` | counter | Total messages enqueued since last start |
+| `dequeued_total` | counter | Total messages dequeued since last start |
+| `dispatched_total` | counter | Total messages dispatched since last start |
 | `message_inflight_count` | gauge | Messages dispatched but not acknowledged |
-| `expired_count_total` | counter | Total messages expired since last start |
-| `consumer_count` | gauge | Number of consumers |
-| `producer_count` | gauge | Number of producers |
+| `expired_total` | counter | Total messages expired since last start |
+| `consumers` | gauge | Number of consumers |
+| `producers` | gauge | Number of producers |
 | `memory_percent_usage` | gauge | Percent of destination memory limit used |
 | `memory_limit_bytes` | gauge | Memory limit for destination in bytes |
 | `memory_usage_bytes` | gauge | Memory used by destination in bytes |

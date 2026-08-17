@@ -21,7 +21,7 @@
       "options": { "reduceOptions": { "calcs": ["lastNotNull"] } },
       "title": "Connections",
       "type": "stat",
-      "targets": [{ "expr": "activemq_broker_connections_count", "legendFormat": "{{broker}}" }]
+      "targets": [{ "expr": "activemq_broker_connections", "legendFormat": "{{broker}}" }]
     },
     {
       "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
@@ -61,7 +61,7 @@
       "options": { "reduceOptions": { "calcs": ["lastNotNull"] } },
       "title": "Consumers",
       "type": "stat",
-      "targets": [{ "expr": "activemq_broker_consumers_count", "legendFormat": "{{broker}}" }]
+      "targets": [{ "expr": "activemq_broker_consumers", "legendFormat": "{{broker}}" }]
     },
     {
       "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
@@ -71,7 +71,7 @@
       "options": { "reduceOptions": { "calcs": ["lastNotNull"] } },
       "title": "Producers",
       "type": "stat",
-      "targets": [{ "expr": "activemq_broker_producers_count", "legendFormat": "{{broker}}" }]
+      "targets": [{ "expr": "activemq_broker_producers", "legendFormat": "{{broker}}" }]
     },
     {
       "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
@@ -95,7 +95,7 @@
       "title": "Connections Over Time",
       "type": "timeseries",
       "targets": [
-        { "expr": "activemq_broker_connections_count", "legendFormat": "current" },
+        { "expr": "activemq_broker_connections", "legendFormat": "current" },
         { "expr": "rate(activemq_broker_connections_total[5m])", "legendFormat": "new/s (5m)" }
       ]
     },
@@ -114,7 +114,7 @@
       "options": { "legend": { "displayMode": "table", "placement": "right", "sortBy": "Last", "sortDesc": true }, "tooltip": { "mode": "multi" } },
       "title": "Queue Depth",
       "type": "timeseries",
-      "targets": [{ "expr": "activemq_queue_message_count", "legendFormat": "{{destination}} depth" }]
+      "targets": [{ "expr": "activemq_queue_messages", "legendFormat": "{{destination}} depth" }]
     },
     {
       "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
@@ -124,7 +124,7 @@
       "options": { "legend": { "displayMode": "table", "placement": "right", "sortBy": "Last", "sortDesc": true }, "tooltip": { "mode": "multi" } },
       "title": "Queue Enqueue Rate",
       "type": "timeseries",
-      "targets": [{ "expr": "rate(activemq_queue_enqueue_count_total[1m])", "legendFormat": "{{destination}} enqueue/s" }]
+      "targets": [{ "expr": "rate(activemq_queue_enqueued_total[1m])", "legendFormat": "{{destination}} enqueue/s" }]
     },
     {
       "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
@@ -144,7 +144,7 @@
       "options": { "legend": { "displayMode": "table", "placement": "right", "sortBy": "Last", "sortDesc": true }, "tooltip": { "mode": "multi" } },
       "title": "Queue Consumers",
       "type": "timeseries",
-      "targets": [{ "expr": "activemq_queue_consumer_count", "legendFormat": "{{destination}} consumers" }]
+      "targets": [{ "expr": "activemq_queue_consumers", "legendFormat": "{{destination}} consumers" }]
     },
     {
       "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
@@ -181,7 +181,7 @@
       "options": { "legend": { "displayMode": "table", "placement": "right", "sortBy": "Last", "sortDesc": true }, "tooltip": { "mode": "multi" } },
       "title": "Topic Enqueue Rate",
       "type": "timeseries",
-      "targets": [{ "expr": "rate(activemq_topic_enqueue_count_total[1m])", "legendFormat": "{{destination}} enqueue/s" }]
+      "targets": [{ "expr": "rate(activemq_topic_enqueued_total[1m])", "legendFormat": "{{destination}} enqueue/s" }]
     },
     {
       "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
@@ -191,7 +191,54 @@
       "options": { "legend": { "displayMode": "table", "placement": "right", "sortBy": "Last", "sortDesc": true }, "tooltip": { "mode": "multi" } },
       "title": "Topic Consumers",
       "type": "timeseries",
-      "targets": [{ "expr": "activemq_topic_consumer_count", "legendFormat": "{{destination}} consumers" }]
+      "targets": [{ "expr": "activemq_topic_consumers", "legendFormat": "{{destination}} consumers" }]
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 48 },
+      "id": 310,
+      "title": "Job Scheduler & Cardinality",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "steps": [{ "color": "green", "value": null }] } } },
+      "gridPos": { "h": 4, "w": 4, "x": 0, "y": 49 },
+      "id": 311,
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "title": "Queues",
+      "type": "stat",
+      "targets": [{ "expr": "activemq_broker_queues", "legendFormat": "{{broker}}" }]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "steps": [{ "color": "green", "value": null }] } } },
+      "gridPos": { "h": 4, "w": 4, "x": 4, "y": 49 },
+      "id": 312,
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "title": "Topics",
+      "type": "stat",
+      "targets": [{ "expr": "activemq_broker_topics", "legendFormat": "{{broker}}" }]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 70 }, { "color": "red", "value": 90 }] }, "unit": "percent" } },
+      "gridPos": { "h": 4, "w": 4, "x": 8, "y": 49 },
+      "id": 313,
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "title": "JobScheduler Store %",
+      "type": "stat",
+      "targets": [{ "expr": "activemq_broker_job_scheduler_store_percent_usage", "legendFormat": "{{broker}}" }]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "steps": [{ "color": "green", "value": null }] }, "unit": "bytes" } },
+      "gridPos": { "h": 4, "w": 4, "x": 12, "y": 49 },
+      "id": 314,
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "title": "JobScheduler Store Limit",
+      "type": "stat",
+      "targets": [{ "expr": "activemq_broker_job_scheduler_store_limit_bytes", "legendFormat": "{{broker}}" }]
     }
   ],
   "schemaVersion": 39,

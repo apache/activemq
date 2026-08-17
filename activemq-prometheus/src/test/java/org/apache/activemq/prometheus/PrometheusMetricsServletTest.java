@@ -31,6 +31,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
+import javax.management.StandardMBean;
 
 import org.junit.After;
 import org.junit.Before;
@@ -44,6 +45,9 @@ public class PrometheusMetricsServletTest {
     private static final ObjectName SECOND_QUEUE_NAME;
     private static final ObjectName TOPIC_NAME;
     private static final ObjectName INVALID_BROKER_NAME;
+    private static final ObjectName INJECTION_NAME;
+    private static final ObjectName INF_QUEUE;
+    private static final ObjectName NAN_QUEUE;
 
     static {
         try {
@@ -55,6 +59,11 @@ public class PrometheusMetricsServletTest {
             TOPIC_NAME = new ObjectName("org.apache.activemq:type=Broker,brokerName=TestBroker,"
                     + "destinationType=Topic,destinationName=events.topic");
             INVALID_BROKER_NAME = new ObjectName("org.apache.activemq:type=Broker,brokerName=InvalidBroker");
+            INJECTION_NAME = new ObjectName("org.apache.activemq:type=Broker,brokerName=Injection");
+            INF_QUEUE = new ObjectName("org.apache.activemq:type=Broker,brokerName=TestBroker,"
+                    + "destinationType=Queue,destinationName=inf.queue");
+            NAN_QUEUE = new ObjectName("org.apache.activemq:type=Broker,brokerName=TestBroker,"
+                    + "destinationType=Queue,destinationName=nan.queue");
         } catch (Exception exception) {
             throw new ExceptionInInitializerError(exception);
         }
@@ -78,6 +87,9 @@ public class PrometheusMetricsServletTest {
         unregister(SECOND_QUEUE_NAME);
         unregister(TOPIC_NAME);
         unregister(INVALID_BROKER_NAME);
+        unregister(INJECTION_NAME);
+        unregister(INF_QUEUE);
+        unregister(NAN_QUEUE);
     }
 
     @Test
@@ -90,11 +102,14 @@ public class PrometheusMetricsServletTest {
         assertTrue(output.endsWith("\n"));
 
         // Broker metrics present
-        assertTrue(output.contains("activemq_broker_connections_count{broker=\"TestBroker\"} 42"));
+        assertTrue(output.contains("activemq_broker_connections{broker=\"TestBroker\"} 42"));
         assertTrue(output.contains("activemq_broker_messages_enqueued_total{broker=\"TestBroker\"} 50000"));
 
         // Percent usage reported as raw integer from MBean (no conversion)
         assertTrue(output.contains("activemq_broker_memory_percent_usage{broker=\"TestBroker\"} 25"));
+        assertTrue(output.contains("activemq_broker_queues{broker=\"TestBroker\"} 7"));
+        assertTrue(output.contains("activemq_broker_topics{broker=\"TestBroker\"} 3"));
+        assertTrue(output.contains("activemq_broker_job_scheduler_store_percent_usage{broker=\"TestBroker\"} 20"));
         assertTrue(output.contains("activemq_broker_store_percent_usage{broker=\"TestBroker\"} 10"));
         assertTrue(output.contains("activemq_broker_temp_percent_usage{broker=\"TestBroker\"} 5"));
 
@@ -116,32 +131,75 @@ public class PrometheusMetricsServletTest {
         assertEquals(HttpServletResponse.SC_OK, response.status);
 
         // Broker metrics still present
-        assertTrue(output.contains("activemq_broker_connections_count{broker=\"TestBroker\"} 42"));
+        assertTrue(output.contains("activemq_broker_connections{broker=\"TestBroker\"} 42"));
 
         // Destination metrics now present
-        assertTrue(output.contains("activemq_queue_message_count{broker=\"TestBroker\",destination=\"test.queue\"} 100"));
-        assertTrue(output.contains("activemq_queue_message_count{broker=\"TestBroker\",destination=\"orders.queue\"} 100"));
-        assertTrue(output.contains("activemq_topic_message_count{broker=\"TestBroker\",destination=\"events.topic\"} 100"));
+        assertTrue(output.contains("activemq_queue_messages{broker=\"TestBroker\",destination=\"test.queue\"} 100"));
+        assertTrue(output.contains("activemq_queue_messages{broker=\"TestBroker\",destination=\"orders.queue\"} 100"));
+        assertTrue(output.contains("activemq_topic_messages{broker=\"TestBroker\",destination=\"events.topic\"} 100"));
 
         // AverageEnqueueTime present (fractional value preserved)
         assertTrue(output.contains("activemq_queue_average_enqueue_time_milliseconds{broker=\"TestBroker\",destination=\"test.queue\"} 3.7"));
 
         // Percent usage reported as raw integer from MBean
         assertTrue(output.contains("activemq_queue_memory_percent_usage{broker=\"TestBroker\",destination=\"test.queue\"} 15"));
+        assertTrue(output.contains("activemq_queue_memory_limit_bytes{broker=\"TestBroker\",destination=\"test.queue\"} 536870912"));
+        assertTrue(output.contains("# HELP activemq_queue_enqueued_total Total messages enqueued to this destination since last start"));
 
         assertMetadataAppearsOncePerMetric(output);
         assertSamplesHavePrometheusSyntax(output);
     }
 
     @Test
-    public void testCollectionFailureReturnsServerErrorWithoutPartialMetrics() throws Exception {
+    public void testUnidentifiableBrokerIsSkippedAndScrapeStillSucceeds() throws Exception {
+        // A broker whose identity attribute cannot be read must not fail the whole scrape.
         mBeanServer.registerMBean(new InvalidBroker(), INVALID_BROKER_NAME);
 
         CapturedResponse response = invokeServlet(null);
+        String output = response.output.toString();
 
-        assertEquals(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, response.status);
-        assertEquals("Metrics collection failed", response.errorMessage);
-        assertEquals("", response.output.toString());
+        assertEquals(HttpServletResponse.SC_OK, response.status);
+        assertEquals(CONTENT_TYPE, response.contentType);
+
+        // The valid broker is still reported.
+        assertTrue(output.contains("activemq_broker_connections{broker=\"TestBroker\"} 42"));
+
+        // The unidentifiable broker is dropped, not emitted as a phantom "unknown" series.
+        assertFalse(output.contains("broker=\"unknown\""));
+
+        assertMetadataAppearsOncePerMetric(output);
+        assertSamplesHavePrometheusSyntax(output);
+    }
+
+    @Test
+    public void testMaliciousBrokerNameIsEscaped() throws Exception {
+        // Backslash + quote + newline + a metadata marker: prove the exact escaped form and that
+        // it is emitted only as one quoted label value.
+        final String evil = "\\\"My evil \n# TYPE Broker";
+        final String escaped = "\\\\\\\"My evil \\n# TYPE Broker"; // \ -> \\, " -> \", newline -> \n
+        assertEquals(escaped, PrometheusMetricsServlet.sanitizeLabel(evil));
+
+        mBeanServer.registerMBean(new StandardMBean(new InjectionBroker(evil), FakeBrokerMBean.class), INJECTION_NAME);
+        CapturedResponse response = invokeServlet(null);
+        String output = response.output.toString();
+
+        assertEquals(HttpServletResponse.SC_OK, response.status);
+        assertTrue(output.contains("activemq_broker_connections{broker=\"" + escaped + "\"} 42"));
+        assertSamplesHavePrometheusSyntax(output);
+    }
+
+    @Test
+    public void testNonFiniteValuesRenderPerPrometheusSpec() throws Exception {
+        mBeanServer.registerMBean(new StandardMBean(new InfinityDestination(), FakeDestinationMBean.class), INF_QUEUE);
+        mBeanServer.registerMBean(new StandardMBean(new NanDestination(), FakeDestinationMBean.class), NAN_QUEUE);
+        Map<String, String> params = new HashMap<>();
+        params.put("per_object", "true");
+        CapturedResponse response = invokeServlet(params);
+        String output = response.output.toString();
+
+        assertEquals(HttpServletResponse.SC_OK, response.status);
+        assertTrue(output.contains("activemq_queue_average_enqueue_time_milliseconds{broker=\"TestBroker\",destination=\"inf.queue\"} +Inf"));
+        assertTrue(output.contains("activemq_queue_average_enqueue_time_milliseconds{broker=\"TestBroker\",destination=\"nan.queue\"} NaN"));
     }
 
     @Test
@@ -150,7 +208,31 @@ public class PrometheusMetricsServletTest {
         assertEquals("a\\\"b", PrometheusMetricsServlet.sanitizeLabel("a\"b"));
         assertEquals("a\\\\b", PrometheusMetricsServlet.sanitizeLabel("a\\b"));
         assertEquals("a\\nb", PrometheusMetricsServlet.sanitizeLabel("a\nb"));
+        assertEquals("a\\rb", PrometheusMetricsServlet.sanitizeLabel("a\rb"));
         assertEquals("unknown", PrometheusMetricsServlet.sanitizeLabel(null));
+    }
+
+    @Test
+    public void testBrokerNameCannotInjectExpositionFormat() throws Exception {
+        final String evil = "# TYPE injected_metric gauge\nactivemq_broker_evil 999";
+        mBeanServer.registerMBean(new StandardMBean(new InjectionBroker(evil), FakeBrokerMBean.class), INJECTION_NAME);
+
+        CapturedResponse response = invokeServlet(null);
+        String output = response.output.toString();
+
+        assertEquals(HttpServletResponse.SC_OK, response.status);
+
+        // The malicious name appears only as one escaped, quoted label value (newline -> \n).
+        assertTrue(output.contains("broker=\"# TYPE injected_metric gauge\\nactivemq_broker_evil 999\""));
+
+        // It must NOT forge its own metadata line or an injected sample line.
+        for (String line : output.split("\n")) {
+            assertFalse("injected TYPE line leaked", line.equals("# TYPE injected_metric gauge"));
+            assertFalse("injected sample leaked", line.equals("activemq_broker_evil 999"));
+        }
+
+        assertMetadataAppearsOncePerMetric(output);
+        assertSamplesHavePrometheusSyntax(output);
     }
 
     private CapturedResponse invokeServlet(Map<String, String> params) throws Exception {
@@ -246,6 +328,37 @@ public class PrometheusMetricsServletTest {
         }
     }
 
+    // A broker whose reported name contains Prometheus-meaningful characters, used to prove the
+    // exposition format cannot be injected through a label value.
+    public static class InjectionBroker extends FakeBroker {
+        private final String brokerName;
+
+        public InjectionBroker(String brokerName) {
+            this.brokerName = brokerName;
+        }
+
+        @Override
+        public String getBrokerName() {
+            return brokerName;
+        }
+    }
+
+    // Destinations whose double attribute returns non-finite values, to prove Prometheus-spec
+    // rendering (+Inf / NaN) instead of Java's "Infinity".
+    public static class InfinityDestination extends FakeDestination {
+        @Override
+        public double getAverageEnqueueTime() {
+            return Double.POSITIVE_INFINITY;
+        }
+    }
+
+    public static class NanDestination extends FakeDestination {
+        @Override
+        public double getAverageEnqueueTime() {
+            return Double.NaN;
+        }
+    }
+
     public interface FakeBrokerMBean {
         String getBrokerName();
 
@@ -276,6 +389,14 @@ public class PrometheusMetricsServletTest {
         long getTempLimit();
 
         long getUptimeMillis();
+
+        int getTotalQueuesCount();
+
+        int getTotalTopicsCount();
+
+        int getJobSchedulerStorePercentUsage();
+
+        long getJobSchedulerStoreLimit();
     }
 
     public static class FakeBroker implements FakeBrokerMBean {
@@ -353,6 +474,26 @@ public class PrometheusMetricsServletTest {
         public long getUptimeMillis() {
             return 86400000L;
         }
+
+        @Override
+        public int getTotalQueuesCount() {
+            return 7;
+        }
+
+        @Override
+        public int getTotalTopicsCount() {
+            return 3;
+        }
+
+        @Override
+        public int getJobSchedulerStorePercentUsage() {
+            return 20;
+        }
+
+        @Override
+        public long getJobSchedulerStoreLimit() {
+            return 5368709120L;
+        }
     }
 
     public interface FakeDestinationMBean {
@@ -373,6 +514,8 @@ public class PrometheusMetricsServletTest {
         long getProducerCount();
 
         int getMemoryPercentUsage();
+
+        long getMemoryLimit();
 
         long getMemoryUsageByteCount();
 
@@ -425,6 +568,11 @@ public class PrometheusMetricsServletTest {
         @Override
         public int getMemoryPercentUsage() {
             return 15;
+        }
+
+        @Override
+        public long getMemoryLimit() {
+            return 536870912L;
         }
 
         @Override

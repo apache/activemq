@@ -18,8 +18,10 @@ package org.apache.activemq.prometheus;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.lang.management.ManagementFactory;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Set;
 
 import jakarta.servlet.http.HttpServlet;
@@ -28,9 +30,13 @@ import jakarta.servlet.http.HttpServletResponse;
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class PrometheusMetricsServlet extends HttpServlet {
 
     private static final long serialVersionUID = 1L;
+    private static final Logger LOG = LoggerFactory.getLogger(PrometheusMetricsServlet.class);
     private static final String CONTENT_TYPE = "text/plain; version=0.0.4; charset=utf-8";
 
     // Metrics can be easily extended by adding them here
@@ -48,7 +54,11 @@ public class PrometheusMetricsServlet extends HttpServlet {
         new MetricDefinition("store_limit_bytes", "Store limit in bytes", "StoreLimit", MetricType.GAUGE),
         new MetricDefinition("temp_percent_usage", "Percent (0-100) of temp limit used", "TempPercentUsage", MetricType.GAUGE),
         new MetricDefinition("temp_limit_bytes", "Temp limit in bytes", "TempLimit", MetricType.GAUGE),
-        new MetricDefinition("uptime_milliseconds", "Broker uptime in milliseconds", "UptimeMillis", MetricType.GAUGE)
+        new MetricDefinition("uptime_milliseconds", "Broker uptime in milliseconds", "UptimeMillis", MetricType.GAUGE),
+        new MetricDefinition("queues", "Number of queues on the broker", "TotalQueuesCount", MetricType.GAUGE),
+        new MetricDefinition("topics", "Number of topics on the broker", "TotalTopicsCount", MetricType.GAUGE),
+        new MetricDefinition("job_scheduler_store_percent_usage", "Percent (0-100) of job scheduler store limit used", "JobSchedulerStorePercentUsage", MetricType.GAUGE),
+        new MetricDefinition("job_scheduler_store_limit_bytes", "Job scheduler store limit in bytes", "JobSchedulerStoreLimit", MetricType.GAUGE)
     };
 
     private static final MetricDefinition[] DESTINATION_METRICS = {
@@ -68,96 +78,134 @@ public class PrometheusMetricsServlet extends HttpServlet {
     };
 
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        boolean perObject = request != null && "true".equalsIgnoreCase(request.getParameter("per_object"));
+    protected void doGet(final HttpServletRequest request, final HttpServletResponse response) throws IOException {
+        final boolean perObject = request != null && "true".equalsIgnoreCase(request.getParameter("per_object"));
+        final MBeanServer mBeanServer = ManagementFactory.getPlatformMBeanServer();
 
-        StringWriter output = new StringWriter();
-        PrintWriter writer = new PrintWriter(output);
-
+        // If the mBeanServer is unavailable nothing useful can be produced, so return a 500
+        final Set<ObjectName> brokers;
+        final Set<ObjectName> queues;
+        final Set<ObjectName> topics;
         try {
-            writeMetrics(ManagementFactory.getPlatformMBeanServer(), writer, perObject);
-        } catch (Exception exception) {
+            brokers = mBeanServer.queryNames(new ObjectName("org.apache.activemq:type=Broker,brokerName=*"), null);
+            if (perObject) {
+                // Scraping destinations on brokers with many queues or topics can be expensive.
+                queues = mBeanServer.queryNames(new ObjectName(
+                        "org.apache.activemq:type=Broker,brokerName=*,destinationType=Queue,destinationName=*"), null);
+                topics = mBeanServer.queryNames(new ObjectName(
+                        "org.apache.activemq:type=Broker,brokerName=*,destinationType=Topic,destinationName=*"), null);
+            } else {
+                queues = Collections.emptySet();
+                topics = Collections.emptySet();
+            }
+        } catch (final Exception exception) {
+            LOG.warn("Prometheus scrape failed while querying broker MBeans", exception);
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Metrics collection failed");
             return;
         }
 
+        // Stream metrics to avoid keeping the response body in memory
+        // Failed items are skipped or default to 0 (when not possible) to allow the scrape to continue
         response.setContentType(CONTENT_TYPE);
         response.setStatus(HttpServletResponse.SC_OK);
-        response.getWriter().write(output.toString());
-    }
-
-    void writeMetrics(MBeanServer mBeanServer, PrintWriter writer, boolean perObject) throws Exception {
-        writeBrokerMetrics(mBeanServer, writer);
-        // Scraping this by default on brokers with lots of queues or topics might be expensive
+        final PrintWriter writer = response.getWriter();
+        writeBrokerMetrics(mBeanServer, writer, brokers);
         if (perObject) {
-            writeDestinationMetrics(mBeanServer, writer, "Queue");
-            writeDestinationMetrics(mBeanServer, writer, "Topic");
+            writeDestinationMetrics(mBeanServer, writer, "Queue", queues);
+            writeDestinationMetrics(mBeanServer, writer, "Topic", topics);
         }
         writer.flush();
     }
 
-    private void writeBrokerMetrics(MBeanServer mBeanServer, PrintWriter writer) throws Exception {
-        ObjectName pattern = new ObjectName("org.apache.activemq:type=Broker,brokerName=*");
-        Set<ObjectName> brokers = mBeanServer.queryNames(pattern, null);
+    private void writeBrokerMetrics(final MBeanServer mBeanServer, final PrintWriter writer, final Set<ObjectName> brokers) {
+        // In case there is a network of brokers, only use the local one
+        // Unreadable names are skipped
+        final Map<ObjectName, String> identified = new LinkedHashMap<>();
+        for (final ObjectName broker : brokers) {
+            final String brokerName = resolveStringAttribute(mBeanServer, broker, "BrokerName");
+            if (brokerName != null) {
+                identified.put(broker, "broker=\"" + sanitizeLabel(brokerName) + "\"");
+            }
+        }
 
-        for (MetricDefinition metric : BROKER_METRICS) {
-            String metricName = "activemq_broker_" + metric.name;
+        for (final MetricDefinition metric : BROKER_METRICS) {
+            final String metricName = "activemq_broker_" + metric.name;
             writeMetadata(writer, metricName, metric);
-            for (ObjectName broker : brokers) {
-                String brokerName = sanitizeLabel((String) mBeanServer.getAttribute(broker, "BrokerName"));
-                String labels = "broker=\"" + brokerName + "\"";
-                writeSample(writer, metricName, labels, getNumber(mBeanServer, broker, metric.attribute));
+            for (final Map.Entry<ObjectName, String> entry : identified.entrySet()) {
+                writeSample(writer, metricName, entry.getValue(), getNumber(mBeanServer, entry.getKey(), metric.attribute));
             }
         }
     }
 
-    private void writeDestinationMetrics(MBeanServer mBeanServer, PrintWriter writer, String type) throws Exception {
-        String queryPattern = "org.apache.activemq:type=Broker,brokerName=*,destinationType=" + type + ",destinationName=*";
-        Set<ObjectName> destinations = mBeanServer.queryNames(new ObjectName(queryPattern), null);
-        String typeLower = type.toLowerCase();
+    private void writeDestinationMetrics(final MBeanServer mBeanServer, final PrintWriter writer, final String type,
+            final Set<ObjectName> destinations) {
+        final String typeLower = type.toLowerCase();
 
-        for (MetricDefinition metric : DESTINATION_METRICS) {
-            String metricName = "activemq_" + typeLower + "_" + metric.name;
+        for (final MetricDefinition metric : DESTINATION_METRICS) {
+            final String metricName = "activemq_" + typeLower + "_" + metric.name;
             writeMetadata(writer, metricName, metric.withFormattedHelp(typeLower));
-            for (ObjectName destination : destinations) {
-                String brokerName = sanitizeLabel(destination.getKeyProperty("brokerName"));
-                String destinationName = sanitizeLabel(destination.getKeyProperty("destinationName"));
-                String labels = String.format("broker=\"%s\",destination=\"%s\"", brokerName, destinationName);
+            for (final ObjectName destination : destinations) {
+                final String brokerName = sanitizeLabel(destination.getKeyProperty("brokerName"));
+                final String destinationName = sanitizeLabel(destination.getKeyProperty("destinationName"));
+                final String labels = String.format("broker=\"%s\",destination=\"%s\"", brokerName, destinationName);
                 writeSample(writer, metricName, labels, getNumber(mBeanServer, destination, metric.attribute));
             }
         }
     }
 
-    private double getNumber(MBeanServer mBeanServer, ObjectName name, String attribute) {
+    private String resolveStringAttribute(final MBeanServer mBeanServer, final ObjectName name, final String attribute) {
+        // Partial results are better than no results if something goes wrong
         try {
-            Object value = mBeanServer.getAttribute(name, attribute);
+            final Object value = mBeanServer.getAttribute(name, attribute);
+            if (value instanceof String) {
+                return (String) value;
+            }
+        } catch (final Exception exception) {
+            LOG.debug("Skipping object {}: identity attribute {} unavailable", name, attribute, exception);
+        }
+        return null;
+    }
+
+    private double getNumber(final MBeanServer mBeanServer, final ObjectName name, final String attribute) {
+        try {
+            final Object value = mBeanServer.getAttribute(name, attribute);
             if (value instanceof Number) {
                 return ((Number) value).doubleValue();
             }
-        } catch (Exception ignored) {
-            // Some attributes are not available on every ActiveMQ deployment (eg: bridge metrics)
+        } catch (final Exception exception) {
+            // Some attributes are not available on every ActiveMQ deployment (eg: bridge metrics).
+            LOG.debug("Reporting 0 for {} on {}: attribute unavailable", attribute, name, exception);
         }
         return 0;
     }
 
-    private void writeMetadata(PrintWriter writer, String metric, MetricDefinition def) {
+    private void writeMetadata(final PrintWriter writer, final String metric, final MetricDefinition def) {
         writer.println("# HELP " + metric + " " + def.help);
         writer.println("# TYPE " + metric + " " + def.type.prometheusName());
     }
 
-    private void writeSample(PrintWriter writer, String metric, String labels, double value) {
-        if (value == (long) value) {
-            writer.println(metric + "{" + labels + "} " + (long) value);
+    private void writeSample(final PrintWriter writer, final String metric, final String labels, final double value) {
+        final String rendered;
+        if (Double.isNaN(value)) {
+            rendered = "NaN";
+        } else if (value == Double.POSITIVE_INFINITY) {
+            rendered = "+Inf";
+        } else if (value == Double.NEGATIVE_INFINITY) {
+            rendered = "-Inf";
+        } else if (value == (long) value) {
+            rendered = Long.toString((long) value);
         } else {
-            writer.println(metric + "{" + labels + "} " + value);
+            rendered = Double.toString(value);
         }
+        writer.println(metric + "{" + labels + "} " + rendered);
     }
 
-    static String sanitizeLabel(String value) {
+    static String sanitizeLabel(final String value) {
         if (value == null) {
             return "unknown";
         }
-        return value.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n");
+        // See: https://prometheus.io/docs/instrumenting/exposition_formats/
+        return value.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r");
     }
 
     private static final class MetricDefinition {
@@ -166,14 +214,14 @@ public class PrometheusMetricsServlet extends HttpServlet {
         private final String attribute;
         private final MetricType type;
 
-        private MetricDefinition(String name, String help, String attribute, MetricType type) {
+        private MetricDefinition(final String name, final String help, final String attribute, final MetricType type) {
             this.name = name;
             this.help = help;
             this.attribute = attribute;
             this.type = type;
         }
 
-        private MetricDefinition withFormattedHelp(String arg) {
+        private MetricDefinition withFormattedHelp(final String arg) {
             return new MetricDefinition(name, String.format(help, arg), attribute, type);
         }
     }
@@ -184,7 +232,7 @@ public class PrometheusMetricsServlet extends HttpServlet {
 
         private final String prometheusName;
 
-        MetricType(String prometheusName) {
+        MetricType(final String prometheusName) {
             this.prometheusName = prometheusName;
         }
 

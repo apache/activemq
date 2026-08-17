@@ -176,8 +176,7 @@
       </New>
     </Arg>
   </Call>
-  <!-- Uncomment to serve Prometheus metrics -->
-  <!--
+  <!-- Prometheus Metrics Web Application -->
   <Call name="addHandler">
     <Arg>
       <New class="org.eclipse.jetty.ee11.webapp.WebAppContext">
@@ -187,7 +186,6 @@
       </New>
     </Arg>
   </Call>
-  -->
 
   <!-- Static Resource Handler -->
   <Call name="addHandler">
