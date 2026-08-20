@@ -76,7 +76,7 @@
     <asm-version>9.10.1</asm-version>
     <jasypt-version>1.9.3</jasypt-version>
     <jaxb-version>4.0.9</jaxb-version>
-    <jetty-version>12.1.11</jetty-version>
+    <jetty-version>12.1.12</jetty-version>
     <jetty-version-range>[12,13)</jetty-version-range>
     <jmdns-version>3.6.3</jmdns-version>
     <javassist-version>3.32.0-GA</javassist-version>
