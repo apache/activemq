@@ -29,7 +29,7 @@ public class MessageStoreStatistics extends StatsImpl {
 
     protected CountStatisticImpl messageCount;
     protected SizeStatisticImpl messageSize;
-
+    private long createdTimestamp;
 
     public MessageStoreStatistics() {
         this(true);
@@ -51,6 +51,14 @@ public class MessageStoreStatistics extends StatsImpl {
 
     public SizeStatisticImpl getMessageSize() {
         return messageSize;
+    }
+
+    public long getCreatedTimestamp() {
+        return createdTimestamp;
+    }
+
+    public void setCreatedTimestamp(long createdTimestamp) {
+        this.createdTimestamp = createdTimestamp;
     }
 
     public void reset() {
