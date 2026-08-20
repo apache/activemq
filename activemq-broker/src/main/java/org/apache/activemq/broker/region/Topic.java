@@ -530,10 +530,12 @@ public class Topic extends BaseDestination implements Task {
      * high contention (many concurrent producers with slow persistence or
      * many subscribers).
      *
-     * The write lock is held only during persistence (to guarantee message
-     * ordering via brokerSequenceId). Dispatch to subscribers and persistence
-     * completion wait happen outside the lock, allowing concurrent dispatch
-     * for messages from different producers.
+     * The lock is taken only on the persistent path, where it serializes the
+     * brokerSequenceId stamp together with the store add so the store write
+     * order matches the sequence order. Non-persistent sends stamp the
+     * sequence atomically and skip the lock entirely; dispatch to subscribers
+     * and the persistence completion wait happen outside the lock, allowing
+     * concurrent dispatch for messages from different producers.
      *
      * This is valid per Jakarta Messaging 3.1 Section 6.2.9: message ordering
      * is guaranteed per-session/per-producer only. A JMS Session is not
@@ -549,12 +551,12 @@ public class Topic extends BaseDestination implements Task {
         final ConnectionContext context = producerExchange.getConnectionContext();
         Future<Object> result = null;
 
-        // Write lock: serialize persistence for message ordering
-        sendLock.lock();
-        try {
-            message.getMessageId().setBrokerSequenceId(getDestinationSequenceId());
+        if (topicStore != null && message.isPersistent() && !canOptimizeOutPersistence()) {
+            // Serialize the sequence stamp with the store add for store ordering
+            sendLock.lock();
+            try {
+                message.getMessageId().setBrokerSequenceId(getDestinationSequenceId());
 
-            if (topicStore != null && message.isPersistent() && !canOptimizeOutPersistence()) {
                 if (systemUsage.getStoreUsage().isFull(getStoreUsageHighWaterMark())) {
                     final String logMessage = "Persistent store is Full, " + getStoreUsageHighWaterMark() + "% of "
                             + systemUsage.getStoreUsage().getLimit() + ". Stopping producer (" + message.getProducerId()
@@ -567,11 +569,16 @@ public class Topic extends BaseDestination implements Task {
                     waitForSpace(context, producerExchange, systemUsage.getStoreUsage(), getStoreUsageHighWaterMark(), logMessage);
                 }
                 result = topicStore.asyncAddTopicMessage(context, message, isOptimizeStorage());
-            }
 
+                message.incrementReferenceCount();
+            } finally {
+                sendLock.unlock();
+            }
+        } else {
+            // Non-persistent: the sequence stamp is atomic and JMS ordering is
+            // per-producer only, so independent producers need no serialization.
+            message.getMessageId().setBrokerSequenceId(getDestinationSequenceId());
             message.incrementReferenceCount();
-        } finally {
-            sendLock.unlock();
         }
 
         // Dispatch and persistence wait outside the lock — concurrent for
