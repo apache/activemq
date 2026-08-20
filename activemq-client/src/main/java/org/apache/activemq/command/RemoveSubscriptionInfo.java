@@ -27,6 +27,7 @@ public class RemoveSubscriptionInfo extends BaseCommand {
     public static final byte DATA_STRUCTURE_TYPE = CommandTypes.REMOVE_SUBSCRIPTION_INFO;
 
     protected ConnectionId connectionId;
+    @Deprecated
     protected String clientId;
     protected String subscriptionName;
 
