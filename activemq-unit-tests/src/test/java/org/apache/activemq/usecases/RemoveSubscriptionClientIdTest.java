@@ -19,8 +19,8 @@ package org.apache.activemq.usecases;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import jakarta.jms.JMSException;
-import jakarta.jms.Session;
+import javax.jms.JMSException;
+import javax.jms.Session;
 
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
@@ -31,8 +31,6 @@ import org.apache.activemq.util.Wait;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.apache.activemq.test.annotations.ParallelTest;
 
 /**
  * These tests exercise the broker's remove-subscription command handling directly with a
@@ -40,7 +38,6 @@ import org.apache.activemq.test.annotations.ParallelTest;
  * own durable subscription and (b) a connection may not remove another clientID's durable
  * subscription.
  */
-@Category(ParallelTest.class)
 public class RemoveSubscriptionClientIdTest {
 
     private static final String FIRST_CLIENT_ID = "first-client";
