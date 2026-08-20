@@ -42,6 +42,7 @@ public class NetworkConnectorDefaultsTest extends TestCase {
         nc.setName("NC1");
 
         // Check values before calling .start()
+        assertEquals(Long.valueOf(15000L), Long.valueOf(nc.getAdvisoryAckInterval()));
         assertEquals(Integer.valueOf(75), Integer.valueOf(nc.getAdvisoryAckPercentage()));
         assertEquals(Integer.valueOf(0), Integer.valueOf(nc.getAdvisoryPrefetchSize()));
         assertEquals(Integer.valueOf(ConsumerInfo.NETWORK_CONSUMER_PRIORITY), Integer.valueOf(nc.getConsumerPriorityBase()));
