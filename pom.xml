@@ -217,6 +217,7 @@
     <module>activemq-rar</module>
     <module>activemq-run</module>
     <module>activemq-shiro</module>
+    <module>activemq-prometheus</module>
     <module>activemq-spring</module>
     <module>activemq-runtime-config</module>
     <module>activemq-tooling</module>
@@ -348,6 +349,12 @@
         <groupId>org.apache.activemq</groupId>
         <artifactId>activemq-shiro</artifactId>
         <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.activemq</groupId>
+        <artifactId>activemq-prometheus</artifactId>
+        <version>${project.version}</version>
+        <type>war</type>
       </dependency>
       <dependency>
         <groupId>org.apache.activemq</groupId>
