@@ -728,7 +728,7 @@ public class PageFile {
         // (to account for the nextFreePage that was allocated already)
         // equals the disk size then there are no in use pages after this block.
         if (toOffset(lastFreeSeq.getLast()) + pageSize != diskSize) {
-            LOG.info("Unable to compact, last free page block is not at the end of the file");
+            LOG.debug("Unable to compact, last free page block is not at the end of the file");
             return;
         }
 
