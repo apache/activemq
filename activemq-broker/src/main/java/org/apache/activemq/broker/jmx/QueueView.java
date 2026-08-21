@@ -247,6 +247,18 @@ public class QueueView extends DestinationView implements QueueViewMBean {
     }
 
     @Override
+    public boolean isUseMessageGroups() {
+        var queue = (Queue) destination;
+        return queue.isUseMessageGroups();
+    }
+
+    @Override
+    public void setUseMessageGroups(boolean useMessageGroups) {
+        var queue = (Queue) destination;
+        queue.setUseMessageGroups(useMessageGroups);
+    }
+
+    @Override
     public void pause() {
         Queue queue = (Queue) destination;
         queue.pauseDispatch();
