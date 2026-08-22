@@ -42,10 +42,18 @@ public class HttpsClientTransport extends HttpClientTransport {
     private boolean verifyHostName = true;
 
     public HttpsClientTransport(TextWireFormat wireFormat, URI remoteUrl) {
+        this(wireFormat, remoteUrl, null);
+    }
+
+    public HttpsClientTransport(TextWireFormat wireFormat, URI remoteUrl, SslContext sslContext) {
         super(wireFormat, remoteUrl);
         try {
-            sslSocketFactory = createSocketFactory();
-        } catch (IOException e) {
+            if (sslContext != null) {
+                sslSocketFactory = sslContext.getSSLContext().getSocketFactory();
+            } else {
+                sslSocketFactory = (javax.net.ssl.SSLSocketFactory) javax.net.ssl.SSLSocketFactory.getDefault();
+            }
+        } catch (Exception e) {
             throw new IllegalStateException("Error trying to configure TLS", e);
         }
     }
@@ -69,25 +77,9 @@ public class HttpsClientTransport extends HttpClientTransport {
         }
     }
 
-    /**
-     * Creates a new SSL SocketFactory. The given factory will use user-provided
-     * key and trust managers (if the user provided them).
-     *
-     * @return Newly created (Ssl)SocketFactory.
-     * @throws IOException
-     */
+    @Deprecated
     protected javax.net.ssl.SSLSocketFactory createSocketFactory() throws IOException {
-        if (SslContext.getCurrentSslContext() != null) {
-            SslContext ctx = SslContext.getCurrentSslContext();
-            try {
-                return ctx.getSSLContext().getSocketFactory();
-            } catch (Exception e) {
-                throw IOExceptionSupport.create(e);
-            }
-        } else {
-            return (javax.net.ssl.SSLSocketFactory) javax.net.ssl.SSLSocketFactory.getDefault();
-        }
-
+        return (javax.net.ssl.SSLSocketFactory) javax.net.ssl.SSLSocketFactory.getDefault();
     }
 
     @Override
