@@ -100,6 +100,7 @@ public class PolicyEntry extends DestinationMapEntry {
     private boolean prioritizedMessages;
     private boolean allConsumersExclusiveByDefault;
     private boolean gcInactiveDestinations;
+    private boolean gcWithOnlyWildcardConsumers;
     private boolean gcWithNetworkConsumers;
     private long inactiveTimeoutBeforeGC = BaseDestination.DEFAULT_INACTIVE_TIMEOUT_BEFORE_GC;
     private boolean reduceMemoryFootprint;
@@ -264,6 +265,9 @@ public class PolicyEntry extends DestinationMapEntry {
         }
         if (isUpdate("gcInactiveDestinations", includedProperties)) {
             destination.setGcIfInactive(isGcInactiveDestinations());
+        }
+        if (isUpdate("gcWithOnlyWildcardConsumers", includedProperties)) {
+            destination.setGcWithOnlyWildcardConsumers(isGcWithOnlyWildcardConsumers());
         }
         if (isUpdate("gcWithNetworkConsumers", includedProperties)) {
             destination.setGcWithNetworkConsumers(isGcWithNetworkConsumers());
@@ -1088,6 +1092,14 @@ public class PolicyEntry extends DestinationMapEntry {
      */
     public void setInactiveTimeoutBeforeGC(long inactiveTimeoutBeforeGC) {
         this.inactiveTimeoutBeforeGC = inactiveTimeoutBeforeGC;
+    }
+
+    public void setGcWithOnlyWildcardConsumers(boolean gcWithOnlyWildcardConsumers) {
+        this.gcWithOnlyWildcardConsumers = gcWithOnlyWildcardConsumers;
+    }
+
+    public boolean isGcWithOnlyWildcardConsumers() {
+        return gcWithOnlyWildcardConsumers;
     }
 
     public void setGcWithNetworkConsumers(boolean gcWithNetworkConsumers) {
