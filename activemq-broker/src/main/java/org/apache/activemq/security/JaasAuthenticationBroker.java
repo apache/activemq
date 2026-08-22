@@ -65,7 +65,7 @@ public class JaasAuthenticationBroker extends AbstractAuthenticationBroker {
             Thread.currentThread().setContextClassLoader(JaasAuthenticationBroker.class.getClassLoader());
             SecurityContext securityContext = null;
             try {
-                securityContext = authenticate(info.getUserName(), info.getPassword(), null);
+                securityContext = authenticate(info.getUserName(), info.getPassword(), null, info.getClientId());
                 context.setSecurityContext(securityContext);
                 securityContexts.add(securityContext);
                 super.addConnection(context, info);
@@ -85,8 +85,12 @@ public class JaasAuthenticationBroker extends AbstractAuthenticationBroker {
 
     @Override
     public SecurityContext authenticate(String username, String password, X509Certificate[] certificates) throws SecurityException {
+        return authenticate(username, password, certificates, null);
+    }
+
+    public SecurityContext authenticate(String username, String password, X509Certificate[] certificates, String clientId) throws SecurityException {
         SecurityContext result = null;
-        JassCredentialCallbackHandler callback = new JassCredentialCallbackHandler(username, password);
+        JassCredentialCallbackHandler callback = new JassCredentialCallbackHandler(username, password, clientId);
         try {
             LoginContext lc = new LoginContext(jassConfiguration, callback);
             lc.login();
