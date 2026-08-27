@@ -296,6 +296,11 @@ public class FanoutTransport implements CompositeTransport {
     }
 
     @Override
+    public void stop(Throwable exception) throws Exception {
+        stop();
+    }
+
+    @Override
     public void stop() throws Exception {
         try {
             synchronized (reconnectMutex) {

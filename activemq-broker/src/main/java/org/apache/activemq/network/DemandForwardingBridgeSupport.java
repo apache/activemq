@@ -98,6 +98,7 @@ import org.apache.activemq.transport.TransportDisposedIOException;
 import org.apache.activemq.transport.TransportFilter;
 import org.apache.activemq.transport.failover.FailoverTransport;
 import org.apache.activemq.transport.tcp.TcpTransport;
+import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.IdGenerator;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.LongSequenceGenerator;
@@ -1328,12 +1329,13 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                 } else if (command.isBrokerInfo()) {
                     futureLocalBrokerInfo.set((BrokerInfo) command);
                 } else if (command.isShutdownInfo()) {
-                    if (brokerService.isStopping() || brokerService.isStopped()) {
+                    ShutdownInfo info =  (ShutdownInfo) command;
+                    if (brokerService.isStopping() || brokerService.isStopped() || info.getError() == null) {
                         LOG.info("{} Shutting down {}", configuration.getBrokerName(), configuration.getName());
                         stop();
                     } else {
                         // Administrative shutdown via .stop() or SlowConsumerStrategy needs lifecycle clean-up
-                        serviceLocalException(new IOException("Local network connection was shut down while the broker is still running"));
+                        serviceLocalException(IOExceptionSupport.create(info.getError()));
                     }
                 } else if (command.getClass() == ConnectionError.class) {
                     ConnectionError ce = (ConnectionError) command;

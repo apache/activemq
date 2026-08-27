@@ -19,6 +19,7 @@ package org.apache.activemq.network;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import java.io.IOException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import jakarta.jms.Connection;
@@ -109,7 +110,7 @@ public class NetworkBridgeLocalConnectionCloseReconnectTest {
         var bridgeLocalConnection = findVmConnection(localBroker);
         assertNotNull("expected the bridge's local vm:// connection on the local broker", bridgeLocalConnection);
         LOG.info("stopping the bridge's local connection server-side: {}", bridgeLocalConnection);
-        bridgeLocalConnection.stop();
+        bridgeLocalConnection.serviceException(new IOException("stopping the bridge's local connection server-side"));
 
         // a connection stop is not a broker stop
         var reconnected = Wait.waitFor(() -> {
@@ -195,9 +196,11 @@ public class NetworkBridgeLocalConnectionCloseReconnectTest {
 
         for (var round = 1; round <= 3; round++) {
             var oldBridge = nc.activeBridges().iterator().next();
+            // after a reconnect the new bridge's vm connection may not be registered yet
+            assertTrue("round " + round + ": bridge's local vm:// connection should be present",
+                    Wait.waitFor(() -> findVmConnection(localBroker) != null, 20_000, 10));
             var bridgeLocalConnection = findVmConnection(localBroker);
-            assertNotNull("round " + round + ": expected the bridge's local vm:// connection", bridgeLocalConnection);
-            bridgeLocalConnection.stop();
+            bridgeLocalConnection.serviceException(new IOException("stopping the bridge's local connection server-side"));
 
             final var expectRound = round;
             assertTrue("round " + expectRound + ": bridge must reconnect with a new instance",

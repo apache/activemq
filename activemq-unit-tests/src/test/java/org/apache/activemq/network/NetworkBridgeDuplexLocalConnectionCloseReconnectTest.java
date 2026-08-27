@@ -19,6 +19,7 @@ package org.apache.activemq.network;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import java.io.IOException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import jakarta.jms.Connection;
@@ -138,7 +139,7 @@ public class NetworkBridgeDuplexLocalConnectionCloseReconnectTest {
         var vmConnection = findVmConnection(initiatorBroker);
         assertNotNull("expected the initiator bridge's local vm:// connection", vmConnection);
         LOG.info("stopping initiator-side local connection server-side: {}", vmConnection);
-        vmConnection.stop();
+        vmConnection.serviceException(new IOException("stopping initiator-side local connection server-side"));
 
         awaitNewBridge(oldBridge, "after initiator-side close");
         assertFlowBothWays("after initiator-side close and reconnect");
