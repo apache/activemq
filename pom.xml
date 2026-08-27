@@ -78,7 +78,7 @@
     <jetty-version>${jetty9-version}</jetty-version>
     <jmdns-version>3.6.3</jmdns-version>
     <tomcat-api-version>9.0.121</tomcat-api-version>
-    <javassist-version>3.32.0-GA</javassist-version>
+    <javassist-version>3.33.0-GA</javassist-version>
     <jettison-version>1.5.7</jettison-version>
     <jmock-version>2.13.1</jmock-version>
     <jolokia-version>1.7.2</jolokia-version>
