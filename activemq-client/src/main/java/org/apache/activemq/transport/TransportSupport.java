@@ -135,4 +135,9 @@ public abstract class TransportSupport extends ServiceSupport implements Transpo
         return isStarted();
     }
 
+    @Override
+    public void stop(Throwable exception) throws Exception {
+        stop();
+    }
+
 }
