@@ -164,4 +164,5 @@ public interface Transport extends Service {
      */
     WireFormat getWireFormat();
 
+    void stop(Throwable exception) throws Exception;
 }
