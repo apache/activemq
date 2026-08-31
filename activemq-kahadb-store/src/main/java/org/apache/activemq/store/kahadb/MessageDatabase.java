@@ -1839,8 +1839,10 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                         int dataFileId = subscription.getValue().getDataFileId();
 
                         // Move subscription along if it has no outstanding messages that need ack'd
-                        // and its in the last log file in the journal.
-                        if (!gcCandidateSet.isEmpty() && gcCandidateSet.first() == dataFileId) {
+                        // and the file the command is written to is part of the gcCandidateSet
+                        // This will prevent the subscription from blocking the file from being GC'd
+                        // if otherwise eligible
+                        if (gcCandidateSet.contains(dataFileId)) {
                             final StoredDestination destination = entry.getValue();
                             final String subscriptionKey = subscription.getKey();
                             SequenceSet pendingAcks = destination.ackPositions.get(tx, subscriptionKey);
