@@ -34,8 +34,7 @@ import org.slf4j.LoggerFactory;
  * 
  * 
  */
-public class TempQueue extends Queue implements TempDestination{
-
+public class TempQueue extends Queue implements TempDestination {
     private static final Logger LOG = LoggerFactory.getLogger(TempQueue.class);
 
     private final ActiveMQTempDestination tempDest;
