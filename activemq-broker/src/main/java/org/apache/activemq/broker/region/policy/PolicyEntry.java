@@ -100,6 +100,7 @@ public class PolicyEntry extends DestinationMapEntry {
     private boolean prioritizedMessages;
     private boolean allConsumersExclusiveByDefault;
     private boolean gcInactiveDestinations;
+    private boolean gcWithOnlyWildcardConsumers;
     private boolean gcWithNetworkConsumers;
     private long inactiveTimeoutBeforeGC = BaseDestination.DEFAULT_INACTIVE_TIMEOUT_BEFORE_GC;
     private boolean reduceMemoryFootprint;
@@ -264,6 +265,9 @@ public class PolicyEntry extends DestinationMapEntry {
         }
         if (isUpdate("gcInactiveDestinations", includedProperties)) {
             destination.setGcIfInactive(isGcInactiveDestinations());
+        }
+        if (isUpdate("gcWithOnlyWildcardConsumers", includedProperties)) {
+            destination.setGcWithOnlyWildcardConsumers(isGcWithOnlyWildcardConsumers());
         }
         if (isUpdate("gcWithNetworkConsumers", includedProperties)) {
             destination.setGcWithNetworkConsumers(isGcWithNetworkConsumers());
@@ -1088,6 +1092,25 @@ public class PolicyEntry extends DestinationMapEntry {
      */
     public void setInactiveTimeoutBeforeGC(long inactiveTimeoutBeforeGC) {
         this.inactiveTimeoutBeforeGC = inactiveTimeoutBeforeGC;
+    }
+
+    /**
+     * Allow gc of inactive destinations whose only consumers are wildcard subscriptions,
+     * supporting one-time-use destination patterns where a wildcard consumer stays
+     * connected across destinations being created, drained and collected.
+     *
+     * An attached durable topic subscription always prevents gc - its registration and
+     * pending messages live in the destination's store, which gc destroys. Offline durable
+     * subscriptions remain attached only when the broker runs with keepDurableSubsActive=true
+     * (the default); with keepDurableSubsActive=false this protection does not apply while
+     * the subscriber is offline.
+     */
+    public void setGcWithOnlyWildcardConsumers(boolean gcWithOnlyWildcardConsumers) {
+        this.gcWithOnlyWildcardConsumers = gcWithOnlyWildcardConsumers;
+    }
+
+    public boolean isGcWithOnlyWildcardConsumers() {
+        return gcWithOnlyWildcardConsumers;
     }
 
     public void setGcWithNetworkConsumers(boolean gcWithNetworkConsumers) {
