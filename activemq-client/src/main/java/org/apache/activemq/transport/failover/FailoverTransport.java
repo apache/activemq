@@ -374,6 +374,11 @@ public class FailoverTransport implements CompositeTransport {
     }
 
     @Override
+    public void stop(Throwable exception) throws Exception {
+        stop();
+    }
+
+    @Override
     public void stop() throws Exception {
         Transport transportToStop = null;
         List<Transport> backupsToStop = new ArrayList<Transport>(backups.size());
