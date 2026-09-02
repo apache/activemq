@@ -43,7 +43,7 @@ public class TcpBufferedInputStream extends FilterInputStream {
         internalBuffer = new byte[size];
     }
 
-    protected void fill() throws IOException {
+    protected int fill() throws IOException {
         byte[] buffer = internalBuffer;
         count = 0;
         position = 0;
@@ -51,6 +51,7 @@ public class TcpBufferedInputStream extends FilterInputStream {
         if (n > 0) {
             count = n + position;
         }
+        return n;
     }
 
     @Override
