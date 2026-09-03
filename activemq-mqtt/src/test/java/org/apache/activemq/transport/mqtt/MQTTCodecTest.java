@@ -378,12 +378,15 @@ public class MQTTCodecTest {
         publish.topicName(new UTF8Buffer(topic));
         publish.payload(new Buffer(new byte[payloadSize]));
 
-        DataByteArrayOutputStream output = new DataByteArrayOutputStream();
-        wireFormat.marshal(publish.encode(), output);
-        Buffer marshalled = output.toBuffer();
+        Buffer marshalled;
+        try (DataByteArrayOutputStream output = new DataByteArrayOutputStream()) {
+            wireFormat.marshal(publish.encode(), output);
+            marshalled = output.toBuffer();
+        }
 
-        DataByteArrayInputStream input = new DataByteArrayInputStream(marshalled);
-        codec.parse(input, marshalled.length());
+        try (DataByteArrayInputStream input = new DataByteArrayInputStream(marshalled)) {
+            codec.parse(input, marshalled.length());
+        }
 
         assertEquals("Expected one frame from a valid 4-byte Remaining Length", 1, frames.size());
         PUBLISH decoded = new PUBLISH().decode(frames.get(0));
@@ -402,11 +405,14 @@ public class MQTTCodecTest {
         publish.topicName(new UTF8Buffer(topic));
         publish.payload(new Buffer(new byte[payloadSize]));
 
-        DataByteArrayOutputStream output = new DataByteArrayOutputStream();
-        wireFormat.marshal(publish.encode(), output);
+        Buffer marshalled;
+        try (DataByteArrayOutputStream output = new DataByteArrayOutputStream()) {
+            wireFormat.marshal(publish.encode(), output);
+            marshalled = output.toBuffer();
+        }
 
-        MQTTFrame frame = (MQTTFrame) wireFormat.unmarshal(new ByteSequence(output.toBuffer().data,
-                output.toBuffer().offset, output.toBuffer().length));
+        MQTTFrame frame = (MQTTFrame) wireFormat.unmarshal(
+                new ByteSequence(marshalled.data, marshalled.offset, marshalled.length));
         PUBLISH decoded = new PUBLISH().decode(frame);
         assertEquals(payloadSize, decoded.payload().length());
     }
