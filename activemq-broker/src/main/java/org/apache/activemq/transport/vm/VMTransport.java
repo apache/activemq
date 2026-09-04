@@ -196,6 +196,11 @@ public class VMTransport implements Transport, Task {
 
     @Override
     public void stop() throws Exception {
+        stop(null);
+    }
+
+    @Override
+    public void stop(Throwable exception) throws Exception {
         // Only need to do this once, all future oneway calls will now
         // fail as will any asnyc jobs in the task runner.
         if (disposed.compareAndSet(false, true)) {
@@ -224,7 +229,7 @@ public class VMTransport implements Transport, Task {
                 // to cleanly shutdown the async tasks so that this is the last
                 // command it see's.
                 try {
-                    peer.transportListener.onCommand(new ShutdownInfo());
+                    peer.transportListener.onCommand(new ShutdownInfo(exception));
                 } catch (Exception ignore) {
                 }
 

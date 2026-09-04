@@ -300,11 +300,12 @@
         <include>org.eclipse.jetty.websocket:jetty-websocket-core-client</include>
         <include>org.eclipse.jetty.websocket:jetty-websocket-core-common</include>
         <include>org.eclipse.jetty.websocket:jetty-websocket-core-server</include>
-        <include>org.eclipse.jetty.websocket:jetty-websocket-jetty-client</include>
         <include>org.eclipse.jetty.websocket:jetty-websocket-jetty-api</include>
+        <include>org.eclipse.jetty.websocket:jetty-websocket-jetty-client</include>
+        <include>org.eclipse.jetty.websocket:jetty-websocket-jetty-common</include>
+        <include>org.eclipse.jetty.websocket:jetty-websocket-jetty-server</include>
         <include>org.eclipse.jetty.orbit:javax.security.auth.message</include>
         <include>org.eclipse.jetty.ee11.websocket:jetty-ee11-websocket-jakarta-client</include>
-        <include>org.eclipse.jetty.websocket:jetty-websocket-jetty-common</include>
         <include>org.eclipse.jetty.ee11.websocket:jetty-ee11-websocket-jetty-server</include>
         <include>org.eclipse.jetty.ee11.websocket:jetty-ee11-websocket-servlet</include>
         <include>jakarta.websocket:jakarta.websocket-api</include>

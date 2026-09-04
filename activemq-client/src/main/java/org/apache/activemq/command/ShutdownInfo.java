@@ -19,13 +19,23 @@ package org.apache.activemq.command;
 import org.apache.activemq.state.CommandVisitor;
 
 /**
- * 
+ *
  * @openwire:marshaller code="11"
- * 
+ *
  */
 public class ShutdownInfo extends BaseCommand {
 
     public static final byte DATA_STRUCTURE_TYPE = CommandTypes.SHUTDOWN_INFO;
+
+    private transient Throwable error;
+
+    public ShutdownInfo() {
+
+    }
+
+    public ShutdownInfo(Throwable error) {
+        this.error = error;
+    }
 
     public byte getDataStructureType() {
         return DATA_STRUCTURE_TYPE;
@@ -39,4 +49,11 @@ public class ShutdownInfo extends BaseCommand {
         return true;
     }
 
+    public Throwable getError() {
+        return error;
+    }
+
+    public void setError(Throwable error) {
+        this.error = error;
+    }
 }

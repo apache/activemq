@@ -103,7 +103,9 @@ public class FailoverClusterTest extends TestCase {
     protected void setUp() throws Exception {
         if (brokerA == null) {
             brokerA = createBrokerA(getBindAddress() + "?transport.closeAsync=false");
-            clientUrl = "failover://(" + brokerA.getTransportConnectors().get(0).getPublishableConnectString() + ")";
+            // randomize=false so clients honor the broker-provided round-robin order on
+            // rebalance, making the client spread across brokers deterministic
+            clientUrl = "failover://(" + brokerA.getTransportConnectors().get(0).getPublishableConnectString() + ")?randomize=false";
         }
     }
 
@@ -182,6 +184,6 @@ public class FailoverClusterTest extends TestCase {
                 }
             }
             return set.size() >= minBrokerCount;
-        }, TimeUnit.SECONDS.toMillis(15), TimeUnit.MILLISECONDS.toMillis(500));
+        }, TimeUnit.SECONDS.toMillis(15), 10l);
     }
 }
