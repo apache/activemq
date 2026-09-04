@@ -364,4 +364,57 @@ public class MQTTCodecTest {
         }
     }
 
+    @Test
+    public void testCodecAcceptsFourByteRemainingLength() throws Exception {
+        // 2,097,152 is the smallest value that requires a 4-byte Remaining Length.
+        // Payload size = target RL - variable header overhead (2 topic length + topic + 2 packet id)
+        final String topic = "TOPIC";
+        final int overhead = 2 + topic.length() + 2;  // topic length field + topic + message id (QoS 1)
+        final int payloadSize = 2_097_152 - overhead;
+
+        PUBLISH publish = new PUBLISH();
+        publish.qos(QoS.AT_LEAST_ONCE);
+        publish.messageId((short) 1);
+        publish.topicName(new UTF8Buffer(topic));
+        publish.payload(new Buffer(new byte[payloadSize]));
+
+        Buffer marshalled;
+        try (DataByteArrayOutputStream output = new DataByteArrayOutputStream()) {
+            wireFormat.marshal(publish.encode(), output);
+            marshalled = output.toBuffer();
+        }
+
+        try (DataByteArrayInputStream input = new DataByteArrayInputStream(marshalled)) {
+            codec.parse(input, marshalled.length());
+        }
+
+        assertEquals("Expected one frame from a valid 4-byte Remaining Length", 1, frames.size());
+        PUBLISH decoded = new PUBLISH().decode(frames.get(0));
+        assertEquals(payloadSize, decoded.payload().length());
+    }
+
+    @Test
+    public void testUnmarshalAcceptsFourByteRemainingLength() throws Exception {
+        final String topic = "TOPIC";
+        final int overhead = 2 + topic.length() + 2;
+        final int payloadSize = 2_097_152 - overhead;
+
+        PUBLISH publish = new PUBLISH();
+        publish.qos(QoS.AT_LEAST_ONCE);
+        publish.messageId((short) 1);
+        publish.topicName(new UTF8Buffer(topic));
+        publish.payload(new Buffer(new byte[payloadSize]));
+
+        Buffer marshalled;
+        try (DataByteArrayOutputStream output = new DataByteArrayOutputStream()) {
+            wireFormat.marshal(publish.encode(), output);
+            marshalled = output.toBuffer();
+        }
+
+        MQTTFrame frame = (MQTTFrame) wireFormat.unmarshal(
+                new ByteSequence(marshalled.data, marshalled.offset, marshalled.length));
+        PUBLISH decoded = new PUBLISH().decode(frame);
+        assertEquals(payloadSize, decoded.payload().length());
+    }
+
 }
