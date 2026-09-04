@@ -25,14 +25,14 @@
 2. Restart the broker
 
 The endpoint uses the existing Jetty management listener, TLS configuration,
-IP allowlist, and JAAS realm. Its path is restricted to the `admins` role
-but can be changed in `conf/jetty/jetty-security.xml`.
+IP allowlist, and JAAS realm. Its path is restricted to the `users` and
+`admins` roles but can be changed in `conf/jetty/jetty-security.xml`.
 
 ## Endpoints
 
 Two endpoints because brokers with many destinations might produce large responses:
 - `GET /metrics`: broker-level metrics only.
-- `GET /metrics?per_object=true`: per-queue, per-topic, and broker-level metrics
+- `GET /metrics?per_object=true`: per-destination (queues, topics, temporary queues and topics) and broker-level metrics
 
 ## Metrics
 
@@ -40,7 +40,7 @@ Two endpoints because brokers with many destinations might produce large respons
 
 | Metric | Type | Description |
 |--------|------|-------------|
-| `connections` | gauge | Current number of connections |
+| `current_connections` | gauge | Current number of connections |
 | `connections_total` | counter | Total connections since last start |
 | `messages_enqueued_total` | counter | Total messages enqueued since last start |
 | `messages_dequeued_total` | counter | Total messages dequeued since last start |
@@ -59,17 +59,18 @@ Two endpoints because brokers with many destinations might produce large respons
 | `job_scheduler_store_percent_usage` | gauge | Percent of job scheduler store limit used |
 | `job_scheduler_store_limit_bytes` | gauge | Job scheduler store limit in bytes |
 
-### Destination metrics (`activemq_queue_*` / `activemq_topic_*`)
+### Destination metrics (`activemq_queue_*` / `activemq_topic_*` / `activemq_tempqueue_*` / `activemq_temptopic_*`)
 
 Returned only when `?per_object=true` is set.
 
+Each destination type is reported as its own metric family.
 | Metric | Type | Description |
 |--------|------|-------------|
 | `messages` | gauge | Number of messages in destination |
 | `enqueued_total` | counter | Total messages enqueued since last start |
 | `dequeued_total` | counter | Total messages dequeued since last start |
 | `dispatched_total` | counter | Total messages dispatched since last start |
-| `message_inflight_count` | gauge | Messages dispatched but not acknowledged |
+| `messages_inflight` | gauge | Messages dispatched but not acknowledged |
 | `expired_total` | counter | Total messages expired since last start |
 | `consumers` | gauge | Number of consumers |
 | `producers` | gauge | Number of producers |

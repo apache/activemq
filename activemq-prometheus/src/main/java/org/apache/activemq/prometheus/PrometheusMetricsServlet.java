@@ -17,9 +17,8 @@
 package org.apache.activemq.prometheus;
 
 import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.OutputStream;
 import java.lang.management.ManagementFactory;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
@@ -30,21 +29,33 @@ import jakarta.servlet.http.HttpServletResponse;
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
 
+import io.prometheus.metrics.expositionformats.PrometheusTextFormatWriter;
+import io.prometheus.metrics.model.snapshots.CounterSnapshot;
+import io.prometheus.metrics.model.snapshots.CounterSnapshot.CounterDataPointSnapshot;
+import io.prometheus.metrics.model.snapshots.GaugeSnapshot;
+import io.prometheus.metrics.model.snapshots.GaugeSnapshot.GaugeDataPointSnapshot;
+import io.prometheus.metrics.model.snapshots.Labels;
+import io.prometheus.metrics.model.snapshots.MetricSnapshot;
+import io.prometheus.metrics.model.snapshots.MetricSnapshots;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+// Exposes ActiveMQ broker and destination JMX metrics via Prometheus
 public class PrometheusMetricsServlet extends HttpServlet {
 
     private static final long serialVersionUID = 1L;
     private static final Logger LOG = LoggerFactory.getLogger(PrometheusMetricsServlet.class);
-    private static final String CONTENT_TYPE = "text/plain; version=0.0.4; charset=utf-8";
 
-    // Metrics can be easily extended by adding them here
+    private final PrometheusTextFormatWriter writer = PrometheusTextFormatWriter.create();
+
+    // Metrics can be easily extended by adding them here with their base name.
+    // Exporters take care of prefixes and suffixes.
     private static final MetricDefinition[] BROKER_METRICS = {
-        new MetricDefinition("connections", "Current number of connections", "CurrentConnectionsCount", MetricType.GAUGE),
-        new MetricDefinition("connections_total", "Total connections since last start", "TotalConnectionsCount", MetricType.COUNTER),
-        new MetricDefinition("messages_enqueued_total", "Total messages enqueued since last start", "TotalEnqueueCount", MetricType.COUNTER),
-        new MetricDefinition("messages_dequeued_total", "Total messages dequeued since last start", "TotalDequeueCount", MetricType.COUNTER),
+        new MetricDefinition("current_connections", "Current number of connections", "CurrentConnectionsCount", MetricType.GAUGE),
+        new MetricDefinition("connections", "Total connections since last start", "TotalConnectionsCount", MetricType.COUNTER),
+        new MetricDefinition("messages_enqueued", "Total messages enqueued since last start", "TotalEnqueueCount", MetricType.COUNTER),
+        new MetricDefinition("messages_dequeued", "Total messages dequeued since last start", "TotalDequeueCount", MetricType.COUNTER),
         new MetricDefinition("consumers", "Current number of consumers", "TotalConsumerCount", MetricType.GAUGE),
         new MetricDefinition("producers", "Current number of producers", "TotalProducerCount", MetricType.GAUGE),
         new MetricDefinition("messages", "Current number of messages across all destinations", "TotalMessageCount", MetricType.GAUGE),
@@ -61,13 +72,14 @@ public class PrometheusMetricsServlet extends HttpServlet {
         new MetricDefinition("job_scheduler_store_limit_bytes", "Job scheduler store limit in bytes", "JobSchedulerStoreLimit", MetricType.GAUGE)
     };
 
+    private static final String[] DESTINATION_TYPES = {"Queue", "Topic", "TempQueue", "TempTopic"};
     private static final MetricDefinition[] DESTINATION_METRICS = {
         new MetricDefinition("messages", "Number of messages in this destination", "QueueSize", MetricType.GAUGE),
-        new MetricDefinition("enqueued_total", "Total messages enqueued to this destination since last start", "EnqueueCount", MetricType.COUNTER),
-        new MetricDefinition("dequeued_total", "Total messages dequeued from destination since last start", "DequeueCount", MetricType.COUNTER),
-        new MetricDefinition("dispatched_total", "Total messages dispatched from destination since last start", "DispatchCount", MetricType.COUNTER),
-        new MetricDefinition("message_inflight_count", "Messages dispatched but not acknowledged", "InFlightCount", MetricType.GAUGE),
-        new MetricDefinition("expired_total", "Total messages expired since last start", "ExpiredCount", MetricType.COUNTER),
+        new MetricDefinition("enqueued", "Total messages enqueued to this destination since last start", "EnqueueCount", MetricType.COUNTER),
+        new MetricDefinition("dequeued", "Total messages dequeued from destination since last start", "DequeueCount", MetricType.COUNTER),
+        new MetricDefinition("dispatched", "Total messages dispatched from destination since last start", "DispatchCount", MetricType.COUNTER),
+        new MetricDefinition("messages_inflight", "Messages dispatched but not acknowledged", "InFlightCount", MetricType.GAUGE),
+        new MetricDefinition("expired", "Total messages expired since last start", "ExpiredCount", MetricType.COUNTER),
         new MetricDefinition("consumers", "Number of consumers", "ConsumerCount", MetricType.GAUGE),
         new MetricDefinition("producers", "Number of producers", "ProducerCount", MetricType.GAUGE),
         new MetricDefinition("memory_percent_usage", "Percent (0-100) of destination memory limit used", "MemoryPercentUsage", MetricType.GAUGE),
@@ -84,19 +96,16 @@ public class PrometheusMetricsServlet extends HttpServlet {
 
         // If the mBeanServer is unavailable nothing useful can be produced, so return a 500
         final Set<ObjectName> brokers;
-        final Set<ObjectName> queues;
-        final Set<ObjectName> topics;
+        final Map<String, Set<ObjectName>> destinationsByType = new LinkedHashMap<>();
         try {
             brokers = mBeanServer.queryNames(new ObjectName("org.apache.activemq:type=Broker,brokerName=*"), null);
             if (perObject) {
-                // Scraping destinations on brokers with many queues or topics can be expensive.
-                queues = mBeanServer.queryNames(new ObjectName(
-                        "org.apache.activemq:type=Broker,brokerName=*,destinationType=Queue,destinationName=*"), null);
-                topics = mBeanServer.queryNames(new ObjectName(
-                        "org.apache.activemq:type=Broker,brokerName=*,destinationType=Topic,destinationName=*"), null);
-            } else {
-                queues = Collections.emptySet();
-                topics = Collections.emptySet();
+                // Scraping on brokers with many destinations can be expensive.
+                for (final String type : DESTINATION_TYPES) {
+                    destinationsByType.put(type, mBeanServer.queryNames(new ObjectName(
+                            "org.apache.activemq:type=Broker,brokerName=*,destinationType=" + type
+                                    + ",destinationName=*"), null));
+                }
             }
         } catch (final Exception exception) {
             LOG.warn("Prometheus scrape failed while querying broker MBeans", exception);
@@ -104,53 +113,96 @@ public class PrometheusMetricsServlet extends HttpServlet {
             return;
         }
 
-        // Stream metrics to avoid keeping the response body in memory
-        // Failed items are skipped or default to 0 (when not possible) to allow the scrape to continue
-        response.setContentType(CONTENT_TYPE);
-        response.setStatus(HttpServletResponse.SC_OK);
-        final PrintWriter writer = response.getWriter();
-        writeBrokerMetrics(mBeanServer, writer, brokers);
-        if (perObject) {
-            writeDestinationMetrics(mBeanServer, writer, "Queue", queues);
-            writeDestinationMetrics(mBeanServer, writer, "Topic", topics);
+        // Failed items are skipped or default to 0 (when not possible) to allow partial data..
+        final MetricSnapshots.Builder snapshots = MetricSnapshots.builder();
+        collectBrokerMetrics(mBeanServer, snapshots, brokers);
+        for (final Map.Entry<String, Set<ObjectName>> entry : destinationsByType.entrySet()) {
+            collectDestinationMetrics(mBeanServer, snapshots, entry.getKey(), entry.getValue());
         }
-        writer.flush();
+
+        response.setContentType(writer.getContentType());
+        response.setStatus(HttpServletResponse.SC_OK);
+        final OutputStream out = response.getOutputStream();
+        writer.write(out, snapshots.build());
+        out.flush();
     }
 
-    private void writeBrokerMetrics(final MBeanServer mBeanServer, final PrintWriter writer, final Set<ObjectName> brokers) {
-        // In case there is a network of brokers, only use the local one
-        // Unreadable names are skipped
-        final Map<ObjectName, String> identified = new LinkedHashMap<>();
+    private void collectBrokerMetrics(final MBeanServer mBeanServer, final MetricSnapshots.Builder snapshots,
+            final Set<ObjectName> brokers) {
+        // In case there is a network of brokers, only use the local one.
+        // Skip unreadable names.
+        final Map<ObjectName, Labels> identified = new LinkedHashMap<>();
         for (final ObjectName broker : brokers) {
             final String brokerName = resolveStringAttribute(mBeanServer, broker, "BrokerName");
             if (brokerName != null) {
-                identified.put(broker, "broker=\"" + sanitizeLabel(brokerName) + "\"");
+                identified.put(broker, Labels.of("broker", brokerName));
             }
+        }
+        if (identified.isEmpty()) {
+            return;
         }
 
         for (final MetricDefinition metric : BROKER_METRICS) {
             final String metricName = "activemq_broker_" + metric.name;
-            writeMetadata(writer, metricName, metric);
-            for (final Map.Entry<ObjectName, String> entry : identified.entrySet()) {
-                writeSample(writer, metricName, entry.getValue(), getNumber(mBeanServer, entry.getKey(), metric.attribute));
+            final MetricSnapshot snapshot = buildSnapshot(mBeanServer, metricName, metric, metric.help, identified);
+            if (snapshot != null) {
+                snapshots.metricSnapshot(snapshot);
             }
         }
     }
 
-    private void writeDestinationMetrics(final MBeanServer mBeanServer, final PrintWriter writer, final String type,
-            final Set<ObjectName> destinations) {
+    private void collectDestinationMetrics(final MBeanServer mBeanServer, final MetricSnapshots.Builder snapshots,
+            final String type, final Set<ObjectName> destinations) {
+        if (destinations.isEmpty()) {
+            return;
+        }
         final String typeLower = type.toLowerCase();
+
+        final Map<ObjectName, Labels> labelled = new LinkedHashMap<>();
+        for (final ObjectName destination : destinations) {
+            final String brokerName = destination.getKeyProperty("brokerName");
+            final String destinationName = destination.getKeyProperty("destinationName");
+            labelled.put(destination, Labels.of(
+                    "broker", brokerName == null ? "unknown" : brokerName,
+                    "destination", destinationName == null ? "unknown" : destinationName));
+        }
 
         for (final MetricDefinition metric : DESTINATION_METRICS) {
             final String metricName = "activemq_" + typeLower + "_" + metric.name;
-            writeMetadata(writer, metricName, metric.withFormattedHelp(typeLower));
-            for (final ObjectName destination : destinations) {
-                final String brokerName = sanitizeLabel(destination.getKeyProperty("brokerName"));
-                final String destinationName = sanitizeLabel(destination.getKeyProperty("destinationName"));
-                final String labels = String.format("broker=\"%s\",destination=\"%s\"", brokerName, destinationName);
-                writeSample(writer, metricName, labels, getNumber(mBeanServer, destination, metric.attribute));
+            final MetricSnapshot snapshot = buildSnapshot(mBeanServer, metricName, metric,
+                    String.format(metric.help, typeLower), labelled);
+            if (snapshot != null) {
+                snapshots.metricSnapshot(snapshot);
             }
         }
+    }
+
+    // Builds one metric family (a gauge or counter) with a data point per object.
+    private MetricSnapshot buildSnapshot(final MBeanServer mBeanServer, final String metricName,
+            final MetricDefinition metric, final String help, final Map<ObjectName, Labels> objects) {
+        if (metric.type == MetricType.COUNTER) {
+            final CounterSnapshot.Builder builder = CounterSnapshot.builder()
+                    .name(metricName)
+                    .help(help);
+            for (final Map.Entry<ObjectName, Labels> entry : objects.entrySet()) {
+                builder.dataPoint(CounterDataPointSnapshot.builder()
+                        .labels(entry.getValue())
+                        .value(getNumber(mBeanServer, entry.getKey(), metric.attribute))
+                        .build());
+            }
+            return builder.build();
+        }
+
+        final GaugeSnapshot.Builder builder = GaugeSnapshot.builder()
+                .name(metricName)
+                .help(help);
+        for (final Map.Entry<ObjectName, Labels> entry : objects.entrySet()) {
+            builder.dataPoint(GaugeDataPointSnapshot.builder()
+                    .labels(entry.getValue())
+                    .value(getNumber(mBeanServer, entry.getKey(), metric.attribute))
+                    .build());
+        }
+        return builder.build();
     }
 
     private String resolveStringAttribute(final MBeanServer mBeanServer, final ObjectName name, final String attribute) {
@@ -179,35 +231,6 @@ public class PrometheusMetricsServlet extends HttpServlet {
         return 0;
     }
 
-    private void writeMetadata(final PrintWriter writer, final String metric, final MetricDefinition def) {
-        writer.println("# HELP " + metric + " " + def.help);
-        writer.println("# TYPE " + metric + " " + def.type.prometheusName());
-    }
-
-    private void writeSample(final PrintWriter writer, final String metric, final String labels, final double value) {
-        final String rendered;
-        if (Double.isNaN(value)) {
-            rendered = "NaN";
-        } else if (value == Double.POSITIVE_INFINITY) {
-            rendered = "+Inf";
-        } else if (value == Double.NEGATIVE_INFINITY) {
-            rendered = "-Inf";
-        } else if (value == (long) value) {
-            rendered = Long.toString((long) value);
-        } else {
-            rendered = Double.toString(value);
-        }
-        writer.println(metric + "{" + labels + "} " + rendered);
-    }
-
-    static String sanitizeLabel(final String value) {
-        if (value == null) {
-            return "unknown";
-        }
-        // See: https://prometheus.io/docs/instrumenting/exposition_formats/
-        return value.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r");
-    }
-
     private static final class MetricDefinition {
         private final String name;
         private final String help;
@@ -220,24 +243,10 @@ public class PrometheusMetricsServlet extends HttpServlet {
             this.attribute = attribute;
             this.type = type;
         }
-
-        private MetricDefinition withFormattedHelp(final String arg) {
-            return new MetricDefinition(name, String.format(help, arg), attribute, type);
-        }
     }
 
     enum MetricType {
-        GAUGE("gauge"),
-        COUNTER("counter");
-
-        private final String prometheusName;
-
-        MetricType(final String prometheusName) {
-            this.prometheusName = prometheusName;
-        }
-
-        String prometheusName() {
-            return prometheusName;
-        }
+        GAUGE,
+        COUNTER
     }
 }

@@ -98,6 +98,7 @@
     <qpid-proton-version>0.34.1</qpid-proton-version>
     <qpid-jms-version>2.10.0</qpid-jms-version>
     <netty-version>4.2.16.Final</netty-version>
+    <prometheus-metrics-version>1.8.0</prometheus-metrics-version>
     <rome-version>2.1.0</rome-version>
     <shiro-version>2.2.1</shiro-version>
     <slf4j-version>2.0.18</slf4j-version>
@@ -519,6 +520,14 @@
         <groupId>org.apache.camel</groupId>
         <artifactId>camel-bom</artifactId>
         <version>${camel-version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+
+      <dependency>
+        <groupId>io.prometheus</groupId>
+        <artifactId>prometheus-metrics-bom</artifactId>
+        <version>${prometheus-metrics-version}</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>

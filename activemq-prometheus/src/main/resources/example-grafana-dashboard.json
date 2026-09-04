@@ -21,7 +21,7 @@
       "options": { "reduceOptions": { "calcs": ["lastNotNull"] } },
       "title": "Connections",
       "type": "stat",
-      "targets": [{ "expr": "activemq_broker_connections", "legendFormat": "{{broker}}" }]
+      "targets": [{ "expr": "activemq_broker_current_connections", "legendFormat": "{{broker}}" }]
     },
     {
       "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
@@ -95,7 +95,7 @@
       "title": "Connections Over Time",
       "type": "timeseries",
       "targets": [
-        { "expr": "activemq_broker_connections", "legendFormat": "current" },
+        { "expr": "activemq_broker_current_connections", "legendFormat": "current" },
         { "expr": "rate(activemq_broker_connections_total[5m])", "legendFormat": "new/s (5m)" }
       ]
     },
@@ -134,7 +134,7 @@
       "options": { "legend": { "displayMode": "table", "placement": "right", "sortBy": "Last", "sortDesc": true }, "tooltip": { "mode": "multi" } },
       "title": "Queue In-Flight",
       "type": "timeseries",
-      "targets": [{ "expr": "activemq_queue_message_inflight_count", "legendFormat": "{{destination}} inflight" }]
+      "targets": [{ "expr": "activemq_queue_messages_inflight", "legendFormat": "{{destination}} inflight" }]
     },
     {
       "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },

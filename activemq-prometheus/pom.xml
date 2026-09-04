@@ -46,6 +46,16 @@
             <artifactId>slf4j-api</artifactId>
         </dependency>
 
+        <!-- Official Prometheus Java client for name parsing and serialization -->
+        <dependency>
+            <groupId>io.prometheus</groupId>
+            <artifactId>prometheus-metrics-model</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.prometheus</groupId>
+            <artifactId>prometheus-metrics-exposition-textformats</artifactId>
+        </dependency>
+
         <!-- =============================== -->
         <!-- Testing Dependencies            -->
         <!-- =============================== -->
@@ -58,6 +68,24 @@
 
     <build>
         <finalName>metrics</finalName>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-war-plugin</artifactId>
+                <configuration>
+                    <webResources>
+                        <resource>
+                            <directory>${project.build.directory}/maven-shared-archive-resources/META-INF</directory>
+                            <targetPath>META-INF</targetPath>
+                            <includes>
+                                <include>LICENSE</include>
+                                <include>NOTICE</include>
+                            </includes>
+                        </resource>
+                    </webResources>
+                </configuration>
+            </plugin>
+        </plugins>
     </build>
 
 </project>
