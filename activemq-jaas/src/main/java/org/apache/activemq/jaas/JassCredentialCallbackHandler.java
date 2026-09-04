@@ -31,10 +31,16 @@ public class JassCredentialCallbackHandler implements CallbackHandler {
 
     private final String username;
     private final String password;
+    private final String clientId;
 
     public JassCredentialCallbackHandler(String username, String password) {
+        this(username, password, null);
+    }
+
+    public JassCredentialCallbackHandler(String username, String password, String clientId) {
         this.username = username;
         this.password = password;
+        this.clientId = clientId;
     }
 
     @Override
@@ -55,6 +61,8 @@ public class JassCredentialCallbackHandler implements CallbackHandler {
                 } else {
                     nameCallback.setName(username);
                 }
+            } else if (callback instanceof ClientIdCallback) {
+                ((ClientIdCallback)callback).setClientId(clientId);
             }
         }
     }

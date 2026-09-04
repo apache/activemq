@@ -18,10 +18,11 @@ package org.apache.activemq.jaas;
 
 import java.io.IOException;
 import java.security.Principal;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import javax.security.auth.Subject;
 import javax.security.auth.callback.Callback;
@@ -40,6 +41,10 @@ public class PropertiesLoginModule extends PropertiesLoader implements LoginModu
 
     private static final String USER_FILE_PROP_NAME = "org.apache.activemq.jaas.properties.user";
     private static final String GROUP_FILE_PROP_NAME = "org.apache.activemq.jaas.properties.group";
+    private static final String CLIENTID_FILE_PROP_NAME = "org.apache.activemq.jaas.properties.clientid";
+
+    /** matches the authenticated user name when expanded in a clientId pattern */
+    private static final String USER_TOKEN = "${userId}";
 
     private static final Logger LOG = LoggerFactory.getLogger(PropertiesLoginModule.class);
 
@@ -48,8 +53,15 @@ public class PropertiesLoginModule extends PropertiesLoader implements LoginModu
 
     private Properties users;
     private Map<String,Set<String>> groups;
+    // Optional: userId -> comma-separated clientId patterns. Null when clientId
+    // authentication is not configured (the CLIENTID_FILE_PROP_NAME option is absent).
+    private Properties clientIds;
     private String user;
-    private final Set<Principal> principals = new HashSet<Principal>();
+    private String clientId;
+    // LinkedHashSet so principal insertion order is preserved when copied into the
+    // Subject: UserPrincipal is always added first, then ClientIdPrincipal (when
+    // clientId authentication is enabled), then group principals.
+    private final Set<Principal> principals = new LinkedHashSet<Principal>();
 
     /** the authentication status*/
     private boolean succeeded = false;
@@ -63,6 +75,10 @@ public class PropertiesLoginModule extends PropertiesLoader implements LoginModu
         init(options);
         users = load(USER_FILE_PROP_NAME, "user", options).getProps();
         groups = load(GROUP_FILE_PROP_NAME, "group", options).invertedPropertiesValuesMap();
+        // clientId authentication is opt-in: only enabled when the file option is present
+        if (options.containsKey(CLIENTID_FILE_PROP_NAME)) {
+            clientIds = load(CLIENTID_FILE_PROP_NAME, "clientids", options).getProps();
+        }
     }
 
     @Override
@@ -94,6 +110,20 @@ public class PropertiesLoginModule extends PropertiesLoader implements LoginModu
         if (!password.equals(new String(tmpPassword))) {
             throw new FailedLoginException("Password does not match");
         }
+
+        // When enabled, also authenticate the connection's clientId. A connection
+        // that presents a clientId it is not permitted to use fails to log in. A
+        // connection with no clientId is allowed (it cannot own durable subscriptions).
+        if (clientIds != null) {
+            String requestedClientId = getClientId();
+            if (requestedClientId != null && !requestedClientId.isEmpty()) {
+                if (!isClientIdAllowed(user, requestedClientId)) {
+                    throw new FailedLoginException("clientId is not allowed for user");
+                }
+                clientId = requestedClientId;
+            }
+        }
+
         succeeded = true;
 
         if (debug) {
@@ -112,7 +142,13 @@ public class PropertiesLoginModule extends PropertiesLoader implements LoginModu
             return false;
         }
 
+        // UserPrincipal is always added first; ClientIdPrincipal (when a clientId was
+        // authenticated) is added second, ahead of any group principals.
         principals.add(new UserPrincipal(user));
+
+        if (clientId != null) {
+            principals.add(new ClientIdPrincipal(clientId));
+        }
 
         Set<String> matchedGroups = groups.get(user);
         if (matchedGroups != null) {
@@ -164,7 +200,55 @@ public class PropertiesLoginModule extends PropertiesLoader implements LoginModu
 
     private void clear() {
         user = null;
+        clientId = null;
         principals.clear();
+    }
+
+    private String getClientId() throws LoginException {
+        ClientIdCallback clientIdCallback = new ClientIdCallback();
+        try {
+            callbackHandler.handle(new Callback[] {clientIdCallback});
+        } catch (IOException ioe) {
+            throw new LoginException(ioe.getMessage());
+        } catch (UnsupportedCallbackException uce) {
+            // callback handler does not supply a clientId; treat as none
+            return null;
+        }
+        return clientIdCallback.getClientId();
+    }
+
+    private boolean isClientIdAllowed(String userId, String clientId) {
+        String patterns = clientIds.getProperty(userId);
+        if (patterns == null) {
+            // fall back to the generic per-user rule, e.g. ${userId} = ${userId}-*
+            patterns = clientIds.getProperty(USER_TOKEN);
+        }
+        if (patterns == null) {
+            return false;
+        }
+        for (String pattern : patterns.split(",")) {
+            pattern = pattern.trim();
+            if (pattern.isEmpty()) {
+                continue;
+            }
+            if (matches(pattern.replace(USER_TOKEN, userId), clientId)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean matches(String pattern, String clientId) {
+        // '*' is a multi-character wildcard; all other characters match literally.
+        StringBuilder regex = new StringBuilder();
+        String[] segments = pattern.split("\\*", -1);
+        for (int i = 0; i < segments.length; i++) {
+            if (i > 0) {
+                regex.append(".*");
+            }
+            regex.append(Pattern.quote(segments[i]));
+        }
+        return clientId.matches(regex.toString());
     }
 
 }

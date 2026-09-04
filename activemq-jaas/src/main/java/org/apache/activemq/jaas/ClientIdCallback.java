@@ -14,11 +14,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-activemq {
-    org.apache.activemq.jaas.PropertiesLoginModule required
-        org.apache.activemq.jaas.properties.user="users.properties"
-        org.apache.activemq.jaas.properties.group="groups.properties"
-        // Uncomment to also authenticate the connection clientId (see clientids.properties):
-        // org.apache.activemq.jaas.properties.clientid="clientids.properties"
-        ;
-};
+package org.apache.activemq.jaas;
+
+import javax.security.auth.callback.Callback;
+
+/**
+ * Callback used to pass the connection's requested clientId to a login module
+ * so it can authorize the clientId in addition to the user credentials.
+ */
+public class ClientIdCallback implements Callback {
+
+    private String clientId;
+
+    public String getClientId() {
+        return clientId;
+    }
+
+    public void setClientId(String clientId) {
+        this.clientId = clientId;
+    }
+}
