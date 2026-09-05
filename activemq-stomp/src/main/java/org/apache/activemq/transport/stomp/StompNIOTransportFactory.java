@@ -76,7 +76,7 @@ public class StompNIOTransportFactory extends NIOTransportFactory implements Bro
 
     @SuppressWarnings("rawtypes")
     @Override
-    public Transport serverConfigure(Transport transport, WireFormat format, HashMap options) throws Exception {
+    public Transport serverConfigure(Transport transport, WireFormat format, HashMap options) {
         transport = super.serverConfigure(transport, format, options);
 
         MutexTransport mutex = transport.narrow(MutexTransport.class);

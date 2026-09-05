@@ -329,7 +329,9 @@ public class BrokerService implements Service {
     }
 
     /**
-     * Adds a new transport connector for the given bind address
+     * Adds a new transport connector for the given bind address.
+     * Binds immediately using the broker-wide sslContext; for a per-connector
+     * sslContext build a TransportConnector and use {@link #addConnector(TransportConnector)}.
      *
      * @return the newly created and added transport connector
      */
@@ -338,7 +340,9 @@ public class BrokerService implements Service {
     }
 
     /**
-     * Adds a new transport connector for the given bind address
+     * Adds a new transport connector for the given bind address.
+     * Binds immediately using the broker-wide sslContext; for a per-connector
+     * sslContext build a TransportConnector and use {@link #addConnector(TransportConnector)}.
      *
      * @return the newly created and added transport connector
      */
@@ -460,6 +464,7 @@ public class BrokerService implements Service {
     public ProxyConnector addProxyConnector(ProxyConnector connector) throws Exception {
         URI uri = getVmConnectorURI();
         connector.setLocalUri(uri);
+        connector.setBrokerService(this);
         proxyConnectors.add(connector);
         if (isUseJmx()) {
             registerProxyConnectorMBean(connector);
@@ -2453,7 +2458,7 @@ public class BrokerService implements Service {
     /**
      * Strategy method to add interceptors to the broker
      *
-     * @throws IOException
+     * @throws Exception
      */
     protected Broker addInterceptors(Broker broker) throws Exception {
         if (isAdvisorySupport()) {

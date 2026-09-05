@@ -30,20 +30,22 @@ import javax.net.ssl.SSLEngine;
 
 import org.apache.activemq.broker.SslContext;
 import org.apache.activemq.transport.Transport;
-import org.apache.activemq.transport.TransportServer;
 import org.apache.activemq.transport.nio.NIOSSLTransportServer;
 import org.apache.activemq.transport.tcp.TcpTransport;
 import org.apache.activemq.transport.tcp.TcpTransport.InitBuffer;
 import org.apache.activemq.transport.tcp.TcpTransportServer;
-import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.wireformat.WireFormat;
 
 public class MQTTNIOSSLTransportFactory extends MQTTNIOTransportFactory {
 
-    SSLContext context;
-
     @Override
     protected TcpTransportServer createTcpTransportServer(URI location, ServerSocketFactory serverSocketFactory) throws IOException, URISyntaxException {
+        return createTcpTransportServer(location, serverSocketFactory, null);
+    }
+
+    @Override
+    protected TcpTransportServer createTcpTransportServer(URI location, ServerSocketFactory serverSocketFactory, SslContext sslContext) throws IOException, URISyntaxException {
+        final SSLContext context = toSSLContext(sslContext);
         NIOSSLTransportServer result = new NIOSSLTransportServer(context, this, location, serverSocketFactory) {
             @Override
             protected Transport createTransport(Socket socket, WireFormat format) throws IOException {
@@ -73,17 +75,4 @@ public class MQTTNIOSSLTransportFactory extends MQTTNIOTransportFactory {
             throws IOException {
         return new MQTTNIOSSLTransport(wireFormat, socket, engine, initBuffer, inputBuffer);
     }
-
-    @Override
-    public TransportServer doBind(URI location) throws IOException {
-        if (SslContext.getCurrentSslContext() != null) {
-            try {
-                context = SslContext.getCurrentSslContext().getSSLContext();
-            } catch (Exception e) {
-                throw new IOException(e);
-            }
-        }
-        return super.doBind(location);
-    }
-
 }

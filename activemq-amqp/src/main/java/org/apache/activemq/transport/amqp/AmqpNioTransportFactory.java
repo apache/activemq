@@ -73,7 +73,7 @@ public class AmqpNioTransportFactory extends NIOTransportFactory implements Brok
 
     @SuppressWarnings("rawtypes")
     @Override
-    public Transport serverConfigure(Transport transport, WireFormat format, HashMap options) throws Exception {
+    public Transport serverConfigure(Transport transport, WireFormat format, HashMap options) {
         transport = super.serverConfigure(transport, format, options);
 
         // strip off the mutex transport.

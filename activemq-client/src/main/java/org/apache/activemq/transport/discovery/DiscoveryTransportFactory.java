@@ -21,6 +21,7 @@ import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.activemq.broker.SslContext;
 import org.apache.activemq.transport.CompositeTransport;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportServer;
@@ -33,10 +34,15 @@ import org.apache.activemq.util.URISupport.CompositeData;
  * 
  */
 public class DiscoveryTransportFactory extends FailoverTransportFactory {
-        
+
     public Transport createTransport(CompositeData compositeData) throws IOException {
-        Map<String, String> parameters = new HashMap<String, String>(compositeData.getParameters());
-        FailoverTransport failoverTransport = createTransport(parameters);
+        return createTransport(compositeData, null);
+    }
+
+    @Override
+    public Transport createTransport(CompositeData compositeData, SslContext sslContext) throws IOException {
+        Map<String, String> parameters = new HashMap<>(compositeData.getParameters());
+        FailoverTransport failoverTransport = createTransport(parameters, sslContext);
         return createTransport(failoverTransport, compositeData, parameters);
     }
     

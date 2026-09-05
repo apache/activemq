@@ -17,16 +17,15 @@
 package org.apache.activemq.transport;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Executor;
 
+import org.apache.activemq.broker.SslContext;
 import org.apache.activemq.util.FactoryFinder;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.IntrospectionSupport;
@@ -49,11 +48,38 @@ public abstract class TransportFactory {
 
     public abstract TransportServer doBind(URI location) throws IOException;
 
-    public Transport doConnect(URI location, Executor ex) throws Exception {
+    /**
+     * Default implementation delegates to the single-arg method, ignoring the
+     * SslContext. Subclasses (e.g. SslTransportFactory) override to use the
+     * context for SSL socket creation.
+     */
+    public TransportServer doBind(URI location, SslContext sslContext) throws IOException {
+        return doBind(location);
+    }
+
+    /**
+     * Default implementation delegates to the single-arg method, ignoring the
+     * SslContext. Subclasses (e.g. SslTransportFactory) override to use the
+     * context for SSL socket creation.
+     */
+    public Transport doConnect(URI location, SslContext sslContext) throws IOException, URISyntaxException {
         return doConnect(location);
     }
 
-    public Transport doCompositeConnect(URI location, Executor ex) throws Exception {
+    /**
+     * Default implementation delegates to the single-arg method, ignoring the
+     * SslContext. Subclasses (e.g. SslTransportFactory) override to use the
+     * context for SSL socket creation.
+     */
+    public Transport doCompositeConnect(URI location, SslContext sslContext) throws IOException, URISyntaxException {
+        return doCompositeConnect(location);
+    }
+
+    public Transport doConnect(URI location, Executor ex) throws IOException, URISyntaxException {
+        return doConnect(location);
+    }
+
+    public Transport doCompositeConnect(URI location, Executor ex) throws IOException, URISyntaxException {
         return doCompositeConnect(location);
     }
 
@@ -62,11 +88,17 @@ public abstract class TransportFactory {
      *
      * @param location
      * @return the transport
-     * @throws Exception
+     * @throws IOException
+     * @throws URISyntaxException
      */
-    public static Transport connect(URI location) throws Exception {
+    public static Transport connect(URI location) throws IOException, URISyntaxException {
         TransportFactory tf = findTransportFactory(location);
         return tf.doConnect(location);
+    }
+
+    public static Transport connect(URI location, SslContext sslContext) throws IOException, URISyntaxException {
+        TransportFactory tf = findTransportFactory(location);
+        return tf.doConnect(location, sslContext);
     }
 
     /**
@@ -75,9 +107,10 @@ public abstract class TransportFactory {
      * @param location
      * @param ex
      * @return the transport
-     * @throws Exception
+     * @throws IOException
+     * @throws URISyntaxException
      */
-    public static Transport connect(URI location, Executor ex) throws Exception {
+    public static Transport connect(URI location, Executor ex) throws IOException, URISyntaxException {
         TransportFactory tf = findTransportFactory(location);
         return tf.doConnect(location, ex);
     }
@@ -88,11 +121,17 @@ public abstract class TransportFactory {
      *
      * @param location
      * @return the Transport
-     * @throws Exception
+     * @throws IOException
+     * @throws URISyntaxException
      */
-    public static Transport compositeConnect(URI location) throws Exception {
+    public static Transport compositeConnect(URI location) throws IOException, URISyntaxException {
         TransportFactory tf = findTransportFactory(location);
         return tf.doCompositeConnect(location);
+    }
+
+    public static Transport compositeConnect(URI location, SslContext sslContext) throws IOException, URISyntaxException {
+        TransportFactory tf = findTransportFactory(location);
+        return tf.doCompositeConnect(location, sslContext);
     }
 
     /**
@@ -102,9 +141,10 @@ public abstract class TransportFactory {
      * @param location
      * @param ex
      * @return the Transport
-     * @throws Exception
+     * @throws IOException
+     * @throws URISyntaxException
      */
-    public static Transport compositeConnect(URI location, Executor ex) throws Exception {
+    public static Transport compositeConnect(URI location, Executor ex) throws IOException, URISyntaxException {
         TransportFactory tf = findTransportFactory(location);
         return tf.doCompositeConnect(location, ex);
     }
@@ -114,33 +154,39 @@ public abstract class TransportFactory {
         return tf.doBind(location);
     }
 
-    public Transport doConnect(URI location) throws Exception {
+    public Transport doConnect(URI location) throws IOException, URISyntaxException {
+        return doConnectInternal(location, null, false);
+    }
+
+    public Transport doCompositeConnect(URI location) throws IOException, URISyntaxException {
+        return doConnectInternal(location, null, true);
+    }
+
+    /**
+     * Shared implementation behind {@link #doConnect(URI)} /
+     * {@link #doCompositeConnect(URI)} and the SslContext-carrying overrides in
+     * SSL capable subclasses. {@code composite} selects the slimmed-down form
+     * used by reliable/HA transports (no {@code wireFormat.host} default,
+     * {@link #compositeConfigure} instead of {@link #configure}, and no
+     * {@code auto.*} strip). The SslContext is threaded to
+     * {@link #createTransport(URI, WireFormat, SslContext)} — plain transports
+     * ignore it, SSL capable ones derive their socket factory from it — so the
+     * connect template lives here once rather than being copied per transport.
+     */
+    protected Transport doConnectInternal(URI location, SslContext sslContext, boolean composite) throws IOException {
         try {
             Map<String, String> options = new HashMap<String, String>(URISupport.parseParameters(location));
-            if( !options.containsKey("wireFormat.host") ) {
+            if (!composite && !options.containsKey("wireFormat.host")) {
                 options.put("wireFormat.host", location.getHost());
             }
             WireFormat wf = createWireFormat(options);
-            Transport transport = createTransport(location, wf);
-            Transport rc = configure(transport, wf, options);
-            //remove auto
-            IntrospectionSupport.extractProperties(options, "auto.");
-
-            if (!options.isEmpty()) {
-                throw new IllegalArgumentException("Invalid connect parameters: " + options);
+            Transport transport = createTransport(location, wf, sslContext);
+            Transport rc = composite ? compositeConfigure(transport, wf, options)
+                                     : configure(transport, wf, options);
+            if (!composite) {
+                //remove auto
+                IntrospectionSupport.extractProperties(options, "auto.");
             }
-            return rc;
-        } catch (URISyntaxException e) {
-            throw IOExceptionSupport.create(e);
-        }
-    }
-
-    public Transport doCompositeConnect(URI location) throws Exception {
-        try {
-            Map<String, String> options = new HashMap<String, String>(URISupport.parseParameters(location));
-            WireFormat wf = createWireFormat(options);
-            Transport transport = createTransport(location, wf);
-            Transport rc = compositeConfigure(transport, wf, options);
             if (!options.isEmpty()) {
                 throw new IllegalArgumentException("Invalid connect parameters: " + options);
             }
@@ -163,10 +209,23 @@ public abstract class TransportFactory {
      * Factory method to create a new transport
      *
      * @throws IOException
-     * @throws UnknownHostException
      */
-    protected Transport createTransport(URI location, WireFormat wf) throws MalformedURLException, UnknownHostException, IOException {
+    protected Transport createTransport(URI location, WireFormat wf) throws IOException {
         throw new IOException("createTransport() method not implemented!");
+    }
+
+    /**
+     * SSL-aware createTransport override point used by {@link #doConnectInternal}.
+     * The default ignores the SslContext and delegates to
+     * {@link #createTransport(URI, WireFormat)};
+     * SSL capable subclasses (e.g. TcpTransportFactory) override this to derive
+     * their socket factory from the context, so the connect template does not
+     * have to be duplicated per transport.
+     *
+     * @param sslContext the SslContext to use, or null for the JVM default.
+     */
+    protected Transport createTransport(URI location, WireFormat wf, SslContext sslContext) throws IOException {
+        return createTransport(location, wf);
     }
 
     /**
@@ -225,10 +284,10 @@ public abstract class TransportFactory {
      * @param wf
      * @param options
      * @return
-     * @throws Exception
+     * @throws IOException
      */
     @SuppressWarnings("rawtypes")
-    public Transport configure(Transport transport, WireFormat wf, Map options) throws Exception {
+    public Transport configure(Transport transport, WireFormat wf, Map options) throws IOException {
         transport = compositeConfigure(transport, wf, options);
 
         transport = new MutexTransport(transport);
@@ -247,10 +306,9 @@ public abstract class TransportFactory {
      * @param format
      * @param options
      * @return
-     * @throws Exception
      */
     @SuppressWarnings("rawtypes")
-    public Transport serverConfigure(Transport transport, WireFormat format, HashMap options) throws Exception {
+    public Transport serverConfigure(Transport transport, WireFormat format, HashMap options) {
         if (options.containsKey(THREAD_NAME_FILTER)) {
             transport = new ThreadNameFilter(transport);
         }

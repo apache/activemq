@@ -30,7 +30,6 @@ import javax.net.ssl.SSLEngine;
 
 import org.apache.activemq.broker.SslContext;
 import org.apache.activemq.transport.Transport;
-import org.apache.activemq.transport.TransportServer;
 import org.apache.activemq.transport.tcp.TcpTransport;
 import org.apache.activemq.transport.tcp.TcpTransport.InitBuffer;
 import org.apache.activemq.transport.tcp.TcpTransportServer;
@@ -38,10 +37,14 @@ import org.apache.activemq.wireformat.WireFormat;
 
 public class AmqpNioSslTransportFactory extends AmqpNioTransportFactory {
 
-    protected SSLContext context;
-
     @Override
     protected TcpTransportServer createTcpTransportServer(URI location, ServerSocketFactory serverSocketFactory) throws IOException, URISyntaxException {
+        return createTcpTransportServer(location, serverSocketFactory, null);
+    }
+
+    @Override
+    protected TcpTransportServer createTcpTransportServer(URI location, ServerSocketFactory serverSocketFactory, SslContext sslContext) throws IOException, URISyntaxException {
+        final SSLContext context = toSSLContext(sslContext);
         return new TcpTransportServer(this, location, serverSocketFactory) {
             @Override
             protected Transport createTransport(Socket socket, WireFormat format) throws IOException {
@@ -69,17 +72,5 @@ public class AmqpNioSslTransportFactory extends AmqpNioTransportFactory {
             SSLEngine engine, InitBuffer initBuffer, ByteBuffer inputBuffer)
             throws IOException {
         return new AmqpNioSslTransport(wireFormat, socket, engine, initBuffer, inputBuffer);
-    }
-
-    @Override
-    public TransportServer doBind(URI location) throws IOException {
-        if (SslContext.getCurrentSslContext() != null) {
-            try {
-                context = SslContext.getCurrentSslContext().getSSLContext();
-            } catch (Exception e) {
-                throw new IOException(e);
-            }
-        }
-        return super.doBind(location);
     }
 }
