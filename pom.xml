@@ -217,6 +217,7 @@
     <module>activemq-rar</module>
     <module>activemq-run</module>
     <module>activemq-shiro</module>
+    <module>activemq-prometheus</module>
     <module>activemq-spring</module>
     <module>activemq-runtime-config</module>
     <module>activemq-tooling</module>
@@ -348,6 +349,12 @@
         <groupId>org.apache.activemq</groupId>
         <artifactId>activemq-shiro</artifactId>
         <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.activemq</groupId>
+        <artifactId>activemq-prometheus</artifactId>
+        <version>${project.version}</version>
+        <type>war</type>
       </dependency>
       <dependency>
         <groupId>org.apache.activemq</groupId>
@@ -512,6 +519,14 @@
         <groupId>org.apache.camel</groupId>
         <artifactId>camel-bom</artifactId>
         <version>${camel-version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+
+      <dependency>
+        <groupId>io.prometheus</groupId>
+        <artifactId>prometheus-metrics-bom</artifactId>
+        <version>${prometheus-metrics-version}</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
