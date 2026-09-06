@@ -100,6 +100,7 @@
     <netty-version>4.2.17.Final</netty-version>
     <rome-version>2.1.0</rome-version>
     <shiro-version>2.2.1</shiro-version>
+    <opentelemetry-version>1.43.0</opentelemetry-version>
     <slf4j-version>2.0.18</slf4j-version>
     <spring-version>7.0.9</spring-version>
     <spring-version-range>[7,8)</spring-version-range>
@@ -217,6 +218,7 @@
     <module>activemq-rar</module>
     <module>activemq-run</module>
     <module>activemq-shiro</module>
+    <module>activemq-opentelemetry</module>
     <module>activemq-spring</module>
     <module>activemq-runtime-config</module>
     <module>activemq-tooling</module>
@@ -347,6 +349,11 @@
       <dependency>
         <groupId>org.apache.activemq</groupId>
         <artifactId>activemq-shiro</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.activemq</groupId>
+        <artifactId>activemq-opentelemetry</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
@@ -665,6 +672,15 @@
         <artifactId>shiro-spring</artifactId>
         <version>${shiro-version}</version>
         <optional>true</optional>
+      </dependency>
+
+      <!-- Optional OpenTelemetry Support -->
+      <dependency>
+        <groupId>io.opentelemetry</groupId>
+        <artifactId>opentelemetry-bom</artifactId>
+        <version>${opentelemetry-version}</version>
+        <type>pom</type>
+        <scope>import</scope>
       </dependency>
 
       <!-- Optional Spring Support -->
