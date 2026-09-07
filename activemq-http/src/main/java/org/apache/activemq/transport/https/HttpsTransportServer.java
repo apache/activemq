@@ -24,6 +24,11 @@ import org.apache.activemq.transport.http.HttpTransportServer;
 
 public class HttpsTransportServer extends HttpTransportServer {
 
+    @Override
+    public boolean isSslServer() {
+        return true;
+    }
+
     public HttpsTransportServer(URI uri, HttpsTransportFactory factory, SslContext context) {
         super(uri, factory);
         this.socketConnectorFactory = new SecureSocketConnectorFactory(context);
