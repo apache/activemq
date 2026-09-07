@@ -2113,8 +2113,13 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
             pagedInPendingDispatchLock.readLock().unlock();
         }
         if (isLazyDispatch() && !force) {
-            // Only page in the minimum number of messages which can be
-            // dispatched immediately.
+            toPageIn = Math.min(toPageIn, getConsumerMessageCountBeforeFull());
+        }
+        if (pagedInPendingSize >= maxPageSize && !force) {
+            // When the pending dispatch list is full, only page in what
+            // consumers can actually accept. This prevents unbounded growth
+            // while still allowing consumers with available prefetch capacity
+            // to receive messages even when other consumers are full.
             toPageIn = Math.min(toPageIn, getConsumerMessageCountBeforeFull());
         }
 
@@ -2132,7 +2137,8 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                     maxPageSize);
         }
 
-        if (toPageIn > 0 && (force || (haveRealConsumer() && pagedInPendingSize < maxPageSize))) {
+        if (toPageIn > 0 && (force || (haveRealConsumer() && (pagedInPendingSize < maxPageSize
+                || getConsumerMessageCountBeforeFull() > 0)))) {
             int count = 0;
             result = new ArrayList<QueueMessageReference>(toPageIn);
             messagesLock.writeLock().lock();
