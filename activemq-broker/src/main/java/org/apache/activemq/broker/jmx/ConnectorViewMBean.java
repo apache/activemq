@@ -54,6 +54,9 @@ public interface ConnectorViewMBean extends Service {
     @MBeanInfo("Statistics gathering enabled")
     boolean isStatisticsEnabled();
 
+    @MBeanInfo("Connections are protected by SSL/TLS")
+    boolean isSsl();
+
     /**
      * Returns true if link stealing is enabled on this Connector
      *
