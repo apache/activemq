@@ -52,7 +52,7 @@
     <!-- JAR dependency versions -->
     <activesoap-version>1.3</activesoap-version>
     <annogen-version>0.1.0</annogen-version>
-    <ant-version>1.10.17</ant-version>
+    <ant-version>1.10.18</ant-version>
     <aries-version>1.1.0</aries-version>
     <camel-version>4.22.0</camel-version>
     <commons-beanutils-version>1.11.0</commons-beanutils-version>
