@@ -42,18 +42,26 @@ public abstract class Usage<T extends Usage> implements Service {
 
     protected final ReentrantReadWriteLock usageLock = new ReentrantReadWriteLock();
     protected final Condition waitForSpaceCondition = usageLock.writeLock().newCondition();
-    protected int percentUsage;
+    // volatile so lock-free hot paths (isFull, percent-change detection) can read it without
+    // taking the usageLock; all writes still happen under the writeLock via setPercentUsage().
+    protected volatile int percentUsage;
+    // The absolute usage-value bounds of the current percentUsage bucket, kept in one volatile
+    // reference (immutable pair, cannot tear). Installed under the write lock whenever
+    // percentUsage is published (setPercentUsage/refreshPercentUsage), which also covers limit
+    // and percentUsageMinDelta changes via onLimitChange/setPercentUsageMinDelta. Lock-free
+    // hot paths compare a usage value against it to decide if a locked recompute is needed.
+    protected volatile PercentBounds bounds = PercentBounds.ALWAYS_CROSS;
     protected T parent;
     protected String name;
 
     private UsageCapacity limiter = new DefaultUsageCapacity();
-    private int percentUsageMinDelta = 1;
+    private volatile int percentUsageMinDelta = 1;
     private final List<UsageListener> listeners = new CopyOnWriteArrayList<UsageListener>();
     private final boolean debug = LOG.isDebugEnabled();
     private float usagePortion = 1.0f;
     private final List<T> children = new CopyOnWriteArrayList<T>();
     private final List<Runnable> callbacks = new LinkedList<Runnable>();
-    private int pollingTime = 100;
+    private volatile int pollingTime = 100;
     private final AtomicBoolean started = new AtomicBoolean();
     private ThreadPoolExecutor executor;
 
@@ -93,12 +101,12 @@ public abstract class Usage<T extends Usage> implements Service {
         }
         usageLock.writeLock().lock();
         try {
-            percentUsage = caclPercentUsage();
+            refreshPercentUsage(caclPercentUsage());
             if (percentUsage >= highWaterMark) {
                 long deadline = timeout > 0 ? System.currentTimeMillis() + timeout : Long.MAX_VALUE;
                 long timeleft = deadline;
                 while (timeleft > 0) {
-                    percentUsage = caclPercentUsage();
+                    refreshPercentUsage(caclPercentUsage());
                     if (percentUsage >= highWaterMark) {
                         waitForSpaceCondition.await(pollingTime, TimeUnit.MILLISECONDS);
                         timeleft = deadline - System.currentTimeMillis();
@@ -121,9 +129,15 @@ public abstract class Usage<T extends Usage> implements Service {
         if (parent != null && parent.isFull(highWaterMark)) {
             return true;
         }
+        // Fast path: while the usage value stays inside the cached percent bucket the
+        // published percentUsage is still valid - no lock, no division. retrieveUsage() is
+        // safe to call unlocked for every implementation (atomic counters or constant).
+        if (bounds.contains(retrieveUsage())) {
+            return percentUsage >= highWaterMark;
+        }
         usageLock.writeLock().lock();
         try {
-            percentUsage = caclPercentUsage();
+            refreshPercentUsage(caclPercentUsage());
             return percentUsage >= highWaterMark;
         } finally {
             usageLock.writeLock().unlock();
@@ -216,21 +230,26 @@ public abstract class Usage<T extends Usage> implements Service {
     }
 
     public int getPercentUsage() {
-        usageLock.readLock().lock();
-        try {
-            return percentUsage;
-        } finally {
-            usageLock.readLock().unlock();
+        // Fresh-on-read without a lock: if the usage value has crossed out of the cached
+        // percent bucket, take the write lock once and silently refresh (no listener events -
+        // preserving the historical behavior of read-driven recomputes). Subclasses whose
+        // usage value changes externally (StoreUsage/TempUsage/JobSchedulerUsage) get accurate
+        // reads from this shared path instead of per-class write-locked overrides.
+        if (!bounds.contains(retrieveUsage())) {
+            usageLock.writeLock().lock();
+            try {
+                refreshPercentUsage(caclPercentUsage());
+            } finally {
+                usageLock.writeLock().unlock();
+            }
         }
+        return percentUsage;
     }
 
     public int getPercentUsageMinDelta() {
-        usageLock.readLock().lock();
-        try {
-            return percentUsageMinDelta;
-        } finally {
-            usageLock.readLock().unlock();
-        }
+        // volatile field - no lock needed; also avoids a nested read-lock acquisition when
+        // called from subclass code already holding the write lock (MemoryUsage.computeBounds)
+        return percentUsageMinDelta;
     }
 
     /**
@@ -268,12 +287,24 @@ public abstract class Usage<T extends Usage> implements Service {
         try {
             int oldValue = percentUsage;
             percentUsage = value;
+            bounds = PercentBounds.compute(value, limiter.getLimit(), percentUsageMinDelta);
             if (oldValue != value) {
                 fireEvent(oldValue, value);
             }
         } finally {
             usageLock.writeLock().unlock();
         }
+    }
+
+    /**
+     * Silently refresh the cached percentUsage (no listener events, no waiter signalling) -
+     * used by the internal recompute sites in waitForSpace(long,int) and isFull(int).
+     * Must be called with the usageLock write lock held. Subclasses that cache values derived
+     * from percentUsage override this to refresh them in the same critical section.
+     */
+    protected void refreshPercentUsage(int value) {
+        percentUsage = value;
+        bounds = PercentBounds.compute(value, limiter.getLimit(), percentUsageMinDelta);
     }
 
     protected int caclPercentUsage() {
@@ -432,6 +463,10 @@ public abstract class Usage<T extends Usage> implements Service {
     }
 
     /**
+     * Creation-time setter. Swapping the limiter on a live Usage does not trigger
+     * onLimitChange(): percentUsage - and any subclass caches derived from it, such as
+     * MemoryUsage's percent bucket bounds - remain stale until the next recompute.
+     *
      * @param limiter
      *            the limiter to set
      */
