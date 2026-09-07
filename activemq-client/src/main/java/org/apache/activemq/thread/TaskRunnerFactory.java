@@ -58,6 +58,9 @@ public class TaskRunnerFactory implements Executor {
     private final AtomicBoolean initDone = new AtomicBoolean(false);
     private int maxThreadPoolSize = getDefaultMaximumPoolSize();
     private RejectedExecutionHandler rejectedTaskHandler = null;
+    /** system property that turns on virtual thread task runners for every factory that is not told otherwise */
+    public static final String USE_VIRTUAL_THREAD_TASK_RUNNER_PROPERTY = "org.apache.activemq.UseVirtualThreadTaskRunner";
+
     private ClassLoader threadClassLoader;
 
     // [AMQ-9394] Virtual Thread support
@@ -106,7 +109,7 @@ public class TaskRunnerFactory implements Executor {
             synchronized(this) {
                 //need to recheck if initDone is true under the lock
                 if (!initDone.get()) {
-                    if (virtualThreadTaskRunner || "true".equalsIgnoreCase(System.getProperty("org.apache.activemq.UseVirtualThreadTaskRunner")) ) {
+                    if (virtualThreadTaskRunner || isVirtualThreadTaskRunnerDefault()) {
                         executorRef.compareAndSet(null, createVirtualThreadExecutor());
                     } else if (dedicatedTaskRunner || "true".equalsIgnoreCase(System.getProperty("org.apache.activemq.UseDedicatedTaskRunner"))) {
                         executorRef.set(null);
@@ -239,11 +242,14 @@ public class TaskRunnerFactory implements Executor {
         return rc;
     }
 
+    // The JDK 21 classes ship in this artifact under META-INF/versions/21, so they are
+    // loaded through this class's own loader. threadClassLoader is the context loader
+    // for spawned threads and is unset on the client, where it would mean the bootstrap loader.
     protected ExecutorService createVirtualThreadExecutor() {
         assertJDK21VirtualThreadSupport();
 
         try {
-            Class<?> virtualThreadExecutorClass = Class.forName("org.apache.activemq.thread.VirtualThreadExecutor", false, threadClassLoader);
+            Class<?> virtualThreadExecutorClass = Class.forName("org.apache.activemq.thread.VirtualThreadExecutor", false, TaskRunnerFactory.class.getClassLoader());
             Method method = virtualThreadExecutorClass.getMethod("createVirtualThreadExecutorService", String.class, AtomicLong.class, Logger.class);
             Object result = method.invoke(null, name, id, LOG);
             if(!ExecutorService.class.isAssignableFrom(result.getClass())) {
@@ -261,7 +267,7 @@ public class TaskRunnerFactory implements Executor {
         assertJDK21VirtualThreadSupport();
 
         try {
-            Class<?> virtualThreadTaskRunnerClass = Class.forName("org.apache.activemq.thread.VirtualThreadTaskRunner", false, threadClassLoader);
+            Class<?> virtualThreadTaskRunnerClass = Class.forName("org.apache.activemq.thread.VirtualThreadTaskRunner", false, TaskRunnerFactory.class.getClassLoader());
             Constructor<?> constructor = virtualThreadTaskRunnerClass.getConstructor(Executor.class, Task.class, Integer.TYPE);
             Object result = constructor.newInstance(executor, task, maxIterations);
             if(!TaskRunner.class.isAssignableFrom(result.getClass())) {
@@ -272,6 +278,11 @@ public class TaskRunnerFactory implements Executor {
             LOG.error("VirtualThreadTaskRunner class failed to load", e);
             throw new IllegalStateException(e);
         }
+    }
+
+    /** the process wide default from {@link #USE_VIRTUAL_THREAD_TASK_RUNNER_PROPERTY} */
+    public static boolean isVirtualThreadTaskRunnerDefault() {
+        return "true".equalsIgnoreCase(System.getProperty(USE_VIRTUAL_THREAD_TASK_RUNNER_PROPERTY));
     }
 
     private void assertJDK21VirtualThreadSupport() {
