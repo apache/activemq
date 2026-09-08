@@ -39,7 +39,7 @@ public class MBeanTest extends RuntimeConfigTestSupport {
         assertTrue("broker alive", brokerService.isStarted());
         assertEquals("no network connectors", 0, brokerService.getNetworkConnectors().size());
 
-        applyNewConfig(brokerConfig, "networkConnectorTest-one-nc", SLEEP);
+        applyNewConfig(brokerConfig, "networkConnectorTest-one-nc", WAIT_FOR_CHANGE);
 
         assertEquals("no network connectors", 0, brokerService.getNetworkConnectors().size());
 
@@ -79,7 +79,7 @@ public class MBeanTest extends RuntimeConfigTestSupport {
         assertTrue("broker alive", brokerService.isStarted());
         assertEquals("no network connectors", 0, brokerService.getNetworkConnectors().size());
 
-        applyNewConfig(brokerConfig, "parseErrorConfig", SLEEP);
+        applyNewConfig(brokerConfig, "parseErrorConfig", WAIT_FOR_CHANGE);
 
         // apply via jmx
         ObjectName objectName =
@@ -106,7 +106,7 @@ public class MBeanTest extends RuntimeConfigTestSupport {
         assertEquals("modified is same", props.get(propOfInterest), propsAfter.get(propOfInterest));
 
         // apply good change now
-        applyNewConfig(brokerConfig, "networkConnectorTest-one-nc", SLEEP);
+        applyNewConfig(brokerConfig, "networkConnectorTest-one-nc", WAIT_FOR_CHANGE);
 
         result = runtimeConfigurationView.updateNow();
 
