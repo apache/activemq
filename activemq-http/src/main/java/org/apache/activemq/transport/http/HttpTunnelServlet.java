@@ -61,6 +61,30 @@ public class HttpTunnelServlet extends HttpServlet {
     private HashMap<String, Object> transportOptions;
     private HashMap<String, Object> wireFormatOptions;
 
+    /**
+     * Releases every client's pending long poll so the in flight GET requests
+     * complete at once. Called by the transport server before Jetty is stopped;
+     * otherwise Jetty's graceful shutdown waits for each poll to time out.
+     */
+    public void releaseClients() {
+        for (String clientID : clients.keySet()) {
+            BlockingQueueTransport removed = clients.remove(clientID);
+            if (removed != null) {
+                try {
+                    removed.getQueue().add(new ShutdownInfo());
+                } catch (Exception e) {
+                    LOG.debug("Could not send ShutdownInfo() packet to BlockingQueueTransport on server stop for client {}", clientID);
+                }
+            }
+        }
+    }
+
+    @Override
+    public void destroy() {
+        releaseClients();
+        super.destroy();
+    }
+
     @SuppressWarnings("unchecked")
     @Override
     public void init() throws ServletException {
