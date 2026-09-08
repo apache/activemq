@@ -27,6 +27,10 @@ import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.command.ConnectionInfo;
 import org.apache.activemq.jaas.JassCredentialCallbackHandler;
+import org.apache.activemq.broker.Connection;
+import org.apache.activemq.broker.Connector;
+import org.apache.activemq.jaas.ConnectionCallback;
+import org.apache.activemq.jaas.ConnectionPrincipal;
 
 /**
  * Logs a user in using JAAS.
@@ -55,6 +59,25 @@ public class JaasAuthenticationBroker extends AbstractAuthenticationBroker {
         public Set<Principal> getPrincipals() {
             return subject.getPrincipals();
         }
+
+        /**
+         * The login module records its decision on the ConnectionPrincipal when
+         * clientId authorization is configured; with no ConnectionPrincipal the
+         * feature is off and the connection is not restricted.
+         */
+        @Override
+        public boolean isNetworkConnectionAllowed() {
+            for (ConnectionPrincipal connection : subject.getPrincipals(ConnectionPrincipal.class)) {
+                return connection.isNetworkConnection();
+            }
+            return true;
+        }
+
+        /** a ConnectionPrincipal is only added when clientId authorization is configured */
+        @Override
+        public boolean isNetworkConnectionAuthorizationRequired() {
+            return !subject.getPrincipals(ConnectionPrincipal.class).isEmpty();
+        }
     }
 
     @Override
@@ -65,7 +88,7 @@ public class JaasAuthenticationBroker extends AbstractAuthenticationBroker {
             Thread.currentThread().setContextClassLoader(JaasAuthenticationBroker.class.getClassLoader());
             SecurityContext securityContext = null;
             try {
-                securityContext = authenticate(info.getUserName(), info.getPassword(), null);
+                securityContext = authenticate(info.getUserName(), info.getPassword(), connectionCallbackFrom(context, info));
                 context.setSecurityContext(securityContext);
                 securityContexts.add(securityContext);
                 super.addConnection(context, info);
@@ -83,14 +106,48 @@ public class JaasAuthenticationBroker extends AbstractAuthenticationBroker {
         }
     }
 
+    private ConnectionCallback connectionCallbackFrom(ConnectionContext context, ConnectionInfo info) {
+        var callback = new ConnectionCallback();
+        callback.setConnectionId(info.getConnectionId() != null ? info.getConnectionId().getValue() : null);
+        callback.setClientId(info.getClientId());
+        callback.setBrokerName(getBrokerName());
+        callback.setNetworkConnection(context.isNetworkConnection());
+        // the transport's view of the peer; ConnectionInfo.clientIp is client supplied
+        var connection = context.getConnection();
+        if (connection != null) {
+            callback.setRemoteAddress(connection.getRemoteAddress());
+        }
+        if (info.getTransportContext() instanceof X509Certificate[]) {
+            callback.setCertificates((X509Certificate[]) info.getTransportContext());
+        }
+        var connector = context.getConnector();
+        if (connector != null) {
+            callback.setSsl(connector.isSsl());
+            callback.setTransportConnectorName(connector.getName());
+        }
+        return callback;
+    }
+
     @Override
     public SecurityContext authenticate(String username, String password, X509Certificate[] certificates) throws SecurityException {
+        var connection = new ConnectionCallback();
+        connection.setCertificates(certificates);
+        return authenticate(username, password, connection);
+    }
+
+    /**
+     * Authenticates a connection, also handing the login module a description of
+     * the connection (id, clientId, broker name, network declaration, SSL, remote
+     * address, transport connector, client certificates) so clientId and network
+     * connection authorization can be applied.
+     */
+    public SecurityContext authenticate(String username, String password, ConnectionCallback connection) throws SecurityException {
         SecurityContext result = null;
-        JassCredentialCallbackHandler callback = new JassCredentialCallbackHandler(username, password);
+        var callback = new JassCredentialCallbackHandler(username, password, connection);
         try {
-            LoginContext lc = new LoginContext(jassConfiguration, callback);
+            var lc = new LoginContext(jassConfiguration, callback);
             lc.login();
-            Subject subject = lc.getSubject();
+            var subject = lc.getSubject();
 
             result = new JaasSecurityContext(username, subject);
         } catch (Exception ex) {

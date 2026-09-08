@@ -72,6 +72,12 @@ public interface Connector extends Service {
     int connectionCount();
 
     /**
+     * @return true if connections accepted by this connector are protected by
+     * SSL/TLS, that is the transport negotiates TLS with each client
+     */
+    boolean isSsl();
+
+    /**
      * If enabled, older connections with the same clientID are stopped
      *
      * @return true/false if link stealing is enabled
