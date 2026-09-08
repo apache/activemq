@@ -46,6 +46,7 @@ import org.apache.activemq.store.kahadb.data.KahaTransactionInfo;
 import org.apache.activemq.store.kahadb.data.KahaXATransactionId;
 import org.apache.activemq.store.kahadb.disk.journal.DataFileFactory;
 import org.apache.activemq.store.kahadb.disk.journal.Journal.JournalDiskSyncStrategy;
+import org.apache.activemq.store.kahadb.disk.page.PageFile.PageFileCompactionStrategy;
 import org.apache.activemq.usage.SystemUsage;
 import org.apache.activemq.util.ServiceStopper;
 
@@ -772,6 +773,30 @@ public class KahaDBPersistenceAdapter extends LockableServiceSupport implements 
      */
     public void setEnableSubscriptionStatistics(boolean enableSubscriptionStatistics) {
         letter.setEnableSubscriptionStatistics(enableSubscriptionStatistics);
+    }
+
+    public float getMinFreePageCompactionRatio() {
+        return letter.getMinFreePageCompactionRatio();
+    }
+
+    public void setMinFreePageCompactionRatio(float minFreePageCompactionRatio) {
+        letter.setMinFreePageCompactionRatio(minFreePageCompactionRatio);
+    }
+
+    public float getMaxFreePageCompactionRatio() {
+        return letter.getMaxFreePageCompactionRatio();
+    }
+
+    public void setMaxFreePageCompactionRatio(float maxFreePageCompactionRatio) {
+        letter.setMaxFreePageCompactionRatio(maxFreePageCompactionRatio);
+    }
+
+    public PageFileCompactionStrategy getIndexCompactionStrategy() {
+        return letter.getIndexCompactionStrategy();
+    }
+
+    public void setIndexCompactionStrategy(PageFileCompactionStrategy indexCompactionStrategy) {
+        letter.setIndexCompactionStrategy(indexCompactionStrategy);
     }
 
     public KahaDBStore getStore() {
