@@ -63,6 +63,7 @@ import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.command.RemoveSubscriptionInfo;
 import org.apache.activemq.command.SessionId;
 import org.apache.activemq.filter.DestinationPath;
+import org.apache.activemq.filter.NonCachedMessageEvaluationContext;
 import org.apache.activemq.state.ProducerState;
 import org.apache.activemq.usage.Usage;
 import org.apache.activemq.util.IdGenerator;
@@ -1095,8 +1096,9 @@ public class AdvisoryBroker extends BrokerFilter {
 
     protected ProducerBrokerExchange newAdvisoryProducerExchange() {
         final ProducerBrokerExchange producerExchange = new ProducerBrokerExchange();
+        // Concurrent advisory sends must not share mutable message evaluation state.
         producerExchange.setConnectionContext(Objects.requireNonNull(advisoryConnectionContext.get(),
-                "Advisory ConnectionContext must not be null"));
+                "Advisory ConnectionContext must not be null").copy(new NonCachedMessageEvaluationContext()));
         producerExchange.setMutable(true);
         producerExchange.setProducerState(new ProducerState(new ProducerInfo()));
         return producerExchange;
