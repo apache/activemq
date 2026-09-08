@@ -80,7 +80,18 @@ public class ConnectionContext {
     }
 
     public ConnectionContext copy() {
-        ConnectionContext rc = new ConnectionContext(this.messageEvaluationContext);
+        return copy(this.messageEvaluationContext);
+    }
+
+    /**
+     * Copies this connection context using the supplied message evaluation context.
+     * A separate evaluation context allows the copy to evaluate messages independently.
+     *
+     * @param messageEvaluationContext the evaluation context to use in the copy
+     * @return a copy with the supplied message evaluation context
+     */
+    public ConnectionContext copy(MessageEvaluationContext messageEvaluationContext) {
+        ConnectionContext rc = new ConnectionContext(messageEvaluationContext);
         rc.connection = this.connection;
         rc.connector = this.connector;
         rc.broker = this.broker;
