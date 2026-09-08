@@ -57,6 +57,7 @@ public class RuntimeConfigurationBroker extends AbstractRuntimeConfigurationBrok
     PropertiesPlaceHolderUtil placeHolderUtil = null;
     private long checkPeriod;
     private long lastModified = -1;
+    private volatile long lastChecked = -1;
     private Resource configToMonitor;
     private DtoBroker currentConfiguration;
     private Schema schema;
@@ -139,15 +140,25 @@ public class RuntimeConfigurationBroker extends AbstractRuntimeConfigurationBrok
 
 
     private void applyModifications(Resource configToMonitor) {
-        DtoBroker changed = loadConfiguration(configToMonitor);
-        if (changed != null && !currentConfiguration.equals(changed)) {
-            LOG.info("change in " + configToMonitor + " at: " + new Date(lastModified));
-            LOG.debug("current:" + filterPasswords(currentConfiguration));
-            LOG.debug("new    :" + filterPasswords(changed));
-            processSelectiveChanges(currentConfiguration, changed);
-            currentConfiguration = changed;
-        } else {
-            info("No material change to configuration in " + configToMonitor + " at: " + new Date(lastModified));
+        long modified = -1;
+        try {
+            modified = configToMonitor.lastModified();
+        } catch (IOException e) {
+            LOG.debug("Failed to determine lastModified time on configuration: " + configToMonitor, e);
+        }
+        try {
+            DtoBroker changed = loadConfiguration(configToMonitor);
+            if (changed != null && !currentConfiguration.equals(changed)) {
+                LOG.info("change in " + configToMonitor + " at: " + new Date(lastModified));
+                LOG.debug("current:" + filterPasswords(currentConfiguration));
+                LOG.debug("new    :" + filterPasswords(changed));
+                processSelectiveChanges(currentConfiguration, changed);
+                currentConfiguration = changed;
+            } else {
+                info("No material change to configuration in " + configToMonitor + " at: " + new Date(lastModified));
+            }
+        } finally {
+            lastChecked = modified;
         }
     }
 
@@ -245,6 +256,16 @@ public class RuntimeConfigurationBroker extends AbstractRuntimeConfigurationBrok
 
     public long getLastModified() {
         return lastModified;
+    }
+
+    /**
+     * Modification time of the configuration file as of the most recent completed
+     * update attempt, whether or not that attempt parsed and applied. Unlike
+     * {@link #getLastModified()} it advances for rejected files too, so a caller
+     * can tell that a given version of the file has been looked at.
+     */
+    public long getLastChecked() {
+        return lastChecked;
     }
 
     public Resource getConfigToMonitor() {

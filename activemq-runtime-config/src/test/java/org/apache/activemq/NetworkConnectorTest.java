@@ -41,7 +41,7 @@ public class NetworkConnectorTest extends RuntimeConfigTestSupport {
         assertTrue("broker alive", brokerService.isStarted());
         assertEquals("no network connectors", 0, brokerService.getNetworkConnectors().size());
 
-        applyNewConfig(brokerConfig, configurationSeed + "-one-nc", SLEEP);
+        applyNewConfig(brokerConfig, configurationSeed + "-one-nc", WAIT_FOR_CHANGE);
 
         assertTrue("new network connectors", Wait.waitFor(new Wait.Condition() {
             @Override
@@ -82,7 +82,7 @@ public class NetworkConnectorTest extends RuntimeConfigTestSupport {
         NetworkConnector networkConnector = brokerService.getNetworkConnectors().get(0);
         assertEquals("network ttl is default", 1, networkConnector.getNetworkTTL());
 
-        applyNewConfig(brokerConfig, configurationSeed + "-mod-one-nc", SLEEP);
+        applyNewConfig(brokerConfig, configurationSeed + "-mod-one-nc", WAIT_FOR_CHANGE);
 
         assertEquals("still one network connectors", 1, brokerService.getNetworkConnectors().size());
 
@@ -92,7 +92,7 @@ public class NetworkConnectorTest extends RuntimeConfigTestSupport {
         assertNotNull("got ssl", modNetworkConnector.getSslContext());
 
         // apply again - ensure no change
-        applyNewConfig(brokerConfig, configurationSeed + "-mod-one-nc", SLEEP);
+        applyNewConfig(brokerConfig, configurationSeed + "-mod-one-nc", WAIT_FOR_CHANGE);
         assertEquals("no new network connectors", 1, brokerService.getNetworkConnectors().size());
         assertSame("same instance", modNetworkConnector, brokerService.getNetworkConnectors().get(0));
         assertFalse(modNetworkConnector.getBrokerName().isEmpty());
@@ -118,7 +118,7 @@ public class NetworkConnectorTest extends RuntimeConfigTestSupport {
             }
         }
 
-        applyNewConfig(brokerConfig, configurationSeed + "-one-nc", SLEEP);
+        applyNewConfig(brokerConfig, configurationSeed + "-one-nc", WAIT_FOR_CHANGE);
 
         assertTrue("expected mod on time, but found " + brokerService.getNetworkConnectors().size() + " connectors", Wait.waitFor(new Wait.Condition() {
             @Override
@@ -151,7 +151,7 @@ public class NetworkConnectorTest extends RuntimeConfigTestSupport {
         assertEquals("two network connectors", 2, brokerService.getNetworkConnectors().size());
 
         // apply a config that changes the order only
-        applyNewConfig(brokerConfig, configurationSeed + "-two-b-nc", SLEEP);
+        applyNewConfig(brokerConfig, configurationSeed + "-two-b-nc", WAIT_FOR_CHANGE);
 
         assertTrue("expected mod on time", Wait.waitFor(new Wait.Condition() {
             @Override

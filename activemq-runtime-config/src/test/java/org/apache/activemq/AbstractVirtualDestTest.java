@@ -18,7 +18,6 @@ package org.apache.activemq;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 
 import java.util.Collections;
 import java.util.Map;
@@ -92,9 +91,17 @@ public abstract class AbstractVirtualDestTest extends RuntimeConfigTestSupport {
         assertNotNull("The message did not reach the destination even though it should pass through the filter.", message);
         assertEquals("Did not get expected message", body, ((TextMessage) message).getText());
 
-        // negative test
-        message = sendAndReceiveMessage(session, consumer, producer, "Not to filtered cq:" + dest, Collections.singletonMap("odd", "somethingElse"));
-        assertNull("The message reached the destination, but it should have been removed by the filter.", message);
+        // negative test: the consumer queue keeps send order, so when a passing
+        // message sent behind the rejected one is the next to arrive, the filter
+        // dropped the rejected one. That proves the point without waiting out a timeout.
+        TextMessage rejected = session.createTextMessage("Not to filtered cq:" + dest);
+        rejected.setStringProperty("odd", "somethingElse");
+        producer.send(rejected);
+
+        body = "After rejected, to filtered cq:" + dest;
+        message = sendAndReceiveMessage(session, consumer, producer, body, Collections.singletonMap("odd", acceptedHeaderValue));
+        assertNotNull("The message sent after the rejected one did not reach the destination.", message);
+        assertEquals("The message reached the destination, but it should have been removed by the filter.", body, ((TextMessage) message).getText());
 
         connection.close();
     }
