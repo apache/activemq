@@ -125,7 +125,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
     // this is guarded by pagedInPendingDispatchLock
     private final Map<QueueMessageReference, ActiveMQMessageFormatException> dispatchMessageFormatErrors = new LinkedHashMap<>();
     protected QueueDispatchPendingList dispatchPendingList = new QueueDispatchPendingList();
-    private AtomicInteger pendingSends = new AtomicInteger(0);
+    private final AtomicInteger pendingSends = new AtomicInteger(0);
     private MessageGroupMap messageGroupOwners;
     private DispatchPolicy dispatchPolicy = new RoundRobinDispatchPolicy();
     private MessageGroupMapFactory messageGroupMapFactory = new CachedMessageGroupMapFactory();
@@ -888,6 +888,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
             if (store != null && messageContext.message.isPersistent()) {
                 rollbackPendingCursorAdditions(messageContext.message.getMessageId());
             }
+            pendingSends.decrementAndGet();
             messageContext.message.decrementReferenceCount();
         }
     }
