@@ -221,7 +221,7 @@
       <plugin>
         <groupId>org.apache.xbean</groupId>
         <artifactId>maven-xbean-plugin</artifactId>
-        <version>${xbean-version}</version>
+        <version>${xbean-maven-plugin-version}</version>
         <executions>
           <execution>
             <phase>process-classes</phase>
