@@ -81,7 +81,7 @@ public class AMQ4530Test {
             final Message toSend = session.createMessage();
             toSend.setStringProperty(KEY, VALUE);
             final MessageProducer producer = session.createProducer(queue);
-            producer.send(queue, toSend);
+            producer.send(toSend);
         } finally {
             conn.close();
         }
