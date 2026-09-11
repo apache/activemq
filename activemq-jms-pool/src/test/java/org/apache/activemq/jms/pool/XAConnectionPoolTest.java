@@ -32,6 +32,7 @@ import jakarta.jms.QueueConnection;
 import jakarta.jms.QueueConnectionFactory;
 import jakarta.jms.QueueSender;
 import jakarta.jms.QueueSession;
+import jakarta.jms.JMSContext;
 import jakarta.jms.Session;
 import jakarta.jms.TopicConnection;
 import jakarta.jms.TopicConnectionFactory;
@@ -172,6 +173,233 @@ public class XAConnectionPoolTest extends JmsPoolTestSupport {
         connection.close();
 
         pcf.stop();
+    }
+
+    @Test(timeout = 60000)
+    public void testCreateContextSpansTransactions() throws Exception {
+        final Vector<Synchronization> syncs = new Vector<Synchronization>();
+        final java.util.concurrent.atomic.AtomicReference<Xid> currentXid =
+            new java.util.concurrent.atomic.AtomicReference<Xid>(createXid());
+        final java.util.concurrent.atomic.AtomicReference<XAResource> enlisted =
+            new java.util.concurrent.atomic.AtomicReference<XAResource>();
+        XaPooledConnectionFactory pcf = new XaPooledConnectionFactory();
+        pcf.setConnectionFactory(new XAConnectionFactoryOnly(new ActiveMQXAConnectionFactory("vm://test?broker.persistent=false")));
+
+        // simple TM that is always in a tx, enlists with the current xid and tracks syncs
+        pcf.setTransactionManager(new TransactionManager() {
+            @Override
+            public void begin() throws NotSupportedException, SystemException {
+            }
+
+            @Override
+            public void commit() throws HeuristicMixedException, HeuristicRollbackException, IllegalStateException, RollbackException, SecurityException, SystemException {
+            }
+
+            @Override
+            public int getStatus() throws SystemException {
+                return Status.STATUS_ACTIVE;
+            }
+
+            @Override
+            public Transaction getTransaction() throws SystemException {
+                return new Transaction() {
+                    @Override
+                    public void commit() throws HeuristicMixedException, HeuristicRollbackException, RollbackException, SecurityException, SystemException {
+                    }
+
+                    @Override
+                    public boolean delistResource(XAResource xaRes, int flag) throws IllegalStateException, SystemException {
+                        return false;
+                    }
+
+                    @Override
+                    public boolean enlistResource(XAResource xaRes) throws IllegalStateException, RollbackException, SystemException {
+                        try {
+                            xaRes.start(currentXid.get(), 0);
+                            enlisted.set(xaRes);
+                        } catch (XAException e) {
+                            throw new SystemException(e.getMessage());
+                        }
+                        return true;
+                    }
+
+                    @Override
+                    public int getStatus() throws SystemException {
+                        return 0;
+                    }
+
+                    @Override
+                    public void registerSynchronization(Synchronization synch) throws IllegalStateException, RollbackException, SystemException {
+                        syncs.add(synch);
+                    }
+
+                    @Override
+                    public void rollback() throws IllegalStateException, SystemException {
+                    }
+
+                    @Override
+                    public void setRollbackOnly() throws IllegalStateException, SystemException {
+                    }
+                };
+            }
+
+            @Override
+            public void resume(Transaction tobj) throws IllegalStateException, InvalidTransactionException, SystemException {
+            }
+
+            @Override
+            public void rollback() throws IllegalStateException, SecurityException, SystemException {
+            }
+
+            @Override
+            public void setRollbackOnly() throws IllegalStateException, SystemException {
+            }
+
+            @Override
+            public void setTransactionTimeout(int seconds) throws SystemException {
+            }
+
+            @Override
+            public Transaction suspend() throws SystemException {
+                return null;
+            }
+        });
+
+        JMSContext context = pcf.createContext();
+        try {
+            jakarta.jms.Queue queue = context.createQueue("test.xa.context.two.tx");
+
+            // first transaction
+            Xid firstXid = currentXid.get();
+            context.createProducer().send(queue, "one");
+            assertEquals("First transaction should have enlisted one session", 1, syncs.size());
+            enlisted.get().end(firstXid, XAResource.TMSUCCESS);
+            enlisted.get().rollback(firstXid);
+            syncs.get(0).beforeCompletion();
+            syncs.get(0).afterCompletion(1);
+
+            // second transaction - the context must renew its pooled session and enlist again
+            Xid secondXid = createXid();
+            currentXid.set(secondXid);
+            context.createProducer().send(queue, "two");
+            assertEquals("Second transaction should have enlisted a renewed session", 2, syncs.size());
+            enlisted.get().end(secondXid, XAResource.TMSUCCESS);
+            enlisted.get().rollback(secondXid);
+            syncs.get(1).beforeCompletion();
+            syncs.get(1).afterCompletion(1);
+        } finally {
+            context.close();
+            pcf.stop();
+        }
+    }
+
+    @Test(timeout = 60000)
+    public void testCreateContextEnlistsSessionInTransaction() throws Exception {
+        final Vector<Synchronization> syncs = new Vector<Synchronization>();
+        XaPooledConnectionFactory pcf = new XaPooledConnectionFactory();
+        pcf.setConnectionFactory(new XAConnectionFactoryOnly(new ActiveMQXAConnectionFactory("vm://test?broker.persistent=false")));
+
+        final Xid xid = createXid();
+
+        // simple TM that is in a tx, enlists resources and tracks syncs
+        pcf.setTransactionManager(new TransactionManager() {
+            @Override
+            public void begin() throws NotSupportedException, SystemException {
+            }
+
+            @Override
+            public void commit() throws HeuristicMixedException, HeuristicRollbackException, IllegalStateException, RollbackException, SecurityException, SystemException {
+            }
+
+            @Override
+            public int getStatus() throws SystemException {
+                return Status.STATUS_ACTIVE;
+            }
+
+            @Override
+            public Transaction getTransaction() throws SystemException {
+                return new Transaction() {
+                    @Override
+                    public void commit() throws HeuristicMixedException, HeuristicRollbackException, RollbackException, SecurityException, SystemException {
+                    }
+
+                    @Override
+                    public boolean delistResource(XAResource xaRes, int flag) throws IllegalStateException, SystemException {
+                        return false;
+                    }
+
+                    @Override
+                    public boolean enlistResource(XAResource xaRes) throws IllegalStateException, RollbackException, SystemException {
+                        try {
+                            xaRes.start(xid, 0);
+                        } catch (XAException e) {
+                            throw new SystemException(e.getMessage());
+                        }
+                        return true;
+                    }
+
+                    @Override
+                    public int getStatus() throws SystemException {
+                        return 0;
+                    }
+
+                    @Override
+                    public void registerSynchronization(Synchronization synch) throws IllegalStateException, RollbackException, SystemException {
+                        syncs.add(synch);
+                    }
+
+                    @Override
+                    public void rollback() throws IllegalStateException, SystemException {
+                    }
+
+                    @Override
+                    public void setRollbackOnly() throws IllegalStateException, SystemException {
+                    }
+                };
+            }
+
+            @Override
+            public void resume(Transaction tobj) throws IllegalStateException, InvalidTransactionException, SystemException {
+            }
+
+            @Override
+            public void rollback() throws IllegalStateException, SecurityException, SystemException {
+            }
+
+            @Override
+            public void setRollbackOnly() throws IllegalStateException, SystemException {
+            }
+
+            @Override
+            public void setTransactionTimeout(int seconds) throws SystemException {
+            }
+
+            @Override
+            public Transaction suspend() throws SystemException {
+                return null;
+            }
+        });
+
+        JMSContext context = pcf.createContext();
+        try {
+            jakarta.jms.Queue queue = context.createQueue("test.xa.context");
+            context.createProducer().send(queue, "xa message");
+
+            // the send succeeding proves the XA session was enlisted; the
+            // registered synchronization proves it is tied to the transaction
+            assertFalse("Session should have been enlisted in the transaction", syncs.isEmpty());
+
+            // simulate a commit
+            for (Synchronization sync : syncs) {
+                sync.beforeCompletion();
+            }
+            for (Synchronization sync : syncs) {
+                sync.afterCompletion(1);
+            }
+        } finally {
+            context.close();
+            pcf.stop();
+        }
     }
 
     static long txGenerator = 22;

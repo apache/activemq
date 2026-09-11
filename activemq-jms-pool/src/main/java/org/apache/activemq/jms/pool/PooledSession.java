@@ -97,19 +97,19 @@ public class PooledSession implements Session, TopicSession, QueueSession, XASes
         }
 
         if (closed.compareAndSet(false, true)) {
-            boolean invalidate = false;
+            var invalidate = false;
             try {
                 // lets reset the session
                 getInternalSession().setMessageListener(null);
 
                 // Close any consumers and browsers that may have been created.
-                for (Iterator<MessageConsumer> iter = consumers.iterator(); iter.hasNext();) {
-                    MessageConsumer consumer = iter.next();
+                for (var iter = consumers.iterator(); iter.hasNext();) {
+                    var consumer = iter.next();
                     consumer.close();
                 }
 
-                for (Iterator<QueueBrowser> iter = browsers.iterator(); iter.hasNext();) {
-                    QueueBrowser browser = iter.next();
+                for (var iter = browsers.iterator(); iter.hasNext();) {
+                    var browser = iter.next();
                     browser.close();
                 }
 
@@ -152,7 +152,7 @@ public class PooledSession implements Session, TopicSession, QueueSession, XASes
                 try {
                     sessionPool.returnObject(key, sessionHolder);
                 } catch (Exception e) {
-                    jakarta.jms.IllegalStateException illegalStateException = new jakarta.jms.IllegalStateException(e.toString());
+                    var illegalStateException = new jakarta.jms.IllegalStateException(e.toString());
                     illegalStateException.initCause(e);
                     throw illegalStateException;
                 }
@@ -272,7 +272,7 @@ public class PooledSession implements Session, TopicSession, QueueSession, XASes
 
     @Override
     public XAResource getXAResource() {
-        SessionHolder session = safeGetSessionHolder();
+        var session = safeGetSessionHolder();
 
         if (session.getSession() instanceof XASession) {
             return ((XASession) session.getSession()).getXAResource();
@@ -288,7 +288,7 @@ public class PooledSession implements Session, TopicSession, QueueSession, XASes
 
     @Override
     public void run() {
-        SessionHolder session = safeGetSessionHolder();
+        var session = safeGetSessionHolder();
         if (session != null) {
             session.getSession().run();
         }
@@ -363,32 +363,32 @@ public class PooledSession implements Session, TopicSession, QueueSession, XASes
     
     @Override
     public MessageConsumer createSharedConsumer(Topic topic, String sharedSubscriptionName) throws JMSException {
-        throw new UnsupportedOperationException("createSharedConsumer(Topic, sharedSubscriptionName) is not supported");
+        return addConsumer(getInternalSession().createSharedConsumer(topic, sharedSubscriptionName));
     }
 
     @Override
     public MessageConsumer createSharedConsumer(Topic topic, String sharedSubscriptionName, String messageSelector) throws JMSException {
-        throw new UnsupportedOperationException("createSharedConsumer(Topic, sharedSubscriptionName, messageSelector) is not supported");
+        return addConsumer(getInternalSession().createSharedConsumer(topic, sharedSubscriptionName, messageSelector));
     }
 
     @Override
     public MessageConsumer createDurableConsumer(Topic topic, String name) throws JMSException {
-        throw new UnsupportedOperationException("createDurableConsumer(Topic, name) is not supported");
+        return addConsumer(getInternalSession().createDurableConsumer(topic, name));
     }
 
     @Override
     public MessageConsumer createDurableConsumer(Topic topic, String name, String messageSelector, boolean noLocal) throws JMSException {
-        throw new UnsupportedOperationException("createDurableConsumer(Topic, name, messageSelector, noLocal) is not supported");
+        return addConsumer(getInternalSession().createDurableConsumer(topic, name, messageSelector, noLocal));
     }
 
     @Override
     public MessageConsumer createSharedDurableConsumer(Topic topic, String name) throws JMSException {
-        throw new UnsupportedOperationException("createSharedDurableConsumer(Topic, name) is not supported");
+        return addConsumer(getInternalSession().createSharedDurableConsumer(topic, name));
     }
 
     @Override
     public MessageConsumer createSharedDurableConsumer(Topic topic, String name, String messageSelector) throws JMSException {
-        throw new UnsupportedOperationException("createSharedDurableConsumer(Topic, name, messageSelector) is not supported");
+        return addConsumer(getInternalSession().createSharedDurableConsumer(topic, name, messageSelector));
     }
 
     // Producer related methods
@@ -485,6 +485,22 @@ public class PooledSession implements Session, TopicSession, QueueSession, XASes
 
     public void setIsXa(boolean isXa) {
         this.isXa = isXa;
+    }
+
+    /**
+     * @return true if this session hands out a single cached anonymous MessageProducer
+     *         instead of creating a new MessageProducer for each request.
+     */
+    public boolean isUseAnonymousProducers() {
+        return useAnonymousProducers;
+    }
+
+    /**
+     * @return true if this pooled session facade has been closed and its internal
+     *         session handed back to the pool.
+     */
+    public boolean isClosed() {
+        return closed.get();
     }
 
     @Override

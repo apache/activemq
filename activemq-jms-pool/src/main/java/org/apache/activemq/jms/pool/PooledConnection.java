@@ -91,7 +91,13 @@ public class PooledConnection implements TopicConnection, QueueConnection, Poole
 
     @Override
     public void start() throws JMSException {
-        assertNotClosed();
+        // Do not use assertNotClosed() here, b/c we need to be able to restart
+        if (pool == null) {
+            throw new IllegalStateException("Connection closed");
+        }
+        // Connection.stop() only pauses this facade; per JMS a stopped
+        // connection can be restarted, so clear the stopped flag here.
+        stopped = false;
         pool.start();
     }
 
@@ -150,8 +156,6 @@ public class PooledConnection implements TopicConnection, QueueConnection, Poole
         return getConnection().createConnectionConsumer(queue, selector, serverSessionPool, maxMessages);
     }
 
-    // Session factory methods
-    // -------------------------------------------------------------------------
     @Override
     public QueueSession createQueueSession(boolean transacted, int ackMode) throws JMSException {
         return (QueueSession) createSession(transacted, ackMode);
@@ -173,7 +177,7 @@ public class PooledConnection implements TopicConnection, QueueConnection, Poole
      */
     @Override
     public Session createSession() throws JMSException {
-        throw new UnsupportedOperationException("createSession() is unsupported"); 
+        return createSession(false, Session.AUTO_ACKNOWLEDGE);
     }
 
     /**
@@ -197,15 +201,16 @@ public class PooledConnection implements TopicConnection, QueueConnection, Poole
      */
     @Override
     public Session createSession(int sessionMode) throws JMSException {
-        throw new UnsupportedOperationException("createSession(int sessionMode) is unsupported"); 
+        boolean transacted = sessionMode == Session.SESSION_TRANSACTED;
+        return createSession(transacted, transacted ? Session.SESSION_TRANSACTED : sessionMode);
     }
     
     @Override
     public Session createSession(boolean transacted, int ackMode) throws JMSException {
-        PooledSession result = (PooledSession) pool.createSession(transacted, ackMode);
+        var result = (PooledSession) pool.createSession(transacted, ackMode);
 
         // Store the session so we can close the sessions that this PooledConnection
-        // created in order to ensure that consumers etc are closed per the JMS contract.
+        // created in order to ensure that consumers are closed per the JMS contract.
         loanedSessions.add(result);
 
         // Add a event listener to the session that notifies us when the session
@@ -220,24 +225,21 @@ public class PooledConnection implements TopicConnection, QueueConnection, Poole
      * @since 2.0
      */
     @Override
-    public ConnectionConsumer createSharedConnectionConsumer(Topic topic, String subscriptionName, String messageSelector, ServerSessionPool sessionPool, 
+    public ConnectionConsumer createSharedConnectionConsumer(Topic topic, String subscriptionName, String messageSelector, ServerSessionPool sessionPool,
                                                              int maxMessages) throws JMSException {
-        throw new UnsupportedOperationException("createSharedConnectionConsumer() is not supported");
+        return getConnection().createSharedConnectionConsumer(topic, subscriptionName, messageSelector, sessionPool, maxMessages);
     }
 
     /**
-     * 
+     *
      * @see jakarta.jms.ConnectionConsumer
      * @since 2.0
      */
     @Override
     public ConnectionConsumer createSharedDurableConnectionConsumer(Topic topic, String subscriptionName, String messageSelector, ServerSessionPool sessionPool,
                                                                     int maxMessages) throws JMSException {
-       throw new UnsupportedOperationException("createSharedConnectionConsumer() is not supported");
+        return getConnection().createSharedDurableConnectionConsumer(topic, subscriptionName, messageSelector, sessionPool, maxMessages);
     }
-
-    // Implementation methods
-    // -------------------------------------------------------------------------
 
     @Override
     public void onTemporaryQueueCreate(TemporaryQueue tempQueue) {
@@ -277,16 +279,16 @@ public class PooledConnection implements TopicConnection, QueueConnection, Poole
     }
 
     /**
-     * Remove all of the temporary destinations created for this connection.
+     * Remove all the temporary destinations created for this connection.
      * This is important since the underlying connection may be reused over a
-     * long period of time, accumulating all of the temporary destinations from
+     * long period of time, accumulating all the temporary destinations from
      * each use. However, from the perspective of the lifecycle from the
      * client's view, close() closes the connection and, therefore, deletes all
-     * of the temporary destinations created.
+     * the temporary destinations created.
      */
     protected void cleanupConnectionTemporaryDestinations() {
 
-        for (TemporaryQueue tempQueue : connTempQueues) {
+        for (var tempQueue : connTempQueues) {
             try {
                 tempQueue.delete();
             } catch (JMSException ex) {
@@ -295,7 +297,7 @@ public class PooledConnection implements TopicConnection, QueueConnection, Poole
         }
         connTempQueues.clear();
 
-        for (TemporaryTopic tempTopic : connTempTopics) {
+        for (var tempTopic : connTempTopics) {
             try {
                 tempTopic.delete();
             } catch (JMSException ex) {
@@ -312,7 +314,7 @@ public class PooledConnection implements TopicConnection, QueueConnection, Poole
      */
     protected void cleanupAllLoanedSessions() {
 
-        for (PooledSession session : loanedSessions) {
+        for (var session : loanedSessions) {
             try {
                 session.close();
             } catch (JMSException ex) {
