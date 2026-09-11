@@ -167,6 +167,13 @@ public class LocalAndXATransaction implements XAResource, LocalTransaction {
 
     public void cleanup() {
         transactionContext.cleanup();
+        // The managed connection is being recycled, so transaction scoped state must not
+        // survive into its next use. The rollbackOnly marker set by end(TMFAIL) belongs to
+        // the transaction that has just ended; left in place it is only ever cleared by the
+        // next transaction boundary on this context, so a physical connection returned to
+        // the pool after a rolled back transaction rejects every subsequent send that is
+        // not part of a transaction.
+        transactionContext.setRollbackOnly(false);
         inManagedTx = false;
     }
 
