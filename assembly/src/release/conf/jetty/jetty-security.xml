@@ -81,6 +81,21 @@
               </Arg>
             </Call>
 
+            <!-- Prometheus is allowed to any console user -->
+            <Call name="put">
+              <Arg>/metrics/*</Arg>
+              <Arg>
+                <Call class="org.eclipse.jetty.security.Constraint" name="from">
+                  <Arg>
+                    <Array type="java.lang.String">
+                      <Item>users</Item>
+                      <Item>admins</Item>
+                    </Array>
+                  </Arg>
+                </Call>
+              </Arg>
+            </Call>
+
             <!-- Everything else requires an authenticated user or admin. -->
             <Call name="put">
               <Arg>/*</Arg>
