@@ -225,6 +225,20 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
             }
             os.writeInt(this.openwireVersion);
         }
+
+        // Accessors for lastUpdate, the most recent journal location applied
+        // to the index. A KahaDBStore subclass in another package can reach
+        // the protected metadata field of the outer class, but not the fields
+        // of this nested class, so a subclass that updates the index itself
+        // (for example after applying buffered transaction operations) needs
+        // these.
+        public Location getLastUpdate() {
+            return lastUpdate;
+        }
+
+        public void setLastUpdate(Location lastUpdate) {
+            this.lastUpdate = lastUpdate;
+        }
     }
 
     class MetadataMarshaller extends VariableMarshaller<Metadata> {
@@ -1432,7 +1446,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
 
     protected final ReentrantLock indexLock = new ReentrantLock();
 
-    long updateIndex(Transaction tx, KahaAddMessageCommand command, Location location) throws IOException {
+    protected long updateIndex(Transaction tx, KahaAddMessageCommand command, Location location) throws IOException {
         StoredDestination sd = getExistingStoredDestination(command.getDestination(), tx);
         if (sd == null) {
             // if the store no longer exists, skip
@@ -1498,7 +1512,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         }
     }
 
-    void updateIndex(Transaction tx, KahaUpdateMessageCommand updateMessageCommand, Location location) throws IOException {
+    protected void updateIndex(Transaction tx, KahaUpdateMessageCommand updateMessageCommand, Location location) throws IOException {
         KahaAddMessageCommand command = updateMessageCommand.getMessage();
         StoredDestination sd = getStoredDestination(command.getDestination(), tx);
 
@@ -1541,7 +1555,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         }
     }
 
-    void updateIndex(Transaction tx, KahaRemoveMessageCommand command, Location ackLocation) throws IOException {
+    protected void updateIndex(Transaction tx, KahaRemoveMessageCommand command, Location ackLocation) throws IOException {
         StoredDestination sd = getStoredDestination(command.getDestination(), tx);
         if (!command.hasSubscriptionKey()) {
 
@@ -1590,7 +1604,13 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         }
     }
 
-    private void recordAckMessageReferenceLocation(Location ackLocation, Location messageLocation) {
+    /**
+     * Records that the journal file holding the given ack references the
+     * journal file holding the acked message. The ackMessageFileMap is
+     * guarded by the index lock: every reader and writer, including the ack
+     * compaction task, must hold that lock.
+     */
+    protected void recordAckMessageReferenceLocation(Location ackLocation, Location messageLocation) {
         Set<Integer> referenceFileIds = metadata.ackMessageFileMap.get(ackLocation.getDataFileId());
         if (referenceFileIds == null) {
             referenceFileIds = new HashSet<>();
@@ -1606,7 +1626,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         }
     }
 
-    void updateIndex(Transaction tx, KahaRemoveDestinationCommand command) throws IOException {
+    protected void updateIndex(Transaction tx, KahaRemoveDestinationCommand command) throws IOException {
         StoredDestination sd = getStoredDestination(command.getDestination(), tx);
         sd.orderIndex.remove(tx);
 
@@ -1646,7 +1666,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         storeCache.remove(key(command.getDestination()));
     }
 
-    void updateIndex(Transaction tx, KahaSubscriptionCommand command, Location location) throws IOException {
+    protected void updateIndex(Transaction tx, KahaSubscriptionCommand command, Location location) throws IOException {
         StoredDestination sd = getStoredDestination(command.getDestination(), tx);
         final String subscriptionKey = command.getSubscriptionKey();
 
