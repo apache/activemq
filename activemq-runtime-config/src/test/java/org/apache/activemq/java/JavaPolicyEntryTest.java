@@ -23,7 +23,6 @@ import static org.junit.Assert.assertTrue;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 
 import jakarta.jms.Session;
 
@@ -45,7 +44,6 @@ import org.junit.Test;
 
 public class JavaPolicyEntryTest extends RuntimeConfigTestSupport {
 
-    public static final int SLEEP = 2; // seconds
     private JavaRuntimeConfigurationBroker javaConfigBroker;
 
     public void startBroker(BrokerService brokerService) throws Exception {
@@ -81,7 +79,6 @@ public class JavaPolicyEntryTest extends RuntimeConfigTestSupport {
         //Reapply new limit
         entry.setMemoryLimit(4194304);
         javaConfigBroker.modifyPolicyEntry(entry);
-        TimeUnit.SECONDS.sleep(SLEEP);
 
         verifyQueueLimit("After", 4194304);
 
@@ -121,7 +118,6 @@ public class JavaPolicyEntryTest extends RuntimeConfigTestSupport {
         properties.add("memoryLimit");
         properties.add("maxPageSize");
         javaConfigBroker.modifyPolicyEntry(entry, false, properties);
-        TimeUnit.SECONDS.sleep(SLEEP);
 
         verifyQueueLimit("After", 4194304);
         assertEquals(300, getQueue("After").getMaxPageSize());
@@ -161,7 +157,6 @@ public class JavaPolicyEntryTest extends RuntimeConfigTestSupport {
         topicProperties.add("lazyDispatch");
         javaConfigBroker.modifyPolicyEntry(qEntry, false, queueProperties);
         javaConfigBroker.modifyPolicyEntry(tEntry, false, topicProperties);
-        TimeUnit.SECONDS.sleep(SLEEP);
 
         assertEquals(false, getQueue("queueBefore").isPersistJMSRedelivered());
         assertEquals(false, getTopic("topicBefore").isLazyDispatch());
@@ -195,7 +190,6 @@ public class JavaPolicyEntryTest extends RuntimeConfigTestSupport {
         Set<String> properties = new HashSet<>();
         properties.add("enableAudit");
         javaConfigBroker.modifyPolicyEntry(entry, false, properties);
-        TimeUnit.SECONDS.sleep(SLEEP);
 
         //no change because enableAudit is excluded
         assertTrue(getQueue("Before").isEnableAudit());
@@ -223,7 +217,6 @@ public class JavaPolicyEntryTest extends RuntimeConfigTestSupport {
         Set<String> properties = new HashSet<>();
         properties.add("invalid");
         javaConfigBroker.modifyPolicyEntry(entry, false, properties);
-        TimeUnit.SECONDS.sleep(SLEEP);
 
         //This should be unchanged as the list of properties only
         //has an invalid property so nothing will be re-applied retrospectively
@@ -243,7 +236,6 @@ public class JavaPolicyEntryTest extends RuntimeConfigTestSupport {
         policyMap.setPolicyEntries(Arrays.asList(entry));
         brokerService.setDestinationPolicy(policyMap);
 
-
         startBroker(brokerService);
         assertTrue("broker alive", brokerService.isStarted());
 
@@ -255,7 +247,6 @@ public class JavaPolicyEntryTest extends RuntimeConfigTestSupport {
         entry2.setQueue(">");
         entry2.setMemoryLimit(4194304);
         javaConfigBroker.modifyPolicyEntry(entry2, true);
-        TimeUnit.SECONDS.sleep(SLEEP);
 
         // These should change because the policy entry passed in
         //matched an existing entry but was not the same reference.
@@ -289,7 +280,6 @@ public class JavaPolicyEntryTest extends RuntimeConfigTestSupport {
 
         //The true flag should add the new policy
         javaConfigBroker.modifyPolicyEntry(entry, true);
-        TimeUnit.SECONDS.sleep(SLEEP);
 
         //Make sure the new policy is added and applied
         verifyQueueLimit("Before", 1024);
@@ -325,13 +315,11 @@ public class JavaPolicyEntryTest extends RuntimeConfigTestSupport {
             caughtException = true;
         }
         assertTrue(caughtException);
-        TimeUnit.SECONDS.sleep(SLEEP);
 
         //Make sure there was no change
         verifyQueueLimit("Before", (int)brokerService.getSystemUsage().getMemoryUsage().getLimit());
         verifyQueueLimit("After", (int)brokerService.getSystemUsage().getMemoryUsage().getLimit());
     }
-
 
     @Test
     public void testModNewPolicyObjectCreateOrReplaceFalse() throws Exception {
@@ -359,7 +347,6 @@ public class JavaPolicyEntryTest extends RuntimeConfigTestSupport {
             caughtException = true;
         }
         assertTrue(caughtException);
-        TimeUnit.SECONDS.sleep(SLEEP);
 
         // These should not change because the policy entry passed in
         //matched an existing entry but was not the same reference.
@@ -396,7 +383,6 @@ public class JavaPolicyEntryTest extends RuntimeConfigTestSupport {
         //Reapply new limit to policy 2
         entry2.setMemoryLimit(4194304);
         javaConfigBroker.modifyPolicyEntry(entry2);
-        TimeUnit.SECONDS.sleep(SLEEP);
 
         //verify new dest and existing are changed
         verifyQueueLimit("queue.child.test", 4194304);
@@ -445,7 +431,6 @@ public class JavaPolicyEntryTest extends RuntimeConfigTestSupport {
         //Reapply new limit to policy 2
         entry3.setMemoryLimit(4194304);
         javaConfigBroker.modifyPolicyEntry(entry);
-        TimeUnit.SECONDS.sleep(SLEEP);
 
         //should be unchanged
         verifyQueueLimit("queue.child.>", 2048);
@@ -494,7 +479,6 @@ public class JavaPolicyEntryTest extends RuntimeConfigTestSupport {
         //Reapply new limit to policy 2
         entry2.setMemoryLimit(4194304);
         javaConfigBroker.modifyPolicyEntry(entry2);
-        TimeUnit.SECONDS.sleep(SLEEP);
 
         //verify that destination at a higher level policy is not affected
         verifyQueueLimit("queue.>", 1024);
@@ -534,7 +518,6 @@ public class JavaPolicyEntryTest extends RuntimeConfigTestSupport {
         //Reapply new limit to policy
         entry.setMemoryLimit(4194304);
         javaConfigBroker.modifyPolicyEntry(entry);
-        TimeUnit.SECONDS.sleep(SLEEP);
 
         //verify new dest and existing are not changed
         verifyQueueLimit("queue.child.test", 2048);
@@ -562,13 +545,11 @@ public class JavaPolicyEntryTest extends RuntimeConfigTestSupport {
 
         entry.setMemoryLimit(2048);
         javaConfigBroker.modifyPolicyEntry(entry);
-        TimeUnit.SECONDS.sleep(SLEEP);
 
         PolicyEntry newEntry = new PolicyEntry();
         newEntry.setTopic(">");
         newEntry.setMemoryLimit(2048);
         javaConfigBroker.addNewPolicyEntry(newEntry);
-        TimeUnit.SECONDS.sleep(SLEEP);
 
         verifyTopicLimit("After", 2048l);
         verifyQueueLimit("After", 2048);
@@ -595,7 +576,6 @@ public class JavaPolicyEntryTest extends RuntimeConfigTestSupport {
 
         entry.setMemoryLimit(2048);
         javaConfigBroker.modifyPolicyEntry(entry);
-        TimeUnit.SECONDS.sleep(SLEEP);
 
         PolicyEntry newEntry = new PolicyEntry();
         newEntry.setTopic("test2.>");
@@ -605,7 +585,6 @@ public class JavaPolicyEntryTest extends RuntimeConfigTestSupport {
         newEntry2.setMemoryLimit(4000);
         javaConfigBroker.addNewPolicyEntry(newEntry);
         javaConfigBroker.addNewPolicyEntry(newEntry2);
-        TimeUnit.SECONDS.sleep(SLEEP);
 
         verifyTopicLimit("test2.after", 2048l);
         verifyTopicLimit("test2.test.after", 4000l);
@@ -680,7 +659,6 @@ public class JavaPolicyEntryTest extends RuntimeConfigTestSupport {
         assertAllQueuePolicyProperties(getQueue("Before"), 10000, true, true, true, true, 100,
                 100, true, true);
 
-
         //change config
         setAllDestPolicyProperties(entry, false, false, 100,
                 1000, 2000, 10000, 4000, 400, 300, false, false, false, 1000, false, false,
@@ -689,7 +667,6 @@ public class JavaPolicyEntryTest extends RuntimeConfigTestSupport {
                 1000, false, false);
 
         javaConfigBroker.modifyPolicyEntry(entry, false, properties);
-        TimeUnit.SECONDS.sleep(SLEEP);
 
         assertAllDestPolicyProperties(getQueue("Before"), false, false, 100,
                 1000, 2000, 10000, 4000, 400, 300, false, false, false, 1000, false, false,
@@ -729,7 +706,6 @@ public class JavaPolicyEntryTest extends RuntimeConfigTestSupport {
                 30, true, true, true, true, true, true, true, true, true);
         assertAllTopicPolicyProperties(getTopic("Before"), 10000, true);
 
-
         //change config
         setAllDestPolicyProperties(entry, false, false, 100,
                 1000, 2000, 10000, 4000, 400, 300, false, false, false, 1000, false, false,
@@ -737,7 +713,6 @@ public class JavaPolicyEntryTest extends RuntimeConfigTestSupport {
         setAllTopicPolicyProperties(entry, 100000, false);
 
         javaConfigBroker.modifyPolicyEntry(entry, false, properties);
-        TimeUnit.SECONDS.sleep(SLEEP);
 
         assertAllDestPolicyProperties(getTopic("Before"), false, false, 100,
                 1000, 2000, 10000, 4000, 400, 300, false, false, false, 1000, false, false,

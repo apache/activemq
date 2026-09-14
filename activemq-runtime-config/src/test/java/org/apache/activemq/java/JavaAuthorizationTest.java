@@ -20,7 +20,6 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.activemq.AbstractAuthorizationTest;
 import org.apache.activemq.broker.BrokerPlugin;
@@ -37,7 +36,6 @@ import org.junit.Test;
 
 public class JavaAuthorizationTest extends AbstractAuthorizationTest {
 
-    public static final int SLEEP = 2; // seconds
     String configurationSeed = "authorizationTest";
 
     private JavaRuntimeConfigurationBroker javaConfigBroker;
@@ -47,7 +45,6 @@ public class JavaAuthorizationTest extends AbstractAuthorizationTest {
 
         JaasAuthenticationPlugin authenticationPlugin = new JaasAuthenticationPlugin();
         authenticationPlugin.setConfiguration("activemq-domain");
-
 
         AuthorizationPlugin authorizationPlugin = new AuthorizationPlugin();
         DefaultAuthorizationMap authorizationMap = new DefaultAuthorizationMap();
@@ -76,11 +73,10 @@ public class JavaAuthorizationTest extends AbstractAuthorizationTest {
 
         assertDeniedTemp("guest");
 
-       // applyNewConfig(brokerConfig, configurationSeed + "-users-guests", SLEEP);
+       // applyNewConfig(brokerConfig, configurationSeed + "-users-guests", WAIT_FOR_CHANGE);
 
         authorizationMap = buildUsersGuestsMap();
         javaConfigBroker.updateAuthorizationMap(authorizationMap);
-        TimeUnit.SECONDS.sleep(SLEEP);
 
         assertAllowed("user", "USERS.A");
         assertAllowed("guest", "GUESTS.A");
@@ -97,7 +93,6 @@ public class JavaAuthorizationTest extends AbstractAuthorizationTest {
         assertTrue("broker alive", brokerService.isStarted());
 
         javaConfigBroker.updateAuthorizationMap(authorizationMap);
-        TimeUnit.SECONDS.sleep(SLEEP);
         assertAllowed("user", "USERS.A");
         assertAllowed("guest", "GUESTS.A");
         assertDenied("user", "GUESTS.A");
@@ -105,7 +100,6 @@ public class JavaAuthorizationTest extends AbstractAuthorizationTest {
 
         authorizationMap = buildUsersMap();
         javaConfigBroker.updateAuthorizationMap(authorizationMap);
-        TimeUnit.SECONDS.sleep(SLEEP);
 
         assertAllowed("user", "USERS.A");
         assertDenied("user", "GUESTS.A");
@@ -120,7 +114,6 @@ public class JavaAuthorizationTest extends AbstractAuthorizationTest {
         assertTrue("broker alive", brokerService.isStarted());
 
         javaConfigBroker.updateAuthorizationMap(authorizationMap);
-        TimeUnit.SECONDS.sleep(SLEEP);
 
         final String ALL_USERS = "ALL.USERS.>";
         final String ALL_GUESTS = "ALL.GUESTS.>";
@@ -142,7 +135,6 @@ public class JavaAuthorizationTest extends AbstractAuthorizationTest {
 
         assertDenied("user", "USERS.>");
         assertDenied("guest", "GUESTS.>");
-
 
         assertAllowedTemp("guest");
     }
@@ -181,7 +173,6 @@ public class JavaAuthorizationTest extends AbstractAuthorizationTest {
         List<DestinationMapEntry> entries = new ArrayList<>();
         entries.add(buildQueueAuthorizationEntry(">", "admins", "admins", "admins"));
         entries.add(buildQueueAuthorizationEntry("USERS.>", "users", "users", "users"));
-
 
         entries.add(buildTopicAuthorizationEntry(">", "admins", "admins", "admins"));
         entries.add(buildTopicAuthorizationEntry("USERS.>", "users", "users", "users"));

@@ -38,7 +38,7 @@ public class PolicyEntryTest extends RuntimeConfigTestSupport {
         assertTrue("broker alive", brokerService.isStarted());
 
         verifyQueueLimit("Before", 1024);
-        applyNewConfig(brokerConfig, configurationSeed + "-policy-ml-mod", SLEEP);
+        applyNewConfig(brokerConfig, configurationSeed + "-policy-ml-mod", WAIT_FOR_CHANGE);
         verifyQueueLimit("After", 4194304);
 
         // change to existing dest
@@ -53,7 +53,7 @@ public class PolicyEntryTest extends RuntimeConfigTestSupport {
         assertTrue("broker alive", brokerService.isStarted());
 
         verifyBooleanField("AMQ.8397", "sendDuplicateFromStoreToDLQ", false);
-        applyNewConfig(brokerConfig, configurationSeed + "-policy-sendDuplicateFromStoreToDLQ-mod", SLEEP);
+        applyNewConfig(brokerConfig, configurationSeed + "-policy-sendDuplicateFromStoreToDLQ-mod", WAIT_FOR_CHANGE);
         verifyBooleanField("AMQ.8397", "sendDuplicateFromStoreToDLQ", true);
     }
 
@@ -65,7 +65,7 @@ public class PolicyEntryTest extends RuntimeConfigTestSupport {
         assertTrue("broker alive", brokerService.isStarted());
 
         verifyBooleanField("AMQ.8463", "advancedMessageStatisticsEnabled", false);
-        applyNewConfig(brokerConfig, configurationSeed + "-policy-advancedMessageStatistics-mod", SLEEP);
+        applyNewConfig(brokerConfig, configurationSeed + "-policy-advancedMessageStatistics-mod", WAIT_FOR_CHANGE);
         verifyBooleanField("AMQ.8463", "advancedMessageStatisticsEnabled", true);
     }
 
@@ -77,7 +77,7 @@ public class PolicyEntryTest extends RuntimeConfigTestSupport {
         assertTrue("broker alive", brokerService.isStarted());
 
         verifyBooleanField("AMQ.9437", "advancedNetworkStatisticsEnabled", false);
-        applyNewConfig(brokerConfig, configurationSeed + "-policy-advancedNetworkStatistics-mod", SLEEP);
+        applyNewConfig(brokerConfig, configurationSeed + "-policy-advancedNetworkStatistics-mod", WAIT_FOR_CHANGE);
         verifyBooleanField("AMQ.9437", "advancedNetworkStatisticsEnabled", true);
     }
 
@@ -91,7 +91,7 @@ public class PolicyEntryTest extends RuntimeConfigTestSupport {
         verifyQueueLimit("Before", 1024);
         verifyTopicLimit("Before", brokerService.getSystemUsage().getMemoryUsage().getLimit());
 
-        applyNewConfig(brokerConfig, configurationSeed + "-policy-ml-add", SLEEP);
+        applyNewConfig(brokerConfig, configurationSeed + "-policy-ml-add", WAIT_FOR_CHANGE);
 
         verifyTopicLimit("After", 2048l);
         verifyQueueLimit("After", 2048);
@@ -109,7 +109,7 @@ public class PolicyEntryTest extends RuntimeConfigTestSupport {
 
         verifyQueueLimit("queue.test", 1024);
         verifyQueueLimit("queue.child.test", 2048);
-        applyNewConfig(brokerConfig, configurationSeed + "-policy-ml-parent-mod", SLEEP);
+        applyNewConfig(brokerConfig, configurationSeed + "-policy-ml-parent-mod", WAIT_FOR_CHANGE);
         verifyQueueLimit("queue.test2", 4194304);
 
         // change to existing dest
@@ -127,7 +127,7 @@ public class PolicyEntryTest extends RuntimeConfigTestSupport {
 
         verifyQueueLimit("queue.test", 1024);
         verifyQueueLimit("queue.child.test", 2048);
-        applyNewConfig(brokerConfig, configurationSeed + "-policy-ml-child-mod", SLEEP);
+        applyNewConfig(brokerConfig, configurationSeed + "-policy-ml-child-mod", WAIT_FOR_CHANGE);
         //verify no change
         verifyQueueLimit("queue.test", 1024);
 
