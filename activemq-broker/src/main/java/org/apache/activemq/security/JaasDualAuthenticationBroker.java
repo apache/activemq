@@ -24,7 +24,6 @@ import org.apache.activemq.broker.BrokerFilter;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.Connector;
 import org.apache.activemq.broker.EmptyBroker;
-import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConnectionInfo;
 
@@ -111,12 +110,8 @@ public class JaasDualAuthenticationBroker extends BrokerFilter implements Authen
     }
 
     protected boolean isSSL(ConnectionContext context, ConnectionInfo info) throws Exception {
-        boolean sslCapable = false;
         Connector connector = context.getConnector();
-        if (connector instanceof TransportConnector) {
-            TransportConnector transportConnector = (TransportConnector) connector;
-            sslCapable = transportConnector.getServer().isSslServer();
-        }
+        boolean sslCapable = connector != null && connector.isSsl();
         // AMQ-5943, also check if transport context carries X509 cert
         if (!sslCapable && info.getTransportContext() instanceof X509Certificate[]) {
             sslCapable = true;

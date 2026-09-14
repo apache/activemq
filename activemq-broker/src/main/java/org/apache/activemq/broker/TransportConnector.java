@@ -22,6 +22,7 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.StringTokenizer;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -691,6 +692,28 @@ public class TransportConnector implements Connector, BrokerServiceAware {
     @Override
     public long getMaxConnectionExceededCount() {
         return (server != null ? server.getMaxConnectionExceededCount() : 0l);
+    }
+
+    /**
+     * Once the transport server is bound its own answer is authoritative. Before
+     * that the configured scheme decides, so the flag is also usable while a broker
+     * is still being configured: ssl, nio+ssl, auto+nio+ssl, mqtt+ssl and so on,
+     * plus https and wss.
+     */
+    @Override
+    public boolean isSsl() {
+        if (server != null) {
+            return server.isSslServer();
+        }
+        if (uri == null || uri.getScheme() == null) {
+            return false;
+        }
+        for (String part : uri.getScheme().toLowerCase(Locale.ROOT).split("\\+")) {
+            if ("ssl".equals(part) || "https".equals(part) || "wss".equals(part)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
