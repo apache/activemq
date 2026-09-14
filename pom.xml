@@ -1324,8 +1324,8 @@
                 <configuration>
                   <rules>
                     <requireJavaVersion>
-                      <version>[24,)</version>
-                      <message>You must use Java 24+ to build (we leverage MRJAR).</message>
+                      <version>[25,)</version>
+                      <message>You must use Java 25+ to build a release; the multi-release jars carry Java 21, 24 and 25 classes.</message>
                     </requireJavaVersion>
                   </rules>
                 </configuration>
