@@ -58,6 +58,12 @@ public class MQTTWSConnectionTimeoutTest extends WSTransportTestSupport {
         return "ws";
     }
 
+    /** the check under test fires after connectAttemptTimeout; two seconds proves it as well as the thirty second default */
+    @Override
+    protected String getWSConnectorURI() {
+        return super.getWSConnectorURI() + "&transport.connectAttemptTimeout=2000";
+    }
+
     @Test(timeout = 90000)
     public void testInactivityMonitor() throws Exception {
 

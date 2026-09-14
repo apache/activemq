@@ -27,9 +27,14 @@ public class SocketConnectorFactory {
 
     private Map<String, Object> transportOptions;
 
+    /** how long idle keep alive connections linger once shutdown begins; Jetty's default is a second */
+    public static final long SHUTDOWN_IDLE_TIMEOUT_MS = 100L;
+
     public Connector createConnector(Server server) throws Exception {
         ServerConnector connector = new ServerConnector(server);
         server.setStopTimeout(30_000L);
+        // graceful shutdown still waits for active requests; idle connections need not hold it up
+        connector.setShutdownIdleTimeout(SHUTDOWN_IDLE_TIMEOUT_MS);
         if (transportOptions != null) {
             IntrospectionSupport.setProperties(connector, transportOptions, "");
         }
