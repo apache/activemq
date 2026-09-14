@@ -95,6 +95,39 @@ public interface ConnectorViewMBean extends Service {
     @MBeanInfo("Max connection exceeded count")
     long getMaxConnectionExceededCount();
 
+    @MBeanInfo("Remote address allow list: comma separated CIDR blocks or a file: URI")
+    String getAllowList();
+
+    @MBeanInfo("Remote address deny list: comma separated CIDR blocks or a file: URI")
+    String getDenyList();
+
+    @MBeanInfo("Remote address allow/deny validation enabled")
+    boolean isAllowDenyValidationEnabled();
+
+    @MBeanInfo("Enable or disable remote address allow/deny validation; the lists stay configured")
+    void setAllowDenyValidationEnabled(boolean enabled);
+
+    @MBeanInfo("Connections accepted by the remote address check")
+    long getAllowedCount();
+
+    @MBeanInfo("Connections refused by the remote address check")
+    long getDeniedCount();
+
+    @MBeanInfo("Valid CIDR entries loaded into the allow list")
+    long getAllowListCount();
+
+    @MBeanInfo("Valid CIDR entries loaded into the deny list")
+    long getDenyListCount();
+
+    @MBeanInfo("Allow list entries skipped as invalid")
+    long getAllowListInvalidCount();
+
+    @MBeanInfo("Deny list entries skipped as invalid")
+    long getDenyListInvalidCount();
+
+    @MBeanInfo("Would the IP address, or the CIDR block as a whole, be allowed by the allow/deny lists (enabled flag ignored)")
+    boolean allowed(@MBeanInfo("addressOrCidr") String addressOrCidr);
+
     /**
      * @return true if transport connector auto start is enabled
      */
