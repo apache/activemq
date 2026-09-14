@@ -234,4 +234,19 @@ public class ConnectorView implements ConnectorViewMBean {
     public String getName() {
         return this.connector.getName();
     }
+
+    @Override
+    public String[] getNamedGroups() {
+        return this.connector.getNamedGroups();
+    }
+
+    @Override
+    public String[] getSignatureSchemes() {
+        return this.connector.getSignatureSchemes();
+    }
+
+    @Override
+    public boolean isRequirePostQuantumKeyExchange() {
+        return this.connector.isRequirePostQuantumKeyExchange();
+    }
 }

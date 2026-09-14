@@ -1254,5 +1254,33 @@
           </plugins>
         </build>
       </profile>
+      <profile>
+        <id>jdk27-plus</id>
+        <activation>
+          <jdk>[27,)</jdk>
+        </activation>
+        <build>
+          <plugins>
+            <plugin>
+              <groupId>org.codehaus.mojo</groupId>
+              <artifactId>build-helper-maven-plugin</artifactId>
+              <executions>
+                <execution>
+                  <id>add-jdk27-test-source</id>
+                  <phase>generate-test-sources</phase>
+                  <goals>
+                    <goal>add-test-source</goal>
+                  </goals>
+                  <configuration>
+                    <sources>
+                      <source>src/test/java27</source>
+                    </sources>
+                  </configuration>
+                </execution>
+              </executions>
+            </plugin>
+          </plugins>
+        </build>
+      </profile>
   </profiles>
 </project>
