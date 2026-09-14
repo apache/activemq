@@ -44,6 +44,8 @@ public class BrokerView implements BrokerViewMBean {
 
     private static final Logger LOG = LoggerFactory.getLogger(BrokerView.class);
 
+    private static final ObjectName[] NO_OBJECT_NAMES = new ObjectName[0];
+
     ManagedRegionBroker broker;
 
     private final BrokerService brokerService;
@@ -65,12 +67,18 @@ public class BrokerView implements BrokerViewMBean {
 
     @Override
     public String getBrokerId() {
-        return safeGetBroker().getBrokerId().toString();
+        if (broker == null) {
+            return null;
+        }
+        return broker.getBrokerId().toString();
     }
 
     @Override
     public String getBrokerName() {
-        return safeGetBroker().getBrokerName();
+        if (broker == null) {
+            return brokerService.getBrokerName();
+        }
+        return broker.getBrokerName();
     }
 
     @Override
@@ -135,27 +143,42 @@ public class BrokerView implements BrokerViewMBean {
 
     @Override
     public long getTotalEnqueueCount() {
-        return safeGetBroker().getDestinationStatistics().getEnqueues().getCount();
+        if (broker == null) {
+            return 0;
+        }
+        return broker.getDestinationStatistics().getEnqueues().getCount();
     }
 
     @Override
     public long getTotalDequeueCount() {
-        return safeGetBroker().getDestinationStatistics().getDequeues().getCount();
+        if (broker == null) {
+            return 0;
+        }
+        return broker.getDestinationStatistics().getDequeues().getCount();
     }
 
     @Override
     public long getTotalConsumerCount() {
-        return safeGetBroker().getDestinationStatistics().getConsumers().getCount();
+        if (broker == null) {
+            return 0;
+        }
+        return broker.getDestinationStatistics().getConsumers().getCount();
     }
 
     @Override
     public long getTotalProducerCount() {
-        return safeGetBroker().getDestinationStatistics().getProducers().getCount();
+        if (broker == null) {
+            return 0;
+        }
+        return broker.getDestinationStatistics().getProducers().getCount();
     }
 
     @Override
     public long getTotalMessageCount() {
-        return safeGetBroker().getDestinationStatistics().getMessages().getCount();
+        if (broker == null) {
+            return 0;
+        }
+        return broker.getDestinationStatistics().getMessages().getCount();
     }
 
     /**
@@ -163,8 +186,11 @@ public class BrokerView implements BrokerViewMBean {
      */
     @Override
     public long getAverageMessageSize() {
+        if (broker == null) {
+            return 0;
+        }
         // we are okay with the size without decimals so cast to long
-        return (long) safeGetBroker().getDestinationStatistics().getMessageSize().getAverageSize();
+        return (long) broker.getDestinationStatistics().getMessageSize().getAverageSize();
     }
 
     /**
@@ -172,7 +198,10 @@ public class BrokerView implements BrokerViewMBean {
      */
     @Override
     public long getMaxMessageSize() {
-        return safeGetBroker().getDestinationStatistics().getMessageSize().getMaxSize();
+        if (broker == null) {
+            return 0;
+        }
+        return broker.getDestinationStatistics().getMessageSize().getMaxSize();
     }
 
     /**
@@ -180,11 +209,17 @@ public class BrokerView implements BrokerViewMBean {
      */
     @Override
     public long getMinMessageSize() {
-        return safeGetBroker().getDestinationStatistics().getMessageSize().getMinSize();
+        if (broker == null) {
+            return 0;
+        }
+        return broker.getDestinationStatistics().getMessageSize().getMinSize();
     }
 
     public long getTotalMessagesCached() {
-        return safeGetBroker().getDestinationStatistics().getMessagesCached().getCount();
+        if (broker == null) {
+            return 0;
+        }
+        return broker.getDestinationStatistics().getMessagesCached().getCount();
     }
 
     @Override
@@ -264,7 +299,10 @@ public class BrokerView implements BrokerViewMBean {
 
     @Override
     public boolean isStatisticsEnabled() {
-        return safeGetBroker().getDestinationStatistics().isEnabled();
+        if (broker == null) {
+            return false;
+        }
+        return broker.getDestinationStatistics().isEnabled();
     }
 
     @Override
@@ -279,42 +317,66 @@ public class BrokerView implements BrokerViewMBean {
 
     @Override
     public ObjectName[] getTopics() {
-        return safeGetBroker().getTopicsNonSuppressed();
+        if (broker == null) {
+            return NO_OBJECT_NAMES;
+        }
+        return broker.getTopicsNonSuppressed();
     }
 
     @Override
     public int getTotalTopicsCount() {
-        return safeGetBroker().getTopicRegion().getDestinationMap().size();
+        if (broker == null) {
+            return 0;
+        }
+        return broker.getTopicRegion().getDestinationMap().size();
     }
 
     @Override
     public int getTotalManagedTopicsCount() {
-        return safeGetBroker().getTopicsNonSuppressed().length;
+        if (broker == null) {
+            return 0;
+        }
+        return broker.getTopicsNonSuppressed().length;
     }
 
     @Override
     public int getTotalTemporaryTopicsCount() {
-        return safeGetBroker().getTempTopicRegion().getDestinationMap().size();
+        if (broker == null) {
+            return 0;
+        }
+        return broker.getTempTopicRegion().getDestinationMap().size();
     }
 
     @Override
     public ObjectName[] getQueues() {
-        return safeGetBroker().getQueuesNonSuppressed();
+        if (broker == null) {
+            return NO_OBJECT_NAMES;
+        }
+        return broker.getQueuesNonSuppressed();
     }
 
     @Override
     public int getTotalQueuesCount() {
-        return safeGetBroker().getQueueRegion().getDestinationMap().size();
+        if (broker == null) {
+            return 0;
+        }
+        return broker.getQueueRegion().getDestinationMap().size();
     }
 
     @Override
     public int getTotalManagedQueuesCount() {
-        return safeGetBroker().getQueuesNonSuppressed().length;
+        if (broker == null) {
+            return 0;
+        }
+        return broker.getQueuesNonSuppressed().length;
     }
 
     @Override
     public int getTotalTemporaryQueuesCount() {
-        return safeGetBroker().getTempQueueRegion().getDestinationMap().size();
+        if (broker == null) {
+            return 0;
+        }
+        return broker.getTempQueueRegion().getDestinationMap().size();
     }
 
     @Override
@@ -337,67 +399,106 @@ public class BrokerView implements BrokerViewMBean {
 
     @Override
     public ObjectName[] getTemporaryTopics() {
-        return safeGetBroker().getTemporaryTopicsNonSuppressed();
+        if (broker == null) {
+            return NO_OBJECT_NAMES;
+        }
+        return broker.getTemporaryTopicsNonSuppressed();
     }
 
     @Override
     public ObjectName[] getTemporaryQueues() {
-        return safeGetBroker().getTemporaryQueuesNonSuppressed();
+        if (broker == null) {
+            return NO_OBJECT_NAMES;
+        }
+        return broker.getTemporaryQueuesNonSuppressed();
     }
 
     @Override
     public ObjectName[] getTopicSubscribers() {
-        return safeGetBroker().getTopicSubscribersNonSuppressed();
+        if (broker == null) {
+            return NO_OBJECT_NAMES;
+        }
+        return broker.getTopicSubscribersNonSuppressed();
     }
 
     @Override
     public ObjectName[] getDurableTopicSubscribers() {
-        return safeGetBroker().getDurableTopicSubscribersNonSuppressed();
+        if (broker == null) {
+            return NO_OBJECT_NAMES;
+        }
+        return broker.getDurableTopicSubscribersNonSuppressed();
     }
 
     @Override
     public ObjectName[] getQueueSubscribers() {
-        return safeGetBroker().getQueueSubscribersNonSuppressed();
+        if (broker == null) {
+            return NO_OBJECT_NAMES;
+        }
+        return broker.getQueueSubscribersNonSuppressed();
     }
 
     @Override
     public ObjectName[] getTemporaryTopicSubscribers() {
-        return safeGetBroker().getTemporaryTopicSubscribersNonSuppressed();
+        if (broker == null) {
+            return NO_OBJECT_NAMES;
+        }
+        return broker.getTemporaryTopicSubscribersNonSuppressed();
     }
 
     @Override
     public ObjectName[] getTemporaryQueueSubscribers() {
-        return safeGetBroker().getTemporaryQueueSubscribersNonSuppressed();
+        if (broker == null) {
+            return NO_OBJECT_NAMES;
+        }
+        return broker.getTemporaryQueueSubscribersNonSuppressed();
     }
 
     @Override
     public ObjectName[] getInactiveDurableTopicSubscribers() {
-        return safeGetBroker().getInactiveDurableTopicSubscribersNonSuppressed();
+        if (broker == null) {
+            return NO_OBJECT_NAMES;
+        }
+        return broker.getInactiveDurableTopicSubscribersNonSuppressed();
     }
 
     @Override
     public ObjectName[] getTopicProducers() {
-        return safeGetBroker().getTopicProducersNonSuppressed();
+        if (broker == null) {
+            return NO_OBJECT_NAMES;
+        }
+        return broker.getTopicProducersNonSuppressed();
     }
 
     @Override
     public ObjectName[] getQueueProducers() {
-        return safeGetBroker().getQueueProducersNonSuppressed();
+        if (broker == null) {
+            return NO_OBJECT_NAMES;
+        }
+        return broker.getQueueProducersNonSuppressed();
     }
 
     @Override
     public ObjectName[] getTemporaryTopicProducers() {
-        return safeGetBroker().getTemporaryTopicProducersNonSuppressed();
+        if (broker == null) {
+            return NO_OBJECT_NAMES;
+        }
+        return broker.getTemporaryTopicProducersNonSuppressed();
     }
 
     @Override
     public ObjectName[] getTemporaryQueueProducers() {
-        return safeGetBroker().getTemporaryQueueProducersNonSuppressed();
+        if (broker == null) {
+            return NO_OBJECT_NAMES;
+        }
+        return broker.getTemporaryQueueProducersNonSuppressed();
     }
 
     @Override
     public ObjectName[] getDynamicDestinationProducers() {
-        return safeGetBroker().getDynamicDestinationProducersNonSuppressed();
+        if (broker == null) {
+            return NO_OBJECT_NAMES;
+        }
+        return broker.getDynamicDestinationProducersNonSuppressed();
     }
 
     @Override
@@ -600,7 +701,10 @@ public class BrokerView implements BrokerViewMBean {
 
     @Override
     public long getTotalMaxUncommittedExceededCount() {
-        return safeGetBroker().getDestinationStatistics().getMaxUncommittedExceededCount().getCount();
-	}
+        if (broker == null) {
+            return 0;
+        }
+        return broker.getDestinationStatistics().getMaxUncommittedExceededCount().getCount();
+    }
 
 }
