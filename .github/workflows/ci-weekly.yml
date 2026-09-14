@@ -41,7 +41,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ ubuntu-24.04, macos-26, windows-2025 ]
-        java-version: [ 17, 21, 25 ]
+        java-version: [ 17, 21, 25, 27-ea ]
 
     runs-on: ${{ matrix.os }}
 
