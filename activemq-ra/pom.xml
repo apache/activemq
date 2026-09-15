@@ -86,9 +86,12 @@
       <plugin>
         <groupId>org.apache.xbean</groupId>
         <artifactId>maven-xbean-plugin</artifactId>
-        <version>${xbean-version}</version>
+        <version>${xbean-maven-plugin-version}</version>
         <executions>
           <execution>
+            <!-- bound explicitly: the mapping goal's default phase moved to generate-resources in
+                 maven-xbean-plugin 5.0.0, which would run it after the replacer execution below -->
+            <phase>generate-sources</phase>
             <configuration>
               <strictXsdOrder>false</strictXsdOrder>
               <namespace>http://activemq.apache.org/schema/ra</namespace>
