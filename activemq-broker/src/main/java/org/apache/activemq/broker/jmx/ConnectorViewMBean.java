@@ -148,4 +148,13 @@ public interface ConnectorViewMBean extends Service {
 
     @MBeanInfo("Connector name")
     String getName();
+
+    @MBeanInfo("TLS named groups offered, in preference order; unset means the JDK default")
+    String[] getNamedGroups();
+
+    @MBeanInfo("TLS signature schemes offered, in preference order; unset means the JDK default")
+    String[] getSignatureSchemes();
+
+    @MBeanInfo("Only the post-quantum hybrid key exchange groups are offered")
+    boolean isRequirePostQuantumKeyExchange();
 }

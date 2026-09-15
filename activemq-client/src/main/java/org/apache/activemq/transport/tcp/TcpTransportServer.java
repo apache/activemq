@@ -56,6 +56,7 @@ import org.apache.activemq.transport.TransportServerThreadSupport;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.InetAddressUtil;
 import org.apache.activemq.util.IntrospectionSupport;
+import org.apache.activemq.util.StringArrayConverter;
 import org.apache.activemq.util.ServiceListener;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.util.ServiceSupport;
@@ -197,11 +198,36 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
                     }
                 }
 
+                configureNamedGroups(((SSLServerSocket) socket).getSSLParameters(), (SSLServerSocket) socket);
+            } else if (isSslServer()) {
+                // nio+ssl listens on a plain socket and builds an engine per connection;
+                // still refuse a setting this JDK cannot honour before the connector starts
+                configureNamedGroups(new SSLParameters(), null);
             }
 
             //AMQ-6599 - don't strip out set properties on the socket as we need to set them
             //on the Transport as well later
             IntrospectionSupport.setProperties(socket, transportOptions, false);
+        }
+    }
+
+    /**
+     * Key exchange and signature settings are applied to the server socket here, so
+     * they hold for the handshake of every accepted connection, including the blocking
+     * auto transports that handshake during protocol detection. The options stay in
+     * the map so the accepted transports apply them again (AMQ-6599). A setting this
+     * JDK cannot honour stops the connector from starting, like a bad cipher suite.
+     */
+    private void configureNamedGroups(SSLParameters sslParams, SSLServerSocket socket) throws SocketException {
+        String[] namedGroups = StringArrayConverter.convertToStringArray(transportOptions.get("namedGroups"));
+        String[] signatureSchemes = StringArrayConverter.convertToStringArray(transportOptions.get("signatureSchemes"));
+        boolean requirePostQuantum = Boolean.parseBoolean(String.valueOf(transportOptions.get("requirePostQuantumKeyExchange")));
+        try {
+            if (SslParameterSupport.apply(sslParams, namedGroups, signatureSchemes, requirePostQuantum) && socket != null) {
+                socket.setSSLParameters(sslParams);
+            }
+        } catch (IllegalStateException | IllegalArgumentException e) {
+            throw new SocketException("Invalid transport options: " + e.getMessage());
         }
     }
 
