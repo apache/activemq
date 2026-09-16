@@ -97,7 +97,7 @@ public class JMSClientNioPlusSslClientAuthTest extends JMSClientTestSupport {
 
     @Test(timeout = 60000)
     public void testClientCertificateRequested() throws Exception {
-        createConnection();
+        connection = createConnection();
 
         assertTrue("amqp+nio+ssl should request the client certificate with bare " + option,
                 hasCertificate);
