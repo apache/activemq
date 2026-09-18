@@ -210,16 +210,6 @@
       <artifactId>jmdns</artifactId>
       <optional>true</optional>
     </dependency>
-    <dependency>
-      <groupId>org.jasypt</groupId>
-      <artifactId>jasypt</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.jasypt</groupId>
-      <artifactId>jasypt-spring4</artifactId>
-      <version>${jasypt-version}</version>
-      <optional>true</optional>
-    </dependency>
     <!-- database testing -->
     <dependency>
       <groupId>commons-collections</groupId>
