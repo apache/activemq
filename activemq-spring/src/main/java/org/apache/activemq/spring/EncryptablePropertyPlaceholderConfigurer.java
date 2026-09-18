@@ -38,6 +38,11 @@ import org.springframework.beans.factory.config.PropertyPlaceholderConfigurer;
  *
  * Values encrypted by the jasypt-based tooling of previous releases are
  * still resolved; see {@link ActiveMQEncryptor} for details.
+ *
+ * <p>For new configurations prefer
+ * {@link EncryptablePropertySourcesPlaceholderConfigurer}; this class
+ * extends Spring's deprecated {@code PropertyPlaceholderConfigurer} and
+ * will be removed when Spring removes it.
  */
 @SuppressWarnings("deprecation")
 public class EncryptablePropertyPlaceholderConfigurer extends PropertyPlaceholderConfigurer {

@@ -22,7 +22,7 @@
   http://activemq.apache.org/schema/core http://activemq.apache.org/schema/core/activemq-core.xsd">
 
     <!-- Allows us to use system properties as variables in this configuration file -->
-    <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer" />
+    <bean class="org.springframework.context.support.PropertySourcesPlaceholderConfigurer" />
 
     <!--
         The <broker> element is used to configure the ActiveMQ broker.

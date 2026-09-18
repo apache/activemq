@@ -39,7 +39,7 @@
   http://activemq.apache.org/camel/schema/spring http://activemq.apache.org/camel/schema/spring/camel-spring.xsd">
 
     <!-- Allows us to use system properties as variables in this configuration file -->
-    <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer"/>
+    <bean class="org.springframework.context.support.PropertySourcesPlaceholderConfigurer"/>
 
     <broker xmlns="http://activemq.apache.org/schema/core" brokerName="static-broker1" dataDirectory="${activemq.data}">
 
