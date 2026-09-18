@@ -16,15 +16,13 @@
  */
 package org.apache.activemq.jaas;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import javax.security.auth.Subject;
 import javax.security.auth.callback.CallbackHandler;
 
-import org.jasypt.encryption.pbe.StandardPBEStringEncryptor;
-import org.jasypt.encryption.pbe.config.EnvironmentStringPBEConfig;
-import org.jasypt.iv.RandomIvGenerator;
-import org.jasypt.properties.EncryptableProperties;
+import org.apache.activemq.util.ActiveMQEncryptor;
 
 /**
  * LDAPLoginModule that supports encryption
@@ -34,41 +32,40 @@ public class EncryptableLDAPLoginModule extends LDAPLoginModule {
     private static final String ENCRYPTION_PASSWORD = "encryptionPassword";
     private static final String PASSWORD_ENV_NAME = "passwordEnvName";
     private static final String PASSWORD_ALGORITHM = "encryptionAlgorithm";
-    private static final String DEFAULT_PASSWORD_ENV_NAME = "ACTIVEMQ_ENCRYPTION_PASSWORD";
-    private static final String DEFAULT_PASSWORD_ALGORITHM = "PBEWithMD5AndDES";
-    private final StandardPBEStringEncryptor configurationEncryptor = new StandardPBEStringEncryptor();
+    private static final String DEFAULT_PASSWORD_ENV_NAME = ActiveMQEncryptor.DEFAULT_PASSWORD_ENV_NAME;
+    private static final String DEFAULT_PASSWORD_ALGORITHM = ActiveMQEncryptor.DEFAULT_LEGACY_ALGORITHM;
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
     public void initialize(Subject subject, CallbackHandler callbackHandler, Map sharedState, Map options) {
 
-        String encryptionPassword = (String)options.get(ENCRYPTION_PASSWORD);
-        String passwordEnvName = options.get(PASSWORD_ENV_NAME) != null ?
+        var encryptionPassword = (String) options.get(ENCRYPTION_PASSWORD);
+        var passwordEnvName = options.get(PASSWORD_ENV_NAME) != null ?
                 (String)options.get(PASSWORD_ENV_NAME) : DEFAULT_PASSWORD_ENV_NAME;
-        String passwordAlgorithm = options.get(PASSWORD_ALGORITHM) != null ?
+        var passwordAlgorithm = options.get(PASSWORD_ALGORITHM) != null ?
                 (String)options.get(PASSWORD_ALGORITHM) : DEFAULT_PASSWORD_ALGORITHM;
 
-        EnvironmentStringPBEConfig envConfig = new EnvironmentStringPBEConfig();
-        envConfig.setAlgorithm(passwordAlgorithm);
-
-        if (passwordAlgorithm.startsWith("PBE") && passwordAlgorithm.contains("AES")) {
-            envConfig.setIvGenerator(new RandomIvGenerator());
-        }
+        var encryptor = new ActiveMQEncryptor();
+        encryptor.setLegacyAlgorithm(passwordAlgorithm);
 
         //If the password was set, use it
         //else look up the password from the environment
         if (encryptionPassword == null) {
-            envConfig.setPasswordEnvName(passwordEnvName);
+            encryptor.setPasswordEnvName(passwordEnvName);
         } else {
-            envConfig.setPassword(encryptionPassword);
+            encryptor.setPassword(encryptionPassword);
         }
 
-        configurationEncryptor.setConfig(envConfig);
-        EncryptableProperties encryptableOptions
-            = new EncryptableProperties(configurationEncryptor);
-        encryptableOptions.putAll(options);
+        var decryptedOptions = new HashMap(options);
+        for (var entryObject : decryptedOptions.entrySet()) {
+            var entry = (Map.Entry) entryObject;
+            if (entry.getValue() instanceof String value
+                    && ActiveMQEncryptor.isEncryptedValue(value)) {
+                entry.setValue(encryptor.decrypt(value));
+            }
+        }
 
-        super.initialize(subject, callbackHandler, sharedState, encryptableOptions);
+        super.initialize(subject, callbackHandler, sharedState, decryptedOptions);
 
     }
 

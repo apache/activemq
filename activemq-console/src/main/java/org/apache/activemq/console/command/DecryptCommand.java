@@ -18,25 +18,25 @@ package org.apache.activemq.console.command;
 
 import java.util.List;
 
-import org.jasypt.exceptions.EncryptionOperationNotPossibleException;
-import org.jasypt.iv.RandomIvGenerator;
+import org.apache.activemq.util.ActiveMQEncryptor;
 
 public class DecryptCommand extends EncryptCommand {
 
     protected String[] helpFile = new String[] {
             "Task Usage: Main decrypt --password <password> --input <input>",
             "Description: Decrypts given text.",
-            "", 
-            "Encrypt Options:",
+            "",
+            "Decrypt Options:",
             "    --password <password>      Password to be used by the encryptor.  Defaults to",
             "                               the value in the ACTIVEMQ_ENCRYPTION_PASSWORD env variable.",
-            "    --input <input>            Text to be encrypted.",
-            "    --algorithm <algorithm>    Algorithm to use.",
+            "    --input <input>            Text to be decrypted.",
+            "    --algorithm <algorithm>    Legacy JCE PBE algorithm for values encrypted by previous",
+            "                               releases.  Defaults to PBEWithMD5AndDES.",
             "    --version                  Display the version information.",
             "    -h,-?,--help               Display the stop broker help information.",
             ""
-        };    
-    
+        };
+
     @Override
     public String getName() {
         return "decrypt";
@@ -45,6 +45,11 @@ public class DecryptCommand extends EncryptCommand {
     @Override
     public String getOneLineDescription() {
         return "Decrypts given text";
+    }
+
+    @Override
+    protected void printHelp() {
+        context.printHelp(helpFile);
     }
 
     @Override
@@ -58,19 +63,15 @@ public class DecryptCommand extends EncryptCommand {
         }
         encryptor.setPassword(password);
         if (algorithm != null) {
-            encryptor.setAlgorithm(algorithm);
-            // From Jasypt: for PBE-AES-based algorithms, the IV generator is MANDATORY"
-            if (algorithm.startsWith("PBE") && algorithm.contains("AES")) {
-                encryptor.setIvGenerator(new RandomIvGenerator());
-            }
+            encryptor.setLegacyAlgorithm(algorithm);
         }
         try {
             context.print("Decrypted text: " + encryptor.decrypt(input));
-        } catch (EncryptionOperationNotPossibleException e) {
+        } catch (ActiveMQEncryptor.EncryptionException e) {
             context.print("ERROR: Text cannot be decrypted, check your input and password and try again!");
         }
     }
 
-    
-    
+
+
 }

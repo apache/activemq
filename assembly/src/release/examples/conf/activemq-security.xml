@@ -38,17 +38,15 @@
   xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
   http://activemq.apache.org/schema/core http://activemq.apache.org/schema/core/activemq-core.xsd">
   
-  <!-- Allows us to use encrypted system properties as variables in this configuration file -->
-  <bean id="environmentVariablesConfiguration" class="org.jasypt.encryption.pbe.config.EnvironmentStringPBEConfig">
-    <property name="algorithm" value="PBEWithMD5AndDES" />
+  <!-- Allows us to use encrypted properties as variables in this configuration file.
+       Values are created with the 'activemq encrypt' command (AES-256-GCM); values
+       encrypted by previous releases with jasypt are still supported and can be
+       selected with the legacyAlgorithm property (default PBEWithMD5AndDES). -->
+  <bean id="configurationEncryptor" class="org.apache.activemq.util.ActiveMQEncryptor">
     <property name="passwordEnvName" value="ACTIVEMQ_ENCRYPTION_PASSWORD" />
   </bean>
-                                                                     
-  <bean id="configurationEncryptor" class="org.jasypt.encryption.pbe.StandardPBEStringEncryptor">
-    <property name="config" ref="environmentVariablesConfiguration" />
-  </bean>  
     
-  <bean id="propertyConfigurer" class="org.jasypt.spring4.properties.EncryptablePropertyPlaceholderConfigurer">
+  <bean id="propertyConfigurer" class="org.apache.activemq.spring.EncryptablePropertyPlaceholderConfigurer">
       <constructor-arg ref="configurationEncryptor" /> 
       <property name="location" value="file:${activemq.conf}/credentials-enc.properties"/> 
   </bean> 
@@ -57,10 +55,9 @@
     Use this configuration if you don't want to set encryptor password using environment variable
     Note however, that with this solution your passwords can be easily decrypted once the encrypter password is known
     
-  <bean id="configurationEncryptor" class="org.jasypt.encryption.pbe.StandardPBEStringEncryptor">
-     <property name="algorithm" value="PBEWithMD5AndDES"/>
+  <bean id="configurationEncryptor" class="org.apache.activemq.util.ActiveMQEncryptor">
      <property name="password" value="activemq"/>
-  </bean> 
+  </bean>
   -->
 
   <broker useJmx="true" persistent="false" xmlns="http://activemq.apache.org/schema/core" id="broker">
