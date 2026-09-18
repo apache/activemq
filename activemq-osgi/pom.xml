@@ -181,6 +181,7 @@
               javax.resource*;resolution:=optional,
               javax.servlet*;resolution:=optional,
               jakarta.servlet*;resolution:=optional,
+              com.github.benmanes.caffeine*;resolution:=optional,
               com.thoughtworks.xstream*;resolution:=optional,
               org.apache.camel*;resolution:=optional,
               org.apache.camel.spring.handler;resolution:=optional,
