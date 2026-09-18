@@ -20,7 +20,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
-import java.util.concurrent.TimeUnit;
 
 import org.apache.activemq.broker.region.DestinationInterceptor;
 import org.apache.activemq.broker.region.virtual.VirtualDestinationInterceptor;
@@ -49,7 +48,7 @@ public class VirtualDestTest extends AbstractVirtualDestTest {
 
         exerciseVirtualTopic("VirtualTopic.Default");
 
-        applyNewConfig(brokerConfig, configurationSeed + "-one-vd", SLEEP);
+        applyNewConfig(brokerConfig, configurationSeed + "-one-vd", WAIT_FOR_CHANGE);
 
         assertEquals("one interceptor", 1, interceptors.length);
         assertTrue("it is virtual topic interceptor", interceptors[0] instanceof VirtualDestinationInterceptor);
@@ -73,7 +72,7 @@ public class VirtualDestTest extends AbstractVirtualDestTest {
         startBroker(brokerConfig);
         assertTrue("broker alive", brokerService.isStarted());
 
-        applyNewConfig(brokerConfig, configurationSeed + "-add-composite-vd", SLEEP);
+        applyNewConfig(brokerConfig, configurationSeed + "-add-composite-vd", WAIT_FOR_CHANGE);
 
         exerciseCompositeQueue("VirtualDestination.CompositeQueue", "VirtualDestination.QueueConsumer");
     }
@@ -86,7 +85,7 @@ public class VirtualDestTest extends AbstractVirtualDestTest {
         assertTrue("broker alive", brokerService.isStarted());
         exerciseCompositeQueue("VirtualDestination.CompositeQueue", "VirtualDestination.QueueConsumer");
 
-        applyNewConfig(brokerConfig, configurationSeed + "-mod-composite-vd", SLEEP);
+        applyNewConfig(brokerConfig, configurationSeed + "-mod-composite-vd", WAIT_FOR_CHANGE);
         exerciseCompositeQueue("VirtualDestination.CompositeQueue", "VirtualDestination.QueueConsumer");
 
         exerciseCompositeQueue("VirtualDestination.CompositeQueue", "VirtualDestination.CompositeQueue");
@@ -101,14 +100,12 @@ public class VirtualDestTest extends AbstractVirtualDestTest {
         brokerService.start();
         brokerService.waitUntilStarted();
 
-        TimeUnit.SECONDS.sleep(SLEEP);
-
         assertTrue("broker alive", brokerService.isStarted());
 
         DestinationInterceptor[] interceptors  = brokerService.getDestinationInterceptors();
         assertEquals("one interceptor", 0, interceptors.length);
 
-        applyNewConfig(brokerConfig, configurationSeed + "-one-vd", SLEEP);
+        applyNewConfig(brokerConfig, configurationSeed + "-one-vd", WAIT_FOR_CHANGE);
 
         // update will happen on addDestination
         exerciseVirtualTopic("A.Default");
@@ -133,14 +130,12 @@ public class VirtualDestTest extends AbstractVirtualDestTest {
         brokerService.start();
         brokerService.waitUntilStarted();
 
-        TimeUnit.SECONDS.sleep(SLEEP);
-
         assertTrue("broker alive", brokerService.isStarted());
 
         DestinationInterceptor[] interceptors  = brokerService.getDestinationInterceptors();
         assertEquals("expected interceptor", 2, interceptors.length);
 
-        applyNewConfig(brokerConfig, configurationSeed + "-one-vd", SLEEP);
+        applyNewConfig(brokerConfig, configurationSeed + "-one-vd", WAIT_FOR_CHANGE);
 
         // update will happen on addDestination
         exerciseVirtualTopic("A.Default");
@@ -173,7 +168,7 @@ public class VirtualDestTest extends AbstractVirtualDestTest {
 
         exerciseVirtualTopic("A.Default");
 
-        applyNewConfig(brokerConfig, RuntimeConfigTestSupport.EMPTY_UPDATABLE_CONFIG, SLEEP);
+        applyNewConfig(brokerConfig, RuntimeConfigTestSupport.EMPTY_UPDATABLE_CONFIG, WAIT_FOR_CHANGE);
 
         // update will happen on addDestination
         forceAddDestination("AnyDest");
@@ -186,7 +181,7 @@ public class VirtualDestTest extends AbstractVirtualDestTest {
         }));
 
         // reverse the remove, add again
-        applyNewConfig(brokerConfig, configurationSeed + "-one-vd", SLEEP);
+        applyNewConfig(brokerConfig, configurationSeed + "-one-vd", WAIT_FOR_CHANGE);
 
         // update will happen on addDestination
         exerciseVirtualTopic("A.NewOne");
@@ -206,12 +201,11 @@ public class VirtualDestTest extends AbstractVirtualDestTest {
         assertEquals("one interceptor", 1, brokerService.getDestinationInterceptors().length);
         exerciseVirtualTopic("A.Default");
 
-        applyNewConfig(brokerConfig, configurationSeed + "-mod-one-vd", SLEEP);
+        applyNewConfig(brokerConfig, configurationSeed + "-mod-one-vd", WAIT_FOR_CHANGE);
         exerciseVirtualTopic("B.Default");
 
         assertEquals("still one interceptor", 1, brokerService.getDestinationInterceptors().length);
     }
-
 
     @Test
     public void testModWithMirroredQueue() throws Exception {
@@ -222,12 +216,10 @@ public class VirtualDestTest extends AbstractVirtualDestTest {
         brokerService.start();
         brokerService.waitUntilStarted();
 
-        TimeUnit.SECONDS.sleep(SLEEP);
-
         assertEquals("one interceptor", 1, brokerService.getDestinationInterceptors().length);
         exerciseVirtualTopic("A.Default");
 
-        applyNewConfig(brokerConfig, configurationSeed + "-mod-one-vd", SLEEP);
+        applyNewConfig(brokerConfig, configurationSeed + "-mod-one-vd", WAIT_FOR_CHANGE);
         exerciseVirtualTopic("B.Default");
 
         assertEquals("still one interceptor", 1, brokerService.getDestinationInterceptors().length);
@@ -240,7 +232,7 @@ public class VirtualDestTest extends AbstractVirtualDestTest {
         startBroker(brokerConfig);
         assertTrue("broker alive", brokerService.isStarted());
 
-        applyNewConfig(brokerConfig, configurationSeed + "-add-filtered-composite-vd", SLEEP);
+        applyNewConfig(brokerConfig, configurationSeed + "-add-filtered-composite-vd", WAIT_FOR_CHANGE);
 
         exerciseFilteredCompositeQueue("VirtualDestination.FilteredCompositeQueue", "VirtualDestination.QueueConsumer", "yes");
     }
@@ -253,12 +245,9 @@ public class VirtualDestTest extends AbstractVirtualDestTest {
         assertTrue("broker alive", brokerService.isStarted());
         exerciseFilteredCompositeQueue("VirtualDestination.FilteredCompositeQueue", "VirtualDestination.QueueConsumer", "yes");
 
-        applyNewConfig(brokerConfig, configurationSeed + "-mod-filtered-composite-vd", SLEEP);
+        applyNewConfig(brokerConfig, configurationSeed + "-mod-filtered-composite-vd", WAIT_FOR_CHANGE);
         exerciseFilteredCompositeQueue("VirtualDestination.FilteredCompositeQueue", "VirtualDestination.QueueConsumer", "no");
         exerciseFilteredCompositeQueue("VirtualDestination.FilteredCompositeQueue", "VirtualDestination.QueueConsumer", "no");
     }
-
-
-
 
 }
