@@ -193,7 +193,6 @@
               org.bouncycastle*;resolution:=optional,
               com.fasterxml.jackson*;resolution:=optional,
               org.codehaus.jettison*;resolution:=optional,
-              org.jasypt*;resolution:=optional,
               org.eclipse.jetty*;resolution:=optional;version="${jetty-version-range}",
               org.fusesource.hawtjni*;resolution:=optional,
               org.springframework.jms*;version="${spring-version-range}";resolution:=optional,
@@ -462,13 +461,6 @@
           <groupId>org.fusesource.hawtbuf</groupId>
           <artifactId>hawtbuf</artifactId>
           <version>${hawtbuf-version}</version>
-          <classifier>sources</classifier>
-          <optional>true</optional>
-        </dependency>
-        <dependency>
-          <groupId>org.jasypt</groupId>
-          <artifactId>jasypt</artifactId>
-          <version>${jasypt-version}</version>
           <classifier>sources</classifier>
           <optional>true</optional>
         </dependency>
