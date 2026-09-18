@@ -22,7 +22,8 @@
   <import resource="webconsole-query.xml"/>
      
   <!-- Allows us to use system properties as variables in this configuration file -->
-  <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+  <bean class="org.springframework.context.support.PropertySourcesPlaceholderConfigurer">
+      <property name="localOverride" value="true"/>
       <property name="locations">
           <value>file:${activemq.conf}/credentials.properties</value>
       </property>      

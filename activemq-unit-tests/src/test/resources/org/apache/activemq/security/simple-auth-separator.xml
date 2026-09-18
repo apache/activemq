@@ -29,8 +29,9 @@
       <property name="password" value="activemq"/>
   </bean>
 
-  <bean id="propertyConfigurer" class="org.apache.activemq.spring.EncryptablePropertyPlaceholderConfigurer">
+  <bean id="propertyConfigurer" class="org.apache.activemq.spring.EncryptablePropertySourcesPlaceholderConfigurer">
       <constructor-arg ref="configurationEncryptor" />
+      <property name="localOverride" value="true"/>
       <property name="location" value="classpath:credentials.properties"/>
   </bean>
 

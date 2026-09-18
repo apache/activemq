@@ -46,8 +46,9 @@
     <property name="passwordEnvName" value="ACTIVEMQ_ENCRYPTION_PASSWORD" />
   </bean>
     
-  <bean id="propertyConfigurer" class="org.apache.activemq.spring.EncryptablePropertyPlaceholderConfigurer">
+  <bean id="propertyConfigurer" class="org.apache.activemq.spring.EncryptablePropertySourcesPlaceholderConfigurer">
       <constructor-arg ref="configurationEncryptor" /> 
+      <property name="localOverride" value="true"/>
       <property name="location" value="file:${activemq.conf}/credentials-enc.properties"/> 
   </bean> 
   
