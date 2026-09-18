@@ -336,6 +336,18 @@ public abstract class ActiveMQMessageProducerSupport implements MessageProducer,
 
     protected abstract void checkClosed() throws IllegalStateException;
 
+    protected static void validateDeliveryMode(final int deliveryMode) throws JMSException {
+        if (deliveryMode != DeliveryMode.PERSISTENT && deliveryMode != DeliveryMode.NON_PERSISTENT) {
+            throw new JMSException("Invalid delivery mode: " + deliveryMode);
+        }
+    }
+
+    protected static void validatePriority(final int priority) throws JMSException {
+        if (priority < 0 || priority > 9) {
+            throw new JMSException("Invalid priority: " + priority + " (must be 0-9)");
+        }
+    }
+
     /**
      * @return the sendTimeout
      */
