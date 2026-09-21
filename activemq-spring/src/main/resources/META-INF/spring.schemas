@@ -23,7 +23,10 @@ http\://activemq.apache.org/schema/core/activemq-core-6.1.1.xsd=activemq.xsd
 http\://activemq.apache.org/schema/core/activemq-core-6.1.2.xsd=activemq.xsd
 http\://activemq.apache.org/schema/core/activemq-core-6.2.0.xsd=activemq.xsd
 http\://activemq.apache.org/schema/core/activemq-core-6.3.0.xsd=activemq.xsd
-http\://activemq.apache.org/schema/core/activemq-core-6.4.0.xsd=activemq.xsd
+## The entry for the version being built is generated from the project
+## version by resource filtering at build time. When bumping the development
+## version after a release, add the released version above as a fixed entry.
+http\://activemq.apache.org/schema/core/activemq-core-${project.version}.xsd=activemq.xsd
 
 http\://camel.apache.org/schema/osgi/camel-osgi.xsd=camel-osgi.xsd
 http\://camel.apache.org/schema/spring/camel-spring.xsd=camel-spring.xsd
