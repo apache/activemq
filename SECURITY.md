@@ -94,6 +94,8 @@ The Apache ActiveMQ team has initiated a security hardening project to move from
 
 11. [#2461] Authorize connection clientIds allowed for given userId
 
+12. [#2595] Add support for Post Quantum Cryptography
+
 ## Security vs Features
 
 AI code scanning tools often mistaken designed features as a security issue. It is the responsibility of the reporter to review AI output and verify if it's a real issue. There has been a large number of invalid submissions that could be avoided by simply reviewing the JMS spec and the features of the broker itself.
