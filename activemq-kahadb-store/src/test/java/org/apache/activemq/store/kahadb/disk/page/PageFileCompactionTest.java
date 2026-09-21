@@ -197,22 +197,6 @@ public class PageFileCompactionTest {
     assertEquals(0, pf2.getFreePageCount());
     assertEquals(80, pf2.getPageCount());
 
-
-
-    // TODO we also want to test with recovery file still enabled, but
-    // writing something after compaction and then unclean shutdown
-    // In that case the recovery file would contain the new writes
-    // and not the free pages so the compaction should hopefully hold
-    // Ie if we compacted from 30 to 10 free pages, then write 1 page
-    // and unclean shutdown, we would recover with 9 free pages left
-    // as it would replay the 1 new write and not recover the previous
-    // free pages.
-
-//    assertEquals(pf2.getFile().length(), pf2.getDiskSize());
-//    assertEquals(pf2.toOffset(80), pf2.getDiskSize());
-//    assertEquals(10, pf2.getFreePageCount());
-//    assertEquals(80, pf2.getPageCount());
-
   }
 
   @Test

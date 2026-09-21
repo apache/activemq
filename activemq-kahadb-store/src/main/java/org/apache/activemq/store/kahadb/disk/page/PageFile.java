@@ -758,8 +758,8 @@ public class PageFile {
                 return;
             }
 
-            LOG.debug("Number of free pages to be deleted: {}", freePagesToDelete.range());
-            LOG.debug("Disk size of end of file free pages: {}", pageSize * freePagesToDelete.range());
+            LOG.debug("Free pages to be deleted, Count:{}, Size:{}",
+                    freePagesToDelete.range(), pageSize * freePagesToDelete.range());
 
             if (enablePageCaching) {
                 pageCache.keySet().removeIf(freePagesToDelete::contains);
@@ -784,8 +784,8 @@ public class PageFile {
                 writeFile.sync();
             }
 
-            LOG.debug("Page file was compacted, new length: {}, old length:{}", newDiskSize, diskSize);
-            LOG.debug("New page count: {}, free page count: {}", getPageCount(), getFreePageCount());
+            LOG.debug("Page file was compacted, page count:{}, free page count:{}, length:{}",
+                    getPageCount(), getFreePageCount(), getPageCount() * pageSize);
         }
     }
 
