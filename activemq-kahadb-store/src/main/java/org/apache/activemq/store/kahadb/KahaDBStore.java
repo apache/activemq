@@ -526,6 +526,28 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
 
         @Override
         public void addMessage(final ConnectionContext context, final Message message) throws IOException {
+            // A synchronous add (no future assigned yet) can race a pending
+            // asynchronous add of the same message id (concurrentStoreAndDispatch):
+            // the async task still holds the journal/index update while its message
+            // has already been counted and dispatched from the cursor cache. If the
+            // sync add wins the index it is assigned a real sequence, evades the
+            // duplicate suppression in the cursor add path, and inflates the
+            // destination statistics. Reject it here as the duplicate it is; the
+            // -1 marker is handled by the existing suppression in
+            // Queue.doPendingCursorAdditions.
+            if (isConcurrentStoreAndDispatchQueues()
+                    && message.getMessageId().getFutureOrSequenceLong() == null) {
+                StoreTask pendingAsyncAdd;
+                synchronized (asyncTaskMap) {
+                    pendingAsyncAdd = asyncTaskMap.get(new AsyncJobKey(message.getMessageId(), getDestination()));
+                }
+                if (pendingAsyncAdd != null) {
+                    LOG.warn("Duplicate message add attempt rejected. Destination: {}, Message id: {} (async add pending)",
+                            dest, message.getMessageId());
+                    message.getMessageId().setFutureOrSequenceLong(-1L);
+                    return;
+                }
+            }
             final KahaAddMessageCommand command = new KahaAddMessageCommand();
             command.setDestination(dest);
             command.setMessageId(message.getMessageId().toProducerKey());
