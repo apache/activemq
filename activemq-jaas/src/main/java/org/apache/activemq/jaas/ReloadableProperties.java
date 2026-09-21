@@ -129,14 +129,8 @@ public class ReloadableProperties {
         try {
             props.load(in);
             if (key.isDecrypt()) {
-                try {
-                    // Decrypt the parameter props, not this.props (which may be the old instance)
-                    EncryptionSupport.decrypt(props, key.getAlgorithm());
-                } catch (NoClassDefFoundError e) {
-                    // this Happens when jasypt is not on the classpath..
-                    key.setDecrypt(false);
-                    LOG.info("jasypt is not on the classpath: password decryption disabled.");
-                }
+                // Decrypt the parameter props, not this.props (which may be the old instance)
+                EncryptionSupport.decrypt(props, key.getAlgorithm());
             }
 
         } finally {

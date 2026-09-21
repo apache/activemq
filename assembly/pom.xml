@@ -542,15 +542,6 @@ o  'org.eclipse.jetty:apache-jsp'
       <version>3.0.1</version>
     </dependency>
     <dependency>
-      <groupId>org.jasypt</groupId>
-      <artifactId>jasypt</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.jasypt</groupId>
-      <artifactId>jasypt-spring4</artifactId>
-      <version>${jasypt-version}</version>
-    </dependency>
-    <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <scope>test</scope>
