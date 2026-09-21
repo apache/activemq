@@ -1,11 +1,11 @@
 # Apache ActiveMQ Security Policy
 
-## Supported Versions
+## Active Versions
 
 | Version | Supported          | Note |
 | ------- | ------------------ | ---- |
 | 6.3.x   | :white_check_mark: |      |
-| 6.2.x   | :white_check_mark: |      |
+| 6.2.x   | :x: | |
 | 6.1.x   | :x: | |
 | 6.0.x   | :x: | | 
 | 5.19.x   | :white_check_mark: | Except for EOL dependencies: Spring and Jetty |
@@ -74,7 +74,7 @@ The Apache ActiveMQ team has initiated a security hardening project to move from
 
 1. Enhancements to the SSL authentication plugin to fix wantAuth mode
 
-2. [#2133] Updates to SSL handling to allow configuring per-transport and per-network connector SSL keys
+2. [Done] Updates to SSL handling to allow configuring per-transport and per-network connector SSL keys
 
 3. [Done] Refactoring of Jetty service to use Jetty-provided configurations instead of Spring-style configuration for Jetty service used by API and web console.
 
@@ -82,7 +82,7 @@ The Apache ActiveMQ team has initiated a security hardening project to move from
 
 5. Long-term: Replace Spring as the primary means of configuring and booting Apache ActiveMQ servers.
 
-6. Add allow/deny lists to transport connectors to limit IP addresses
+6. [#2539] Add allow/deny lists to transport connectors to limit IP addresses
 
 7. [Done] VM Transport creation blocks the XBean factory by default
 
@@ -91,6 +91,8 @@ The Apache ActiveMQ team has initiated a security hardening project to move from
 9. [Done] Validate all size values during unmarshalling before using those sizes for allocating buffers
 
 10. [Done] The WebConsole and Jolokia have been restricted to only admins.
+
+11. [#2461] Authorize connection clientIds allowed for given userId
 
 ## Security vs Features
 
