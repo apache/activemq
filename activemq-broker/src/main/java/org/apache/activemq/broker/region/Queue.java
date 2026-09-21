@@ -1990,8 +1990,6 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
     @Override
     public void messageExpired(ConnectionContext context, Subscription subs, MessageReference reference) {
         LOG.debug("message expired: {}", reference);
-        broker.messageExpired(context, reference, subs);
-        destinationStatistics.getExpired().increment();
         try {
             removeMessage(context, subs, (QueueMessageReference) reference);
             messagesLock.writeLock().lock();
@@ -2000,8 +1998,20 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
             } finally {
                 messagesLock.writeLock().unlock();
             }
+            // Advertise and count the expiry only after the store removal and the
+            // messages decrement (dropMessage) have succeeded. A failed attempt
+            // signals and counts nothing, so a retried expiry is advertised and
+            // counted exactly once no matter how many attempts it took.
+            broker.messageExpired(context, reference, subs);
+            destinationStatistics.getExpired().increment();
         } catch (IOException e) {
-            LOG.error("Failed to remove expired Message from the store ", e);
+            // The expiry CAS (canProcessAsExpired) was consumed by the caller and
+            // dropMessage has not run: without a reset the failed expiry would
+            // never be retried and the messages counter would stay inflated while
+            // the row remains orphaned in the store. Reset so a later expiry
+            // check can process this message again.
+            reference.getMessage().resetProcessAsExpired();
+            LOG.error("Failed to remove expired message {} from the store, expiry processing will be retried", reference.getMessageId(), e);
         }
     }
 
