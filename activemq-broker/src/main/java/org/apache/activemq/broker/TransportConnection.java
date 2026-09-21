@@ -1269,7 +1269,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
             LOG.trace("Exception caught stopping. This exception is ignored.", ignore);
         }
         try {
-            transport.stop();
+            transport.stop(transportException.get());
             LOG.debug("Stopped transport: {}", transport.getRemoteAddress());
         } catch (Exception e) {
             LOG.debug("Could not stop transport to {}. This exception is ignored.", transport.getRemoteAddress(), e);

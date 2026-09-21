@@ -72,6 +72,11 @@ public class MockTransport extends DefaultTransportListener implements Transport
     }
 
     @Override
+    public void stop(Throwable exception) throws Exception {
+        getNext().stop(exception);
+    }
+
+    @Override
     public void onCommand(Object command) {
         getTransportListener().onCommand(command);
     }

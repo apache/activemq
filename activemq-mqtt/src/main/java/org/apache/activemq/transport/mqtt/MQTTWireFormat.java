@@ -92,12 +92,12 @@ public class MQTTWireFormat implements WireFormat {
         int length = 0;
         do {
             digit = dataIn.readByte();
-            length += (digit & 0x7F) * multiplier;
-            multiplier <<= 7;
             // MQTT protocol limits Remaining Length to 4 bytes
             if (multiplier == MAX_MULTIPLIER && (digit & 128) != 0) {
                 throw new IOException("Remaining length exceeds 4 bytes");
             }
+            length += (digit & 0x7F) * multiplier;
+            multiplier <<= 7;
         }
         while ((digit & 0x80) != 0);
 

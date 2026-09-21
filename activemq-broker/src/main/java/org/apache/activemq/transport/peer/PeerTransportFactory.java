@@ -44,23 +44,24 @@ public class PeerTransportFactory extends TransportFactory {
     private static final IdGenerator ID_GENERATOR = new IdGenerator("peer-");
 
     @Override
-    public Transport doConnect(URI location) throws Exception {
+    public Transport doConnect(URI location) throws IOException, URISyntaxException {
         VMTransportFactory vmTransportFactory = createTransportFactory(location);
         return vmTransportFactory.doConnect(location);
     }
 
     @Override
-    public Transport doCompositeConnect(URI location) throws Exception {
+    public Transport doCompositeConnect(URI location) throws IOException, URISyntaxException {
         VMTransportFactory vmTransportFactory = createTransportFactory(location);
         return vmTransportFactory.doCompositeConnect(location);
     }
 
     /**
      * @param location
-     * @return the converted URI
+     * @return a VMTransportFactory that connects to the vm:// location derived from the peer URI
+     * @throws IOException
      * @throws URISyntaxException
      */
-    private VMTransportFactory createTransportFactory(URI location) throws IOException {
+    private VMTransportFactory createTransportFactory(URI location) throws IOException, URISyntaxException {
         try {
             String group = location.getHost();
             String broker = URISupport.stripPrefix(location.getPath(), "/");
@@ -82,12 +83,12 @@ public class PeerTransportFactory extends TransportFactory {
             final String finalGroup = group;
             VMTransportFactory rc = new VMTransportFactory() {
                 @Override
-                public Transport doConnect(URI ignore) throws Exception {
+                public Transport doConnect(URI ignore) throws IOException, URISyntaxException {
                     return super.doConnect(finalLocation);
                 };
 
                 @Override
-                public Transport doCompositeConnect(URI ignore) throws Exception {
+                public Transport doCompositeConnect(URI ignore) throws IOException, URISyntaxException {
                     return super.doCompositeConnect(finalLocation);
                 };
             };

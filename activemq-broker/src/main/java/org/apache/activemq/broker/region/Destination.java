@@ -267,4 +267,5 @@ public interface Destination extends Service, Task, Message.MessageDestination {
 
     void setAdvancedMessageStatisticsEnabled(boolean advancedMessageStatisticsEnabled);
 
+    boolean isGcWithOnlyWildcardConsumers();
 }

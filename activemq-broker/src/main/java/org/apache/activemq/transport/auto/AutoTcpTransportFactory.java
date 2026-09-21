@@ -28,6 +28,7 @@ import javax.net.ServerSocketFactory;
 
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.BrokerServiceAware;
+import org.apache.activemq.broker.SslContext;
 import org.apache.activemq.openwire.OpenWireFormatFactory;
 import org.apache.activemq.transport.TransportServer;
 import org.apache.activemq.transport.tcp.TcpTransport;
@@ -56,7 +57,7 @@ public class AutoTcpTransportFactory extends TcpTransportFactory implements Brok
 
 
     @Override
-    public TransportServer doBind(final URI location) throws IOException {
+    public TransportServer doBind(final URI location, SslContext sslContext) throws IOException {
         try {
             Map<String, String> options = new HashMap<String, String>(URISupport.parseParameters(location));
 

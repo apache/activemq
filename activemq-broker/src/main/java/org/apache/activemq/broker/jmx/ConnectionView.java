@@ -23,6 +23,7 @@ import javax.management.ObjectName;
 
 import org.apache.activemq.broker.Connection;
 import org.apache.activemq.broker.TransportConnection;
+import org.apache.activemq.command.WireFormatInfo;
 import org.apache.activemq.util.IOExceptionSupport;
 
 public class ConnectionView implements ConnectionViewMBean {
@@ -201,8 +202,9 @@ public class ConnectionView implements ConnectionViewMBean {
 
     @Override
     public String getWireFormatInfo() {
-        if(connection instanceof TransportConnection) {
-            return ((TransportConnection)connection).getRemoteWireFormatInfo().toString();
+        if (connection instanceof TransportConnection) {
+            WireFormatInfo info = ((TransportConnection) connection).getRemoteWireFormatInfo();
+            return (info != null) ? info.toString() : "WireFormatInfo not available";
         }
         return "WireFormatInfo not available";
     }

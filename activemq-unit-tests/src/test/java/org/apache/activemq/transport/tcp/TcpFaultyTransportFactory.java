@@ -20,17 +20,11 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
-import java.util.HashMap;
-import java.util.Map;
 
 import javax.net.ServerSocketFactory;
 import javax.net.SocketFactory;
 
 import org.apache.activemq.transport.Transport;
-import org.apache.activemq.transport.TransportServer;
-import org.apache.activemq.util.IOExceptionSupport;
-import org.apache.activemq.util.IntrospectionSupport;
-import org.apache.activemq.util.URISupport;
 import org.apache.activemq.wireformat.WireFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,22 +61,9 @@ public class TcpFaultyTransportFactory extends TcpTransportFactory {
         return new TcpFaultyTransportServer(this, location, serverSocketFactory);
     }
 
-    public TransportServer doBind(final URI location) throws IOException {
-        try {
-            Map<String, String> options = new HashMap<String, String>(URISupport.parseParameters(location));
-
-            ServerSocketFactory serverSocketFactory = createServerSocketFactory();
-            TcpFaultyTransportServer server = createTcpFaultyTransportServer(location, serverSocketFactory);
-            server.setWireFormatFactory(createWireFormatFactory(options));
-            IntrospectionSupport.setProperties(server, options);
-            Map<String, Object> transportOptions = IntrospectionSupport.extractProperties(options, "transport.");
-            server.setTransportOption(transportOptions);
-            server.bind();
-
-            return server;
-        } catch (URISyntaxException e) {
-            throw IOExceptionSupport.create(e);
-        }
+    @Override
+    protected TcpTransportServer createTcpTransportServer(final URI location, ServerSocketFactory serverSocketFactory) throws IOException, URISyntaxException {
+        return createTcpFaultyTransportServer(location, serverSocketFactory);
     }
 
     
