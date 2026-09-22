@@ -204,7 +204,8 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
         if (info.getDestination() == null) {
             throw new UnsupportedOperationException("A destination must be specified.");
         }
-        super.send(message);
+        sendToProducerDestination(message, this.defaultDeliveryMode, this.defaultPriority,
+                                  this.defaultTimeToLive, null);
     }
 
     @Override
@@ -215,15 +216,13 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
         }
         validateDeliveryMode(deliveryMode);
         validatePriority(priority);
-        super.send(message, deliveryMode, priority, timeToLive);
+        sendToProducerDestination(message, deliveryMode, priority, timeToLive, null);
     }
 
     @Override
     public void send(Destination destination, Message message) throws JMSException {
         checkClosed();
-        if (info.getDestination() != null) {
-            throw new UnsupportedOperationException("This producer was created with a specific destination. Use send(Message) variants.");
-        }
+        assertUnidentifiedProducer();
         super.send(destination, message);
     }
 
@@ -251,9 +250,64 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
      */
     @Override
     public void send(Destination destination, Message message, int deliveryMode, int priority, long timeToLive) throws JMSException {
+        checkClosed();
+        assertUnidentifiedProducer();
         validateDeliveryMode(deliveryMode);
         validatePriority(priority);
         this.send(destination, message, deliveryMode, priority, timeToLive, (AsyncCallback) null);
+    }
+
+    /**
+     * Whether to enforce the JMS identified/unidentified producer send rules.
+     * <p>
+     * ActiveMQ has always accepted either send form on either kind of producer, and a
+     * great deal of existing code relies on that, so enforcement is opt-in via the
+     * connection's {@code strictCompliance} flag -- the same switch
+     * {@code ActiveMQMessage} uses to enforce strict Jakarta 3.1 property rules.
+     */
+    private boolean isStrictProducerCompliance() {
+        return this.session != null && this.session.connection != null
+            && this.session.connection.isStrictCompliance();
+    }
+
+    /**
+     * JMS reserves the destination-less {@code send} methods for an identified
+     * producer -- one created with a destination. Using them on a producer created
+     * without one must raise {@code UnsupportedOperationException}.
+     * Enforced only under strict compliance; see {@link #isStrictProducerCompliance()}.
+     */
+    private void assertIdentifiedProducer() {
+        if (isStrictProducerCompliance() && this.info.getDestination() == null) {
+            throw new UnsupportedOperationException("This message producer was created without a destination; "
+                + "a destination must be supplied on every send. Use send(Destination, Message, ...).");
+        }
+    }
+
+    /**
+     * The mirror rule: JMS reserves the destination-taking {@code send} methods for
+     * an unidentified producer. Supplying a destination to a producer that already
+     * has one must raise {@code UnsupportedOperationException}, even when the two
+     * destinations are equal.
+     * Enforced only under strict compliance; see {@link #isStrictProducerCompliance()}.
+     */
+    private void assertUnidentifiedProducer() {
+        if (isStrictProducerCompliance() && this.info.getDestination() != null) {
+            throw new UnsupportedOperationException("This message producer was created with a destination; "
+                + "a destination cannot be supplied on send. Use send(Message, ...).");
+        }
+    }
+
+    /**
+     * Internal send used by the destination-less overloads. Routes straight to the
+     * full send path so it bypasses {@link #assertUnidentifiedProducer()}, which
+     * would otherwise reject the producer's own destination.
+     */
+    private void sendToProducerDestination(Message message, int deliveryMode, int priority, long timeToLive,
+                                           AsyncCallback onComplete) throws JMSException {
+        checkClosed();
+        assertIdentifiedProducer();
+        this.send(this.info.getDestination(), message, deliveryMode, priority, timeToLive,
+                  getDisableMessageID(), getDisableMessageTimestamp(), onComplete);
     }
 
     /**
@@ -343,9 +397,7 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
     @Override
     public void send(Destination destination, Message message, CompletionListener completionListener) throws JMSException {
         checkClosed();
-        if (info.getDestination() != null) {
-            throw new UnsupportedOperationException("This producer was created with a specific destination. Use send(Message, CompletionListener) variants.");
-        }
+        assertUnidentifiedProducer();
         if (completionListener == null) {
             throw new IllegalArgumentException("CompletionListener must not be null");
         }
@@ -381,9 +433,7 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
     public void send(Destination destination, Message message, int deliveryMode, int priority, long timeToLive,
                      CompletionListener completionListener) throws JMSException {
         checkClosed();
-        if (info.getDestination() != null) {
-            throw new UnsupportedOperationException("This producer was created with a specific destination. Use send(Message, CompletionListener) variants.");
-        }
+        assertUnidentifiedProducer();
         if (completionListener == null) {
             throw new IllegalArgumentException("CompletionListener must not be null");
         }
@@ -421,9 +471,7 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
                      boolean disableMessageID, boolean disableMessageTimestamp,
                      CompletionListener completionListener) throws JMSException {
         checkClosed();
-        if (info.getDestination() != null) {
-            throw new UnsupportedOperationException("This producer was created with a specific destination. Use send(Message, CompletionListener) variants.");
-        }
+        assertUnidentifiedProducer();
         if (completionListener == null) {
             throw new IllegalArgumentException("CompletionListener must not be null");
         }
@@ -465,11 +513,8 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
     }
 
     public void send(Message message, AsyncCallback onComplete) throws JMSException {
-        this.send(this.getDestination(),
-                  message,
-                  this.defaultDeliveryMode,
-                  this.defaultPriority,
-                  this.defaultTimeToLive, onComplete);
+        sendToProducerDestination(message, this.defaultDeliveryMode, this.defaultPriority,
+                                  this.defaultTimeToLive, onComplete);
     }
 
     public void send(Destination destination, Message message, AsyncCallback onComplete) throws JMSException {
@@ -482,15 +527,12 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
     }
 
     public void send(Message message, int deliveryMode, int priority, long timeToLive, AsyncCallback onComplete) throws JMSException {
-        this.send(this.getDestination(),
-                  message,
-                  deliveryMode,
-                  priority,
-                  timeToLive,
-                  onComplete);
+        sendToProducerDestination(message, deliveryMode, priority, timeToLive, onComplete);
     }
 
     public void send(Destination destination, Message message, int deliveryMode, int priority, long timeToLive, AsyncCallback onComplete) throws JMSException {
+        checkClosed();
+        assertUnidentifiedProducer();
         this.send(destination, message, deliveryMode, priority, timeToLive, getDisableMessageID(), getDisableMessageTimestamp(), onComplete);
     }
 
