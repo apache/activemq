@@ -1567,6 +1567,21 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     }
 
     /**
+     * Validates this connection's credentials with the broker using a throwaway
+     * ConnectionInfo that is removed again immediately. The connection's own
+     * ConnectionInfo is left unsent, so setClientID() remains possible afterwards
+     * as the specification requires. Used by the factory under strictCompliance
+     * so createConnection fails fast with JMSSecurityException on bad credentials.
+     */
+    protected void authenticate() throws JMSException {
+        ConnectionInfo probe = info.copy();
+        probe.setConnectionId(new ConnectionId(info.getConnectionId().getValue() + ":auth"));
+        probe.setClientId(clientIdGenerator.generateId());
+        syncSendPacket(probe, getConnectResponseTimeout());
+        asyncSendPacket(probe.createRemoveCommand());
+    }
+
+    /**
      * Send the ConnectionInfo to the Broker
      *
      * @throws JMSException
