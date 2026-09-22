@@ -424,9 +424,11 @@ public class PooledJMSProducerTest extends JmsPoolTestSupport {
             var queue = context.createQueue("test.producer.async");
             var producer = context.createProducer();
 
+            final var completed = new java.util.concurrent.CountDownLatch(1);
             var listener = new CompletionListener() {
                 @Override
                 public void onCompletion(Message message) {
+                    completed.countDown();
                 }
 
                 @Override
@@ -437,10 +439,22 @@ public class PooledJMSProducerTest extends JmsPoolTestSupport {
             assertSame(producer, producer.setAsync(listener));
             assertSame(listener, producer.getAsync());
 
+            // The pool only passes the listener through. A provider without async
+            // send support rejects the send with UnsupportedOperationException;
+            // one with support must invoke the listener.
+            boolean providerSupportsAsync;
             try {
                 producer.send(queue, "async message");
-                fail("Expected UnsupportedOperationException from ActiveMQ Classic client");
-            } catch (UnsupportedOperationException expected) {
+                providerSupportsAsync = true;
+            } catch (UnsupportedOperationException unsupportedByProvider) {
+                providerSupportsAsync = false;
+            }
+            if (providerSupportsAsync) {
+                assertTrue("CompletionListener should have been invoked",
+                    completed.await(10, java.util.concurrent.TimeUnit.SECONDS));
+                try (var consumer = context.createConsumer(queue)) {
+                    assertEquals("async message", consumer.receiveBody(String.class, 5000));
+                }
             }
 
             // clearing the listener restores synchronous sends
