@@ -305,7 +305,7 @@ public class ActiveMQJMS2ContextTest extends ActiveMQJMS2TestBase {
         messageProducer.setDeliveryDelay(1000l);
     }
 
-    @Test(expected = UnsupportedOperationException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void testProducerSendMessageCompletionListener() throws JMSException {
          messageProducer.send(session.createQueue(methodNameDestinationName), null, (CompletionListener)null);
     }
@@ -315,12 +315,12 @@ public class ActiveMQJMS2ContextTest extends ActiveMQJMS2TestBase {
          messageProducer.send(null, 1, 4, 0l, null);
     }
 
-    @Test(expected = UnsupportedOperationException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void testProducerSendDestinationMessageCompletionListener() throws JMSException {
          messageProducer.send(session.createQueue(methodNameDestinationName), null, null);
     }
 
-    @Test(expected = UnsupportedOperationException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void testProducerSendDestinationMessageQosParamsCompletionListener() throws JMSException {
          messageProducer.send(session.createQueue(methodNameDestinationName), null, 1, 4, 0l, null);
     }
