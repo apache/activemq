@@ -21,25 +21,21 @@ import java.net.Socket;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.UnknownHostException;
-import java.util.HashMap;
 import java.util.Map;
 
 import javax.net.ServerSocketFactory;
 import javax.net.SocketFactory;
+import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 
 import org.apache.activemq.broker.SslContext;
 import org.apache.activemq.transport.Transport;
-import org.apache.activemq.transport.TransportServer;
 import org.apache.activemq.transport.tcp.TcpTransport.InitBuffer;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.IntrospectionSupport;
-import org.apache.activemq.util.URISupport;
 import org.apache.activemq.wireformat.WireFormat;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * An implementation of the TcpTransportFactory using SSL. The major
@@ -49,28 +45,22 @@ import org.slf4j.LoggerFactory;
  */
 public class SslTransportFactory extends TcpTransportFactory {
 
-    private static final Logger LOG = LoggerFactory.getLogger(SslTransportFactory.class);
+    /**
+     * Overriding to derive the SSL server socket factory from the given
+     * SslContext, falling back to the JVM default when none is supplied.
+     */
+    @Override
+    protected ServerSocketFactory createServerSocketFactory(SslContext sslContext) throws IOException {
+        SSLContext context = toSSLContext(sslContext);
+        return context != null ? context.getServerSocketFactory() : createServerSocketFactory();
+    }
 
     /**
      * Overriding to use SslTransportServer and allow for proper reflection.
      */
     @Override
-    public TransportServer doBind(final URI location) throws IOException {
-        try {
-            Map<String, String> options = new HashMap<String, String>(URISupport.parseParameters(location));
-
-            ServerSocketFactory serverSocketFactory = createServerSocketFactory();
-            SslTransportServer server = createSslTransportServer(location, (SSLServerSocketFactory)serverSocketFactory);
-            server.setWireFormatFactory(createWireFormatFactory(options));
-            IntrospectionSupport.setProperties(server, options);
-            Map<String, Object> transportOptions = IntrospectionSupport.extractProperties(options, "transport.");
-            server.setTransportOption(transportOptions);
-            server.bind();
-
-            return server;
-        } catch (URISyntaxException e) {
-            throw IOExceptionSupport.create(e);
-        }
+    protected TcpTransportServer createTcpTransportServer(final URI location, ServerSocketFactory serverSocketFactory) throws IOException, URISyntaxException {
+        return createSslTransportServer(location, (SSLServerSocketFactory) serverSocketFactory);
     }
 
     /**
@@ -101,25 +91,21 @@ public class SslTransportFactory extends TcpTransportFactory {
     }
 
     /**
+     * Overriding to derive the SSL socket factory from the given SslContext,
+     * falling back to the JVM default when none is supplied.
+     */
+    @Override
+    protected SocketFactory createSocketFactory(SslContext sslContext) throws IOException {
+        SSLContext context = toSSLContext(sslContext);
+        return context != null ? context.getSocketFactory() : createSocketFactory();
+    }
+
+    /**
      * Overriding to use SslTransports.
      */
     @Override
-    protected Transport createTransport(URI location, WireFormat wf) throws UnknownHostException, IOException {
-        URI localLocation = null;
-        String path = location.getPath();
-        // see if the path is a local URI location
-        if (path != null && path.length() > 0) {
-            int localPortIndex = path.indexOf(':');
-            try {
-                Integer.parseInt(path.substring(localPortIndex + 1, path.length()));
-                String localString = location.getScheme() + ":/" + path;
-                localLocation = new URI(localString);
-            } catch (Exception e) {
-                LOG.warn("path isn't a valid local location for SslTransport to use", e);
-            }
-        }
-        SocketFactory socketFactory = createSocketFactory();
-        return new SslTransport(wf, (SSLSocketFactory)socketFactory, location, localLocation, false);
+    protected TcpTransport createTcpTransport(WireFormat wf, SocketFactory socketFactory, URI location, URI localLocation) throws UnknownHostException, IOException {
+        return new SslTransport(wf, (SSLSocketFactory) socketFactory, location, localLocation, false);
     }
 
     /**
@@ -131,37 +117,12 @@ public class SslTransportFactory extends TcpTransportFactory {
      */
     @Override
     protected ServerSocketFactory createServerSocketFactory() throws IOException {
-        if( SslContext.getCurrentSslContext()!=null ) {
-            SslContext ctx = SslContext.getCurrentSslContext();
-            try {
-                return ctx.getSSLContext().getServerSocketFactory();
-            } catch (Exception e) {
-                throw IOExceptionSupport.create(e);
-            }
-        } else {
-            return SSLServerSocketFactory.getDefault();
-        }
+        return SSLServerSocketFactory.getDefault();
     }
 
-    /**
-     * Creates a new SSL SocketFactory. The given factory will use user-provided
-     * key and trust managers (if the user provided them).
-     *
-     * @return Newly created (Ssl)SocketFactory.
-     * @throws IOException
-     */
     @Override
     protected SocketFactory createSocketFactory() throws IOException {
-        if( SslContext.getCurrentSslContext()!=null ) {
-            SslContext ctx = SslContext.getCurrentSslContext();
-            try {
-                return ctx.getSSLContext().getSocketFactory();
-            } catch (Exception e) {
-                throw IOExceptionSupport.create(e);
-            }
-        } else {
-            return SSLSocketFactory.getDefault();
-        }
+        return SSLSocketFactory.getDefault();
     }
 
     @Override

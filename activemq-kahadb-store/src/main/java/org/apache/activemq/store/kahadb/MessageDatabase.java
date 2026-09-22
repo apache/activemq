@@ -97,6 +97,7 @@ import org.apache.activemq.store.kahadb.disk.journal.Location;
 import org.apache.activemq.store.kahadb.disk.journal.TargetedDataFileAppender;
 import org.apache.activemq.store.kahadb.disk.page.Page;
 import org.apache.activemq.store.kahadb.disk.page.PageFile;
+import org.apache.activemq.store.kahadb.disk.page.PageFile.PageFileCompactionStrategy;
 import org.apache.activemq.store.kahadb.disk.page.Transaction;
 import org.apache.activemq.store.kahadb.disk.util.LocationMarshaller;
 import org.apache.activemq.store.kahadb.disk.util.LongMarshaller;
@@ -291,6 +292,9 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     private boolean enableIndexDiskSyncs = true;
     private boolean enableIndexRecoveryFile = true;
     private boolean enableIndexPageCaching = true;
+    private PageFileCompactionStrategy indexCompactionStrategy = PageFileCompactionStrategy.NEVER;
+    private float minFreePageCompactionRatio = .1F;
+    private float maxFreePageCompactionRatio = .3F;
     ReentrantReadWriteLock checkpointLock = new ReentrantReadWriteLock();
 
     private boolean enableAckCompaction = true;
@@ -1699,6 +1703,8 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 Set<Integer> filesToGc = pageFile.tx().execute((Transaction.CallableClosure<Set<Integer>, IOException>)
                         tx -> checkpointUpdate(tx, cleanup));
                 pageFile.flush();
+                pageFile.compact();
+
                 // after the index update such that partial removal does not leave dangling references in the index.
                 journal.removeDataFiles(filesToGc);
             } finally {
@@ -1839,8 +1845,10 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                         int dataFileId = subscription.getValue().getDataFileId();
 
                         // Move subscription along if it has no outstanding messages that need ack'd
-                        // and its in the last log file in the journal.
-                        if (!gcCandidateSet.isEmpty() && gcCandidateSet.first() == dataFileId) {
+                        // and the file the command is written to is part of the gcCandidateSet
+                        // This will prevent the subscription from blocking the file from being GC'd
+                        // if otherwise eligible
+                        if (gcCandidateSet.contains(dataFileId)) {
                             final StoredDestination destination = entry.getValue();
                             final String subscriptionKey = subscription.getKey();
                             SequenceSet pendingAcks = destination.ackPositions.get(tx, subscriptionKey);
@@ -3263,6 +3271,9 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         index.setEnableDiskSyncs(isEnableIndexDiskSyncs());
         index.setEnableRecoveryFile(isEnableIndexRecoveryFile());
         index.setEnablePageCaching(isEnableIndexPageCaching());
+        index.setCompactionStrategy(getIndexCompactionStrategy());
+        index.setMaxFreePageCompactionRatio(getMaxFreePageCompactionRatio());
+        index.setMinFreePageCompactionRatio(getMinFreePageCompactionRatio());
         return index;
     }
 
@@ -4165,6 +4176,45 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
      */
     public void setEnableSubscriptionStatistics(boolean enableSubscriptionStatistics) {
         this.enableSubscriptionStatistics = enableSubscriptionStatistics;
+    }
+
+    public float getMinFreePageCompactionRatio() {
+        return minFreePageCompactionRatio;
+    }
+
+    /**
+     * The ratio of the minimum amount of free pages to keep.
+     * The default will keep a minimum of 10% of free pages, relative to the
+     * current size of the file when compaction is started.
+     *
+     * @param minFreePageCompactionRatio
+     */
+    public void setMinFreePageCompactionRatio(float minFreePageCompactionRatio) {
+        this.minFreePageCompactionRatio = minFreePageCompactionRatio;
+    }
+
+    public float getMaxFreePageCompactionRatio() {
+        return maxFreePageCompactionRatio;
+    }
+
+    /**
+     * The ratio of the maximum amount of free pages to allow before triggering compaction.
+     * The default will trigger a compaction attempt if the percentage of free pages
+     * hits 30% of the total file size.
+     *
+     * @param maxFreePageCompactionRatio
+     */
+    public void setMaxFreePageCompactionRatio(float maxFreePageCompactionRatio) {
+        this.maxFreePageCompactionRatio = maxFreePageCompactionRatio;
+    }
+
+    public PageFileCompactionStrategy getIndexCompactionStrategy() {
+        return indexCompactionStrategy;
+    }
+
+    public void setIndexCompactionStrategy(
+            PageFileCompactionStrategy indexCompactionStrategy) {
+        this.indexCompactionStrategy = indexCompactionStrategy;
     }
 
     private static class MessageDatabaseObjectInputStream extends ObjectInputStream {

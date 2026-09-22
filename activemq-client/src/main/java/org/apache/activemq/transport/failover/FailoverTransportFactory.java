@@ -20,6 +20,8 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Map;
+
+import org.apache.activemq.broker.SslContext;
 import org.apache.activemq.transport.MutexTransport;
 import org.apache.activemq.transport.ResponseCorrelator;
 import org.apache.activemq.transport.Transport;
@@ -33,8 +35,13 @@ public class FailoverTransportFactory extends TransportFactory {
 
     @Override
     public Transport doConnect(URI location) throws IOException {
+        return doConnect(location, (SslContext) null);
+    }
+
+    @Override
+    public Transport doConnect(URI location, SslContext sslContext) throws IOException {
         try {
-            Transport transport = createTransport(URISupport.parseComposite(location));
+            Transport transport = createTransport(URISupport.parseComposite(location), sslContext);
             transport = new MutexTransport(transport);
             transport = new ResponseCorrelator(transport);
             return transport;
@@ -52,14 +59,22 @@ public class FailoverTransportFactory extends TransportFactory {
         }
     }
 
-    /**
-     * @param compositData
-     * @return
-     * @throws IOException
-     */
+    @Override
+    public Transport doCompositeConnect(URI location, SslContext sslContext) throws IOException {
+        try {
+            return createTransport(URISupport.parseComposite(location), sslContext);
+        } catch (URISyntaxException e) {
+            throw new IOException("Invalid location: " + location);
+        }
+    }
+
     public Transport createTransport(CompositeData compositData) throws IOException {
+        return createTransport(compositData, null);
+    }
+
+    public Transport createTransport(CompositeData compositData, SslContext sslContext) throws IOException {
         Map<String, String> options = compositData.getParameters();
-        FailoverTransport transport = createTransport(options);
+        FailoverTransport transport = createTransport(options, sslContext);
         if (!options.isEmpty()) {
             throw new IllegalArgumentException("Invalid connect parameters: " + options);
         }
@@ -68,7 +83,11 @@ public class FailoverTransportFactory extends TransportFactory {
     }
 
     public FailoverTransport createTransport(Map<String, String> parameters) throws IOException {
-        FailoverTransport transport = new FailoverTransport();
+        return createTransport(parameters, null);
+    }
+
+    public FailoverTransport createTransport(Map<String, String> parameters, SslContext sslContext) throws IOException {
+        FailoverTransport transport = new FailoverTransport(sslContext);
         Map<String, Object> nestedExtraQueryOptions = IntrospectionSupport.extractProperties(parameters, "nested.");
         IntrospectionSupport.setProperties(transport, parameters);
         try {

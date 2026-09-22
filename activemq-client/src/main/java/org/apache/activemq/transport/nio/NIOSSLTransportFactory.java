@@ -33,7 +33,6 @@ import javax.net.ssl.SSLSocketFactory;
 
 import org.apache.activemq.broker.SslContext;
 import org.apache.activemq.transport.Transport;
-import org.apache.activemq.transport.TransportServer;
 import org.apache.activemq.transport.tcp.SslTransport;
 import org.apache.activemq.transport.tcp.TcpTransport;
 import org.apache.activemq.transport.tcp.TcpTransport.InitBuffer;
@@ -41,29 +40,22 @@ import org.apache.activemq.transport.tcp.TcpTransportServer;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.wireformat.WireFormat;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class NIOSSLTransportFactory extends NIOTransportFactory {
-    private static final Logger LOG = LoggerFactory.getLogger(NIOSSLTransportFactory.class);
-
-    protected SSLContext context;
-
     @Override
     protected TcpTransportServer createTcpTransportServer(URI location, ServerSocketFactory serverSocketFactory) throws IOException, URISyntaxException {
-        return new NIOSSLTransportServer(context, this, location, serverSocketFactory);
+        return createTcpTransportServer(location, serverSocketFactory, null);
     }
 
+    /**
+     * Overriding to create an NIO SSL transport server that uses the given
+     * SslContext for accepted connections.
+     *
+     * @param sslContext the SslContext to use, or null for the JVM default.
+     */
     @Override
-    public TransportServer doBind(URI location) throws IOException {
-        if (SslContext.getCurrentSslContext() != null) {
-            try {
-                context = SslContext.getCurrentSslContext().getSSLContext();
-            } catch (Exception e) {
-                throw new IOException(e);
-            }
-        }
-        return super.doBind(location);
+    protected TcpTransportServer createTcpTransportServer(URI location, ServerSocketFactory serverSocketFactory, SslContext sslContext) throws IOException, URISyntaxException {
+        return new NIOSSLTransportServer(toSSLContext(sslContext), this, location, serverSocketFactory);
     }
 
     /**
@@ -84,25 +76,20 @@ public class NIOSSLTransportFactory extends NIOTransportFactory {
     }
 
     /**
+     * Overriding to derive the SSL socket factory from the given SslContext,
+     * falling back to the JVM default when none is supplied.
+     */
+    @Override
+    protected SocketFactory createSocketFactory(SslContext sslContext) throws IOException {
+        SSLContext context = toSSLContext(sslContext);
+        return context != null ? context.getSocketFactory() : createSocketFactory();
+    }
+
+    /**
      * Overriding to use SslTransports.
      */
     @Override
-    protected Transport createTransport(URI location, WireFormat wf) throws UnknownHostException, IOException {
-
-        URI localLocation = null;
-        String path = location.getPath();
-        // see if the path is a local URI location
-        if (path != null && path.length() > 0) {
-            int localPortIndex = path.indexOf(':');
-            try {
-                Integer.parseInt(path.substring(localPortIndex + 1, path.length()));
-                String localString = location.getScheme() + ":/" + path;
-                localLocation = new URI(localString);
-            } catch (Exception e) {
-                LOG.warn("path isn't a valid local location for SslTransport to use", e);
-            }
-        }
-        SocketFactory socketFactory = createSocketFactory();
+    protected TcpTransport createTcpTransport(WireFormat wf, SocketFactory socketFactory, URI location, URI localLocation) throws UnknownHostException, IOException {
         return new SslTransport(wf, (SSLSocketFactory) socketFactory, location, localLocation, false);
     }
 
@@ -113,26 +100,9 @@ public class NIOSSLTransportFactory extends NIOTransportFactory {
         return new NIOSSLTransport(wireFormat, socket, engine, initBuffer, inputBuffer);
     }
 
-    /**
-     * Creates a new SSL SocketFactory. The given factory will use user-provided
-     * key and trust managers (if the user provided them).
-     *
-     * @return Newly created (Ssl)SocketFactory.
-     * @throws IOException
-     */
     @Override
     protected SocketFactory createSocketFactory() throws IOException {
-        if (SslContext.getCurrentSslContext() != null) {
-            SslContext ctx = SslContext.getCurrentSslContext();
-            try {
-                return ctx.getSSLContext().getSocketFactory();
-            } catch (Exception e) {
-                throw IOExceptionSupport.create(e);
-            }
-        } else {
-            return SSLSocketFactory.getDefault();
-        }
-
+        return SSLSocketFactory.getDefault();
     }
 
 }

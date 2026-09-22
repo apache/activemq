@@ -73,6 +73,11 @@ public class TransportFilter implements TransportListener, Transport {
     }
 
     @Override
+    public void stop(Throwable exception) throws Exception {
+        next.stop(exception);
+    }
+
+    @Override
     public void onCommand(Object command) {
         transportListener.onCommand(command);
     }

@@ -98,6 +98,7 @@ import org.apache.activemq.transport.TransportDisposedIOException;
 import org.apache.activemq.transport.TransportFilter;
 import org.apache.activemq.transport.failover.FailoverTransport;
 import org.apache.activemq.transport.tcp.TcpTransport;
+import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.IdGenerator;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.apache.activemq.util.LongSequenceGenerator;
@@ -1328,8 +1329,14 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                 } else if (command.isBrokerInfo()) {
                     futureLocalBrokerInfo.set((BrokerInfo) command);
                 } else if (command.isShutdownInfo()) {
-                    LOG.info("{} Shutting down {}", configuration.getBrokerName(), configuration.getName());
-                    stop();
+                    ShutdownInfo info =  (ShutdownInfo) command;
+                    if (brokerService.isStopping() || brokerService.isStopped() || info.getError() == null) {
+                        LOG.info("{} Shutting down {}", configuration.getBrokerName(), configuration.getName());
+                        stop();
+                    } else {
+                        // Administrative shutdown via .stop() or SlowConsumerStrategy needs lifecycle clean-up
+                        serviceLocalException(IOExceptionSupport.create(info.getError()));
+                    }
                 } else if (command.getClass() == ConnectionError.class) {
                     ConnectionError ce = (ConnectionError) command;
                     serviceLocalException(ce.getException());
@@ -1583,17 +1590,21 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         }
 
         List<ConsumerId> candidateConsumers = consumerInfo.getNetworkConsumerIds();
+        // null when the destination's region is not an AbstractRegion (no
+        // subscription view available) - nothing to compare against
         Collection<Subscription> currentSubs = getRegionSubscriptions(consumerInfo.getDestination());
-        for (Subscription sub : currentSubs) {
-            List<ConsumerId> networkConsumers = sub.getConsumerInfo().getNetworkConsumerIds();
-            if (!networkConsumers.isEmpty()) {
-                if (matchFound(candidateConsumers, networkConsumers)) {
-                    if (isInActiveDurableSub(sub)) {
-                        suppress = false;
-                    } else {
-                        suppress = hasLowerPriority(sub, candidate.getLocalInfo());
+        if (currentSubs != null) {
+            for (Subscription sub : currentSubs) {
+                List<ConsumerId> networkConsumers = sub.getConsumerInfo().getNetworkConsumerIds();
+                if (!networkConsumers.isEmpty()) {
+                    if (matchFound(candidateConsumers, networkConsumers)) {
+                        if (isInActiveDurableSub(sub)) {
+                            suppress = false;
+                        } else {
+                            suppress = hasLowerPriority(sub, candidate.getLocalInfo());
+                        }
+                        break;
                     }
-                    break;
                 }
             }
         }
@@ -2007,7 +2018,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
      * Used to allow for async tasks to await receipt of the BrokerInfo from the local and
      * remote sides of the network bridge.
      */
-    private static class FutureBrokerInfo implements Future<BrokerInfo> {
+    static class FutureBrokerInfo implements Future<BrokerInfo> {
 
         private final CountDownLatch slot = new CountDownLatch(1);
         private final AtomicBoolean disposed;
@@ -2058,7 +2069,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                 if (info == null) {
                     long deadline = System.currentTimeMillis() + unit.toMillis(timeout);
 
-                    while (!disposed.get() || System.currentTimeMillis() - deadline < 0) {
+                    while (!disposed.get() && System.currentTimeMillis() - deadline < 0) {
                         if (slot.await(1, TimeUnit.MILLISECONDS)) {
                             break;
                         }

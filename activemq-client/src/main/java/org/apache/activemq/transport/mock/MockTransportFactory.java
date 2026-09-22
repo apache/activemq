@@ -32,7 +32,7 @@ import org.apache.activemq.util.URISupport.CompositeData;
 public class MockTransportFactory extends TransportFactory {
 
     @Override
-    public Transport doConnect(URI location) throws URISyntaxException, Exception {
+    public Transport doConnect(URI location) throws IOException, URISyntaxException {
         Transport transport = createTransport(URISupport.parseComposite(location));
         transport = new MutexTransport(transport);
         transport = new ResponseCorrelator(transport);
@@ -40,16 +40,17 @@ public class MockTransportFactory extends TransportFactory {
     }
 
     @Override
-    public Transport doCompositeConnect(URI location) throws URISyntaxException, Exception {
+    public Transport doCompositeConnect(URI location) throws IOException, URISyntaxException {
         return createTransport(URISupport.parseComposite(location));
     }
 
     /**
      * @param compositData
      * @return a new Transport instance.
-     * @throws Exception
+     * @throws IOException
+     * @throws URISyntaxException
      */
-    public Transport createTransport(CompositeData compositData) throws Exception {
+    public Transport createTransport(CompositeData compositData) throws IOException, URISyntaxException {
         MockTransport transport = new MockTransport(TransportFactory.compositeConnect(compositData.getComponents()[0]));
         IntrospectionSupport.setProperties(transport, compositData.getParameters());
         return transport;

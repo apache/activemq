@@ -17,10 +17,13 @@
 package org.apache.activemq.proxy;
 
 import org.apache.activemq.Service;
+import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.SslContext;
 import org.apache.activemq.transport.CompositeTransport;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportAcceptListener;
 import org.apache.activemq.transport.TransportFactory;
+import org.apache.activemq.transport.TransportFactorySupport;
 import org.apache.activemq.transport.TransportFilter;
 import org.apache.activemq.transport.TransportServer;
 import org.apache.activemq.util.ServiceStopper;
@@ -31,6 +34,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Iterator;
+import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
@@ -44,6 +48,8 @@ public class ProxyConnector implements Service {
     private URI remote;
     private URI localUri;
     private String name;
+    private BrokerService brokerService;
+    private SslContext sslContext;
 
     /**
      * Should we proxy commands to the local broker using VM transport as well?
@@ -143,11 +149,11 @@ public class ProxyConnector implements Service {
         if (bind == null) {
             throw new IllegalArgumentException("You must specify either a server or the bind property");
         }
-        return TransportFactory.bind(bind);
+        return TransportFactorySupport.bind(brokerService, bind, resolveSslContext());
     }
 
     private Transport createRemoteTransport(final Transport local) throws Exception {
-        Transport transport = TransportFactory.compositeConnect(remote);
+        Transport transport = TransportFactory.compositeConnect(remote, resolveSslContext());
         CompositeTransport ct = transport.narrow(CompositeTransport.class);
         if (ct != null && localUri != null && proxyToLocalBroker) {
             ct.add(false, new URI[] { localUri });
@@ -188,6 +194,36 @@ public class ProxyConnector implements Service {
 
     public void setProxyToLocalBroker(boolean proxyToLocalBroker) {
         this.proxyToLocalBroker = proxyToLocalBroker;
+    }
+
+    public BrokerService getBrokerService() {
+        return brokerService;
+    }
+
+    public void setBrokerService(BrokerService brokerService) {
+        this.brokerService = brokerService;
+    }
+
+    public SslContext getSslContext() {
+        return sslContext;
+    }
+
+    /**
+     * Sets the SSL context used when the bind or remote URI uses an SSL
+     * based transport. When not set, the broker's SSL context is used;
+     * when neither is set, the JVM default applies.
+     */
+    public void setSslContext(SslContext sslContext) {
+        this.sslContext = sslContext;
+    }
+
+    /**
+     * Resolves the SSL context at connect/bind time: the per-connector
+     * context wins, then the broker's context, then null (JVM default).
+     */
+    private SslContext resolveSslContext() {
+        return Optional.ofNullable(sslContext)
+                .orElse(brokerService != null ? brokerService.getSslContext() : null);
     }
 
     protected Integer getConnectionCount() {

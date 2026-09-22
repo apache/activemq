@@ -16,19 +16,24 @@
  */
 package org.apache.activemq.util;
 
+import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
+
 public class IntSequenceGenerator {
 
-    private int lastSequenceId;
+    private static final AtomicIntegerFieldUpdater<IntSequenceGenerator> SEQUENCE_UPDATER =
+            AtomicIntegerFieldUpdater.newUpdater(IntSequenceGenerator.class, "lastSequenceId");
 
-    public synchronized int getNextSequenceId() {
-        return ++lastSequenceId;
+    private volatile int lastSequenceId;
+
+    public int getNextSequenceId() {
+        return SEQUENCE_UPDATER.incrementAndGet(this);
     }
 
-    public synchronized int getLastSequenceId() {
+    public int getLastSequenceId() {
         return lastSequenceId;
     }
 
-    public synchronized void setLastSequenceId(int l) {
-        lastSequenceId = l;
+    public void setLastSequenceId(int l) {
+        SEQUENCE_UPDATER.set(this, l);
     }
 }

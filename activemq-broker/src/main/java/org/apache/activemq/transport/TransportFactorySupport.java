@@ -29,18 +29,15 @@ import java.net.URI;
 public class TransportFactorySupport {
 
     public static TransportServer bind(BrokerService brokerService, URI location) throws IOException {
+        return bind(brokerService, location, brokerService != null ? brokerService.getSslContext() : null);
+    }
+
+    public static TransportServer bind(BrokerService brokerService, URI location, SslContext sslContext) throws IOException {
         TransportFactory tf = TransportFactory.findTransportFactory(location);
-        if( brokerService!=null && tf instanceof BrokerServiceAware) {
-            ((BrokerServiceAware)tf).setBrokerService(brokerService);
+        if (brokerService != null && tf instanceof BrokerServiceAware) {
+            ((BrokerServiceAware) tf).setBrokerService(brokerService);
         }
-        try {
-            if( brokerService!=null ) {
-                SslContext.setCurrentSslContext(brokerService.getSslContext());
-            }
-            return tf.doBind(location);
-        } finally {
-            SslContext.setCurrentSslContext(null);
-        }
+        return tf.doBind(location, sslContext);
     }
 
 }

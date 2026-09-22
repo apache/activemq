@@ -128,6 +128,8 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
     private final Transport transport;
     private MessageAuthorizationPolicy messageAuthorizationPolicy;
     private WireFormatInfo wireFormatInfo;
+    // Cached connector URI for the MDC tag; connector.getUri() is stable once started.
+    private String connectorUriString = "unset";
     // Used to do async dispatch.. this should perhaps be pushed down into the
     // transport layer..
     private boolean inServiceException;
@@ -329,7 +331,14 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
 
     @Override
     public Response service(Command command) {
-        MDC.put("activemq.connector", connector.getUri().toString());
+        // MDC entries are copy-on-write maps in log4j2 — a put per command is a
+        // full thread-context map copy per message. Put only when this thread's
+        // tag actually changes and leave it sticky between commands (same
+        // lifecycle-scoped pattern as the activemq.broker MDC entry), so the
+        // steady-state per-command cost is a single allocation-free MDC.get.
+        if (!connectorUriString.equals(MDC.get("activemq.connector"))) {
+            MDC.put("activemq.connector", connectorUriString);
+        }
         Response response = null;
         boolean responseRequired = command.isResponseRequired();
         int commandId = command.getCommandId();
@@ -379,7 +388,6 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
             }
             context = null;
         }
-        MDC.remove("activemq.connector");
         return response;
     }
 
@@ -1132,6 +1140,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         if (status.compareAndSet(NEW, STARTING)) {
             try {
                 synchronized (this) {
+                    connectorUriString = connector.getUri().toString();
                     if (taskRunnerFactory != null) {
                         taskRunner = taskRunnerFactory.createTaskRunner(this, "ActiveMQ Connection Dispatcher: "
                                 + getRemoteAddress());
@@ -1260,7 +1269,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
             LOG.trace("Exception caught stopping. This exception is ignored.", ignore);
         }
         try {
-            transport.stop();
+            transport.stop(transportException.get());
             LOG.debug("Stopped transport: {}", transport.getRemoteAddress());
         } catch (Exception e) {
             LOG.debug("Could not stop transport to {}. This exception is ignored.", transport.getRemoteAddress(), e);

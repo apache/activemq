@@ -156,7 +156,7 @@ public class PooledProducer implements MessageProducer {
      */
     @Override
     public long getDeliveryDelay() throws JMSException {
-        throw new UnsupportedOperationException("getDeliveryDelay() is not supported");
+        return 0L;
     }
 
     @Override

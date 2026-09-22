@@ -1,12 +1,13 @@
 Welcome to Apache ActiveMQ 
 =======================================================================
-Apache ActiveMQ is a high performance Apache 2.0 licensed
-Message Broker.
+Apache ActiveMQ is a high performance Message Broker licensed under Apache 2.0.
+
 ActiveMQ supports several API and protocols:
 - Jakarta Messaging 3.1.0, JMS 2.0 and JMS 1.1.
 - AMQP
 - MQTT
 - HTTP/WS
+- STOMP
 
 ActiveMQ also provides advanced features like:
 - network of brokers
@@ -20,7 +21,7 @@ To help you get started, try the following links:
 Getting Started
 - You need JDK17+ to run Apache ActiveMQ
 - After having extracted ActiveMQ binary distribution, you can start ActiveMQ with `./bin/activemq console` (foreground) or `./bin/activemq start`
-- Docker images are also available on Docker Hub (https://hub.docker.com/r/apache/activemq-classic)
+- Docker images are also available on Docker Hub (https://hub.docker.com/r/apache/activemq)
 
 Building
 - You can build (fast) using Apache Maven: `mvn clean install -DskipTests`
@@ -33,7 +34,7 @@ We welcome contributions of all kinds, for details of how you can help
 https://activemq.apache.org/contributing.html
 
 Please refer to the website for details of finding the issue tracker, 
-email lists, wiki or IRC channel at https://activemq.apache.org/
+email lists, wiki or Slack channel at https://activemq.apache.org/
 
 Please help us make Apache ActiveMQ better - we appreciate any feedback 
 you may have.

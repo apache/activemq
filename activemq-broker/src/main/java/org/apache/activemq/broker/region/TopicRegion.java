@@ -209,11 +209,13 @@ public class TopicRegion extends AbstractRegion {
 
     @Override
     public void removeSubscription(ConnectionContext context, RemoveSubscriptionInfo info) throws Exception {
-        SubscriptionKey key = new SubscriptionKey(info.getClientId(), info.getSubscriptionName());
+        // clientId from connection context
+        final String clientId = context.getClientId();
+        SubscriptionKey key = new SubscriptionKey(clientId, info.getSubscriptionName());
         DurableTopicSubscription sub = durableSubscriptions.get(key);
         if (sub == null) {
             throw new InvalidDestinationException("No durable subscription exists for clientID: " +
-                                                  info.getClientId() + " and subscriptionName: " +
+                                                  clientId + " and subscriptionName: " +
                                                   info.getSubscriptionName());
         }
         if (sub.isActive()) {

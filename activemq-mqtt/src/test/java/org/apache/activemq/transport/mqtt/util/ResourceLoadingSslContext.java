@@ -32,7 +32,7 @@ import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 
-import org.apache.activemq.broker.SslContext;
+import org.apache.activemq.broker.CompatibleSslContext;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
@@ -42,7 +42,7 @@ import org.springframework.util.ResourceUtils;
 /**
  * Extends the SslContext so that it's easier to configure from spring.
  */
-public class ResourceLoadingSslContext extends SslContext {
+public class ResourceLoadingSslContext extends CompatibleSslContext {
 
     private String keyStoreType = "jks";
     private String trustStoreType = "jks";

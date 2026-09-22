@@ -289,9 +289,14 @@ public class ActiveMQJMS2ContextTest extends ActiveMQJMS2TestBase {
         session.createSharedDurableConsumer(session.createTopic("test"), null, null);
     }
 
-    @Test(expected = UnsupportedOperationException.class)
+    @Test
     public void testProducerDeliveryDelayGet() throws JMSException {
-        messageProducer.getDeliveryDelay();
+        assertEquals(0L, messageProducer.getDeliveryDelay());
+    }
+
+    @Test(expected = UnsupportedOperationException.class)
+    public void testProducerDeliveryDelaySetZero() throws JMSException {
+        messageProducer.setDeliveryDelay(0L);
     }
 
     @Test(expected = UnsupportedOperationException.class)

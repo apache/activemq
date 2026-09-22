@@ -865,9 +865,9 @@ public class RegionBroker extends EmptyBroker {
      */
     @Override
     public long getBrokerSequenceId() {
-        synchronized (sequenceGenerator) {
-            return sequenceGenerator.getNextSequenceId();
-        }
+        // LongSequenceGenerator is atomic; no monitor needed on this hot path
+        // (stamped on every send for every destination).
+        return sequenceGenerator.getNextSequenceId();
     }
 
     @Override

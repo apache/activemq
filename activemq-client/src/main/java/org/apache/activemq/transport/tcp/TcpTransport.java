@@ -613,26 +613,39 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
     }
 
     protected void initializeStreams() throws Exception {
+        // receiveCounter feeds AbstractInactivityMonitor.readCheck() so only increment when there is data read
         TcpBufferedInputStream buffIn = new TcpBufferedInputStream(socket.getInputStream(), ioBufferSize) {
             @Override
             public int read() throws IOException {
-                receiveCounter.incrementAndGet();
-                return super.read();
+                int result = super.read();
+                if (result >= 0) {
+                    receiveCounter.incrementAndGet();
+                }
+                return result;
             }
             @Override
             public int read(byte[] b, int off, int len) throws IOException {
-                receiveCounter.incrementAndGet();
-                return super.read(b, off, len);
+                int result = super.read(b, off, len);
+                if (result > 0) {
+                    receiveCounter.incrementAndGet();
+                }
+                return result;
             }
             @Override
             public long skip(long n) throws IOException {
-                receiveCounter.incrementAndGet();
-                return super.skip(n);
+                long result = super.skip(n);
+                if (result > 0) {
+                    receiveCounter.incrementAndGet();
+                }
+                return result;
             }
             @Override
-            protected void fill() throws IOException {
-                receiveCounter.incrementAndGet();
-                super.fill();
+            protected int fill() throws IOException {
+                int read = super.fill();
+                if (read > 0) {
+                    receiveCounter.incrementAndGet();
+                }
+                return read;
             }
         };
         //Unread the initBuffer that was used for protocol detection if it exists
