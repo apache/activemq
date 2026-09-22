@@ -308,6 +308,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
      */
     @Override
     public JMSContext createContext(String userName, String password, int sessionMode) {
+        ActiveMQSession.validateSessionMode(sessionMode);
         try {
             return new ActiveMQContext(createActiveMQConnection(userName, password), sessionMode);
         } catch (JMSException e) {
@@ -320,6 +321,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
      */
     @Override
     public JMSContext createContext(int sessionMode) {
+        ActiveMQSession.validateSessionMode(sessionMode);
         try {
             return new ActiveMQContext(createActiveMQConnection(getUserName(), getPassword()), sessionMode);
         } catch (JMSException e) {
