@@ -696,17 +696,14 @@ public class PageFile {
         // Disk size of the free pages in the page file
         long freePageCount = getFreePageCount();
         long totalPageCount = getPageCount();
-
-        // Percentage of pages that are free vs in use
-        double freePageRatio = Math.round((double)freePageCount / totalPageCount * 100d) / 100d;
+        long maxFreePages = Math.round(totalPageCount * maxFreePageCompactionRatio);
 
         // Only attempt to compact if we have reached the maximum ratio of free pages
         // that is configured.
-        var tolerance = .001;
-        if (freePageRatio < maxFreePageCompactionRatio - tolerance) {
-            var formatted = Math.round((double)freePageCount / totalPageCount * 100d) / 100d;
+        if (freePageCount < maxFreePages) {
+            double freePageRatio = Math.round((double)freePageCount / totalPageCount * 100d) / 100d;
             LOG.debug("Skipping compaction, page file freePageRatio {} is less than "
-              + "configured maxFreePageCompactionRatio {}", String.format("%,.2f", formatted), maxFreePageCompactionRatio);
+              + "configured maxFreePageCompactionRatio {}", String.format("%,.2f", freePageRatio), maxFreePageCompactionRatio);
             return;
         }
 
@@ -737,6 +734,10 @@ public class PageFile {
         // we must keep a minimum number of free pages so find the point
         // where we can truncate without removing too many pages
         long maxPagesToTruncate = freePageCount - minFreePages;
+        if (maxPagesToTruncate <= 0) {
+            LOG.debug("Unable to compact, maxPagesToTruncate is {}", maxPagesToTruncate);
+            return;
+        }
 
         final Sequence freePagesToDelete;
         // If the block of free pages is larger than the max we need to truncate
