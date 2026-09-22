@@ -97,6 +97,11 @@ public class JNDIInitialContextFactory implements InitialContextFactory {
     private static ActiveMQConnectionFactory createConnectionFactory(final String clientId) {
         final ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(BROKER_URL);
         factory.setNestedMapAndListEnabled(false);
+        // JmsTool creates competing queue consumers on connections it never starts.
+        // Without deferral the broker round-robins messages into those consumers'
+        // prefetch, where they park in the held dispatch channel and the started
+        // consumer's receive() blocks forever (core20 jmsconsumertests queueReceiveTests).
+        factory.setDeferPrefetchUntilStarted(true);
         if (clientId != null) {
             factory.setClientID(clientId);
         }
