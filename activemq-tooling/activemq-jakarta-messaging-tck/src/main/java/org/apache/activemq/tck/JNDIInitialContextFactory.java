@@ -28,6 +28,9 @@ import javax.naming.Context;
 import javax.naming.NamingException;
 import javax.naming.spi.InitialContextFactory;
 
+import org.apache.activemq.broker.BrokerPlugin;
+import org.apache.activemq.security.AuthenticationUser;
+import org.apache.activemq.security.SimpleAuthenticationPlugin;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQQueue;
@@ -97,6 +100,11 @@ public class JNDIInitialContextFactory implements InitialContextFactory {
     private static ActiveMQConnectionFactory createConnectionFactory(final String clientId) {
         final ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(BROKER_URL);
         factory.setNestedMapAndListEnabled(false);
+        // The TCK asserts strict Jakarta Messaging semantics that ActiveMQ relaxes by
+        // default for backwards compatibility: eager authentication on
+        // createConnection/createContext, the administratively configured client
+        // identifier, and the strict message property rules.
+        factory.setStrictCompliance(true);
         if (clientId != null) {
             factory.setClientID(clientId);
         }
@@ -117,6 +125,14 @@ public class JNDIInitialContextFactory implements InitialContextFactory {
                 bs.setPersistent(false);
                 bs.setUseJmx(false);
                 bs.setAdvisorySupport(false);
+                // The TCK expects invalid credentials to be rejected (JMSSecurityException
+                // from createConnection, JMSSecurityRuntimeException from createContext).
+                // Authenticate the ts.jte user and keep anonymous access for the many
+                // tests that connect without credentials.
+                SimpleAuthenticationPlugin authentication = new SimpleAuthenticationPlugin(
+                    java.util.List.of(new AuthenticationUser("guest", "guest", "users")));
+                authentication.setAnonymousAccessAllowed(true);
+                bs.setPlugins(new BrokerPlugin[] {authentication});
                 bs.start();
                 bs.waitUntilStarted();
                 broker = bs;
