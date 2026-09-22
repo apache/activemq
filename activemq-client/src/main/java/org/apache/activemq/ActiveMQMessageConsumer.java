@@ -833,7 +833,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         sendPullCommand(timeout);
         while (timeout > 0) {
             MessageDispatch md;
-            if (info.getPrefetchSize() == 0) {
+            if (isPullConsumer()) {
                 md = dequeue(-1);
             } else {
                 md = dequeue(timeout);
@@ -890,7 +890,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         sendPullCommand(-1);
 
         MessageDispatch md;
-        if (info.getPrefetchSize() == 0) {
+        if (isPullConsumer()) {
             md = dequeue(-1);
         } else {
             md = dequeue(0);
