@@ -398,6 +398,15 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
                 connection.setDefaultClientID(clientID);
             }
 
+            // Jakarta Messaging expects createConnection/createContext to authenticate
+            // the caller immediately (JMSSecurityException on bad credentials). ActiveMQ
+            // historically defers the ConnectionInfo exchange until first use, so the
+            // eager check is only performed under strictCompliance, and it uses a probe
+            // so the connection's own identity stays unset for a later setClientID().
+            if (isStrictCompliance()) {
+                connection.authenticate();
+            }
+
             return connection;
         } catch (JMSException e) {
             // Clean up!
