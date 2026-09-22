@@ -1572,7 +1572,10 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
                 if (command.getAck() != UNMATCHED) {
                     sd.orderIndex.get(tx, sequence);
                     byte priority = sd.orderIndex.lastGetPriority();
-                    sd.subscriptionAcks.put(tx, subscriptionKey, new LastAck(sequence, priority));
+                    LastAck current = sd.subscriptionAcks.get(tx, subscriptionKey);
+                    if (current == null || sequence > current.lastAckedSequence) {
+                        sd.subscriptionAcks.put(tx, subscriptionKey, new LastAck(sequence, priority));
+                    }
                 }
 
                 MessageKeys keys = sd.orderIndex.get(tx, sequence);
