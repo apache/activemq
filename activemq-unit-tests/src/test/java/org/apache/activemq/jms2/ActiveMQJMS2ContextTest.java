@@ -61,6 +61,32 @@ public class ActiveMQJMS2ContextTest extends ActiveMQJMS2TestBase {
     }
 
     @Test
+    public void testCreateContextRejectsInvalidSessionMode() {
+        for (int invalidMode : new int[] {-1, 5, 99}) {
+            try {
+                activemqConnectionFactory.createContext(invalidMode).close();
+                fail("Expected JMSRuntimeException for session mode " + invalidMode);
+            } catch (JMSRuntimeException expected) {
+            }
+            try {
+                activemqConnectionFactory.createContext(DEFAULT_JMS_USER, DEFAULT_JMS_PASS, invalidMode).close();
+                fail("Expected JMSRuntimeException for session mode " + invalidMode);
+            } catch (JMSRuntimeException expected) {
+            }
+        }
+
+        // the ActiveMQ INDIVIDUAL_ACKNOWLEDGE extension remains a valid mode
+        try (JMSContext jmsContext = activemqConnectionFactory.createContext(org.apache.activemq.ActiveMQSession.INDIVIDUAL_ACKNOWLEDGE)) {
+            assertEquals(org.apache.activemq.ActiveMQSession.INDIVIDUAL_ACKNOWLEDGE, jmsContext.getSessionMode());
+            try {
+                jmsContext.createContext(42).close();
+                fail("Expected JMSRuntimeException for child context session mode 42");
+            } catch (JMSRuntimeException expected) {
+            }
+        }
+    }
+
+    @Test
     public void testConnectionFactoryCreateContextSession() {
         try(JMSContext jmsContext = activemqConnectionFactory.createContext(Session.AUTO_ACKNOWLEDGE)) {
             assertNotNull(jmsContext);
