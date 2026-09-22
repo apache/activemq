@@ -146,6 +146,9 @@ public class JNDIInitialContextFactory implements InitialContextFactory {
                 bs.setPersistent(false);
                 bs.setUseJmx(false);
                 bs.setAdvisorySupport(false);
+                // JMS 2.0 delivery delay is implemented by the scheduler broker; the
+                // non-persistent broker uses the in-memory job scheduler store.
+                bs.setSchedulerSupport(true);
                 bs.start();
                 bs.waitUntilStarted();
                 broker = bs;
