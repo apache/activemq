@@ -147,6 +147,8 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      * This strictly rejects non-standard property types such as Character, Map, and List.
      */
     private boolean strictCompliance = false;
+    // set when the client identifier came from the connection factory configuration
+    private boolean adminConfiguredClientID = false;
 
     private boolean disableTimeStampsByDefault;
     private boolean optimizedMessageDispatch = true;
@@ -463,6 +465,12 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
             throw new IllegalStateException("The clientID has already been set");
         }
 
+        // The specification forbids overriding an administratively configured client
+        // identifier; ActiveMQ has always allowed it, so enforce under strict compliance.
+        if (this.adminConfiguredClientID && this.strictCompliance) {
+            throw new IllegalStateException("The clientID was administratively configured and cannot be changed");
+        }
+
         if (this.isConnectionInfoSentToBroker) {
             throw new IllegalStateException("Setting clientID on a used Connection is not allowed");
         }
@@ -479,6 +487,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     public void setDefaultClientID(String clientID) throws JMSException {
         this.info.setClientId(clientID);
         this.userSpecifiedClientID = true;
+        this.adminConfiguredClientID = true;
     }
 
     /**
