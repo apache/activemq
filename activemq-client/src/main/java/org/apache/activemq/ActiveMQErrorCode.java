@@ -68,4 +68,7 @@ public final class ActiveMQErrorCode {
 
     /** A shared durable subscription with the same name is already active. */
     public static final String SUBSCRIPTION_ALREADY_EXISTS = "AMQ-50004";
+
+    /** Consumer attempted to join a shared subscription on a different topic. */
+    public static final String TOPIC_MISMATCH = "AMQ-50005";
 }
