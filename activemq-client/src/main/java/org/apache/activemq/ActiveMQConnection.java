@@ -149,6 +149,8 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     private boolean strictCompliance = false;
     private boolean deferPrefetchUntilStarted = false;
     private final AtomicBoolean everStarted = new AtomicBoolean(false);
+    // set when the client identifier came from the connection factory configuration
+    private boolean adminConfiguredClientID = false;
 
     private boolean disableTimeStampsByDefault;
     private boolean optimizedMessageDispatch = true;
@@ -465,6 +467,12 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
             throw new IllegalStateException("The clientID has already been set");
         }
 
+        // The specification forbids overriding an administratively configured client
+        // identifier; ActiveMQ has always allowed it, so enforce under strict compliance.
+        if (this.adminConfiguredClientID && this.strictCompliance) {
+            throw new IllegalStateException("The clientID was administratively configured and cannot be changed");
+        }
+
         if (this.isConnectionInfoSentToBroker) {
             throw new IllegalStateException("Setting clientID on a used Connection is not allowed");
         }
@@ -481,6 +489,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     public void setDefaultClientID(String clientID) throws JMSException {
         this.info.setClientId(clientID);
         this.userSpecifiedClientID = true;
+        this.adminConfiguredClientID = true;
     }
 
     /**
@@ -1594,6 +1603,21 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
         if (closed.get()) {
             throw new ConnectionClosedException();
         }
+    }
+
+    /**
+     * Validates this connection's credentials with the broker using a throwaway
+     * ConnectionInfo that is removed again immediately. The connection's own
+     * ConnectionInfo is left unsent, so setClientID() remains possible afterwards
+     * as the specification requires. Used by the factory under strictCompliance
+     * so createConnection fails fast with JMSSecurityException on bad credentials.
+     */
+    protected void authenticate() throws JMSException {
+        ConnectionInfo probe = info.copy();
+        probe.setConnectionId(new ConnectionId(info.getConnectionId().getValue() + ":auth"));
+        probe.setClientId(clientIdGenerator.generateId());
+        syncSendPacket(probe, getConnectResponseTimeout());
+        asyncSendPacket(probe.createRemoveCommand());
     }
 
     /**

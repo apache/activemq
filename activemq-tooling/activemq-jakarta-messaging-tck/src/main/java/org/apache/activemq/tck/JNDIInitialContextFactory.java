@@ -31,6 +31,9 @@ import javax.naming.spi.InitialContextFactory;
 import org.apache.activemq.ActiveMQPrefetchPolicy;
 import org.apache.activemq.broker.SharedTopicBrokerService;
 import org.apache.activemq.SharedTopicConnectionFactory;
+import org.apache.activemq.broker.BrokerPlugin;
+import org.apache.activemq.security.AuthenticationUser;
+import org.apache.activemq.security.SimpleAuthenticationPlugin;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
@@ -131,6 +134,11 @@ public class JNDIInitialContextFactory implements InitialContextFactory {
         // prefetch, where they park in the held dispatch channel and the started
         // consumer's receive() blocks forever (core20 jmsconsumertests queueReceiveTests).
         factory.setDeferPrefetchUntilStarted(true);
+        // The TCK asserts strict Jakarta Messaging semantics that ActiveMQ relaxes by
+        // default for backwards compatibility: eager authentication on
+        // createConnection/createContext, the administratively configured client
+        // identifier, and the strict message property rules.
+        factory.setStrictCompliance(true);
         if (clientId != null) {
             factory.setClientID(clientId);
         }
@@ -154,6 +162,14 @@ public class JNDIInitialContextFactory implements InitialContextFactory {
                 // JMS 2.0 delivery delay is implemented by the scheduler broker; the
                 // non-persistent broker uses the in-memory job scheduler store.
                 bs.setSchedulerSupport(true);
+                // The TCK expects invalid credentials to be rejected (JMSSecurityException
+                // from createConnection, JMSSecurityRuntimeException from createContext).
+                // Authenticate the ts.jte user and keep anonymous access for the many
+                // tests that connect without credentials.
+                SimpleAuthenticationPlugin authentication = new SimpleAuthenticationPlugin(
+                    java.util.List.of(new AuthenticationUser("guest", "guest", "users")));
+                authentication.setAnonymousAccessAllowed(true);
+                bs.setPlugins(new BrokerPlugin[] {authentication});
                 bs.start();
                 bs.waitUntilStarted();
                 broker = bs;

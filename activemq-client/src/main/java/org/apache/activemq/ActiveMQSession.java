@@ -43,6 +43,7 @@ import jakarta.jms.IllegalStateException;
 import jakarta.jms.InvalidDestinationException;
 import jakarta.jms.InvalidSelectorException;
 import jakarta.jms.JMSException;
+import jakarta.jms.JMSRuntimeException;
 import jakarta.jms.MapMessage;
 import jakarta.jms.Message;
 import jakarta.jms.MessageConsumer;
@@ -202,6 +203,17 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      */
     public static final int INDIVIDUAL_ACKNOWLEDGE = 4;
     public static final int MAX_ACK_CONSTANT = INDIVIDUAL_ACKNOWLEDGE;
+
+    /**
+     * Rejects a JMSContext session mode outside the four Jakarta Messaging modes
+     * and ActiveMQ's INDIVIDUAL_ACKNOWLEDGE extension, as the specification
+     * requires a JMSRuntimeException for an invalid mode.
+     */
+    static void validateSessionMode(int sessionMode) {
+        if (sessionMode < Session.SESSION_TRANSACTED || sessionMode > MAX_ACK_CONSTANT) {
+            throw new JMSRuntimeException("Invalid session mode: " + sessionMode);
+        }
+    }
 
     public static interface DeliveryListener {
         void beforeDelivery(ActiveMQSession session, Message msg);
