@@ -20,8 +20,6 @@
 # This file lists TCK tests to exclude from the run.
 # Format: <full-test-path>#<test-method>
 
-# TCK bug: variable never assigned before use
-com/sun/ts/tests/jms/core/messageFormatRuntimeExceptionTests#messageFormatRuntimeExceptionTests_from_standalone
 
 # NOTE: the three xUnsupportedOperationException* tests (anonymous producer) were
 # excluded here until ActiveMQMessageProducer began enforcing the JMS
