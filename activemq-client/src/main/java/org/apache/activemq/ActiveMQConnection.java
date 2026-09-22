@@ -147,6 +147,8 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      * This strictly rejects non-standard property types such as Character, Map, and List.
      */
     private boolean strictCompliance = false;
+    private boolean deferPrefetchUntilStarted = false;
+    private final AtomicBoolean everStarted = new AtomicBoolean(false);
 
     private boolean disableTimeStampsByDefault;
     private boolean optimizedMessageDispatch = true;
@@ -579,6 +581,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     public void start() throws JMSException {
         checkClosedOrFailed();
         ensureConnectionInfoSent();
+        everStarted.set(true);
         if (started.compareAndSet(false, true)) {
             for (Iterator<ActiveMQSession> i = sessions.iterator(); i.hasNext();) {
                 ActiveMQSession session = i.next();
@@ -1063,6 +1066,25 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      */
     public void setStrictCompliance(boolean strictCompliance) {
         this.strictCompliance = strictCompliance;
+    }
+
+    public boolean isDeferPrefetchUntilStarted() {
+        return deferPrefetchUntilStarted;
+    }
+
+    /**
+     * See {@link ActiveMQConnectionFactory#setDeferPrefetchUntilStarted(boolean)}.
+     */
+    public void setDeferPrefetchUntilStarted(boolean deferPrefetchUntilStarted) {
+        this.deferPrefetchUntilStarted = deferPrefetchUntilStarted;
+    }
+
+    /**
+     * @return true once {@link #start()} has been called at least once,
+     *         regardless of later {@link #stop()} calls.
+     */
+    public boolean isEverStarted() {
+        return everStarted.get();
     }
 
     public boolean isExclusiveConsumer() {
