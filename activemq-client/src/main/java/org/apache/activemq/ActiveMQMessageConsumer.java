@@ -44,6 +44,7 @@ import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQObjectMessage;
 import org.apache.activemq.command.ActiveMQTempDestination;
+import org.apache.activemq.command.ConsumerControl;
 import org.apache.activemq.command.CommandTypes;
 import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.ConsumerInfo;
@@ -154,6 +155,9 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     private final String selector;
     private boolean synchronizationRegistered;
     private final AtomicBoolean started = new AtomicBoolean(false);
+    // Configured prefetch withheld until the connection first starts; zero when
+    // no deferral is pending. See ActiveMQConnectionFactory#setDeferPrefetchUntilStarted.
+    private volatile int deferredPrefetchSize;
 
     private MessageAvailableListener availableListener;
 
@@ -293,6 +297,21 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                         || this.nonBlockingRedelivery
                         || session.connection.isMessagePrioritySupported();
         this.consumerExpiryCheckEnabled = session.connection.isConsumerExpiryCheckEnabled();
+        // Register queue consumers created before the connection has ever been
+        // started with zero prefetch so the broker does not push messages into a
+        // consumer that cannot deliver them; such messages would park in the held
+        // dispatch channel and starve running consumers. The configured prefetch
+        // is restored when the connection starts.
+        if (this.session.connection.isDeferPrefetchUntilStarted()
+            && !this.session.connection.isEverStarted()
+            && dest.isQueue()
+            && !browser
+            && this.info.getPrefetchSize() > 0) {
+            this.deferredPrefetchSize = this.info.getPrefetchSize();
+            this.info.setPrefetchSize(0);
+            this.info.setCurrentPrefetchSize(0);
+        }
+
         if (messageListener != null) {
             setMessageListener(messageListener);
         }
@@ -448,7 +467,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     @Override
     public void setMessageListener(MessageListener listener) throws JMSException {
         checkClosed();
-        if (info.getPrefetchSize() == 0) {
+        if (info.getPrefetchSize() == 0 && deferredPrefetchSize == 0) {
             throw new JMSException("Illegal prefetch size of zero. This setting is not supported for asynchronous consumers please set a value of at least 1");
         }
         if (listener != null) {
@@ -665,7 +684,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         while (timeout > 0) {
 
             MessageDispatch md;
-            if (info.getPrefetchSize() == 0) {
+            if (isPullConsumer()) {
                 md = dequeue(-1); // We let the broker let us know when we timeout.
             } else {
                 md = dequeue(timeout);
@@ -697,7 +716,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         sendPullCommand(-1);
 
         MessageDispatch md;
-        if (info.getPrefetchSize() == 0) {
+        if (isPullConsumer()) {
             md = dequeue(-1); // We let the broker let us know when we
             // timeout.
         } else {
@@ -914,7 +933,9 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
      */
     protected void sendPullCommand(long timeout) throws JMSException {
         clearDeliveredList();
-        if (info.getCurrentPrefetchSize() == 0 && unconsumedMessages.isEmpty()) {
+        // A consumer whose prefetch is deferred until connection start is not a
+        // pull consumer; a pull here could steal a message into the held channel.
+        if (info.getCurrentPrefetchSize() == 0 && deferredPrefetchSize == 0 && unconsumedMessages.isEmpty()) {
             MessagePull messagePull = new MessagePull();
             messagePull.configure(info);
             messagePull.setTimeout(timeout);
@@ -1485,7 +1506,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
 
                                     // Pull consumer needs to check if pull timed out and send
                                     // a new pull command if not.
-                                    if (info.getCurrentPrefetchSize() == 0) {
+                                    if (info.getCurrentPrefetchSize() == 0 && deferredPrefetchSize == 0) {
                                         unconsumedMessages.enqueue(null);
                                     }
                                 }
@@ -1628,9 +1649,39 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         if (unconsumedMessages.isClosed()) {
             return;
         }
+        restoreDeferredPrefetch();
         started.set(true);
         unconsumedMessages.start();
         session.executor.wakeup();
+    }
+
+    /**
+     * A pull consumer relies on the broker to answer each MessagePull, including
+     * signalling the receive timeout. A consumer whose prefetch is merely deferred
+     * until the connection starts carries prefetch zero on the wire but sends no
+     * pulls, so it must use client-side timeouts like any push consumer.
+     */
+    private boolean isPullConsumer() {
+        return info.getPrefetchSize() == 0 && deferredPrefetchSize == 0;
+    }
+
+    /**
+     * Restores the configured prefetch that was withheld while the connection
+     * had never been started and tells the broker so it re-credits this
+     * consumer and dispatches any pending messages.
+     */
+    private void restoreDeferredPrefetch() throws JMSException {
+        int prefetch = deferredPrefetchSize;
+        if (prefetch > 0) {
+            deferredPrefetchSize = 0;
+            info.setPrefetchSize(prefetch);
+            info.setCurrentPrefetchSize(prefetch);
+            ConsumerControl control = new ConsumerControl();
+            control.setConsumerId(info.getConsumerId());
+            control.setDestination(info.getDestination());
+            control.setPrefetch(prefetch);
+            session.asyncSendPacket(control);
+        }
     }
 
     public void stop() {
