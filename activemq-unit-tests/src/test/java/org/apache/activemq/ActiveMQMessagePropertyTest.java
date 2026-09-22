@@ -21,7 +21,9 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import jakarta.jms.BytesMessage;
 import jakarta.jms.Connection;
+import jakarta.jms.MapMessage;
 import jakarta.jms.Message;
 import jakarta.jms.MessageFormatException;
 import jakarta.jms.Session;
@@ -106,6 +108,51 @@ public class ActiveMQMessagePropertyTest {
             Message message = session.createMessage();
             message.setObjectProperty("charProp", 'A'); // Should pass
             assertEquals('A', message.getObjectProperty("charProp"));
+        }
+    }
+
+    @Test
+    public void testStrictComplianceAllowsCharacterInMapMessageBody() throws Exception {
+        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(connectionUri);
+        factory.setStrictCompliance(true);
+
+        try (Connection connection = factory.createConnection();
+             Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE)) {
+
+            // MapMessage bodies support char per the spec; only message properties
+            // exclude Character under strict compliance
+            MapMessage message = session.createMapMessage();
+            message.setChar("charEntry", 'A');
+            message.setObject("charObject", 'B');
+            assertEquals('A', message.getChar("charEntry"));
+            assertEquals('B', message.getObject("charObject"));
+
+            try {
+                message.setObjectProperty("charProp", 'C');
+                fail("Character properties must still be rejected under strict compliance");
+            } catch (MessageFormatException expected) {
+            }
+        }
+    }
+
+    @Test
+    public void testGetBodyOnWriteOnlyBytesMessageChecksType() throws Exception {
+        ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(connectionUri);
+
+        try (Connection connection = factory.createConnection();
+             Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE)) {
+
+            BytesMessage message = session.createBytesMessage();
+            message.writeBytes(new byte[] {1, 2, 3});
+
+            // bytes written but not yet stored are still a body: a non-byte[] type
+            // must be rejected even while the message is in write-only mode
+            try {
+                message.getBody(StringBuffer.class);
+                fail("Expected MessageFormatException for a non byte[] body type");
+            } catch (MessageFormatException expected) {
+            }
+            assertEquals(3, message.getBody(byte[].class).length);
         }
     }
 }
