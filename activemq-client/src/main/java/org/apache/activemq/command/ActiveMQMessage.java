@@ -520,7 +520,7 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
         ActiveMQConnection conn = getConnection();
         if (conn != null && conn.isStrictCompliance()) {
             if (STRICT_PROVIDER_JMSX_PROPERTIES.contains(name)) {
-                throw new JMSException("Provider-set JMSX property '" + name + "' cannot be set by a client under strict compliance.");
+                throw new MessageNotWriteableException("Provider-set JMSX property '" + name + "' cannot be set by a client under strict compliance.");
             }
         }
 
