@@ -19,6 +19,7 @@ package org.apache.activemq;
 import jakarta.jms.Connection;
 import jakarta.jms.JMSException;
 import jakarta.jms.Message;
+import jakarta.jms.MessageNotWriteableException;
 import jakarta.jms.Session;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
@@ -102,7 +103,7 @@ public class StrictComplianceProviderJMSXPropertyTest {
                     // Attempting to set these should fail
                     message.setObjectProperty(property, 1);
                     fail("Strict mode must reject client attempt to set provider-only property: " + property);
-                } catch (JMSException e) {
+                } catch (MessageNotWriteableException e) {
                     // PASS: Expected Jakarta Messaging 3.1 behavior
                 }
             }
