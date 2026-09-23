@@ -23,6 +23,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.util.Enumeration;
+import java.util.concurrent.atomic.AtomicReference;
 
 import jakarta.jms.CompletionListener;
 import jakarta.jms.Destination;
@@ -57,6 +58,32 @@ public class ActiveMQJMS2ContextTest extends ActiveMQJMS2TestBase {
             recvMessage(jmsContext, destination, "Test-" + methodNameDestinationName);
         } catch (JMSException e) {
             fail(e.getMessage());
+        }
+    }
+
+    @Test
+    public void testCreateContextRejectsInvalidSessionMode() {
+        for (int invalidMode : new int[] {-1, 5, 99}) {
+            try {
+                activemqConnectionFactory.createContext(invalidMode).close();
+                fail("Expected JMSRuntimeException for session mode " + invalidMode);
+            } catch (JMSRuntimeException expected) {
+            }
+            try {
+                activemqConnectionFactory.createContext(DEFAULT_JMS_USER, DEFAULT_JMS_PASS, invalidMode).close();
+                fail("Expected JMSRuntimeException for session mode " + invalidMode);
+            } catch (JMSRuntimeException expected) {
+            }
+        }
+
+        // the ActiveMQ INDIVIDUAL_ACKNOWLEDGE extension remains a valid mode
+        try (JMSContext jmsContext = activemqConnectionFactory.createContext(org.apache.activemq.ActiveMQSession.INDIVIDUAL_ACKNOWLEDGE)) {
+            assertEquals(org.apache.activemq.ActiveMQSession.INDIVIDUAL_ACKNOWLEDGE, jmsContext.getSessionMode());
+            try {
+                jmsContext.createContext(42).close();
+                fail("Expected JMSRuntimeException for child context session mode 42");
+            } catch (JMSRuntimeException expected) {
+            }
         }
     }
 
@@ -294,34 +321,64 @@ public class ActiveMQJMS2ContextTest extends ActiveMQJMS2TestBase {
         assertEquals(0L, messageProducer.getDeliveryDelay());
     }
 
-    @Test(expected = UnsupportedOperationException.class)
+    @Test
     public void testProducerDeliveryDelaySetZero() throws JMSException {
         messageProducer.setDeliveryDelay(0L);
+        assertEquals(0L, messageProducer.getDeliveryDelay());
     }
 
-    @Test(expected = UnsupportedOperationException.class)
+    @Test
     public void testProducerDeliveryDelaySet() throws JMSException {
         messageProducer.setDeliveryDelay(1000l);
+        assertEquals(1000L, messageProducer.getDeliveryDelay());
     }
 
-    @Test(expected = UnsupportedOperationException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void testProducerSendMessageCompletionListener() throws JMSException {
          messageProducer.send(session.createQueue(methodNameDestinationName), null, (CompletionListener)null);
     }
 
-    @Test(expected = UnsupportedOperationException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void testProducerSendMessageQoSParamsCompletionListener() throws JMSException {
          messageProducer.send(null, 1, 4, 0l, null);
     }
 
-    @Test(expected = UnsupportedOperationException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void testProducerSendDestinationMessageCompletionListener() throws JMSException {
          messageProducer.send(session.createQueue(methodNameDestinationName), null, null);
     }
 
-    @Test(expected = UnsupportedOperationException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void testProducerSendDestinationMessageQosParamsCompletionListener() throws JMSException {
          messageProducer.send(session.createQueue(methodNameDestinationName), null, 1, 4, 0l, null);
+    }
+
+    /**
+     * Jakarta Messaging 3.1 spec section 7.3.8: calling recover() from within a CompletionListener
+     * callback must throw IllegalStateException.
+     */
+    @Test
+    public void testRecoverThrowsIllegalStateFromCompletionListenerCallback() throws JMSException {
+        final AtomicReference<Exception> callbackException = new AtomicReference<>();
+
+        messageProducer.send(session.createTextMessage("test"), new CompletionListener() {
+            @Override
+            public void onCompletion(final Message message) {
+                try {
+                    session.recover();
+                } catch (final Exception e) {
+                    callbackException.set(e);
+                }
+            }
+
+            @Override
+            public void onException(final Message message, final Exception exception) {
+            }
+        });
+
+        assertNotNull("recover() must throw from within CompletionListener callback", callbackException.get());
+        assertTrue("recover() must throw IllegalStateException from within CompletionListener callback",
+                callbackException.get() instanceof jakarta.jms.IllegalStateException);
     }
 
     protected static void sendMessage(JMSContext jmsContext, Destination testDestination, String textBody) {

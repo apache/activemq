@@ -40,6 +40,7 @@ public abstract class ActiveMQMessageProducerSupport implements MessageProducer,
     protected int defaultPriority;
     protected long defaultTimeToLive;
     protected int sendTimeout=0;
+    protected long deliveryDelay;
 
     public ActiveMQMessageProducerSupport(ActiveMQSession session) {
         this.session = session;
@@ -56,7 +57,8 @@ public abstract class ActiveMQMessageProducerSupport implements MessageProducer,
      */
     @Override
     public void setDeliveryDelay(long deliveryDelay) throws JMSException {
-        throw new UnsupportedOperationException("setDeliveryDelay() is not supported");
+        checkClosed();
+        this.deliveryDelay = deliveryDelay;
     }
 
     /**
@@ -68,7 +70,8 @@ public abstract class ActiveMQMessageProducerSupport implements MessageProducer,
      */
     @Override
     public long getDeliveryDelay() throws JMSException {
-        return 0L;
+        checkClosed();
+        return this.deliveryDelay;
     }
     
     /**
@@ -335,6 +338,18 @@ public abstract class ActiveMQMessageProducerSupport implements MessageProducer,
 
 
     protected abstract void checkClosed() throws IllegalStateException;
+
+    protected static void validateDeliveryMode(final int deliveryMode) throws JMSException {
+        if (deliveryMode != DeliveryMode.PERSISTENT && deliveryMode != DeliveryMode.NON_PERSISTENT) {
+            throw new JMSException("Invalid delivery mode: " + deliveryMode);
+        }
+    }
+
+    protected static void validatePriority(final int priority) throws JMSException {
+        if (priority < 0 || priority > 9) {
+            throw new JMSException("Invalid priority: " + priority + " (must be 0-9)");
+        }
+    }
 
     /**
      * @return the sendTimeout

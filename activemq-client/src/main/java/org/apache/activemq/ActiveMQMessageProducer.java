@@ -168,6 +168,7 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
      */
     @Override
     public void close() throws JMSException {
+        session.checkNotInCompletionListenerCallback("close");
         if (!closed) {
             dispose();
             this.session.asyncSendPacket(info.createRemoveCommand());
@@ -197,6 +198,34 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
         }
     }
 
+    @Override
+    public void send(Message message) throws JMSException {
+        checkClosed();
+        if (info.getDestination() == null) {
+            throw new UnsupportedOperationException("A destination must be specified.");
+        }
+        sendToProducerDestination(message, this.defaultDeliveryMode, this.defaultPriority,
+                                  this.defaultTimeToLive, null);
+    }
+
+    @Override
+    public void send(Message message, int deliveryMode, int priority, long timeToLive) throws JMSException {
+        checkClosed();
+        if (info.getDestination() == null) {
+            throw new UnsupportedOperationException("A destination must be specified.");
+        }
+        validateDeliveryMode(deliveryMode);
+        validatePriority(priority);
+        sendToProducerDestination(message, deliveryMode, priority, timeToLive, null);
+    }
+
+    @Override
+    public void send(Destination destination, Message message) throws JMSException {
+        checkClosed();
+        assertUnidentifiedProducer();
+        super.send(destination, message);
+    }
+
     /**
      * Sends a message to a destination for an unidentified message producer,
      * specifying delivery mode, priority and time to live.
@@ -221,50 +250,271 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
      */
     @Override
     public void send(Destination destination, Message message, int deliveryMode, int priority, long timeToLive) throws JMSException {
-        this.send(destination, message, deliveryMode, priority, timeToLive, (AsyncCallback)null);
+        checkClosed();
+        assertUnidentifiedProducer();
+        validateDeliveryMode(deliveryMode);
+        validatePriority(priority);
+        this.send(destination, message, deliveryMode, priority, timeToLive, (AsyncCallback) null);
     }
 
     /**
+     * Whether to enforce the JMS identified/unidentified producer send rules.
+     * <p>
+     * ActiveMQ has always accepted either send form on either kind of producer, and a
+     * great deal of existing code relies on that, so enforcement is opt-in via the
+     * connection's {@code strictCompliance} flag -- the same switch
+     * {@code ActiveMQMessage} uses to enforce strict Jakarta 3.1 property rules.
+     */
+    private boolean isStrictProducerCompliance() {
+        return this.session != null && this.session.connection != null
+            && this.session.connection.isStrictCompliance();
+    }
+
+    /**
+     * JMS reserves the destination-less {@code send} methods for an identified
+     * producer -- one created with a destination. Using them on a producer created
+     * without one must raise {@code UnsupportedOperationException}.
+     * Enforced only under strict compliance; see {@link #isStrictProducerCompliance()}.
+     */
+    private void assertIdentifiedProducer() {
+        if (isStrictProducerCompliance() && this.info.getDestination() == null) {
+            throw new UnsupportedOperationException("This message producer was created without a destination; "
+                + "a destination must be supplied on every send. Use send(Destination, Message, ...).");
+        }
+    }
+
+    /**
+     * The mirror rule: JMS reserves the destination-taking {@code send} methods for
+     * an unidentified producer. Supplying a destination to a producer that already
+     * has one must raise {@code UnsupportedOperationException}, even when the two
+     * destinations are equal.
+     * Enforced only under strict compliance; see {@link #isStrictProducerCompliance()}.
+     */
+    private void assertUnidentifiedProducer() {
+        if (isStrictProducerCompliance() && this.info.getDestination() != null) {
+            throw new UnsupportedOperationException("This message producer was created with a destination; "
+                + "a destination cannot be supplied on send. Use send(Message, ...).");
+        }
+    }
+
+    /**
+     * Internal send used by the destination-less overloads. Routes straight to the
+     * full send path so it bypasses {@link #assertUnidentifiedProducer()}, which
+     * would otherwise reject the producer's own destination.
+     */
+    private void sendToProducerDestination(Message message, int deliveryMode, int priority, long timeToLive,
+                                           AsyncCallback onComplete) throws JMSException {
+        checkClosed();
+        assertIdentifiedProducer();
+        this.send(this.info.getDestination(), message, deliveryMode, priority, timeToLive,
+                  getDisableMessageID(), getDisableMessageTimestamp(), onComplete);
+    }
+
+    /**
+     * Sends a message using the default delivery mode, priority and time to live,
+     * notifying the specified {@code CompletionListener} when the send has completed.
+     *
+     * <p><b>Implementation note:</b> the current ActiveMQ Classic implementation performs the
+     * send synchronously and then invokes the {@code CompletionListener} on a separate thread.
+     * This is explicitly permitted by the JMS 2.0 specification (section 7.3).
+     * A future version may implement fully asynchronous sending; application code that follows
+     * the specification will be compatible with both behaviours.
+     * For high-throughput asynchronous sending outside the JMS specification, see
+     * {@link ActiveMQMessageProducer#send(Destination, Message, AsyncCallback)}.
      *
      * @param message the message to send
-     * @param CompletionListener to callback
+     * @param completionListener to callback
      * @throws JMSException if the JMS provider fails to send the message due to
      *                 some internal error.
-     * @throws UnsupportedOperationException if an invalid destination is
-     *                 specified.
-     * @throws InvalidDestinationException if a client uses this method with an
-     *                 invalid destination.
+     * @throws UnsupportedOperationException if called on an anonymous producer (no fixed destination)
      * @see jakarta.jms.Session#createProducer
      * @since 2.0
      */
     @Override
     public void send(Message message, CompletionListener completionListener) throws JMSException {
-        throw new UnsupportedOperationException("send(Message, CompletionListener) is not supported");
+        checkClosed();
+        if (completionListener == null) {
+            throw new IllegalArgumentException("CompletionListener must not be null");
+        }
+        if (info.getDestination() == null) {
+            throw new UnsupportedOperationException("A destination must be specified.");
+        }
+        this.doSendWithCompletionListener(info.getDestination(), message, this.defaultDeliveryMode,
+                this.defaultPriority, this.defaultTimeToLive,
+                getDisableMessageID(), getDisableMessageTimestamp(), completionListener);
     }
 
+    /**
+     * Sends a message with the specified delivery mode, priority and time to live,
+     * notifying the specified {@code CompletionListener} when the send has completed.
+     *
+     * <p><b>Implementation note:</b> the current ActiveMQ Classic implementation performs the
+     * send synchronously and then invokes the {@code CompletionListener} on a separate thread.
+     * See {@link #send(Message, CompletionListener)} for details.
+     *
+     * @param message the message to send
+     * @param deliveryMode the delivery mode to use
+     * @param priority the priority for this message
+     * @param timeToLive the message's lifetime (in milliseconds)
+     * @param completionListener to callback
+     * @throws JMSException if the JMS provider fails to send the message due to some internal error.
+     * @throws UnsupportedOperationException if called on an anonymous producer (no fixed destination)
+     * @since 2.0
+     */
     @Override
     public void send(Message message, int deliveryMode, int priority, long timeToLive,
                       CompletionListener completionListener) throws JMSException {
-        throw new UnsupportedOperationException("send(Message, deliveryMode, priority, timetoLive, CompletionListener) is not supported");
+        checkClosed();
+        if (completionListener == null) {
+            throw new IllegalArgumentException("CompletionListener must not be null");
+        }
+        if (info.getDestination() == null) {
+            throw new UnsupportedOperationException("A destination must be specified.");
+        }
+        validateDeliveryMode(deliveryMode);
+        validatePriority(priority);
+        this.doSendWithCompletionListener(info.getDestination(), message, deliveryMode, priority, timeToLive,
+                getDisableMessageID(), getDisableMessageTimestamp(), completionListener);
     }
 
+    /**
+     * Sends a message to the specified destination using the default delivery mode, priority
+     * and time to live, notifying the specified {@code CompletionListener} when the send
+     * has completed.
+     *
+     * <p><b>Implementation note:</b> the current ActiveMQ Classic implementation performs the
+     * send synchronously and then invokes the {@code CompletionListener} on a separate thread.
+     * See {@link #send(Message, CompletionListener)} for details.
+     *
+     * @param destination the destination to send this message to
+     * @param message the message to send
+     * @param completionListener to callback
+     * @throws JMSException if the JMS provider fails to send the message due to some internal error.
+     * @throws UnsupportedOperationException if called on a producer with a fixed destination
+     * @throws InvalidDestinationException if a null destination is specified
+     * @since 2.0
+     */
     @Override
     public void send(Destination destination, Message message, CompletionListener completionListener) throws JMSException {
-        throw new UnsupportedOperationException("send(Destination, Message, CompletionListener) is not supported");
+        checkClosed();
+        assertUnidentifiedProducer();
+        if (completionListener == null) {
+            throw new IllegalArgumentException("CompletionListener must not be null");
+        }
+        if (destination == null) {
+            throw new InvalidDestinationException("Don't understand null destinations");
+        }
+        this.doSendWithCompletionListener(ActiveMQDestination.transform(destination), message,
+                this.defaultDeliveryMode, this.defaultPriority, this.defaultTimeToLive,
+                getDisableMessageID(), getDisableMessageTimestamp(), completionListener);
     }
 
+    /**
+     * Sends a message to the specified destination with the specified delivery mode, priority
+     * and time to live, notifying the specified {@code CompletionListener} when the send
+     * has completed.
+     *
+     * <p><b>Implementation note:</b> the current ActiveMQ Classic implementation performs the
+     * send synchronously and then invokes the {@code CompletionListener} on a separate thread.
+     * See {@link #send(Message, CompletionListener)} for details.
+     *
+     * @param destination the destination to send this message to
+     * @param message the message to send
+     * @param deliveryMode the delivery mode to use
+     * @param priority the priority for this message
+     * @param timeToLive the message's lifetime (in milliseconds)
+     * @param completionListener to callback
+     * @throws JMSException if the JMS provider fails to send the message due to some internal error.
+     * @throws UnsupportedOperationException if called on a producer with a fixed destination
+     * @throws InvalidDestinationException if a null destination is specified
+     * @since 2.0
+     */
     @Override
     public void send(Destination destination, Message message, int deliveryMode, int priority, long timeToLive,
                      CompletionListener completionListener) throws JMSException {
-        throw new UnsupportedOperationException("send(Destination, Message, deliveryMode, priority, timetoLive, CompletionListener) is not supported");
+        checkClosed();
+        assertUnidentifiedProducer();
+        if (completionListener == null) {
+            throw new IllegalArgumentException("CompletionListener must not be null");
+        }
+        if (destination == null) {
+            throw new InvalidDestinationException("Don't understand null destinations");
+        }
+        validateDeliveryMode(deliveryMode);
+        validatePriority(priority);
+        this.doSendWithCompletionListener(ActiveMQDestination.transform(destination), message,
+                deliveryMode, priority, timeToLive,
+                getDisableMessageID(), getDisableMessageTimestamp(), completionListener);
+    }
+
+    /**
+     * Sends a message to the specified destination with full control over delivery parameters,
+     * notifying the specified {@code CompletionListener} when the send has completed.
+     *
+     * <p><b>Implementation note:</b> the current ActiveMQ Classic implementation performs the
+     * send synchronously and then invokes the {@code CompletionListener} on a separate thread.
+     * See {@link #send(Message, CompletionListener)} for details.
+     *
+     * @param destination the destination to send this message to
+     * @param message the message to send
+     * @param deliveryMode the delivery mode to use
+     * @param priority the priority for this message
+     * @param timeToLive the message's lifetime (in milliseconds)
+     * @param disableMessageID whether to disable setting the message ID
+     * @param disableMessageTimestamp whether to disable setting the message timestamp
+     * @param completionListener to callback
+     * @throws JMSException if the JMS provider fails to send the message due to some internal error.
+     * @throws UnsupportedOperationException if called on a producer with a fixed destination
+     * @throws InvalidDestinationException if a null destination is specified
+     */
+    public void send(Destination destination, Message message, int deliveryMode, int priority, long timeToLive,
+                     boolean disableMessageID, boolean disableMessageTimestamp,
+                     CompletionListener completionListener) throws JMSException {
+        checkClosed();
+        assertUnidentifiedProducer();
+        if (completionListener == null) {
+            throw new IllegalArgumentException("CompletionListener must not be null");
+        }
+        if (destination == null) {
+            throw new InvalidDestinationException("Don't understand null destinations");
+        }
+        validateDeliveryMode(deliveryMode);
+        validatePriority(priority);
+        this.doSendWithCompletionListener(ActiveMQDestination.transform(destination), message,
+                deliveryMode, priority, timeToLive, disableMessageID, disableMessageTimestamp, completionListener);
+    }
+
+    private void doSendWithCompletionListener(final ActiveMQDestination dest, Message message,
+                                              final int deliveryMode, final int priority, final long timeToLive,
+                                              final boolean disableMessageID, final boolean disableMessageTimestamp,
+                                              final CompletionListener completionListener) throws JMSException {
+        if (dest == null) {
+            throw new JMSException("No destination specified");
+        }
+
+        if (transformer != null) {
+            final Message transformedMessage = transformer.producerTransform(session, this, message);
+            if (transformedMessage != null) {
+                message = transformedMessage;
+            }
+        }
+
+        if (producerWindow != null) {
+            try {
+                producerWindow.waitForSpace();
+            } catch (InterruptedException e) {
+                throw new JMSException("Send aborted due to thread interrupt.");
+            }
+        }
+
+        this.session.send(this, dest, message, deliveryMode, priority, timeToLive,
+                disableMessageID, disableMessageTimestamp, producerWindow, sendTimeout, completionListener);
+        stats.onMessage();
     }
 
     public void send(Message message, AsyncCallback onComplete) throws JMSException {
-        this.send(this.getDestination(),
-                  message,
-                  this.defaultDeliveryMode,
-                  this.defaultPriority,
-                  this.defaultTimeToLive, onComplete);
+        sendToProducerDestination(message, this.defaultDeliveryMode, this.defaultPriority,
+                                  this.defaultTimeToLive, onComplete);
     }
 
     public void send(Destination destination, Message message, AsyncCallback onComplete) throws JMSException {
@@ -277,15 +527,12 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
     }
 
     public void send(Message message, int deliveryMode, int priority, long timeToLive, AsyncCallback onComplete) throws JMSException {
-        this.send(this.getDestination(),
-                  message,
-                  deliveryMode,
-                  priority,
-                  timeToLive,
-                  onComplete);
+        sendToProducerDestination(message, deliveryMode, priority, timeToLive, onComplete);
     }
 
     public void send(Destination destination, Message message, int deliveryMode, int priority, long timeToLive, AsyncCallback onComplete) throws JMSException {
+        checkClosed();
+        assertUnidentifiedProducer();
         this.send(destination, message, deliveryMode, priority, timeToLive, getDisableMessageID(), getDisableMessageTimestamp(), onComplete);
     }
 

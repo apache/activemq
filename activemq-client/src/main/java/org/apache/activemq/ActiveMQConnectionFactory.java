@@ -131,6 +131,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
      * This strictly rejects non-standard property types such as Character, Map, and List.
      */
     private boolean strictCompliance = false;
+    private boolean deferPrefetchUntilStarted = false;
 
     private boolean disableTimeStampsByDefault;
     private boolean optimizedMessageDispatch = true;
@@ -285,7 +286,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     @Override
     public JMSContext createContext() {
         try {
-            return new ActiveMQContext(createActiveMQConnection());
+            return newContext(createActiveMQConnection());
         } catch (JMSException e) {
             throw JMSExceptionSupport.convertToJMSRuntimeException(e);
         }
@@ -297,7 +298,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     @Override
     public JMSContext createContext(String userName, String password) {
         try {
-            return new ActiveMQContext(createActiveMQConnection(userName, password));
+            return newContext(createActiveMQConnection(userName, password));
         } catch (JMSException e) {
             throw JMSExceptionSupport.convertToJMSRuntimeException(e);
         }
@@ -308,8 +309,9 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
      */
     @Override
     public JMSContext createContext(String userName, String password, int sessionMode) {
+        ActiveMQSession.validateSessionMode(sessionMode);
         try {
-            return new ActiveMQContext(createActiveMQConnection(userName, password), sessionMode);
+            return newContext(createActiveMQConnection(userName, password), sessionMode);
         } catch (JMSException e) {
             throw JMSExceptionSupport.convertToJMSRuntimeException(e);
         }
@@ -320,11 +322,28 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
      */
     @Override
     public JMSContext createContext(int sessionMode) {
+        ActiveMQSession.validateSessionMode(sessionMode);
         try {
-            return new ActiveMQContext(createActiveMQConnection(getUserName(), getPassword()), sessionMode);
+            return newContext(createActiveMQConnection(getUserName(), getPassword()), sessionMode);
         } catch (JMSException e) {
             throw JMSExceptionSupport.convertToJMSRuntimeException(e);
         }
+    }
+
+    /**
+     * Creates the JMSContext returned by the createContext methods once the
+     * connection exists. A subclass that needs a different JMSContext type
+     * overrides this rather than the createContext methods themselves.
+     */
+    protected JMSContext newContext(ActiveMQConnection connection) {
+        return new ActiveMQContext(connection);
+    }
+
+    /**
+     * Session-mode variant of {@link #newContext(ActiveMQConnection)}.
+     */
+    protected JMSContext newContext(ActiveMQConnection connection, int sessionMode) {
+        return new ActiveMQContext(connection, sessionMode);
     }
 
     /**
@@ -398,6 +417,15 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
                 connection.setDefaultClientID(clientID);
             }
 
+            // Jakarta Messaging expects createConnection/createContext to authenticate
+            // the caller immediately (JMSSecurityException on bad credentials). ActiveMQ
+            // historically defers the ConnectionInfo exchange until first use, so the
+            // eager check is only performed under strictCompliance, and it uses a probe
+            // so the connection's own identity stays unset for a later setClientID().
+            if (isStrictCompliance()) {
+                connection.authenticate();
+            }
+
             return connection;
         } catch (JMSException e) {
             // Clean up!
@@ -428,6 +456,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
 
     protected void configureConnection(ActiveMQConnection connection) throws JMSException {
         connection.setPrefetchPolicy(getPrefetchPolicy());
+        connection.setDeferPrefetchUntilStarted(isDeferPrefetchUntilStarted());
         connection.setDisableTimeStampsByDefault(isDisableTimeStampsByDefault());
         connection.setOptimizedMessageDispatch(isOptimizedMessageDispatch());
         connection.setCopyMessageOnSend(isCopyMessageOnSend());
@@ -1057,6 +1086,22 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
      */
     public void setStrictCompliance(boolean strictCompliance) {
         this.strictCompliance = strictCompliance;
+    }
+
+    public boolean isDeferPrefetchUntilStarted() {
+        return deferPrefetchUntilStarted;
+    }
+
+    /**
+     * When enabled, queue consumers created before their connection is first
+     * started register with a prefetch of zero so the broker does not dispatch
+     * messages into a consumer that cannot deliver them. The configured
+     * prefetch is restored when the connection starts. Default is false to
+     * preserve the historical behavior of buffering pre-start dispatches in
+     * the client.
+     */
+    public void setDeferPrefetchUntilStarted(boolean deferPrefetchUntilStarted) {
+        this.deferPrefetchUntilStarted = deferPrefetchUntilStarted;
     }
 
     public String getClientIDPrefix() {

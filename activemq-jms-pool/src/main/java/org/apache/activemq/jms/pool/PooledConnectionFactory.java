@@ -23,10 +23,12 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import jakarta.jms.Connection;
 import jakarta.jms.ConnectionFactory;
+import jakarta.jms.IllegalStateRuntimeException;
 import jakarta.jms.JMSContext;
 import jakarta.jms.JMSException;
 import jakarta.jms.QueueConnection;
 import jakarta.jms.QueueConnectionFactory;
+import jakarta.jms.Session;
 import jakarta.jms.TopicConnection;
 import jakarta.jms.TopicConnectionFactory;
 
@@ -89,15 +91,15 @@ public class PooledConnectionFactory implements ConnectionFactory, QueueConnecti
 
     public void initConnectionsPool() {
         if (this.connectionsPool == null) {
-            final GenericKeyedObjectPoolConfig poolConfig = new GenericKeyedObjectPoolConfig();
+            final var poolConfig = new GenericKeyedObjectPoolConfig();
             poolConfig.setJmxEnabled(false);
             this.connectionsPool = new GenericKeyedObjectPool<ConnectionKey, ConnectionPool>(
                 new KeyedPooledObjectFactory<ConnectionKey, ConnectionPool>() {
                     @Override
                     public PooledObject<ConnectionPool> makeObject(ConnectionKey connectionKey) throws Exception {
-                        Connection delegate = createConnection(connectionKey);
+                        var delegate = createConnection(connectionKey);
 
-                        ConnectionPool connection = createConnectionPool(delegate);
+                        var connection = createConnectionPool(delegate);
                         connection.setIdleTimeout(getIdleTimeout());
                         connection.setExpiryTimeout(getExpiryTimeout());
                         connection.setMaximumActiveSessionPerConnection(getMaximumActiveSessionPerConnection());
@@ -117,7 +119,7 @@ public class PooledConnectionFactory implements ConnectionFactory, QueueConnecti
 
                     @Override
                     public void destroyObject(ConnectionKey connectionKey, PooledObject<ConnectionPool> pooledObject) throws Exception {
-                        ConnectionPool connection = pooledObject.getObject();
+                        var connection = pooledObject.getObject();
                         try {
                             LOG.trace("Destroying connection: {}", connection);
                             connection.close();
@@ -128,7 +130,7 @@ public class PooledConnectionFactory implements ConnectionFactory, QueueConnecti
 
                     @Override
                     public boolean validateObject(ConnectionKey connectionKey, PooledObject<ConnectionPool> pooledObject) {
-                        ConnectionPool connection = pooledObject.getObject();
+                        var connection = pooledObject.getObject();
                         if (connection != null && connection.expiredCheck()) {
                             LOG.trace("Connection has expired: {} and will be destroyed", connection);
                             return false;
@@ -218,7 +220,7 @@ public class PooledConnectionFactory implements ConnectionFactory, QueueConnecti
         }
 
         ConnectionPool connection = null;
-        ConnectionKey key = new ConnectionKey(userName, password);
+        var key = new ConnectionKey(userName, password);
 
         // This will either return an existing non-expired ConnectionPool or it
         // will create a new one to meet the demand.
@@ -273,35 +275,77 @@ public class PooledConnectionFactory implements ConnectionFactory, QueueConnecti
     }
 
     /**
-     * @return Returns the JMSContext.
+     * Creates a {@link JMSContext} backed by a pooled connection, using the default
+     * user identity and {@link Session#AUTO_ACKNOWLEDGE}. Closing the context
+     * returns its connection and session to the pool rather than closing them.
+     *
+     * @return a JMSContext backed by a pooled connection
+     * @since 2.0
      */
     @Override
     public JMSContext createContext() {
-        throw new UnsupportedOperationException("createContext() is not supported");
+        return createContext(Session.AUTO_ACKNOWLEDGE);
     }
 
     /**
-     * @return Returns the JMSContext.
+     * Creates a {@link JMSContext} backed by a pooled connection for the given user
+     * identity, using {@link Session#AUTO_ACKNOWLEDGE}. Pooled connections are keyed
+     * by the userName and password, so each distinct identity draws from its own
+     * pool of connections. Closing the context returns its connection and session
+     * to the pool rather than closing them.
+     *
+     * @return a JMSContext backed by a pooled connection for the given identity
+     * @since 2.0
      */
     @Override
     public JMSContext createContext(String userName, String password) {
-        throw new UnsupportedOperationException("createContext(userName, password) is not supported");
+        return createContext(userName, password, Session.AUTO_ACKNOWLEDGE);
     }
 
     /**
-     * @return Returns the JMSContext.
+     * Creates a {@link JMSContext} backed by a pooled connection for the given user
+     * identity and session mode. Pooled connections are keyed by the userName and
+     * password, so each distinct identity draws from its own pool of connections.
+     * Closing the context returns its connection and session to the pool rather
+     * than closing them.
+     *
+     * @return a JMSContext backed by a pooled connection for the given identity
+     * @throws jakarta.jms.IllegalStateRuntimeException if the factory is stopped
+     * @since 2.0
      */
     @Override
     public JMSContext createContext(String userName, String password, int sessionMode) {
-        throw new UnsupportedOperationException("createContext(userName, password, sessionMode) is not supported");
+        try {
+            var pooledConnection = (PooledConnection) createConnection(userName, password);
+            if (pooledConnection == null) {
+                throw new IllegalStateRuntimeException("PooledConnectionFactory is stopped");
+            }
+            return new PooledJMSContext(pooledConnection, sessionMode);
+        } catch (JMSException e) {
+            throw JmsPoolExceptionSupport.toRuntimeException(e);
+        }
     }
 
     /**
-     * @return Returns the JMSContext.
+     * Creates a {@link JMSContext} backed by a pooled connection, using the default
+     * user identity and the given session mode. Closing the context returns its
+     * connection and session to the pool rather than closing them.
+     *
+     * @return a JMSContext backed by a pooled connection
+     * @throws jakarta.jms.IllegalStateRuntimeException if the factory is stopped
+     * @since 2.0
      */
     @Override
     public JMSContext createContext(int sessionMode) {
-        throw new UnsupportedOperationException("createContext(sessionMode) is not supported");
+        try {
+            var pooledConnection = (PooledConnection) createConnection();
+            if (pooledConnection == null) {
+                throw new IllegalStateRuntimeException("PooledConnectionFactory is stopped");
+            }
+            return new PooledJMSContext(pooledConnection, sessionMode);
+        } catch (JMSException e) {
+            throw JmsPoolExceptionSupport.toRuntimeException(e);
+        }
     }
 
     protected Connection newPooledConnection(ConnectionPool connection) {
@@ -309,7 +353,7 @@ public class PooledConnectionFactory implements ConnectionFactory, QueueConnecti
     }
 
     private JMSException createJmsException(String msg, Exception cause) {
-        JMSException exception = new JMSException(msg);
+        var exception = new JMSException(msg);
         exception.setLinkedException(cause);
         exception.initCause(cause);
         return exception;

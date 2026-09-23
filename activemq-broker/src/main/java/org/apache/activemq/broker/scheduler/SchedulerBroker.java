@@ -31,6 +31,8 @@ import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.Connector;
 import org.apache.activemq.broker.ProducerBrokerExchange;
 import org.apache.activemq.broker.region.ConnectionStatistics;
+import org.apache.activemq.broker.region.policy.PolicyEntry;
+import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.Command;
 import org.apache.activemq.command.ConnectionControl;
@@ -62,6 +64,11 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
      * The max repeat value allowed to prevent clients from causing DoS issues with huge repeat counts
      */
     private static final int MAX_REPEAT_ALLOWED = 1000;
+    /**
+     * Internal property used to carry JMSDeliveryTime across the job store, whose
+     * wire format may predate the OpenWire v13 field. Removed before delivery.
+     */
+    private static final String DELIVERY_TIME_PROPERTY = "AMQ_SCHEDULED_DELIVERY_TIME";
     private final LongSequenceGenerator messageIdGenerator = new LongSequenceGenerator();
     private final AtomicBoolean started = new AtomicBoolean();
     private final WireFormat wireFormat = new OpenWireFormat();
@@ -72,10 +79,13 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
     private final JobSchedulerStore store;
     private JobScheduler scheduler;
     private int maxRepeatAllowed = MAX_REPEAT_ALLOWED;
+    // Retained so a per-destination policy can disable JMS delivery delay.
+    private final BrokerService brokerService;
 
     public SchedulerBroker(BrokerService brokerService, Broker next, JobSchedulerStore store) throws Exception {
         super(next);
 
+        this.brokerService = brokerService;
         this.store = store;
         this.producerId.setConnectionId(ID_GENERATOR.generateId());
         this.context.setSecurityContext(SecurityContext.BROKER_SECURITY_CONTEXT);
@@ -208,6 +218,47 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
         return new JobSchedulerFacade(this);
     }
 
+    /**
+     * Converts a message's absolute {@code JMSDeliveryTime} into a relative delay for
+     * the scheduler, or returns null when the message should be delivered immediately
+     * -- no delivery time set, the time has already passed, or the destination's policy
+     * has delivery delay disabled.
+     */
+    private Object resolveDeliveryDelay(Message messageSend) {
+        long deliveryTime = messageSend.getDeliveryTime();
+        if (deliveryTime <= 0) {
+            return null;
+        }
+        long delay = deliveryTime - System.currentTimeMillis();
+        // Consult the destination policy only once a delay is actually in play, so
+        // ordinary sends never pay for the policy lookup.
+        if (delay > 0 && isDeliveryDelayEnabled(messageSend.getDestination())) {
+            return Long.valueOf(delay);
+        }
+        return null;
+    }
+
+    /**
+     * Whether the JMS delivery delay carried on a message should be honoured for the
+     * given destination, per {@code PolicyEntry.deliveryDelayEnabled} (default true).
+     *
+     * <p>Turning this off lets a broker act purely as a hop: the message is delivered
+     * onward immediately with its {@code JMSDeliveryTime} intact, so a downstream
+     * broker can serve the remaining delay instead. This applies only to the JMS
+     * delivery delay -- the explicit {@code AMQ_SCHEDULED_*} properties are unaffected.
+     */
+    private boolean isDeliveryDelayEnabled(ActiveMQDestination destination) {
+        if (brokerService == null || destination == null) {
+            return true;
+        }
+        PolicyMap policyMap = brokerService.getDestinationPolicy();
+        if (policyMap == null) {
+            return true;
+        }
+        PolicyEntry entry = policyMap.getEntryFor(destination);
+        return entry == null || entry.isDeliveryDelayEnabled();
+    }
+
     @Override
     public void start() throws Exception {
         this.started.set(true);
@@ -238,6 +289,16 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
         final Object cronValue = messageSend.getProperty(ScheduledMessage.AMQ_SCHEDULED_CRON);
         final Object periodValue = messageSend.getProperty(ScheduledMessage.AMQ_SCHEDULED_PERIOD);
         final Object delayValue = messageSend.getProperty(ScheduledMessage.AMQ_SCHEDULED_DELAY);
+
+        // The JMS 2.0 delivery delay arrives as an absolute JMSDeliveryTime on the
+        // message rather than as an AMQ_SCHEDULED_* property. Translate it into a
+        // relative delay for the scheduler, but only when the sender did not set an
+        // explicit AMQ_SCHEDULED_* property -- those keep precedence, preserving the
+        // behaviour of everything that predates delivery delay.
+        final Object effectiveDelayValue =
+            (cronValue == null && periodValue == null && delayValue == null)
+                ? resolveDeliveryDelay(messageSend)
+                : delayValue;
 
         String physicalName = messageSend.getDestination().getPhysicalName();
         boolean schedulerManage = physicalName.regionMatches(true, 0, ScheduledMessage.AMQ_SCHEDULER_MANAGEMENT_DESTINATION, 0,
@@ -287,7 +348,7 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
                 }
             }
 
-        } else if ((cronValue != null || periodValue != null || delayValue != null) && jobId == null) {
+        } else if (shouldSchedule(cronValue, periodValue, delayValue, effectiveDelayValue, jobId)) {
 
             // Check for room in the job scheduler store
             if (systemUsage.getJobSchedulerUsage() != null) {
@@ -319,15 +380,32 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
                 context.getTransaction().addSynchronization(new Synchronization() {
                     @Override
                     public void afterCommit() throws Exception {
-                        doSchedule(messageSend, cronValue, periodValue, delayValue);
+                        doSchedule(messageSend, cronValue, periodValue, effectiveDelayValue);
                     }
                 });
             } else {
-                doSchedule(messageSend, cronValue, periodValue, delayValue);
+                doSchedule(messageSend, cronValue, periodValue, effectiveDelayValue);
             }
         } else {
             super.send(producerExchange, messageSend);
         }
+    }
+
+    /**
+     * A message the scheduler has already delivered carries a scheduledJobId. For
+     * property-driven schedules that marker must suppress re-scheduling, otherwise a
+     * consumer re-sending the message would loop it through the scheduler forever.
+     * The JMS 2.0 delivery time is different: the producer recomputes JMSDeliveryTime
+     * on every send, so a stale marker on a re-sent message must not defeat the
+     * fresh delay.
+     */
+    private static boolean shouldSchedule(Object cronValue, Object periodValue, Object delayValue,
+                                          Object effectiveDelayValue, String jobId) {
+        boolean propertyDriven = cronValue != null || periodValue != null || delayValue != null;
+        if (propertyDriven) {
+            return jobId == null;
+        }
+        return effectiveDelayValue != null;
     }
 
     private void doSchedule(Message messageSend, Object cronValue, Object periodValue, Object delayValue) throws Exception {
@@ -339,6 +417,14 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
         // clear transaction context
         Message msg = messageSend.copy();
         msg.setTransactionId(null);
+        // JMSDeliveryTime only exists on the wire from OpenWire v13, but the job store
+        // marshals at storeOpenWireVersion (11 by default), so the field would be lost
+        // across the round-trip. Carry it as a property and restore it on delivery, so
+        // the delivered message reports the delivery time the sender asked for whatever
+        // store version is in use.
+        if (msg.getDeliveryTime() > 0) {
+            msg.setProperty(DELIVERY_TIME_PROPERTY, Long.valueOf(msg.getDeliveryTime()));
+        }
         org.apache.activemq.util.ByteSequence packet = wireFormat.marshal(msg);
         if (cronValue != null) {
             cronEntry = cronValue.toString();
@@ -389,6 +475,15 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
 
             // Add the jobId as a property
             messageSend.setProperty("scheduledJobId", id);
+            // Restore the JMSDeliveryTime carried across the job store (see doSchedule).
+            Object carriedDeliveryTime = messageSend.getProperty(DELIVERY_TIME_PROPERTY);
+            if (carriedDeliveryTime != null) {
+                Long value = (Long) TypeConversionSupport.convert(carriedDeliveryTime, Long.class);
+                if (value != null) {
+                    messageSend.setDeliveryTime(value.longValue());
+                }
+                messageSend.removeProperty(DELIVERY_TIME_PROPERTY);
+            }
 
             // if this goes across a network - we don't want it rescheduled
             messageSend.removeProperty(ScheduledMessage.AMQ_SCHEDULED_PERIOD);

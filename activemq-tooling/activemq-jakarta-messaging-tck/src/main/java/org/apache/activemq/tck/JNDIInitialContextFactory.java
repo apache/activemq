@@ -28,8 +28,13 @@ import javax.naming.Context;
 import javax.naming.NamingException;
 import javax.naming.spi.InitialContextFactory;
 
+import org.apache.activemq.ActiveMQPrefetchPolicy;
+import org.apache.activemq.broker.SharedTopicBrokerService;
+import org.apache.activemq.SharedTopicConnectionFactory;
+import org.apache.activemq.broker.BrokerPlugin;
+import org.apache.activemq.security.AuthenticationUser;
+import org.apache.activemq.security.SimpleAuthenticationPlugin;
 import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.slf4j.Logger;
@@ -47,7 +52,7 @@ public class JNDIInitialContextFactory implements InitialContextFactory {
 
     private static final String BROKER_URL = "vm://localhost";
 
-    private static volatile BrokerService broker;
+    private static volatile SharedTopicBrokerService broker;
     private static final Object BROKER_LOCK = new Object();
 
     private static final Set<String> QUEUE_NAMES = Set.of(
@@ -95,8 +100,45 @@ public class JNDIInitialContextFactory implements InitialContextFactory {
     }
 
     private static ActiveMQConnectionFactory createConnectionFactory(final String clientId) {
-        final ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(BROKER_URL);
+        final ActiveMQPrefetchPolicy prefetchPolicy = new ActiveMQPrefetchPolicy();
+        prefetchPolicy.setAll(0);
+        prefetchPolicy.setQueuePrefetch(1);
+        prefetchPolicy.setQueueBrowserPrefetch(0);
+        prefetchPolicy.setTopicPrefetch(1);
+        // Durable-topic prefetch must be >= 1. Shared durable consumers read
+        // durableTopicPrefetch; at 0 they become pull consumers, and the pull
+        // path hangs for shared durable subscriptions (receive() never returns).
+        // 1 also satisfies async consumers (MessageListener/CompletionListener),
+        // which reject a prefetch of 0.
+        prefetchPolicy.setDurableTopicPrefetch(1);
+        prefetchPolicy.setOptimizeDurableTopicPrefetch(1);
+        final ActiveMQConnectionFactory factory = new SharedTopicConnectionFactory(BROKER_URL);
+        factory.setPrefetchPolicy(prefetchPolicy);
         factory.setNestedMapAndListEnabled(false);
+        // The TCK sends JDK types (e.g. StringBuffer) as ObjectMessage payloads.
+        // ActiveMQ's ObjectMessage deserialization security rejects untrusted
+        // classes by default; trust all packages for the test harness so the
+        // ObjectMessage round-trip tests can deserialize their payloads.
+        factory.setTrustAllPackages(true);
+        // Match the client to the broker, which runs with advisorySupport=false.
+        // ActiveMQConnection only populates activeTempDestinations from temp-destination
+        // advisories, and isDeleted() consults that set whenever an advisory consumer
+        // exists. Watching advisories the broker never publishes leaves the set
+        // permanently empty, so every *other* connection's TemporaryQueue/Topic reads as
+        // deleted and sending to a peer's temp destination -- legal per JMS, and the
+        // basis of request/reply -- fails with InvalidDestinationException. Not watching
+        // restores isDeleted()'s intended permissive branch.
+        factory.setWatchTopicAdvisories(false);
+        // JmsTool creates competing queue consumers on connections it never starts.
+        // Without deferral the broker round-robins messages into those consumers'
+        // prefetch, where they park in the held dispatch channel and the started
+        // consumer's receive() blocks forever (core20 jmsconsumertests queueReceiveTests).
+        factory.setDeferPrefetchUntilStarted(true);
+        // The TCK asserts strict Jakarta Messaging semantics that ActiveMQ relaxes by
+        // default for backwards compatibility: eager authentication on
+        // createConnection/createContext, the administratively configured client
+        // identifier, and the strict message property rules.
+        factory.setStrictCompliance(true);
         if (clientId != null) {
             factory.setClientID(clientId);
         }
@@ -112,11 +154,22 @@ public class JNDIInitialContextFactory implements InitialContextFactory {
                 return;
             }
             try {
-                final BrokerService bs = new BrokerService();
+                final SharedTopicBrokerService bs = new SharedTopicBrokerService();
                 bs.setBrokerName("localhost");
                 bs.setPersistent(false);
                 bs.setUseJmx(false);
                 bs.setAdvisorySupport(false);
+                // JMS 2.0 delivery delay is implemented by the scheduler broker; the
+                // non-persistent broker uses the in-memory job scheduler store.
+                bs.setSchedulerSupport(true);
+                // The TCK expects invalid credentials to be rejected (JMSSecurityException
+                // from createConnection, JMSSecurityRuntimeException from createContext).
+                // Authenticate the ts.jte user and keep anonymous access for the many
+                // tests that connect without credentials.
+                SimpleAuthenticationPlugin authentication = new SimpleAuthenticationPlugin(
+                    java.util.List.of(new AuthenticationUser("guest", "guest", "users")));
+                authentication.setAnonymousAccessAllowed(true);
+                bs.setPlugins(new BrokerPlugin[] {authentication});
                 bs.start();
                 bs.waitUntilStarted();
                 broker = bs;

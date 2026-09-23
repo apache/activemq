@@ -35,6 +35,7 @@ import jakarta.jms.InvalidDestinationException;
 import jakarta.jms.JMSException;
 import jakarta.jms.Message;
 import jakarta.jms.MessageConsumer;
+import jakarta.jms.MessageFormatException;
 import jakarta.jms.MessageListener;
 import jakarta.jms.TransactionRolledBackException;
 
@@ -43,7 +44,9 @@ import org.apache.activemq.command.ActiveMQBlobMessage;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQObjectMessage;
+import org.apache.activemq.command.ActiveMQStreamMessage;
 import org.apache.activemq.command.ActiveMQTempDestination;
+import org.apache.activemq.command.ConsumerControl;
 import org.apache.activemq.command.CommandTypes;
 import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.ConsumerInfo;
@@ -154,6 +157,9 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     private final String selector;
     private boolean synchronizationRegistered;
     private final AtomicBoolean started = new AtomicBoolean(false);
+    // Configured prefetch withheld until the connection first starts; zero when
+    // no deferral is pending. See ActiveMQConnectionFactory#setDeferPrefetchUntilStarted.
+    private volatile int deferredPrefetchSize;
 
     private MessageAvailableListener availableListener;
 
@@ -293,6 +299,21 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                         || this.nonBlockingRedelivery
                         || session.connection.isMessagePrioritySupported();
         this.consumerExpiryCheckEnabled = session.connection.isConsumerExpiryCheckEnabled();
+        // Register queue consumers created before the connection has ever been
+        // started with zero prefetch so the broker does not push messages into a
+        // consumer that cannot deliver them; such messages would park in the held
+        // dispatch channel and starve running consumers. The configured prefetch
+        // is restored when the connection starts.
+        if (this.session.connection.isDeferPrefetchUntilStarted()
+            && !this.session.connection.isEverStarted()
+            && dest.isQueue()
+            && !browser
+            && this.info.getPrefetchSize() > 0) {
+            this.deferredPrefetchSize = this.info.getPrefetchSize();
+            this.info.setPrefetchSize(0);
+            this.info.setCurrentPrefetchSize(0);
+        }
+
         if (messageListener != null) {
             setMessageListener(messageListener);
         }
@@ -448,7 +469,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     @Override
     public void setMessageListener(MessageListener listener) throws JMSException {
         checkClosed();
-        if (info.getPrefetchSize() == 0) {
+        if (info.getPrefetchSize() == 0 && deferredPrefetchSize == 0) {
             throw new JMSException("Illegal prefetch size of zero. This setting is not supported for asynchronous consumers please set a value of at least 1");
         }
         if (listener != null) {
@@ -665,7 +686,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         while (timeout > 0) {
 
             MessageDispatch md;
-            if (info.getPrefetchSize() == 0) {
+            if (isPullConsumer()) {
                 md = dequeue(-1); // We let the broker let us know when we timeout.
             } else {
                 md = dequeue(timeout);
@@ -697,7 +718,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         sendPullCommand(-1);
 
         MessageDispatch md;
-        if (info.getPrefetchSize() == 0) {
+        if (isPullConsumer()) {
             md = dequeue(-1); // We let the broker let us know when we
             // timeout.
         } else {
@@ -711,6 +732,221 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         beforeMessageIsConsumed(md);
         afterMessageIsConsumed(md, false);
         return createActiveMQMessage(md);
+    }
+
+    /**
+     * Receives the next message produced for this message consumer and returns
+     * its body as an object of the specified type. This call blocks
+     * indefinitely until a message is produced or until this message consumer
+     * is closed.
+     * <p>
+     * If the message is not of a type for which the body can be assigned to
+     * the specified type, a {@code MessageFormatException} is thrown. The
+     * subsequent behaviour depends on the session's acknowledge mode:
+     * <ul>
+     *   <li>{@code AUTO_ACKNOWLEDGE} / {@code DUPS_OK_ACKNOWLEDGE}: the
+     *       message is not acknowledged and will be delivered again before any
+     *       subsequent messages. This is not considered redelivery and does not
+     *       cause the {@code JMSRedelivered} header or
+     *       {@code JMSXDeliveryCount} property to be updated.</li>
+     *   <li>{@code CLIENT_ACKNOWLEDGE}: the message is treated as delivered.
+     *       The application must call {@code session.recover()} to have it
+     *       redelivered.</li>
+     *   <li>Transacted session: the message is treated as delivered within the
+     *       transaction. The application must call {@code session.rollback()}
+     *       to have it redelivered.</li>
+     * </ul>
+     * <p>
+     * This method cannot be used to receive {@code Message} or
+     * {@code StreamMessage} objects; a {@code MessageFormatException} will
+     * always be thrown for these types.
+     *
+     * @param c the type to which the body of the next message should be
+     *          assigned
+     * @return the body of the next message, or null if this message consumer
+     *         is concurrently closed
+     * @throws MessageFormatException if the message body cannot be assigned to
+     *         the specified type, or if the message is a {@code Message} or
+     *         {@code StreamMessage}
+     * @throws JMSException if the JMS provider fails to receive the next
+     *         message due to some internal error
+     */
+    public <T> T receiveBody(Class<T> c) throws JMSException {
+        checkClosed();
+        checkMessageListener();
+
+        sendPullCommand(0);
+        MessageDispatch md = dequeue(-1);
+        if (md == null) {
+            return null;
+        }
+
+        return doReceiveBody(md, c);
+    }
+
+    /**
+     * Receives the next message produced for this message consumer and returns
+     * its body as an object of the specified type, blocking up to the
+     * specified timeout. A {@code timeout} of zero never expires and the call
+     * blocks indefinitely.
+     * <p>
+     * If the message is not of a type for which the body can be assigned to
+     * the specified type, a {@code MessageFormatException} is thrown. The
+     * subsequent behaviour depends on the session's acknowledge mode:
+     * <ul>
+     *   <li>{@code AUTO_ACKNOWLEDGE} / {@code DUPS_OK_ACKNOWLEDGE}: the
+     *       message is not acknowledged and will be delivered again before any
+     *       subsequent messages. This is not considered redelivery and does not
+     *       cause the {@code JMSRedelivered} header or
+     *       {@code JMSXDeliveryCount} property to be updated.</li>
+     *   <li>{@code CLIENT_ACKNOWLEDGE}: the message is treated as delivered.
+     *       The application must call {@code session.recover()} to have it
+     *       redelivered.</li>
+     *   <li>Transacted session: the message is treated as delivered within the
+     *       transaction. The application must call {@code session.rollback()}
+     *       to have it redelivered.</li>
+     * </ul>
+     * <p>
+     * This method cannot be used to receive {@code Message} or
+     * {@code StreamMessage} objects; a {@code MessageFormatException} will
+     * always be thrown for these types.
+     *
+     * @param c       the type to which the body of the next message should be
+     *                assigned
+     * @param timeout the timeout value (in milliseconds), a timeout of zero
+     *                never expires
+     * @return the body of the next message, or null if the timeout expires or
+     *         this message consumer is concurrently closed
+     * @throws MessageFormatException if the message body cannot be assigned to
+     *         the specified type, or if the message is a {@code Message} or
+     *         {@code StreamMessage}
+     * @throws JMSException if the JMS provider fails to receive the next
+     *         message due to some internal error
+     */
+    public <T> T receiveBody(Class<T> c, long timeout) throws JMSException {
+        checkClosed();
+        checkMessageListener();
+        if (timeout == 0) {
+            return this.receiveBody(c);
+        }
+
+        sendPullCommand(timeout);
+        while (timeout > 0) {
+            MessageDispatch md;
+            if (isPullConsumer()) {
+                md = dequeue(-1);
+            } else {
+                md = dequeue(timeout);
+            }
+
+            if (md == null) {
+                return null;
+            }
+
+            return doReceiveBody(md, c);
+        }
+        return null;
+    }
+
+    /**
+     * Receives the next message produced for this message consumer and returns
+     * its body as an object of the specified type if one is immediately
+     * available.
+     * <p>
+     * If the message is not of a type for which the body can be assigned to
+     * the specified type, a {@code MessageFormatException} is thrown. The
+     * subsequent behaviour depends on the session's acknowledge mode:
+     * <ul>
+     *   <li>{@code AUTO_ACKNOWLEDGE} / {@code DUPS_OK_ACKNOWLEDGE}: the
+     *       message is not acknowledged and will be delivered again before any
+     *       subsequent messages. This is not considered redelivery and does not
+     *       cause the {@code JMSRedelivered} header or
+     *       {@code JMSXDeliveryCount} property to be updated.</li>
+     *   <li>{@code CLIENT_ACKNOWLEDGE}: the message is treated as delivered.
+     *       The application must call {@code session.recover()} to have it
+     *       redelivered.</li>
+     *   <li>Transacted session: the message is treated as delivered within the
+     *       transaction. The application must call {@code session.rollback()}
+     *       to have it redelivered.</li>
+     * </ul>
+     * <p>
+     * This method cannot be used to receive {@code Message} or
+     * {@code StreamMessage} objects; a {@code MessageFormatException} will
+     * always be thrown for these types.
+     *
+     * @param c the type to which the body of the next message should be
+     *          assigned
+     * @return the body of the next message, or null if one is not immediately
+     *         available
+     * @throws MessageFormatException if the message body cannot be assigned to
+     *         the specified type, or if the message is a {@code Message} or
+     *         {@code StreamMessage}
+     * @throws JMSException if the JMS provider fails to receive the next
+     *         message due to some internal error
+     */
+    public <T> T receiveBodyNoWait(Class<T> c) throws JMSException {
+        checkClosed();
+        checkMessageListener();
+        sendPullCommand(-1);
+
+        MessageDispatch md;
+        if (isPullConsumer()) {
+            md = dequeue(-1);
+        } else {
+            md = dequeue(0);
+        }
+
+        if (md == null) {
+            return null;
+        }
+
+        return doReceiveBody(md, c);
+    }
+
+    /**
+     * Checks that the message body can be assigned to the requested type,
+     * acknowledges the message, and returns its body.  If the body cannot be
+     * assigned, the handling depends on the session's acknowledge mode:
+     * <ul>
+     *   <li>AUTO_ACKNOWLEDGE / DUPS_OK_ACKNOWLEDGE: the message is re-enqueued
+     *       without acknowledgement so that it remains available for a subsequent
+     *       {@code receive} or {@code receiveBody} call.</li>
+     *   <li>CLIENT_ACKNOWLEDGE / TRANSACTED: the message is treated as delivered
+     *       (not re-enqueued). The application may call {@code session.recover()}
+     *       or {@code session.rollback()} respectively to redeliver.</li>
+     * </ul>
+     * <p>
+     * Per Jakarta Messaging 3.1, {@code receiveBody} must always throw
+     * {@code MessageFormatException} for plain {@code Message} and
+     * {@code StreamMessage} types, regardless of what
+     * {@code isBodyAssignableTo} returns.
+     */
+    private <T> T doReceiveBody(MessageDispatch md, Class<T> c) throws JMSException {
+        ActiveMQMessage message = createActiveMQMessage(md);
+
+        // Jakarta Messaging 3.1: receiveBody must always fail for Message and StreamMessage.
+        // Note: Message.isBodyAssignableTo() returns true for any type per spec,
+        // which conflicts with receiveBody's requirement, so we must check explicitly.
+        boolean bodyNotAssignable = message.getClass() == ActiveMQMessage.class
+                || message instanceof ActiveMQStreamMessage
+                || !message.isBodyAssignableTo(c);
+
+        if (bodyNotAssignable) {
+            if (session.isAutoAcknowledge() || session.isDupsOkAcknowledge()) {
+                // re-enqueue for redelivery on next receive/receiveBody call
+                unconsumedMessages.enqueueFirst(md);
+            } else {
+                // CLIENT_ACKNOWLEDGE or TRANSACTED: message is considered delivered,
+                // application must use session.recover() or session.rollback()
+                beforeMessageIsConsumed(md);
+                afterMessageIsConsumed(md, false);
+            }
+            throw new MessageFormatException("Message body cannot be read as type: " + c);
+        }
+
+        beforeMessageIsConsumed(md);
+        afterMessageIsConsumed(md, false);
+        return message.getBody(c);
     }
 
     /**
@@ -914,7 +1150,9 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
      */
     protected void sendPullCommand(long timeout) throws JMSException {
         clearDeliveredList();
-        if (info.getCurrentPrefetchSize() == 0 && unconsumedMessages.isEmpty()) {
+        // A consumer whose prefetch is deferred until connection start is not a
+        // pull consumer; a pull here could steal a message into the held channel.
+        if (info.getCurrentPrefetchSize() == 0 && deferredPrefetchSize == 0 && unconsumedMessages.isEmpty()) {
             MessagePull messagePull = new MessagePull();
             messagePull.configure(info);
             messagePull.setTimeout(timeout);
@@ -1454,7 +1692,12 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                             try {
                                 boolean expired = isConsumerExpiryCheckEnabled() && message.isExpired();
                                 if (!expired) {
-                                    listener.onMessage(message);
+                                    session.messageListenerThread.set(Thread.currentThread());
+                                    try {
+                                        listener.onMessage(message);
+                                    } finally {
+                                        session.messageListenerThread.set(null);
+                                    }
                                 }
                                 afterMessageIsConsumed(md, expired);
                             } catch (RuntimeException e) {
@@ -1485,7 +1728,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
 
                                     // Pull consumer needs to check if pull timed out and send
                                     // a new pull command if not.
-                                    if (info.getCurrentPrefetchSize() == 0) {
+                                    if (info.getCurrentPrefetchSize() == 0 && deferredPrefetchSize == 0) {
                                         unconsumedMessages.enqueue(null);
                                     }
                                 }
@@ -1628,9 +1871,39 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         if (unconsumedMessages.isClosed()) {
             return;
         }
+        restoreDeferredPrefetch();
         started.set(true);
         unconsumedMessages.start();
         session.executor.wakeup();
+    }
+
+    /**
+     * A pull consumer relies on the broker to answer each MessagePull, including
+     * signalling the receive timeout. A consumer whose prefetch is merely deferred
+     * until the connection starts carries prefetch zero on the wire but sends no
+     * pulls, so it must use client-side timeouts like any push consumer.
+     */
+    private boolean isPullConsumer() {
+        return info.getPrefetchSize() == 0 && deferredPrefetchSize == 0;
+    }
+
+    /**
+     * Restores the configured prefetch that was withheld while the connection
+     * had never been started and tells the broker so it re-credits this
+     * consumer and dispatches any pending messages.
+     */
+    private void restoreDeferredPrefetch() throws JMSException {
+        int prefetch = deferredPrefetchSize;
+        if (prefetch > 0) {
+            deferredPrefetchSize = 0;
+            info.setPrefetchSize(prefetch);
+            info.setCurrentPrefetchSize(prefetch);
+            ConsumerControl control = new ConsumerControl();
+            control.setConsumerId(info.getConsumerId());
+            control.setDestination(info.getDestination());
+            control.setPrefetch(prefetch);
+            session.asyncSendPacket(control);
+        }
     }
 
     public void stop() {
