@@ -19,7 +19,7 @@
   <parent>
     <groupId>org.apache</groupId>
     <artifactId>apache</artifactId>
-    <version>39</version>
+    <version>40</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
 
@@ -1215,6 +1215,7 @@
             <exclude>**/webapp/js/css.js</exclude>
             <exclude>**/webapp/js/standardista-table-sorting.js</exclude>
             <exclude>**/*.data</exclude>
+            <exclude>**/*.crl</exclude>
             <exclude>**/webapp/test/assets/*</exclude>
             <exclude>**/*.lck</exclude>
             <exclude>**/*.patch</exclude>
