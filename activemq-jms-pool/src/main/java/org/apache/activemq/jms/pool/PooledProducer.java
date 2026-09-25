@@ -36,6 +36,7 @@ public class PooledProducer implements MessageProducer {
     private boolean disableMessageTimestamp;
     private int priority;
     private long timeToLive;
+    private long deliveryDelay;
     private boolean anonymous = true;
 
     public PooledProducer(MessageProducer messageProducer, Destination destination) throws JMSException {
@@ -112,26 +113,39 @@ public class PooledProducer implements MessageProducer {
      */
     @Override
     public void send(Message message, CompletionListener completionListener) throws JMSException {
-       throw new UnsupportedOperationException("send(Message, CompletionListener) is not supported");
-
+        send(destination, message, getDeliveryMode(), getPriority(), getTimeToLive(), completionListener);
     }
 
     @Override
     public void send(Message message, int deliveryMode, int priority, long timeToLive,
                      CompletionListener completionListener) throws JMSException {
-        throw new UnsupportedOperationException("send(Message, deliveryMode, priority, timetoLive, CompletionListener) is not supported");
+        send(destination, message, deliveryMode, priority, timeToLive, completionListener);
     }
 
     @Override
     public void send(Destination destination, Message message, CompletionListener completionListener)
                      throws JMSException {
-        throw new UnsupportedOperationException("send(Destination, Message, CompletionListener) is not supported");
+        send(destination, message, getDeliveryMode(), getPriority(), getTimeToLive(), completionListener);
     }
 
     @Override
     public void send(Destination destination, Message message, int deliveryMode, int priority, long timeToLive,
                      CompletionListener completionListener) throws JMSException {
-        throw new UnsupportedOperationException("send(Destination, Message, deliveryMode, priority, timetoLive, CompletionListener) is not supported");
+        if (destination == null) {
+            if (messageProducer.getDestination() == null) {
+                throw new UnsupportedOperationException("A destination must be specified.");
+            }
+            throw new InvalidDestinationException("Don't understand null destinations");
+        }
+
+        MessageProducer messageProducer = getMessageProducer();
+
+        synchronized (messageProducer) {
+            if (anonymous && this.destination != null && !this.destination.equals(destination)) {
+                throw new UnsupportedOperationException("This producer can only send messages to: " + this.destination);
+            }
+            messageProducer.send(destination, message, deliveryMode, priority, timeToLive, completionListener);
+        }
     }
 
     /**
@@ -144,19 +158,12 @@ public class PooledProducer implements MessageProducer {
      */
     @Override
     public void setDeliveryDelay(long deliveryDelay) throws JMSException {
-        throw new UnsupportedOperationException("setDeliveryDelay() is not supported");
+        this.deliveryDelay = deliveryDelay;
     }
 
-    /**
-     * Gets the delivery delay value for this <CODE>MessageProducer</CODE>.
-     *
-     * @return the delivery delay for this messageProducer
-     * @throws jakarta.jms.JMSException if the JMS provider fails to determine if deliver delay is
-     *                      disabled due to some internal error.
-     */
     @Override
     public long getDeliveryDelay() throws JMSException {
-        return 0L;
+        return deliveryDelay;
     }
 
     @Override
