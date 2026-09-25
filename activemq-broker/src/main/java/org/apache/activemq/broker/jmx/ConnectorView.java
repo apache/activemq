@@ -86,6 +86,11 @@ public class ConnectorView implements ConnectorViewMBean {
         return connector.getStatistics().isEnabled();
     }
 
+    @Override
+    public boolean isSsl() {
+        return connector.isSsl();
+    }
+
     /**
      * Returns the number of current connections
      */
