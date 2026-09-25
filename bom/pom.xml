@@ -149,6 +149,12 @@
             </dependency>
             <dependency>
                 <groupId>org.apache.activemq</groupId>
+                <artifactId>activemq-prometheus</artifactId>
+                <version>${project.version}</version>
+                <type>war</type>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.activemq</groupId>
                 <artifactId>activemq-spring</artifactId>
                 <version>${project.version}</version>
             </dependency>
