@@ -867,6 +867,16 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
     }
 
     /**
+     * Allow expiry processing to be attempted again after a failed attempt
+     * (e.g. the store removal of the expired message threw). Without the
+     * reset, the one-shot canProcessAsExpired() gate would permanently
+     * prevent any retry of the failed expiry.
+     */
+    public void resetProcessAsExpired() {
+        processAsExpired.set(false);
+    }
+
+    /**
      * Initialize the transient fields at deserialization to get a normal state.
      *
      * @see <a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/io/Serializable.html">Serializable Javadoc</a>
