@@ -285,7 +285,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     @Override
     public JMSContext createContext() {
         try {
-            return new ActiveMQContext(createActiveMQConnection());
+            return newContext(createActiveMQConnection());
         } catch (JMSException e) {
             throw JMSExceptionSupport.convertToJMSRuntimeException(e);
         }
@@ -297,7 +297,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     @Override
     public JMSContext createContext(String userName, String password) {
         try {
-            return new ActiveMQContext(createActiveMQConnection(userName, password));
+            return newContext(createActiveMQConnection(userName, password));
         } catch (JMSException e) {
             throw JMSExceptionSupport.convertToJMSRuntimeException(e);
         }
@@ -309,7 +309,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     @Override
     public JMSContext createContext(String userName, String password, int sessionMode) {
         try {
-            return new ActiveMQContext(createActiveMQConnection(userName, password), sessionMode);
+            return newContext(createActiveMQConnection(userName, password), sessionMode);
         } catch (JMSException e) {
             throw JMSExceptionSupport.convertToJMSRuntimeException(e);
         }
@@ -321,10 +321,26 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     @Override
     public JMSContext createContext(int sessionMode) {
         try {
-            return new ActiveMQContext(createActiveMQConnection(getUserName(), getPassword()), sessionMode);
+            return newContext(createActiveMQConnection(getUserName(), getPassword()), sessionMode);
         } catch (JMSException e) {
             throw JMSExceptionSupport.convertToJMSRuntimeException(e);
         }
+    }
+
+    /**
+     * Creates the JMSContext returned by the createContext methods once the
+     * connection exists. A subclass that needs a different JMSContext type
+     * overrides this rather than the createContext methods themselves.
+     */
+    protected JMSContext newContext(ActiveMQConnection connection) {
+        return new ActiveMQContext(connection);
+    }
+
+    /**
+     * Session-mode variant of {@link #newContext(ActiveMQConnection)}.
+     */
+    protected JMSContext newContext(ActiveMQConnection connection, int sessionMode) {
+        return new ActiveMQContext(connection, sessionMode);
     }
 
     /**
