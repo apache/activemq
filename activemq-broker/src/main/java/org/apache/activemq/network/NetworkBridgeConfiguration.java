@@ -51,6 +51,7 @@ public class NetworkBridgeConfiguration {
      */
     private int advisoryPrefetchSize = 0;
     private int advisoryAckPercentage = 75;
+    private long advisoryAckInterval = 15000;
     private int networkTTL = 1;
     private int consumerTTL = networkTTL;
     private int messageTTL = networkTTL;
@@ -288,6 +289,24 @@ public class NetworkBridgeConfiguration {
      */
     public void setAdvisoryAckPercentage(int advisoryAckPercentage) {
         this.advisoryAckPercentage = advisoryAckPercentage;
+    }
+
+    public long getAdvisoryAckInterval() {
+        return advisoryAckInterval;
+    }
+
+    /**
+     * @param advisoryAckInterval the maximum time in milliseconds pending
+     * advisory dispatches may wait before being acknowledged even though the
+     * advisoryAckPercentage threshold has not been reached. Keeps a quiet
+     * bridge from being aborted as a slow consumer by an
+     * abortSlowAckConsumerStrategy configured to not ignore network consumers
+     * (its default maxTimeSinceLastAck is 30000 - keep this value below it).
+     * Less than or equal to zero disables time-based advisory acks.
+     * Defaults to 15000.
+     */
+    public void setAdvisoryAckInterval(long advisoryAckInterval) {
+        this.advisoryAckInterval = advisoryAckInterval;
     }
 
     /**
