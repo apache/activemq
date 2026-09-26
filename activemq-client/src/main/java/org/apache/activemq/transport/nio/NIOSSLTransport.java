@@ -41,6 +41,7 @@ import javax.net.ssl.SSLParameters;
 import javax.net.ssl.SSLPeerUnverifiedException;
 import javax.net.ssl.SSLSession;
 
+import org.apache.activemq.transport.tcp.SslParameterSupport;
 import org.apache.activemq.MaxFrameSizeExceededException;
 import org.apache.activemq.command.ConnectionInfo;
 import org.apache.activemq.openwire.OpenWireFormat;
@@ -60,6 +61,9 @@ public class NIOSSLTransport extends NIOTransport {
     protected String[] enabledCipherSuites;
     protected String[] enabledProtocols;
     protected boolean verifyHostName = false;
+    protected String[] namedGroups;
+    protected String[] signatureSchemes;
+    protected boolean requirePostQuantumKeyExchange;
 
     protected SSLContext sslContext;
     protected SSLEngine sslEngine;
@@ -123,11 +127,7 @@ public class NIOSSLTransport extends NIOTransport {
                     sslEngine = sslContext.createSSLEngine();
                 }
 
-                if (verifyHostName) {
-                    SSLParameters sslParams = new SSLParameters();
-                    sslParams.setEndpointIdentificationAlgorithm("HTTPS");
-                    sslEngine.setSSLParameters(sslParams);
-                }
+                configureSslParameters(sslEngine);
 
                 sslEngine.setUseClientMode(false);
                 if (enabledCipherSuites != null) {
@@ -639,5 +639,56 @@ public class NIOSSLTransport extends NIOTransport {
 
     public void setVerifyHostName(boolean verifyHostName) {
         this.verifyHostName = verifyHostName;
+    }
+
+    public String[] getNamedGroups() {
+        return namedGroups;
+    }
+
+    /**
+     * TLS named groups (key exchange algorithms) to offer, in preference order,
+     * for example {@code X25519MLKEM768,x25519}. Needs Java 21 or later.
+     */
+    public void setNamedGroups(String[] namedGroups) {
+        this.namedGroups = namedGroups;
+    }
+
+    public String[] getSignatureSchemes() {
+        return signatureSchemes;
+    }
+
+    /** TLS signature schemes to offer, in preference order. Needs Java 21 or later. */
+    public void setSignatureSchemes(String[] signatureSchemes) {
+        this.signatureSchemes = signatureSchemes;
+    }
+
+    public boolean isRequirePostQuantumKeyExchange() {
+        return requirePostQuantumKeyExchange;
+    }
+
+    /**
+     * Offer only the post-quantum hybrid key exchange groups of TLS 1.3, so a
+     * peer without them is refused. Needs Java 27 or later.
+     */
+    public void setRequirePostQuantumKeyExchange(boolean requirePostQuantumKeyExchange) {
+        this.requirePostQuantumKeyExchange = requirePostQuantumKeyExchange;
+    }
+
+    /**
+     * Hostname verification, named groups and signature schemes in one pass over the
+     * engine's own parameters. Called before the client mode and client authentication
+     * flags are set, since setSSLParameters copies those flags too.
+     */
+    protected void configureSslParameters(SSLEngine engine) {
+        SSLParameters sslParams = engine.getSSLParameters();
+        boolean changed = false;
+        if (verifyHostName) {
+            sslParams.setEndpointIdentificationAlgorithm("HTTPS");
+            changed = true;
+        }
+        changed |= SslParameterSupport.apply(sslParams, namedGroups, signatureSchemes, requirePostQuantumKeyExchange);
+        if (changed) {
+            engine.setSSLParameters(sslParams);
+        }
     }
 }

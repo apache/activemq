@@ -19,6 +19,7 @@ package org.apache.activemq.broker;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -43,9 +44,12 @@ import org.apache.activemq.transport.TransportFactorySupport;
 import org.apache.activemq.transport.TransportServer;
 import org.apache.activemq.transport.discovery.DiscoveryAgent;
 import org.apache.activemq.transport.discovery.DiscoveryAgentFactory;
+import org.apache.activemq.transport.tcp.SslParameterSupport;
 import org.apache.activemq.util.ExceptionUtils;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.util.ServiceSupport;
+import org.apache.activemq.util.StringArrayConverter;
+import org.apache.activemq.util.URISupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -283,6 +287,46 @@ public class TransportConnector implements Connector, BrokerServiceAware {
 
         started.set(true);
         LOG.info("Connector {} started", getName());
+        logNamedGroups();
+    }
+
+    /** shows what key exchange a connector was told to request, so refusals of classical peers are explainable */
+    private void logNamedGroups() {
+        boolean requirePostQuantum = isRequirePostQuantumKeyExchange();
+        String[] effective = SslParameterSupport.effectiveNamedGroups(getNamedGroups(), requirePostQuantum);
+        if (effective != null) {
+            LOG.info("Connector {} TLS named groups {}{}", getName(), Arrays.toString(effective),
+                    requirePostQuantum ? " (post-quantum key exchange required)" : "");
+        }
+    }
+
+    @Override
+    public String[] getNamedGroups() {
+        return StringArrayConverter.convertToStringArray(transportOption("namedGroups"));
+    }
+
+    @Override
+    public String[] getSignatureSchemes() {
+        return StringArrayConverter.convertToStringArray(transportOption("signatureSchemes"));
+    }
+
+    @Override
+    public boolean isRequirePostQuantumKeyExchange() {
+        return Boolean.parseBoolean(transportOption("requirePostQuantumKeyExchange"));
+    }
+
+    /** a transport.* option as written on the connector URI, or null when absent */
+    private String transportOption(String name) {
+        URI uri = getUri();
+        if (uri == null) {
+            return null;
+        }
+        try {
+            return URISupport.parseParameters(uri).get("transport." + name);
+        } catch (URISyntaxException e) {
+            LOG.debug("Could not read transport options of connector {}", getName(), e);
+            return null;
+        }
     }
 
     public String getPublishableConnectString() throws Exception {
