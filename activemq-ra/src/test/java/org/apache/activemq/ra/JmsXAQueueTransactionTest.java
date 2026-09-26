@@ -174,6 +174,48 @@ public class JmsXAQueueTransactionTest extends JmsQueueTransactionTest {
         connection.close();
     }
 
+    // The rollbackOnly marker is scoped to the transaction that failed, but the
+    // TransactionContext it lives on is owned by the physical connection. Once the managed
+    // connection has been recycled it must be usable again, including for work that is not
+    // part of any transaction, otherwise a single rolled back transaction disables the
+    // pooled connection for every later non transacted send.
+    public void testSendOnRecycledManagedConnectionAfterAbortedXATx() throws Exception {
+        connection.close();
+
+        ConnectionFactory connectionFactory = newConnectionFactory();
+        connection = connectionFactory.createConnection();
+        connection.start();
+
+        ManagedConnectionProxy proxy = (ManagedConnectionProxy) connection;
+        ActiveMQManagedConnection mc = (ActiveMQManagedConnection) proxy.getManagedConnection();
+        xaResource = mc.getXAResource();
+
+        beginTx();
+
+        Session session = connection.createSession(true, Session.AUTO_ACKNOWLEDGE);
+        session.createProducer(destination);
+
+        abortTx();
+
+        assertTrue("aborted tx leaves the context rollbackOnly", mc.getTransactionContext().isRollbackOnly());
+
+        // the container returns the managed connection to the pool
+        mc.cleanup();
+
+        assertFalse("recycled managed connection must not stay rollbackOnly",
+                    mc.getTransactionContext().isRollbackOnly());
+
+        // and hands it out again, this time outside of any transaction
+        ManagedConnectionProxy recycled = (ManagedConnectionProxy) mc.getConnection(null, null);
+        recycled.start();
+        Session recycledSession = recycled.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        MessageProducer recycledProducer = recycledSession.createProducer(destination);
+
+        recycledProducer.send(recycledSession.createTextMessage("sent after the managed connection was recycled"));
+
+        recycled.close();
+    }
+
     public void testReceiveTwoThenAbort() throws Exception {
         Message[] outbound = new Message[] {session.createTextMessage("First Message"), session.createTextMessage("Second Message")};
 
