@@ -26,11 +26,18 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 import jakarta.jms.BytesMessage;
+import jakarta.jms.CompletionListener;
 import jakarta.jms.Destination;
 import jakarta.jms.IllegalStateException;
 import jakarta.jms.InvalidDestinationException;
@@ -58,7 +65,6 @@ import jakarta.jms.TopicSession;
 import jakarta.jms.TopicSubscriber;
 import jakarta.jms.TransactionRolledBackException;
 
-import org.apache.activemq.selector.SelectorParser;
 import org.apache.activemq.blob.BlobDownloader;
 import org.apache.activemq.blob.BlobTransferPolicy;
 import org.apache.activemq.blob.BlobUploader;
@@ -235,6 +241,20 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     private MessageTransformer transformer;
     private BlobTransferPolicy blobTransferPolicy;
     private long lastDeliveredSequenceId = -2;
+
+    // Single-threaded executor for async send: ensures one CompletionListener callback at a time
+    // and that callbacks are invoked in the same order as the corresponding send calls
+    // per Jakarta Messaging 3.1 spec section 7.3.8
+    private final ExecutorService asyncSendExecutor = Executors.newSingleThreadExecutor(
+        r -> new Thread(r, "ActiveMQ async-send"));
+
+    // Tracks the thread currently executing a CompletionListener callback for this session.
+    // Session-scoped (instance field) so checks only apply to this session's own callbacks,
+    // not to callbacks from other sessions running on the same thread.
+    final AtomicReference<Thread> completionListenerThread = new AtomicReference<>();
+
+    // Tracks the thread currently executing a MessageListener.onMessage() callback for this session.
+    final AtomicReference<Thread> messageListenerThread = new AtomicReference<>();
 
     /**
      * Construct the Session
@@ -577,6 +597,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     @Override
     public void commit() throws JMSException {
         checkClosed();
+        checkNotInCompletionListenerCallback("commit");
         if (!getTransacted()) {
             throw new jakarta.jms.IllegalStateException("Not a transacted session");
         }
@@ -598,6 +619,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     @Override
     public void rollback() throws JMSException {
         checkClosed();
+        checkNotInCompletionListenerCallback("rollback");
         if (!getTransacted()) {
             throw new jakarta.jms.IllegalStateException("Not a transacted session");
         }
@@ -637,6 +659,8 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      */
     @Override
     public void close() throws JMSException {
+        checkNotInCompletionListenerCallback("close");
+        checkNotInMessageListenerCallback("close");
         if (!closed) {
             if (getTransactionContext().isInXATransaction()) {
                 if (!synchronizationRegistered) {
@@ -725,6 +749,15 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
         if (!closed) {
 
             try {
+                // Shutdown async send executor and wait for any in-progress callbacks to finish
+                // per Jakarta Messaging 3.1 spec section 7.3.5
+                asyncSendExecutor.shutdown();
+                try {
+                    asyncSendExecutor.awaitTermination(60, TimeUnit.SECONDS);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    LOG.debug("Interrupted while waiting for async send executor to terminate", e);
+                }
                 executor.close();
 
                 for (Iterator<ActiveMQMessageConsumer> iter = consumers.iterator(); iter.hasNext();) {
@@ -812,6 +845,7 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     public void recover() throws JMSException {
 
         checkClosed();
+        checkNotInCompletionListenerCallback("recover");
         if (getTransacted()) {
             throw new IllegalStateException("This session is transacted");
         }
@@ -1054,7 +1088,12 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
                     }
 
                     LOG.trace("{} onMessage({})", this, message.getMessageId());
-                    messageListener.onMessage(message);
+                    messageListenerThread.set(Thread.currentThread());
+                    try {
+                        messageListener.onMessage(message);
+                    } finally {
+                        messageListenerThread.set(null);
+                    }
 
                 } catch (Throwable e) {
                     if (!isClosed()) {
@@ -1388,21 +1427,12 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     @Override
     public MessageConsumer createSharedConsumer(Topic topic, String sharedSubscriptionName) throws JMSException {
         checkClosed();
-        if (topic == null) {
-            throw new InvalidDestinationException("Topic cannot be null");
-        }
         throw new UnsupportedOperationException("createSharedConsumer(Topic, sharedSubscriptionName) is not supported");
     }
 
     @Override
     public MessageConsumer createSharedConsumer(Topic topic, String sharedSubscriptionName, String messageSelector) throws JMSException {
         checkClosed();
-        if (topic == null) {
-            throw new InvalidDestinationException("Topic cannot be null");
-        }
-        if (messageSelector != null && !messageSelector.trim().isEmpty()) {
-            SelectorParser.parse(messageSelector);
-        }
         throw new UnsupportedOperationException("createSharedConsumer(Topic, sharedSubscriptionName, messageSelector) is not supported");
     }
 
@@ -1421,21 +1451,12 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     @Override
     public MessageConsumer createSharedDurableConsumer(Topic topic, String name) throws JMSException {
         checkClosed();
-        if (topic == null) {
-            throw new InvalidDestinationException("Topic cannot be null");
-        }
         throw new UnsupportedOperationException("createSharedDurableConsumer(Topic, name) is not supported");
     }
 
     @Override
     public MessageConsumer createSharedDurableConsumer(Topic topic, String name, String messageSelector) throws JMSException {
         checkClosed();
-        if (topic == null) {
-            throw new InvalidDestinationException("Topic cannot be null");
-        }
-        if (messageSelector != null && !messageSelector.trim().isEmpty()) {
-            SelectorParser.parse(messageSelector);
-        }
         throw new UnsupportedOperationException("createSharedDurableConsumer(Topic, name, messageSelector) is not supported");
     }
 
@@ -2360,6 +2381,163 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
 
         if (deliveryTimeMethod != null) {
             foreignMessage.setJMSDeliveryTime(deliveryTime);
+        }
+    }
+
+    /**
+     * Sends a message with a CompletionListener for async notification per Jakarta Messaging 3.1 spec section 7.3.
+     * <p>
+     * The wire-level send is performed synchronously (inside sendMutex to preserve ordering). The
+     * CompletionListener is then invoked on a dedicated single-threaded executor, ensuring:
+     * <ul>
+     *   <li>Callbacks are not called on the sender's thread (spec 7.3.8)</li>
+     *   <li>Only one callback executes at a time (spec 7.3.8)</li>
+     *   <li>Callbacks are in the same order as the corresponding send calls (spec 7.3.8)</li>
+     * </ul>
+     * The sender thread blocks until the send completes and the callback has been invoked.
+     */
+    protected void send(ActiveMQMessageProducer producer, ActiveMQDestination destination, Message message,
+                        int deliveryMode, int priority, long timeToLive,
+                        boolean disableMessageID, boolean disableMessageTimestamp,
+                        MemoryUsage producerWindow, int sendTimeout,
+                        CompletionListener completionListener) throws JMSException {
+
+        checkClosed();
+        if (destination.isTemporary() && connection.isDeleted(destination)) {
+            throw new InvalidDestinationException("Cannot publish to a deleted Destination: " + destination);
+        }
+
+        final ActiveMQMessage msg;
+        final Message originalMessage = message;
+        JMSException sendException = null;
+
+        synchronized (sendMutex) {
+            doStartTransaction();
+            if (transactionContext.isRollbackOnly()) {
+                throw new IllegalStateException("transaction marked rollback only");
+            }
+            final TransactionId txid = transactionContext.getTransactionId();
+            final long sequenceNumber = producer.getMessageSequence();
+
+            // Set the "JMS" header fields on the original message, see 1.1 spec section 3.4.11
+            message.setJMSDeliveryMode(deliveryMode);
+            final long timeStamp = System.currentTimeMillis();
+            final long expiration = timeToLive > 0 ? timeToLive + timeStamp : 0L;
+
+            if (!(message instanceof ActiveMQMessage)) {
+                setForeignMessageDeliveryTime(message, timeStamp);
+            } else {
+                message.setJMSDeliveryTime(timeStamp);
+            }
+            if (!disableMessageTimestamp && !producer.getDisableMessageTimestamp()) {
+                message.setJMSTimestamp(timeStamp);
+            } else {
+                message.setJMSTimestamp(0L);
+            }
+            message.setJMSExpiration(expiration);
+            message.setJMSPriority(priority);
+            message.setJMSRedelivered(false);
+
+            // Transform to our own message format
+            ActiveMQMessage amqMsg = ActiveMQMessageTransformation.transformMessage(message, connection);
+            amqMsg.setDestination(destination);
+            amqMsg.setMessageId(new MessageId(producer.getProducerInfo().getProducerId(), sequenceNumber));
+
+            // Propagate the message id and destination back to the original message
+            if (amqMsg != message) {
+                message.setJMSMessageID(amqMsg.getMessageId().toString());
+                message.setJMSDestination(destination);
+            }
+            amqMsg.setBrokerPath(null);
+            amqMsg.setTransactionId(txid);
+
+            // Always copy when sending async so the user can safely modify the message after send()
+            // returns without affecting the in-flight message
+            msg = (ActiveMQMessage) amqMsg.copy();
+            msg.setConnection(connection);
+            msg.onSend();
+            msg.setProducerId(msg.getMessageId().getProducerId());
+
+            if (LOG.isTraceEnabled()) {
+                LOG.trace(getSessionId() + " async sending message: " + msg);
+            }
+
+            // Perform the wire-level send synchronously while holding sendMutex.
+            // This ensures messages are delivered to the broker in send order.
+            // Capture any send failure so the callback can be invoked outside sendMutex,
+            // preventing a deadlock if the CompletionListener calls producer.send().
+            try {
+                this.connection.syncSendPacket(msg);
+            } catch (JMSException sendEx) {
+                sendException = sendEx;
+            }
+        }
+
+        // Both success and error callbacks are invoked outside sendMutex to avoid deadlock.
+        // A CompletionListener is allowed to call producer.send() which would re-acquire sendMutex.
+        if (sendException != null) {
+            final JMSException finalEx = sendException;
+            final Future<?> future = asyncSendExecutor.submit(() -> {
+                completionListenerThread.set(Thread.currentThread());
+                try {
+                    completionListener.onException(originalMessage, finalEx);
+                } finally {
+                    completionListenerThread.set(null);
+                }
+            });
+            awaitAsyncSendFuture(future, originalMessage, completionListener);
+            return;
+        }
+
+        // Send succeeded - invoke onCompletion on executor thread (not sender thread) per spec 7.3.8
+        final Future<?> future = asyncSendExecutor.submit(() -> {
+            completionListenerThread.set(Thread.currentThread());
+            try {
+                completionListener.onCompletion(originalMessage);
+            } catch (Exception e) {
+                // Per spec 7.3.2, exceptions thrown by the callback are swallowed
+                LOG.warn("CompletionListener.onCompletion threw an exception", e);
+            } finally {
+                completionListenerThread.set(null);
+            }
+        });
+        awaitAsyncSendFuture(future, originalMessage, completionListener);
+    }
+
+    private void awaitAsyncSendFuture(final Future<?> future, final Message originalMessage,
+                                      final CompletionListener completionListener) throws JMSException {
+        try {
+            future.get();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new JMSException("Async send interrupted while waiting for CompletionListener");
+        } catch (ExecutionException e) {
+            // Should not happen since we catch all exceptions inside the submitted task
+            LOG.warn("Unexpected error executing CompletionListener", e.getCause());
+        }
+    }
+
+    /**
+     * Throws {@link jakarta.jms.IllegalStateException} if the current thread is executing a
+     * CompletionListener callback for this session, per Jakarta Messaging 3.1 spec section 7.3.5.
+     * The check is session-scoped: callbacks from other sessions on the same thread are unaffected.
+     */
+    void checkNotInCompletionListenerCallback(final String operation) throws jakarta.jms.IllegalStateException {
+        if (Thread.currentThread() == completionListenerThread.get()) {
+            throw new jakarta.jms.IllegalStateException(
+                "Cannot call " + operation + "() from within a CompletionListener callback");
+        }
+    }
+
+    /**
+     * Throws {@link jakarta.jms.IllegalStateException} if the current thread is executing a
+     * MessageListener.onMessage() callback for this session, per Jakarta Messaging spec section 4.4.
+     * The check is session-scoped: callbacks from other sessions on the same thread are unaffected.
+     */
+    void checkNotInMessageListenerCallback(final String operation) throws jakarta.jms.IllegalStateException {
+        if (Thread.currentThread() == messageListenerThread.get()) {
+            throw new jakarta.jms.IllegalStateException(
+                "Cannot call " + operation + "() from within a MessageListener callback");
         }
     }
 }
