@@ -88,7 +88,7 @@
     <junit-version>4.13.2</junit-version>
     <h2-version>2.5.250</h2-version>
     <hamcrest-version>1.3</hamcrest-version>
-    <karaf-version>4.4.11</karaf-version>
+    <karaf-version>4.4.12</karaf-version>
     <log4j-version>2.26.1</log4j-version>
     <mockito-version>5.23.0</mockito-version>
     <owasp-dependency-check-version>13.0.0</owasp-dependency-check-version>
