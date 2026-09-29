@@ -608,6 +608,10 @@ o  'org.eclipse.jetty:apache-jsp'
       <groupId>${project.groupId}</groupId>
       <artifactId>activemq-oauth2</artifactId>
     </dependency>
+    <dependency>
+      <groupId>com.nimbusds</groupId>
+      <artifactId>nimbus-jose-jwt</artifactId>
+    </dependency>
 
     <!-- JAXB/Activation/iStack -->
     <dependency>

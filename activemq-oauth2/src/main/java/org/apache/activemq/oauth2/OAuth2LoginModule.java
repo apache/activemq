@@ -21,11 +21,13 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.Principal;
 import java.text.ParseException;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.security.auth.Subject;
 import javax.security.auth.callback.Callback;
@@ -96,6 +98,8 @@ public class OAuth2LoginModule implements LoginModule {
 
     private static final String DEFAULT_USERNAME_CLAIM = "sub";
     private static final String DEFAULT_GROUPS_CLAIM = "groups";
+
+    private static final Map<String, ConfigurableJWTProcessor<SecurityContext>> PROCESSOR_CACHE = new ConcurrentHashMap<>();
 
     private Subject subject;
     private CallbackHandler callbackHandler;
@@ -280,6 +284,12 @@ public class OAuth2LoginModule implements LoginModule {
             return jwtProcessor;
         }
 
+        String cacheKey = jwksUrl + "|" + issuer + "|" + (audience != null ? audience : "");
+        ConfigurableJWTProcessor<SecurityContext> cached = PROCESSOR_CACHE.get(cacheKey);
+        if (cached != null) {
+            return cached;
+        }
+
         try {
             URL jwksEndpoint = new URL(jwksUrl);
             JWKSource<SecurityContext> keySource = JWKSourceBuilder
@@ -288,7 +298,7 @@ public class OAuth2LoginModule implements LoginModule {
                     .build();
 
             JWSKeySelector<SecurityContext> keySelector = new JWSVerificationKeySelector<>(
-                    JWSAlgorithm.Family.RSA, keySource);
+                    JWSAlgorithm.Family.SIGNATURE, keySource);
 
             ConfigurableJWTProcessor<SecurityContext> processor = new DefaultJWTProcessor<>();
             processor.setJWSKeySelector(keySelector);
@@ -311,21 +321,29 @@ public class OAuth2LoginModule implements LoginModule {
                     exactMatchBuilder.build(),
                     requiredClaims));
 
-            jwtProcessor = processor;
-            return jwtProcessor;
+            PROCESSOR_CACHE.putIfAbsent(cacheKey, processor);
+            return PROCESSOR_CACHE.get(cacheKey);
         } catch (MalformedURLException e) {
             throw new LoginException("Invalid JWKS URL: " + jwksUrl);
         }
     }
 
-    @SuppressWarnings("unchecked")
     private List<String> getGroupsFromClaims(JWTClaimsSet claims) {
         try {
             Object groupsValue = claims.getClaim(groupsClaim);
-            if (groupsValue instanceof List) {
-                return (List<String>) groupsValue;
+            if (groupsValue instanceof List<?>) {
+                List<?> list = (List<?>) groupsValue;
+                return list.stream()
+                        .filter(item -> item != null)
+                        .map(Object::toString)
+                        .map(String::trim)
+                        .filter(s -> !s.isEmpty())
+                        .toList();
             } else if (groupsValue instanceof String) {
-                return List.of(((String) groupsValue).split(","));
+                return Arrays.stream(((String) groupsValue).split(","))
+                        .map(String::trim)
+                        .filter(s -> !s.isEmpty())
+                        .toList();
             }
         } catch (Exception e) {
             if (debug) {
@@ -343,5 +361,10 @@ public class OAuth2LoginModule implements LoginModule {
     // Visible for testing
     void setJwtProcessor(ConfigurableJWTProcessor<SecurityContext> jwtProcessor) {
         this.jwtProcessor = jwtProcessor;
+    }
+
+    // Visible for testing
+    static void clearProcessorCache() {
+        PROCESSOR_CACHE.clear();
     }
 }
