@@ -107,6 +107,8 @@ public interface Connection extends Service {
 
     String getConnectionId();
 
+    String getClientId();
+
     /**
      * return true if a network connection
      *
