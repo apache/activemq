@@ -73,6 +73,7 @@ public class OAuth2LoginModuleTest extends TestCase {
     @Override
     protected void setUp() throws Exception {
         super.setUp();
+        OAuth2LoginModule.clearProcessorCache();
 
         KeyPairGenerator gen = KeyPairGenerator.getInstance("RSA");
         gen.initialize(2048);
@@ -104,6 +105,12 @@ public class OAuth2LoginModuleTest extends TestCase {
                         .audience(AUDIENCE)
                         .build(),
                 requiredClaims));
+    }
+
+    @Override
+    protected void tearDown() throws Exception {
+        OAuth2LoginModule.clearProcessorCache();
+        super.tearDown();
     }
 
     public void testSuccessfulLogin() throws Exception {
@@ -424,6 +431,35 @@ public class OAuth2LoginModuleTest extends TestCase {
                 .issuer(ISSUER)
                 .audience(AUDIENCE)
                 .claim("groups", "admin,users,operators")
+                .expirationTime(new Date(System.currentTimeMillis() + 300000))
+                .issueTime(new Date())
+                .jwtID(UUID.randomUUID().toString())
+                .build();
+
+        String token = signToken(claims);
+        Subject subject = new Subject();
+        OAuth2LoginModule module = createModule(token, subject);
+        assertTrue("Login should succeed", module.login());
+        assertTrue("Commit should succeed", module.commit());
+
+        Set<GroupPrincipal> groupPrincipals = subject.getPrincipals(GroupPrincipal.class);
+        assertEquals("Should have three group principals", 3, groupPrincipals.size());
+
+        Set<String> groupNames = new HashSet<>();
+        for (GroupPrincipal gp : groupPrincipals) {
+            groupNames.add(gp.getName());
+        }
+        assertTrue("Should have admin group", groupNames.contains("admin"));
+        assertTrue("Should have users group", groupNames.contains("users"));
+        assertTrue("Should have operators group", groupNames.contains("operators"));
+    }
+
+    public void testGroupsAsCommaSeparatedStringWithWhitespace() throws Exception {
+        JWTClaimsSet claims = new JWTClaimsSet.Builder()
+                .subject("testuser")
+                .issuer(ISSUER)
+                .audience(AUDIENCE)
+                .claim("groups", "  admin , users ,  operators  ")
                 .expirationTime(new Date(System.currentTimeMillis() + 300000))
                 .issueTime(new Date())
                 .jwtID(UUID.randomUUID().toString())
