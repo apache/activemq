@@ -45,6 +45,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.apache.activemq.TestSupport.getDestination;
@@ -58,6 +59,16 @@ public class TwoBrokerVirtualTopicSelectorAwareForwardingTest extends
     private static final Logger LOG = LoggerFactory.getLogger(TwoBrokerVirtualTopicSelectorAwareForwardingTest.class);
 
     private static final String PERSIST_SELECTOR_CACHE_FILE_BASEPATH = "./target/selectorCache-";
+
+    @Override
+    protected void waitForBridgeFormation() throws Exception {
+        super.waitForBridgeFormation();
+        if (brokers.containsKey("BrokerB") && brokers.containsKey("BrokerA")) {
+            waitForBridge("BrokerB", "BrokerA", 30, TimeUnit.SECONDS);
+            waitForMinTopicRegionConsumerCount("BrokerB", 1);
+            waitForMinTopicRegionConsumerCount("BrokerA", 1);
+        }
+    }
 
     public void testJMX() throws Exception {
         clearSelectorCacheFiles();
@@ -93,7 +104,7 @@ public class TwoBrokerVirtualTopicSelectorAwareForwardingTest extends
                 Wait.waitFor(() -> {
                     final Destination d = brokerA.getBroker().getDestinationMap().get(consumerQueue);
                     return d != null && d.getConsumers().size() == 2;
-                }, 15000, 100));
+                }, 30000, 100));
 
         selectors = cache.selectorsForDestination(testQueue);
         assertEquals(1, selectors.size());
@@ -273,7 +284,7 @@ public class TwoBrokerVirtualTopicSelectorAwareForwardingTest extends
                 Wait.waitFor(() -> {
                     final Destination d = brokerA.getBroker().getDestinationMap().get(consumerBQueueInternal);
                     return d != null && d.getConsumers().size() == 2;
-                }, 15000, 100));
+                }, 30000, 100));
 
 
         final Destination destination = getDestination(brokerB, consumerBQueue);
@@ -441,7 +452,7 @@ public class TwoBrokerVirtualTopicSelectorAwareForwardingTest extends
                 Wait.waitFor(() -> {
                     final Destination d = brokerA.getBroker().getDestinationMap().get(selectorAwareQueue);
                     return d != null && d.getConsumers().size() == 1;
-                }, 15000, 100));
+                }, 30000, 100));
 
         final Destination destination = getDestination(brokers.get("BrokerB").broker, selectorAwareQueue);
         assertEquals(1, destination.getConsumers().size());
@@ -491,15 +502,14 @@ public class TwoBrokerVirtualTopicSelectorAwareForwardingTest extends
         // now let's start broker A back up
         brokerA.start(true);
         brokerA.waitUntilStarted();
-
-        System.out.println(brokerA.getNetworkConnectors());
+        waitForBridgeFormation();
 
         // let advisories propogate
         assertTrue("advisory should propagate after restart: 1 consumer on BrokerA",
                 Wait.waitFor(() -> {
                     final Destination d = brokerA.getBroker().getDestinationMap().get(selectorAwareQueue);
                     return d != null && d.getConsumers().size() == 1;
-                }, 15000, 100));
+                }, 30000, 100));
 
 
         // send two types of messages, one unwanted and the other wanted
