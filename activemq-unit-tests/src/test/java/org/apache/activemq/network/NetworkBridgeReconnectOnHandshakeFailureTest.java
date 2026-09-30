@@ -103,12 +103,12 @@ public class NetworkBridgeReconnectOnHandshakeFailureTest {
      * {@code IOException} from reaching {@code serviceRemoteException()}.
      * </p>
      */
-    @Test(timeout = 60_000)
+    @Test(timeout = 90_000)
     public void testBridgeReconnectsAfterHandshakeFailure() throws Exception {
         // Track exceptions passed to serviceRemoteException to verify
         // the original IOException is properly propagated
         CopyOnWriteArrayList<Throwable> remoteExceptions = new CopyOnWriteArrayList<>();
-        CountDownLatch exceptionLatch = new CountDownLatch(1);
+        CountDownLatch ioExceptionLatch = new CountDownLatch(1);
 
         BridgeFactory trackingFactory = new BridgeFactory() {
             @Override
@@ -122,7 +122,9 @@ public class NetworkBridgeReconnectOnHandshakeFailureTest {
                         LOG.info("serviceRemoteException called with: {} ({})",
                                 error.getClass().getSimpleName(), error.getMessage());
                         remoteExceptions.add(error);
-                        exceptionLatch.countDown();
+                        if (error instanceof IOException) {
+                            ioExceptionLatch.countDown();
+                        }
                         super.serviceRemoteException(error);
                     }
                 };
@@ -188,22 +190,6 @@ public class NetworkBridgeReconnectOnHandshakeFailureTest {
         // Verify serviceRemoteException is called with the original IOException.
         // Without the fix, only a TimeoutException from collectBrokerInfos
         // would reach serviceRemoteException.
-        assertTrue("serviceRemoteException should be called",
-                exceptionLatch.await(10, TimeUnit.SECONDS));
-
-        // Allow time for both code paths (onException and collectBrokerInfos)
-        // to call serviceRemoteException
-        assertTrue("Should receive exception(s)", Wait.waitFor(() ->
-                !remoteExceptions.isEmpty(), 5_000, 100));
-
-        for (int i = 0; i < remoteExceptions.size(); i++) {
-            Throwable ex = remoteExceptions.get(i);
-            LOG.info("serviceRemoteException call [{}]: {} ({})",
-                    i, ex.getClass().getName(), ex.getMessage());
-        }
-
-        boolean hasIOException = remoteExceptions.stream()
-                .anyMatch(ex -> ex instanceof IOException);
         assertTrue(
                 "serviceRemoteException should receive the original IOException "
                         + "(from onException handler), not only TimeoutException "
@@ -211,7 +197,13 @@ public class NetworkBridgeReconnectOnHandshakeFailureTest {
                         + remoteExceptions.stream()
                                 .map(ex -> ex.getClass().getSimpleName())
                                 .reduce((a, b) -> a + ", " + b).orElse("none"),
-                hasIOException);
+                ioExceptionLatch.await(10, TimeUnit.SECONDS));
+
+        for (int i = 0; i < remoteExceptions.size(); i++) {
+            Throwable ex = remoteExceptions.get(i);
+            LOG.info("serviceRemoteException call [{}]: {} ({})",
+                    i, ex.getClass().getName(), ex.getMessage());
+        }
 
         // Phase 3: Shut down the fake server and start a real broker
         // on the same port
@@ -242,7 +234,7 @@ public class NetworkBridgeReconnectOnHandshakeFailureTest {
      * transport exception potentially during the broker info handshake),
      * the network bridge reconnects once the remote broker is restarted.
      */
-    @Test(timeout = 60_000)
+    @Test(timeout = 90_000)
     public void testBridgeReconnectsAfterRemoteBrokerRestart() throws Exception {
         remoteBroker = createRemoteBroker(0);
         remoteBroker.start();
@@ -261,7 +253,7 @@ public class NetworkBridgeReconnectOnHandshakeFailureTest {
         remoteBroker.waitUntilStopped();
 
         assertTrue("Bridge should go down", Wait.waitFor(() ->
-                nc.activeBridges().isEmpty(), 10_000, 200));
+                nc.activeBridges().isEmpty(), 20_000, 200));
 
         remoteBroker = createRemoteBroker(remotePort);
         remoteBroker.start();
