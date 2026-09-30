@@ -29,3 +29,7 @@ org.apache.activemq.console.command.PurgeCommand
 org.apache.activemq.console.command.ProducerCommand
 org.apache.activemq.console.command.ConsumerCommand
 org.apache.activemq.console.command.StoreBackupCommand
+org.apache.activemq.console.command.QueuesCommand
+org.apache.activemq.console.command.TopicsCommand
+org.apache.activemq.console.command.BrokerCommand
+org.apache.activemq.console.command.NetworkConnectorsCommand
