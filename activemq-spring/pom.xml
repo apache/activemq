@@ -109,6 +109,11 @@
       <optional>true</optional>
     </dependency>
     <dependency>
+      <groupId>org.apache.activemq</groupId>
+      <artifactId>activemq-opentelemetry</artifactId>
+      <optional>true</optional>
+    </dependency>
+    <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>activemq-pool</artifactId>
     </dependency>
@@ -234,6 +239,7 @@
                 <include>${basedir}/../activemq-mqtt/src/main/java</include>
                 <include>${basedir}/../activemq-stomp/src/main/java</include>
                 <include>${basedir}/../activemq-runtime-config/src/main/java</include>
+                <include>${basedir}/../activemq-opentelemetry/src/main/java</include>
               </includes>
               <strictXsdOrder>false</strictXsdOrder>
               <namespace>http://activemq.apache.org/schema/core</namespace>
