@@ -176,6 +176,19 @@
       </New>
     </Arg>
   </Call>
+  <!-- Prometheus Metrics Web App
+      Uncomment the block below and restart the broker to expose /metrics endpoint,
+      Use /metrics/* in jetty-security.xml to configure user access (defaults to any console user)
+  <Call name="addHandler">
+    <Arg>
+      <New class="org.eclipse.jetty.ee11.webapp.WebAppContext">
+        <Set name="contextPath">/metrics</Set>
+        <Set name="baseResourceAsString"><Property name="activemq.home" default="."/>/webapps/metrics</Set>
+        <Set name="logUrlOnStart">true</Set>
+      </New>
+    </Arg>
+  </Call>
+  -->
 
   <!-- Static Resource Handler -->
   <Call name="addHandler">
