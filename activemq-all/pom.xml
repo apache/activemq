@@ -98,7 +98,6 @@
                   <include>${project.groupId}:activemq-jdbc-store</include>
                   <include>org.apache.activemq.protobuf:activemq-protobuf</include>
                   <include>org.fusesource.hawtbuf:hawtbuf</include>
-                  <include>org.jasypt:jasypt</include>
                   <include>jakarta.jms:jakarta.jms-api</include>
                   <include>org.apache.geronimo.specs:geronimo-jta_1.1_spec</include>
                   <include>org.apache.geronimo.specs:geronimo-annotation_1.3_spec</include>
@@ -300,13 +299,6 @@
           <groupId>org.fusesource.hawtbuf</groupId>
           <artifactId>hawtbuf</artifactId>
           <version>${hawtbuf-version}</version>
-          <classifier>sources</classifier>
-          <optional>true</optional>
-        </dependency>
-        <dependency>
-          <groupId>org.jasypt</groupId>
-          <artifactId>jasypt</artifactId>
-          <version>${jasypt-version}</version>
           <classifier>sources</classifier>
           <optional>true</optional>
         </dependency>

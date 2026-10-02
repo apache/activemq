@@ -18,30 +18,28 @@ package org.apache.activemq.console.command;
 
 import java.util.List;
 
-import org.jasypt.encryption.pbe.StandardPBEStringEncryptor;
-import org.jasypt.iv.RandomIvGenerator;
+import org.apache.activemq.util.ActiveMQEncryptor;
 
 public class EncryptCommand extends AbstractCommand {
 
     protected String[] helpFile = new String[] {
             "Task Usage: Main encrypt --password <password> --input <input>",
-            "Description: Encrypts given text.",
-            "", 
+            "Description: Encrypts given text using AES-256-GCM with a PBKDF2 derived key.",
+            "",
             "Encrypt Options:",
             "    --password <password>      Password to be used by the encryptor.  Defaults to",
             "                               the value in the ACTIVEMQ_ENCRYPTION_PASSWORD env variable.",
             "    --input <input>            Text to be encrypted.",
-            "    --algorithm <algorithm>    Algorithm to use.",
             "    --version                  Display the version information.",
             "    -h,-?,--help               Display the stop broker help information.",
             ""
         };
-    
-    StandardPBEStringEncryptor encryptor = new StandardPBEStringEncryptor();
+
+    ActiveMQEncryptor encryptor = new ActiveMQEncryptor();
     String input;
     String password;
     String algorithm;
-    
+
     @Override
     public String getName() {
         return "encrypt";
@@ -66,15 +64,16 @@ public class EncryptCommand extends AbstractCommand {
             context.printException(new IllegalArgumentException("input and password parameters are mandatory"));
             return;
         }
-        encryptor.setPassword(password);
         if (algorithm != null) {
-             encryptor.setAlgorithm(algorithm);
-             // From Jasypt: for PBE-AES-based algorithms, the IV generator is MANDATORY"
-             if (algorithm.startsWith("PBE") && algorithm.contains("AES")) {
-                 encryptor.setIvGenerator(new RandomIvGenerator());
-             }
+            context.printException(new IllegalArgumentException(
+                    "--algorithm is only supported by the decrypt command for reading legacy values;"
+                    + " encryption always uses AES-256-GCM with a PBKDF2 derived key"));
+            return;
         }
-        context.print("Encrypted text: " + encryptor.encrypt(input));
+        encryptor.setPassword(password);
+        var encrypted = encryptor.encrypt(input);
+        context.print("Encrypted text: " + encrypted);
+        context.print("Property value: " + ActiveMQEncryptor.wrapEncryptedValue(encrypted));
     }
 
     @Override
@@ -92,7 +91,7 @@ public class EncryptCommand extends AbstractCommand {
                 return;
             }
 
-            password=(String)tokens.remove(0);            
+            password=(String)tokens.remove(0);
         } else if (token.startsWith("--algorithm")) {
             if (tokens.isEmpty() || ((String)tokens.get(0)).startsWith("-")) {
                 context.printException(new IllegalArgumentException("algorithm not specified"));
@@ -104,7 +103,7 @@ public class EncryptCommand extends AbstractCommand {
             super.handleOption(token, tokens);
         }
     }
-    
-    
+
+
 
 }

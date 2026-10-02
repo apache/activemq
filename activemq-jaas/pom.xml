@@ -102,9 +102,8 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.jasypt</groupId>
-      <artifactId>jasypt</artifactId>
-      <optional>true</optional>
+      <groupId>org.apache.activemq</groupId>
+      <artifactId>activemq-client</artifactId>
     </dependency>
   </dependencies>
 

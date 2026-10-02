@@ -16,43 +16,45 @@
  */
 package org.apache.activemq.jaas;
 
-import org.jasypt.encryption.pbe.StandardPBEStringEncryptor;
-import org.jasypt.encryption.pbe.config.EnvironmentStringPBEConfig;
-import org.jasypt.properties.PropertyValueEncryptionUtils;
-import org.jasypt.iv.RandomIvGenerator;
-
 import java.util.ArrayList;
 import java.util.Properties;
 
+import org.apache.activemq.util.ActiveMQEncryptor;
+import org.apache.activemq.util.TextEncryptor;
+
 /**
- * Holds utility methods used work with encrypted values.
+ * Holds utility methods used to work with encrypted values.
  */
 public class EncryptionSupport {
 
     static public void decrypt(Properties props, String algorithm) {
-        StandardPBEStringEncryptor encryptor = createEncryptor(algorithm);
-        for (Object k : new ArrayList(props.keySet())) {
-            String key = (String) k;
-            String value = props.getProperty(key);
-            if (PropertyValueEncryptionUtils.isEncryptedValue(value)) {
-                value = PropertyValueEncryptionUtils.decrypt(value, encryptor);
-                props.setProperty(key, value);
-            }
-        }
-
+        decrypt(props, createEncryptor(algorithm));
     }
-    public static StandardPBEStringEncryptor createEncryptor(String algorithm) {
-        StandardPBEStringEncryptor encryptor = new StandardPBEStringEncryptor();
-        EnvironmentStringPBEConfig config = new EnvironmentStringPBEConfig();
-        if (algorithm != null) {
-            encryptor.setAlgorithm(algorithm);
-            // From Jasypt: for PBE-AES-based algorithms, the IV generator is MANDATORY"
-            if (algorithm.startsWith("PBE") && algorithm.contains("AES")) {
-                encryptor.setIvGenerator(new RandomIvGenerator());
+
+    static public void decrypt(Properties props, TextEncryptor encryptor) {
+        for (var k : new ArrayList<>(props.keySet())) {
+            var key = (String) k;
+            var value = props.getProperty(key);
+            if (ActiveMQEncryptor.isEncryptedValue(value)) {
+                props.setProperty(key, encryptor.decrypt(value));
             }
         }
-        config.setPasswordEnvName("ACTIVEMQ_ENCRYPTION_PASSWORD");
-        encryptor.setConfig(config);
+    }
+
+    /**
+     * Creates an encryptor with the password taken from the
+     * {@code ACTIVEMQ_ENCRYPTION_PASSWORD} environment variable.
+     *
+     * @param legacyAlgorithm JCE PBE algorithm used for values encrypted by
+     *                        the jasypt-based tooling of previous releases,
+     *                        or null for the previous default
+     *                        (PBEWithMD5AndDES)
+     */
+    public static ActiveMQEncryptor createEncryptor(String legacyAlgorithm) {
+        var encryptor = new ActiveMQEncryptor();
+        if (legacyAlgorithm != null) {
+            encryptor.setLegacyAlgorithm(legacyAlgorithm);
+        }
         return encryptor;
     }
 
