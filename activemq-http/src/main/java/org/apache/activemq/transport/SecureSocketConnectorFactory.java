@@ -17,9 +17,11 @@
 package org.apache.activemq.transport;
 
 import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLParameters;
 
 import org.apache.activemq.broker.SslContext;
 import org.apache.activemq.transport.http.BlockingQueueTransport;
+import org.apache.activemq.transport.tcp.SslParameterSupport;
 import org.apache.activemq.util.IntrospectionSupport;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.HttpConfiguration;
@@ -48,6 +50,9 @@ public class SecureSocketConnectorFactory extends SocketConnectorFactory {
     private String keyCertificateAlgorithm;
     private String protocol;
     private String auth;
+    private String[] namedGroups;
+    private String[] signatureSchemes;
+    private boolean requirePostQuantumKeyExchange;
 
     private SslContext context;
     private SslContextFactory.Server contextFactory;
@@ -73,9 +78,12 @@ public class SecureSocketConnectorFactory extends SocketConnectorFactory {
 
         // Get a reference to the current ssl context factory...
 
+        // fail at connector start, not on the first handshake, when this JDK cannot honour the request
+        SslParameterSupport.apply(new SSLParameters(), namedGroups, signatureSchemes, requirePostQuantumKeyExchange);
+
         SslContextFactory.Server factory;
         if (contextFactory == null) {
-            factory = new SslContextFactory.Server();
+            factory = new NamedGroupsSslContextFactory();
             if (context != null) {
                 // Should not be using this method since it does not use all of the values
                 // from the passed SslContext instance.....
@@ -318,5 +326,48 @@ public class SecureSocketConnectorFactory extends SocketConnectorFactory {
 
     public void setTrustStorePassword(String trustStorePassword) {
         this.trustStorePassword = trustStorePassword;
+    }
+
+    public String[] getNamedGroups() {
+        return namedGroups;
+    }
+
+    /**
+     * TLS named groups (key exchange algorithms) to offer, in preference order,
+     * for example {@code X25519MLKEM768,x25519}. Needs Java 21 or later.
+     */
+    public void setNamedGroups(String[] namedGroups) {
+        this.namedGroups = namedGroups;
+    }
+
+    public String[] getSignatureSchemes() {
+        return signatureSchemes;
+    }
+
+    /** TLS signature schemes to offer, in preference order. Needs Java 21 or later. */
+    public void setSignatureSchemes(String[] signatureSchemes) {
+        this.signatureSchemes = signatureSchemes;
+    }
+
+    public boolean isRequirePostQuantumKeyExchange() {
+        return requirePostQuantumKeyExchange;
+    }
+
+    /**
+     * Offer only the post-quantum hybrid key exchange groups of TLS 1.3, so a
+     * peer without them is refused. Needs Java 27 or later.
+     */
+    public void setRequirePostQuantumKeyExchange(boolean requirePostQuantumKeyExchange) {
+        this.requirePostQuantumKeyExchange = requirePostQuantumKeyExchange;
+    }
+
+    /** Jetty applies these parameters to every engine it creates for the connector. */
+    private final class NamedGroupsSslContextFactory extends SslContextFactory.Server {
+        @Override
+        public SSLParameters customize(SSLParameters sslParams) {
+            SSLParameters customized = super.customize(sslParams);
+            SslParameterSupport.apply(customized, namedGroups, signatureSchemes, requirePostQuantumKeyExchange);
+            return customized;
+        }
     }
 }

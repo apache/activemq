@@ -52,6 +52,10 @@ public class SslTransport extends TcpTransport {
      */
     private Boolean verifyHostName = null;
 
+    private String[] namedGroups;
+    private String[] signatureSchemes;
+    private boolean requirePostQuantumKeyExchange;
+
     /**
      * Connect to a remote node such as a Broker.
      *
@@ -120,18 +124,26 @@ public class SslTransport extends TcpTransport {
 
         // Lets try to configure the SSL SNI field.  Handy in case your using
         // a single proxy to route to different messaging apps.
-        final SSLParameters sslParams = new SSLParameters();
+        // Start from the socket's own parameters: setSSLParameters copies the client
+        // authentication flags too, so a fresh SSLParameters would clear what the
+        // server socket configured on an accepted connection (AMQ-8445).
+        final SSLSocket sslSocket = (SSLSocket) this.socket;
+        final SSLParameters sslParams = sslSocket.getSSLParameters();
+        boolean changed = false;
         if (remoteLocation != null) {
             sslParams.setServerNames(Collections.singletonList(new SNIHostName(remoteLocation.getHost())));
+            changed = true;
         }
 
         if (verifyHostName) {
             sslParams.setEndpointIdentificationAlgorithm("HTTPS");
+            changed = true;
         }
 
-        if (remoteLocation != null || verifyHostName) {
-            // AMQ-8445 only set SSLParameters if it has been populated before
-            ((SSLSocket) this.socket).setSSLParameters(sslParams);
+        changed |= SslParameterSupport.apply(sslParams, namedGroups, signatureSchemes, requirePostQuantumKeyExchange);
+
+        if (changed) {
+            sslSocket.setSSLParameters(sslParams);
         }
 
         super.initialiseSocket(sock);
@@ -174,6 +186,39 @@ public class SslTransport extends TcpTransport {
 
     public void setVerifyHostName(Boolean verifyHostName) {
         this.verifyHostName = verifyHostName;
+    }
+
+    public String[] getNamedGroups() {
+        return namedGroups;
+    }
+
+    /**
+     * TLS named groups (key exchange algorithms) to offer, in preference order,
+     * for example {@code X25519MLKEM768,x25519}. Needs Java 21 or later.
+     */
+    public void setNamedGroups(String[] namedGroups) {
+        this.namedGroups = namedGroups;
+    }
+
+    public String[] getSignatureSchemes() {
+        return signatureSchemes;
+    }
+
+    /** TLS signature schemes to offer, in preference order. Needs Java 21 or later. */
+    public void setSignatureSchemes(String[] signatureSchemes) {
+        this.signatureSchemes = signatureSchemes;
+    }
+
+    public boolean isRequirePostQuantumKeyExchange() {
+        return requirePostQuantumKeyExchange;
+    }
+
+    /**
+     * Offer only the post-quantum hybrid key exchange groups of TLS 1.3, so a
+     * peer without them is refused. Needs Java 27 or later.
+     */
+    public void setRequirePostQuantumKeyExchange(boolean requirePostQuantumKeyExchange) {
+        this.requirePostQuantumKeyExchange = requirePostQuantumKeyExchange;
     }
 
     /**

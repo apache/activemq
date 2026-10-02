@@ -115,4 +115,19 @@ public interface Connector extends Service {
      * @return connector name
      */
     public String getName();
+
+    /**
+     * @return the TLS named groups this connector offers, in preference order, or null for the JDK default
+     */
+    String[] getNamedGroups();
+
+    /**
+     * @return the TLS signature schemes this connector offers, in preference order, or null for the JDK default
+     */
+    String[] getSignatureSchemes();
+
+    /**
+     * @return true when the connector offers only the post-quantum hybrid key exchange groups
+     */
+    boolean isRequirePostQuantumKeyExchange();
 }

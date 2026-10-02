@@ -180,7 +180,14 @@
                 Additional transports are disabled by default to reduce the exposed attack surface.
                 Uncomment only the protocols you actually need, and prefer the secured variants
                 (openwire+ssl, amqp+ssl, stomp+ssl, mqtt+nio+ssl, wss) in production deployments.
+
+                On Java 27 and later TLS 1.3 negotiates the post-quantum hybrid key exchange
+                X25519MLKEM768 by default whenever the client supports it. To refuse clients that
+                cannot, add transport.requirePostQuantumKeyExchange=true to an ssl connector, or
+                choose the groups yourself with transport.namedGroups=X25519MLKEM768,SecP256r1MLKEM768
+                (Java 21 or later for namedGroups). Both settings need TLS 1.3 on the connection.
             -->
+            <!-- <transportConnector name="openwire+ssl" uri="ssl://0.0.0.0:61617?maximumConnections=1000&amp;wireFormat.maxFrameSize=10485760&amp;transport.requirePostQuantumKeyExchange=true"/> -->
             <!-- <transportConnector name="amqp" uri="amqp://0.0.0.0:5672?maximumConnections=1000&amp;wireFormat.maxFrameSize=10485760"/> -->
             <!-- <transportConnector name="stomp" uri="stomp://0.0.0.0:61613?maximumConnections=1000&amp;wireFormat.maxFrameSize=10485760"/> -->
             <!-- <transportConnector name="mqtt" uri="mqtt://0.0.0.0:1883?maximumConnections=1000&amp;wireFormat.maxFrameSize=10485760"/> -->
