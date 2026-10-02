@@ -64,6 +64,10 @@ public class JDBCDurableSubExpirationOrderTest {
     private final ActiveMQTopic topic = new ActiveMQTopic("test.topic");
 
     private void startBroker(boolean deleteAllMessages) throws Exception {
+        startBroker(deleteAllMessages, 200);
+    }
+
+    private void startBroker(boolean deleteAllMessages, long expireMessagesPeriod) throws Exception {
         broker = new BrokerService();
         broker.setUseJmx(false);
         broker.setSchedulerSupport(false);
@@ -72,7 +76,7 @@ public class JDBCDurableSubExpirationOrderTest {
         broker.setDeleteAllMessagesOnStartup(deleteAllMessages);
         PolicyMap policyMap = new PolicyMap();
         PolicyEntry policy = new PolicyEntry();
-        policy.setExpireMessagesPeriod(200);
+        policy.setExpireMessagesPeriod(expireMessagesPeriod);
         policyMap.setDefaultEntry(policy);
         broker.setDestinationPolicy(policyMap);
         broker.start();
@@ -129,6 +133,63 @@ public class JDBCDurableSubExpirationOrderTest {
             assertNotNull("second message without ttl was lost", received);
             assertEquals("no-ttl-2", received.getText());
             assertNull(subscriber.receive(500));
+        } finally {
+            connection.close();
+        }
+    }
+
+    // browsing the topic (e.g. over JMX) expires messages too, it must not ack the earlier message either
+    @Test
+    public void testBrowseDoesNotAckEarlierMessage() throws Exception {
+        // no expiry task, only the browse can expire messages
+        startBroker(true, 0);
+
+        Connection connection = connect();
+        Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        session.createDurableSubscriber(topic, "sub1").close();
+
+        MessageProducer producer = session.createProducer(topic);
+        producer.send(session.createTextMessage("no-ttl"), DeliveryMode.PERSISTENT, Message.DEFAULT_PRIORITY, 0);
+        producer.send(session.createTextMessage("ttl"), DeliveryMode.PERSISTENT, Message.DEFAULT_PRIORITY, 500);
+        Thread.sleep(1000);
+
+        broker.getDestination(topic).browse();
+        assertEquals(0, broker.getDestination(topic).getDestinationStatistics().getExpired().getCount());
+        connection.close();
+
+        broker.stop();
+        broker.waitUntilStopped();
+        startBroker(false, 0);
+
+        connection = connect();
+        try {
+            session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            TopicSubscriber subscriber = session.createDurableSubscriber(topic, "sub1");
+            TextMessage received = (TextMessage) subscriber.receive(5000);
+            assertNotNull("message without ttl was lost", received);
+            assertEquals("no-ttl", received.getText());
+        } finally {
+            connection.close();
+        }
+    }
+
+    @Test
+    public void testBrowseExpiresMessages() throws Exception {
+        startBroker(true, 0);
+
+        Connection connection = connect();
+        try {
+            Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            session.createDurableSubscriber(topic, "sub1").close();
+
+            MessageProducer producer = session.createProducer(topic);
+            for (int i = 0; i < 20; i++) {
+                producer.send(session.createTextMessage("ttl" + i), DeliveryMode.PERSISTENT, Message.DEFAULT_PRIORITY, 500);
+            }
+            Thread.sleep(1000);
+
+            broker.getDestination(topic).browse();
+            assertEquals(20, broker.getDestination(topic).getDestinationStatistics().getExpired().getCount());
         } finally {
             connection.close();
         }
