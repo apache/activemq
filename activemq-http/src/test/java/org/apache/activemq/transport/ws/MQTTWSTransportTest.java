@@ -237,7 +237,8 @@ public class MQTTWSTransportTest extends WSTransportTestSupport {
             }
         }));
 
-        TimeUnit.SECONDS.sleep(10);
+        // keepAlive is 2s, so the broker drops an unpinged connection after 3s; six seconds spans two such windows
+        TimeUnit.SECONDS.sleep(6);
 
         assertTrue("Connection should still be open", Wait.waitFor(new Wait.Condition() {
 

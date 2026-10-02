@@ -393,7 +393,8 @@ public class StompWSTransportTest extends WSTransportTestSupport {
             }
         }, 1, 1, TimeUnit.SECONDS);
 
-        TimeUnit.SECONDS.sleep(15);
+        // heart-beat is 2s, so six seconds of one second keep alives spans several expiry windows
+        TimeUnit.SECONDS.sleep(6);
 
         String frame = "SUBSCRIBE\n" + "destination:/queue/" + getTestName() + "\n" +
                        "id:12345\n" + "ack:auto\n\n" + Stomp.NULL;
