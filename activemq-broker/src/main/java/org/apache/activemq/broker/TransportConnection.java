@@ -82,6 +82,7 @@ import org.apache.activemq.network.NetworkBridgeConfiguration;
 import org.apache.activemq.network.NetworkBridgeFactory;
 import org.apache.activemq.network.NetworkConnector;
 import org.apache.activemq.security.MessageAuthorizationPolicy;
+import org.apache.activemq.security.SecurityContext;
 import org.apache.activemq.state.CommandVisitor;
 import org.apache.activemq.state.ConnectionState;
 import org.apache.activemq.state.ConsumerState;
@@ -1222,9 +1223,9 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         if (stopping.compareAndSet(false, true)) {
             // Let all the connection contexts know we are shutting down
             // so that in progress operations can notice and unblock.
-            List<TransportConnectionState> connectionStates = listConnectionStates();
-            for (TransportConnectionState cs : connectionStates) {
-                ConnectionContext connectionContext = cs.getContext();
+            var connectionStates = listConnectionStates();
+            for (var cs : connectionStates) {
+                var connectionContext = cs.getContext();
                 if (connectionContext != null) {
                     connectionContext.getStopping().set(true);
                 }
@@ -1298,8 +1299,8 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
         // Remove all logical connection associated with this connection
         // from the broker.
         if (!broker.isStopped()) {
-            List<TransportConnectionState> connectionStates = listConnectionStates();
-            for (TransportConnectionState cs : connectionStates) {
+            var connectionStates = listConnectionStates();
+            for (var cs : connectionStates) {
                 cs.getContext().getStopping().set(true);
                 try {
                     LOG.debug("Cleaning up connection resources: {}", getRemoteAddress());
@@ -1480,9 +1481,26 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
             setDuplexNetworkConnectorId(duplexNetworkConnectorId);
         }
 
+        // A connection that authenticated as an ordinary client and only now declares
+        // itself a network connection must have been permitted to do so. Bridges normally
+        // send BrokerInfo first, in which case authentication already saw the flag and
+        // there are no connection states here yet.
+        var connectionStates = listConnectionStates();
+        for (var cs : connectionStates) {
+            var securityContext = cs.getContext().getSecurityContext();
+            if (securityContext == null || !securityContext.isNetworkConnectionAuthorizationRequired()) {
+                LOG.debug("Network connection authorization not configured for {}", getRemoteAddress());
+                continue;
+            }
+            if (!securityContext.isNetworkConnectionAllowed()) {
+                LOG.warn("Rejecting network connection from {}: user {} is not allowed to register a network connection",
+                        getRemoteAddress(), securityContext.getUserName());
+                throw new IOException("User " + securityContext.getUserName() + " is not allowed to register a network connection");
+            }
+        }
+
         this.brokerInfo = info;
         networkConnection = true;
-        List<TransportConnectionState> connectionStates = listConnectionStates();
         for (TransportConnectionState cs : connectionStates) {
             cs.getContext().setNetworkConnection(true);
         }
