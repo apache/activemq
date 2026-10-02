@@ -19,6 +19,7 @@ package org.apache.activemq.command;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
@@ -29,6 +30,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.Map;
 
 import jakarta.jms.JMSException;
 import jakarta.jms.MessageFormatException;
@@ -514,5 +516,20 @@ public class ActiveMQMapMessageTest {
             assertTrue(
                     ExceptionUtils.getRootCause(e) instanceof ActiveMQUnmarshalEOFException);
         }
+    }
+
+    // JMS 2.0 getBody() calls isBodyAssignableTo() (which populates the cached
+    // map via getContentMap()) and then doGetBody(). doGetBody() must reuse that
+    // cache instead of deserializing the content a second time.
+    @Test(timeout = 10000)
+    public void testGetBodyDoesNotDeserializeTwice() throws Exception {
+        ActiveMQMapMessage msg = new ActiveMQMapMessage();
+        msg.setString("key", "value");
+        msg.storeContentAndClear();
+
+        Map<String, Object> body = msg.getBody(Map.class);
+        Map<String, Object> contentMap = msg.getContentMap();
+
+        assertSame("doGetBody() should reuse the cached map instead of deserializing again", contentMap, body);
     }
 }
