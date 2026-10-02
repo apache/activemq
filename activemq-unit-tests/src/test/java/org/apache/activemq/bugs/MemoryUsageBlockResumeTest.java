@@ -112,7 +112,7 @@ public class MemoryUsageBlockResumeTest extends TestSupport implements Thread.Un
                     producer.setDeliveryMode(deliveryMode);
                     for (int idx = 0; idx < toSend; ++idx) {
                         Message message = session.createTextMessage(new String(buf) + idx);
-                        producer.send(destination, message);
+                        producer.send(message);
                         messagesSent.incrementAndGet();
                         LOG.info("After little:" + idx + ", System Memory Usage " + broker.getSystemUsage().getMemoryUsage().getPercentUsage());
                     }
@@ -132,7 +132,7 @@ public class MemoryUsageBlockResumeTest extends TestSupport implements Thread.Un
                     producer.setDeliveryMode(deliveryMode);
                     for (int idx = 0; idx < toSend; ++idx) {
                         Message message = session.createTextMessage(new String(buf) + idx);
-                        producer.send(destination, message);
+                        producer.send(message);
                         messagesSent.incrementAndGet();
                         LOG.info("After little:" + idx + ", System Memory Usage " + broker.getSystemUsage().getMemoryUsage().getPercentUsage());
                     }

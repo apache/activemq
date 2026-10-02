@@ -495,8 +495,8 @@ public class JMSConsumerTest extends JmsTestSupport {
                     counter.incrementAndGet();
                     if (counter.get() == 2) {
                         sendDone.await();
-                        connection.close();
                         got2Done.countDown();
+                        return; // Don't acknowledge - message stays unacked (CLIENT_ACK mode)
                     }
                     tm.acknowledge();
                 } catch (Throwable e) {
@@ -511,6 +511,8 @@ public class JMSConsumerTest extends JmsTestSupport {
 
         // Wait for first 2 messages to arrive.
         assertTrue(got2Done.await(100000, TimeUnit.MILLISECONDS));
+        // Close connection from main thread (spec: Connection.close() from MessageListener throws ISE)
+        connection.close();
 
         // Re-start connection.
         connection = (ActiveMQConnection)factory.createConnection();
@@ -584,8 +586,9 @@ public class JMSConsumerTest extends JmsTestSupport {
                     m.acknowledge();
                     if (counter.get() == 2) {
                         sendDone.await();
-                        connection.close();
                         got2Done.countDown();
+                        // Don't call connection.close() from MessageListener - spec violation (throws ISE)
+                        // Main thread will close the connection after this latch
                     }
                 } catch (Throwable e) {
                     e.printStackTrace();
@@ -599,6 +602,8 @@ public class JMSConsumerTest extends JmsTestSupport {
 
         // Wait for first 2 messages to arrive.
         assertTrue(got2Done.await(100000, TimeUnit.MILLISECONDS));
+        // Close connection from main thread (spec: Connection.close() from MessageListener throws ISE)
+        connection.close();
 
         // Re-start connection.
         connection = (ActiveMQConnection)factory.createConnection();
