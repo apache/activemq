@@ -86,6 +86,44 @@ public interface Connector extends Service {
 
     long getMaxConnectionExceededCount();
 
+    /** @return the configured remote address allow list, comma separated CIDRs or a file: URI, or null */
+    String getAllowList();
+
+    /** @return the configured remote address deny list, comma separated CIDRs or a file: URI, or null */
+    String getDenyList();
+
+    /** @return true if remote addresses are checked against the allow and deny lists */
+    boolean isAllowDenyValidationEnabled();
+
+    /** Turn the remote address check on or off at runtime; the lists stay configured */
+    void setAllowDenyValidationEnabled(boolean enabled);
+
+    /** @return connections accepted by the remote address check since the last statistics reset */
+    long getAllowedCount();
+
+    /** @return connections refused by the remote address check since the last statistics reset */
+    long getDeniedCount();
+
+    /** @return number of valid CIDR entries loaded into the allow list */
+    long getAllowListCount();
+
+    /** @return number of valid CIDR entries loaded into the deny list */
+    long getDenyListCount();
+
+    /** @return number of allow list entries skipped because they were not valid CIDR blocks */
+    long getAllowListInvalidCount();
+
+    /** @return number of deny list entries skipped because they were not valid CIDR blocks */
+    long getDenyListInvalidCount();
+
+    /**
+     * Runs an IP literal or a CIDR block through the connector's allow/deny
+     * decision, ignoring whether enforcement is enabled. An address gets the exact
+     * decision a connection would; a block is allowed when an allow entry covers it
+     * and no deny entry covers the whole block.
+     */
+    boolean allowed(String addressOrCidr);
+
     boolean isAutoStart();
 
     /**

@@ -56,6 +56,7 @@ import org.apache.activemq.transport.TransportServerThreadSupport;
 import org.apache.activemq.util.IOExceptionSupport;
 import org.apache.activemq.util.InetAddressUtil;
 import org.apache.activemq.util.IntrospectionSupport;
+import org.apache.activemq.util.RemoteAddressValidator;
 import org.apache.activemq.util.ServiceListener;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.util.ServiceSupport;
@@ -124,7 +125,15 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
      * The maximum number of sockets allowed for this server
      */
     protected int maximumConnections = Integer.MAX_VALUE;
-    protected final AtomicLong maximumConnectionsExceededCount = new AtomicLong(0l);
+    protected final AtomicLong maximumConnectionsExceededCount = new AtomicLong(0L);
+
+    /**
+     * Optional allow/deny check applied to the remote address of every accepted
+     * socket before any other processing. Null means no check.
+     */
+    protected volatile RemoteAddressValidator remoteAddressValidator;
+    protected final AtomicLong allowedCount = new AtomicLong(0L);
+    protected final AtomicLong deniedCount = new AtomicLong(0L);
     protected final AtomicInteger currentTransportCount = new AtomicInteger();
 
     public TcpTransportServer(TcpTransportFactory transportFactory, URI location, ServerSocketFactory serverSocketFactory) throws IOException,
@@ -577,6 +586,24 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
         boolean closeSocket = true;
         boolean countIncremented = false;
         try {
+
+            // A refused remote address is policy at work, not an error: count it, close the
+            // socket without writing anything, and stay out of the accept error path. One
+            // line per attempt is kept at DEBUG so a scanner cannot flood the log.
+            var validator = remoteAddressValidator;
+            if (validator != null && validator.isEnabled()) {
+                if (!validator.isAllowed(socket)) {
+                    deniedCount.incrementAndGet();
+                    LOG.debug("Refused connection from {}: remote address not allowed", socket.getRemoteSocketAddress());
+                    try {
+                        socket.close();
+                    } catch (IOException ignore) {
+                    }
+                    return;
+                }
+                allowedCount.incrementAndGet();
+            }
+
             int currentCount;
             do {
                 currentCount = currentTransportCount.get();
@@ -735,8 +762,28 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
         return this.maximumConnectionsExceededCount.get();
     }
 
+    public RemoteAddressValidator getRemoteAddressValidator() {
+        return remoteAddressValidator;
+    }
+
+    public void setRemoteAddressValidator(RemoteAddressValidator remoteAddressValidator) {
+        this.remoteAddressValidator = remoteAddressValidator;
+    }
+
+    /** connections accepted by the remote address check since the last reset */
+    public long getAllowedCount() {
+        return allowedCount.get();
+    }
+
+    /** connections refused by the remote address check since the last reset */
+    public long getDeniedCount() {
+        return deniedCount.get();
+    }
+
     @Override
     public void resetStatistics() {
-        this.maximumConnectionsExceededCount.set(0l);
+        this.maximumConnectionsExceededCount.set(0L);
+        this.allowedCount.set(0L);
+        this.deniedCount.set(0L);
     }
 }

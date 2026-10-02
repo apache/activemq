@@ -146,6 +146,61 @@ public class ConnectorView implements ConnectorViewMBean {
     }
 
     @Override
+    public String getAllowList() {
+        return this.connector.getAllowList();
+    }
+
+    @Override
+    public String getDenyList() {
+        return this.connector.getDenyList();
+    }
+
+    @Override
+    public boolean isAllowDenyValidationEnabled() {
+        return this.connector.isAllowDenyValidationEnabled();
+    }
+
+    @Override
+    public void setAllowDenyValidationEnabled(boolean enabled) {
+        this.connector.setAllowDenyValidationEnabled(enabled);
+    }
+
+    @Override
+    public long getAllowedCount() {
+        return this.connector.getAllowedCount();
+    }
+
+    @Override
+    public long getDeniedCount() {
+        return this.connector.getDeniedCount();
+    }
+
+    @Override
+    public long getAllowListCount() {
+        return this.connector.getAllowListCount();
+    }
+
+    @Override
+    public long getDenyListCount() {
+        return this.connector.getDenyListCount();
+    }
+
+    @Override
+    public long getAllowListInvalidCount() {
+        return this.connector.getAllowListInvalidCount();
+    }
+
+    @Override
+    public long getDenyListInvalidCount() {
+        return this.connector.getDenyListInvalidCount();
+    }
+
+    @Override
+    public boolean allowed(String addressOrCidr) {
+        return this.connector.allowed(addressOrCidr);
+    }
+
+    @Override
     public boolean isAutoStart() {
         return this.connector.isAutoStart();
     }

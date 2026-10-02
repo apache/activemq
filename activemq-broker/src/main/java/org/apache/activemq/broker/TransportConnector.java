@@ -43,7 +43,10 @@ import org.apache.activemq.transport.TransportFactorySupport;
 import org.apache.activemq.transport.TransportServer;
 import org.apache.activemq.transport.discovery.DiscoveryAgent;
 import org.apache.activemq.transport.discovery.DiscoveryAgentFactory;
+import org.apache.activemq.transport.tcp.TcpTransportServer;
+import org.apache.activemq.util.CidrListLoader;
 import org.apache.activemq.util.ExceptionUtils;
+import org.apache.activemq.util.RemoteAddressValidator;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.util.ServiceSupport;
 import org.slf4j.Logger;
@@ -80,6 +83,15 @@ public class TransportConnector implements Connector, BrokerServiceAware {
     private int maximumConsumersAllowedPerConnection  = Integer.MAX_VALUE;
     private PublishedAddressPolicy publishedAddressPolicy = new PublishedAddressPolicy();
     private boolean allowLinkStealing = false;
+    // remote address allow/deny lists; see setAllowList / setDenyList
+    private String allowList;
+    private String denyList;
+    private boolean allowDenyValidationEnabled = false;
+    private RemoteAddressValidator remoteAddressValidator;
+    private long allowListCount;
+    private long denyListCount;
+    private long allowListInvalidCount;
+    private long denyListInvalidCount;
     private boolean warnOnRemoteClose = false;
     private boolean displayStackTrace = false;
     private boolean autoStart = true;
@@ -134,6 +146,9 @@ public class TransportConnector implements Connector, BrokerServiceAware {
         rc.setMaximumProducersAllowedPerConnection(getMaximumProducersAllowedPerConnection());
         rc.setPublishedAddressPolicy(getPublishedAddressPolicy());
         rc.setAllowLinkStealing(allowLinkStealing);
+        rc.setAllowList(allowList);
+        rc.setDenyList(denyList);
+        rc.setAllowDenyValidationEnabled(allowDenyValidationEnabled);
         rc.setWarnOnRemoteClose(isWarnOnRemoteClose());
         rc.setAutoStart(isAutoStart());
         return rc;
@@ -268,6 +283,7 @@ public class TransportConnector implements Connector, BrokerServiceAware {
                 }
             }
         });
+        installRemoteAddressValidator();
         getServer().setBrokerInfo(brokerInfo);
         getServer().start();
 
@@ -620,6 +636,104 @@ public class TransportConnector implements Connector, BrokerServiceAware {
         this.allowLinkStealing = allowLinkStealing;
     }
 
+    /**
+     * Loads the allow and deny lists, builds the validator and hands it to the
+     * transport server. Only socket based servers (tcp, nio, ssl, auto and the
+     * protocol variants built on them) can check remote addresses.
+     */
+    private void installRemoteAddressValidator() throws Exception {
+        var allow = CidrListLoader.load(allowList, getName() + " allowList");
+        var deny = CidrListLoader.load(denyList, getName() + " denyList");
+        allowListCount = allow.cidrs().size();
+        denyListCount = deny.cidrs().size();
+        allowListInvalidCount = allow.invalidCount();
+        denyListInvalidCount = deny.invalidCount();
+        remoteAddressValidator = new RemoteAddressValidator(allow.cidrs(), deny.cidrs());
+        remoteAddressValidator.setEnabled(allowDenyValidationEnabled);
+        var transportServer = getServer();
+        if (transportServer instanceof TcpTransportServer) {
+            ((TcpTransportServer) transportServer).setRemoteAddressValidator(remoteAddressValidator);
+        } else if (allowList != null || denyList != null) {
+            LOG.warn("allowList/denyList configured on connector {} but its transport does not support remote address validation", getName());
+        }
+    }
+
+    @Override
+    public String getAllowList() {
+        return allowList;
+    }
+
+    /**
+     * CIDR blocks that remote addresses must fall within to connect, as a comma
+     * separated list (e.g. {@code 10.0.0.0/8,192.168.1.0/24}) or a {@code file:} URI
+     * to a file with one CIDR block per line. {@code ${activemq.conf}} and
+     * {@code ${activemq.data}} may be used in the URI. Empty means no restriction
+     * beyond the deny list.
+     */
+    public void setAllowList(String allowList) {
+        this.allowList = allowList;
+    }
+
+    @Override
+    public String getDenyList() {
+        return denyList;
+    }
+
+    /**
+     * CIDR blocks that are refused regardless of the allow list, in the same
+     * comma separated or {@code file:} URI form as the allow list. Deny entries
+     * are checked first.
+     */
+    public void setDenyList(String denyList) {
+        this.denyList = denyList;
+    }
+
+    @Override
+    public boolean isAllowDenyValidationEnabled() {
+        return allowDenyValidationEnabled;
+    }
+
+    /**
+     * Turns the allow/deny check on or off without removing the lists. Default
+     * false, so configured lists take effect only when this is set; the default
+     * may change in a future major release. May be changed at runtime through JMX.
+     */
+    @Override
+    public void setAllowDenyValidationEnabled(boolean allowDenyValidationEnabled) {
+        this.allowDenyValidationEnabled = allowDenyValidationEnabled;
+        var validator = remoteAddressValidator;
+        if (validator != null) {
+            validator.setEnabled(allowDenyValidationEnabled);
+        }
+    }
+
+    @Override
+    public long getAllowListCount() {
+        return allowListCount;
+    }
+
+    @Override
+    public long getDenyListCount() {
+        return denyListCount;
+    }
+
+    @Override
+    public long getAllowListInvalidCount() {
+        return allowListInvalidCount;
+    }
+
+    @Override
+    public long getDenyListInvalidCount() {
+        return denyListInvalidCount;
+    }
+
+    @Override
+    public boolean allowed(String addressOrCidr) {
+        var validator = remoteAddressValidator;
+        // before start no lists are in effect, so nothing is refused
+        return validator == null || validator.isAllowed(addressOrCidr);
+    }
+
     @Override
     public boolean isAuditNetworkProducers() {
         return auditNetworkProducers;
@@ -691,6 +805,16 @@ public class TransportConnector implements Connector, BrokerServiceAware {
     @Override
     public long getMaxConnectionExceededCount() {
         return (server != null ? server.getMaxConnectionExceededCount() : 0l);
+    }
+
+    @Override
+    public long getAllowedCount() {
+        return server instanceof TcpTransportServer ? ((TcpTransportServer) server).getAllowedCount() : 0L;
+    }
+
+    @Override
+    public long getDeniedCount() {
+        return server instanceof TcpTransportServer ? ((TcpTransportServer) server).getDeniedCount() : 0L;
     }
 
     @Override
