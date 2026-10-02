@@ -90,7 +90,7 @@ public class JaasDualAuthenticationBrokerTest extends TestCase {
     protected void setUp() throws Exception {
         receiveBroker = new StubBroker();
 
-        authBroker = new JaasDualAuthenticationBroker(receiveBroker, "activemq-domain", "activemq-ssl-domain");
+        authBroker = new JaasDualAuthenticationBroker(receiveBroker, "activemq-domain", "activemq-ssl-domain", false);
 
         connectionContext = new ConnectionContext();
 
