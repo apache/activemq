@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -613,6 +614,88 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
         } finally {
             close(rs);
             close(s);
+        }
+    }
+
+    @Override
+    public void doRecoverExpired(TransactionContext c, ActiveMQDestination destination, String clientId,
+            String subscriptionName, long now, int maxReturned, boolean isPrioritizedMessages,
+            JDBCMessageRecoveryListener listener) throws Exception {
+        if (this.statements.isUseExternalMessageReferences()) {
+            // only references are stored, there is no message to check the expiration of
+            return;
+        }
+        // Two steps, so the first blocking message is looked up once per ack row and not once
+        // per candidate message: {last acked id, upper id (exclusive), priority} per ack row
+        List<long[]> ranges = new ArrayList<>();
+        PreparedStatement s = null;
+        ResultSet rs = null;
+        try {
+            s = c.getConnection().prepareStatement(isPrioritizedMessages ?
+                    this.statements.getFindExpiredDurableSubRangeByPriorityStatement() :
+                    this.statements.getFindExpiredDurableSubRangeStatement());
+            s.setLong(1, now);
+            s.setString(2, destination.getQualifiedName());
+            s.setString(3, clientId);
+            s.setString(4, subscriptionName);
+            rs = s.executeQuery();
+            while (rs.next()) {
+                long lastAcked = rs.getLong(1);
+                long priority = rs.getLong(2);
+                long upper = rs.getLong(3);
+                if (rs.wasNull()) {
+                    // nothing blocks: up to the last message that exists now, never past it
+                    long maxId = rs.getLong(4);
+                    if (rs.wasNull()) {
+                        continue;
+                    }
+                    upper = maxId + 1;
+                }
+                if (upper > lastAcked + 1) {
+                    ranges.add(new long[] {lastAcked, upper, priority});
+                }
+            }
+        } finally {
+            close(rs);
+            close(s);
+        }
+
+        int count = 0;
+        for (long[] range : ranges) {
+            if (count >= maxReturned) {
+                break;
+            }
+            s = null;
+            rs = null;
+            try {
+                s = c.getConnection().prepareStatement(isPrioritizedMessages ?
+                        this.statements.getFindExpiredMessagesInRangeByPriorityStatement() :
+                        this.statements.getFindExpiredMessagesInRangeStatement());
+                s.setMaxRows(Math.min(maxReturned - count, maxRows));
+                s.setString(1, destination.getQualifiedName());
+                s.setLong(2, range[0]);
+                s.setLong(3, range[1]);
+                s.setLong(4, now);
+                if (isPrioritizedMessages) {
+                    s.setLong(5, range[2]);
+                }
+                rs = s.executeQuery();
+                boolean stopped = false;
+                while (rs.next() && count < maxReturned) {
+                    if (listener.recoverMessage(rs.getLong(1), getBinaryData(rs, 2))) {
+                        count++;
+                    } else {
+                        stopped = true;
+                        break;
+                    }
+                }
+                if (stopped) {
+                    break;
+                }
+            } finally {
+                close(rs);
+                close(s);
+            }
         }
     }
 

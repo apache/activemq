@@ -60,6 +60,9 @@ public interface JDBCAdapter {
     void doRecoverNextMessages(TransactionContext c, ActiveMQDestination destination, String clientId, String subscriptionName, long seq, long priority, int maxReturned,
                                JDBCMessageRecoveryListener listener) throws Exception;
 
+    void doRecoverExpired(TransactionContext c, ActiveMQDestination destination, String clientId, String subscriptionName, long now, int maxReturned,
+                          boolean isPrioritizedMessages, JDBCMessageRecoveryListener listener) throws Exception;
+
     void doRecoverNextMessagesWithPriority(TransactionContext c, ActiveMQDestination destination, String clientId, String subscriptionName, long seq, long priority, int maxReturned,
                                JDBCMessageRecoveryListener listener) throws Exception;
 

@@ -18,7 +18,9 @@ package org.apache.activemq.store.jdbc;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -362,10 +364,57 @@ public class JDBCTopicMessageStore extends JDBCMessageStore implements TopicMess
         }
     }
 
+    /**
+     * Returns, for each subscription, the expired messages it has not acked yet, oldest first.
+     * The ack table only keeps the last acked id of a subscription, so only the run of expired
+     * messages right after it is returned: acking a later expired message would also ack the
+     * non-expired messages before it. At most {@code max} distinct messages are loaded.
+     */
     @Override
     public Map<SubscriptionKey, List<Message>> recoverExpired(Set<SubscriptionKey> subs, int max,
-        MessageRecoveryListener listener) {
-        throw new UnsupportedOperationException("recoverExpired not supported");
+        MessageRecoveryListener listener) throws Exception {
+        final Map<SubscriptionKey, List<Message>> expired = new HashMap<>();
+        // a message pending for several subscriptions is unmarshalled and passed to the listener once
+        final Map<Long, Message> loaded = new HashMap<>();
+        final long now = System.currentTimeMillis();
+        TransactionContext c = persistenceAdapter.getTransactionContext();
+        try {
+            for (SubscriptionKey sub : subs) {
+                // no check on max here: messages already loaded for another subscription cost nothing
+                if (!listener.hasSpace()) {
+                    break;
+                }
+                adapter.doRecoverExpired(c, destination, sub.getClientId(), sub.getSubscriptionName(), now, max,
+                        isPrioritizedMessages(), new JDBCMessageRecoveryListener() {
+                    @Override
+                    public boolean recoverMessage(long sequenceId, byte[] data) throws Exception {
+                        Message msg = loaded.get(sequenceId);
+                        if (msg == null) {
+                            if (loaded.size() >= max || !listener.hasSpace()) {
+                                return false;
+                            }
+                            msg = (Message) wireFormat.unmarshal(new ByteSequence(data));
+                            msg.getMessageId().setBrokerSequenceId(sequenceId);
+                            loaded.put(sequenceId, msg);
+                            listener.recoverMessage(msg);
+                        }
+                        expired.computeIfAbsent(sub, k -> new ArrayList<>()).add(msg);
+                        return true;
+                    }
+
+                    @Override
+                    public boolean recoverMessageReference(String reference) {
+                        return false;
+                    }
+                });
+            }
+        } catch (SQLException e) {
+            JDBCPersistenceAdapter.log("JDBC Failure: ", e);
+            throw IOExceptionSupport.create("Failed to recover expired messages for: " + destination + ". Reason: " + e, e);
+        } finally {
+            c.close();
+        }
+        return expired;
     }
 
     /**

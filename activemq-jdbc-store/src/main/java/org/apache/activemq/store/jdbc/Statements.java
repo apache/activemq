@@ -53,6 +53,10 @@ public class Statements {
     private String findAllDurableSubMessagesStatement;
     private String findDurableSubMessagesStatement;
     private String findDurableSubMessagesByPriorityStatement;
+    private String findExpiredDurableSubRangeStatement;
+    private String findExpiredDurableSubRangeByPriorityStatement;
+    private String findExpiredMessagesInRangeStatement;
+    private String findExpiredMessagesInRangeByPriorityStatement;
     private String findAllDestinationsStatement;
     private String removeAllMessagesStatement;
     private String removeAllSubscriptionsStatement;
@@ -335,6 +339,74 @@ public class Statements {
         }
         return findDurableSubMessagesByPriorityStatement;
     }    
+
+    /**
+     * For each ack row of a durable subscription: the last acked id, the priority, the id of the
+     * first pending message that is not expired or is still part of a transaction (null if there
+     * is none) and the highest message id of the destination. The ack table only records the last
+     * acked id, so acking a message implicitly acks every earlier one: only the expired messages
+     * between the last acked id and that first blocking message can be expired.
+     * Parameters: now, container, client id, sub name.
+     */
+    public String getFindExpiredDurableSubRangeStatement() {
+        if (findExpiredDurableSubRangeStatement == null) {
+            findExpiredDurableSubRangeStatement = "SELECT D.LAST_ACKED_ID, D.PRIORITY,"
+                                              + " (SELECT MIN(B.ID) FROM " + getFullMessageTableName() + " B"
+                                              + " WHERE B.CONTAINER=D.CONTAINER AND B.ID > D.LAST_ACKED_ID"
+                                              + " AND (B.XID IS NOT NULL OR B.EXPIRATION <= 0 OR B.EXPIRATION >= ?)),"
+                                              + " (SELECT MAX(B.ID) FROM " + getFullMessageTableName() + " B WHERE B.CONTAINER=D.CONTAINER)"
+                                              + " FROM " + getFullAckTableName() + " D"
+                                              + " WHERE D.CONTAINER=? AND D.CLIENT_ID=? AND D.SUB_NAME=? AND D.XID IS NULL";
+        }
+        return findExpiredDurableSubRangeStatement;
+    }
+
+    /**
+     * Same as {@link #getFindExpiredDurableSubRangeStatement()} for prioritized messages,
+     * where the ack table holds one last acked id per priority.
+     */
+    public String getFindExpiredDurableSubRangeByPriorityStatement() {
+        if (findExpiredDurableSubRangeByPriorityStatement == null) {
+            findExpiredDurableSubRangeByPriorityStatement = "SELECT D.LAST_ACKED_ID, D.PRIORITY,"
+                                              + " (SELECT MIN(B.ID) FROM " + getFullMessageTableName() + " B"
+                                              + " WHERE B.CONTAINER=D.CONTAINER AND B.PRIORITY=D.PRIORITY AND B.ID > D.LAST_ACKED_ID"
+                                              + " AND (B.XID IS NOT NULL OR B.EXPIRATION <= 0 OR B.EXPIRATION >= ?)),"
+                                              + " (SELECT MAX(B.ID) FROM " + getFullMessageTableName() + " B"
+                                              + " WHERE B.CONTAINER=D.CONTAINER AND B.PRIORITY=D.PRIORITY)"
+                                              + " FROM " + getFullAckTableName() + " D"
+                                              + " WHERE D.CONTAINER=? AND D.CLIENT_ID=? AND D.SUB_NAME=? AND D.XID IS NULL";
+        }
+        return findExpiredDurableSubRangeByPriorityStatement;
+    }
+
+    /**
+     * Expired messages with an id in a range, oldest first.
+     * Parameters: container, lower id (exclusive), upper id (exclusive), now.
+     */
+    public String getFindExpiredMessagesInRangeStatement() {
+        if (findExpiredMessagesInRangeStatement == null) {
+            findExpiredMessagesInRangeStatement = "SELECT ID, MSG FROM " + getFullMessageTableName()
+                                              + " WHERE CONTAINER=? AND ID > ? AND ID < ?"
+                                              + " AND XID IS NULL AND EXPIRATION > 0 AND EXPIRATION < ?"
+                                              + " ORDER BY ID";
+        }
+        return findExpiredMessagesInRangeStatement;
+    }
+
+    /**
+     * Same as {@link #getFindExpiredMessagesInRangeStatement()} limited to one priority.
+     * Parameters: container, lower id (exclusive), upper id (exclusive), now, priority.
+     */
+    public String getFindExpiredMessagesInRangeByPriorityStatement() {
+        if (findExpiredMessagesInRangeByPriorityStatement == null) {
+            findExpiredMessagesInRangeByPriorityStatement = "SELECT ID, MSG FROM " + getFullMessageTableName()
+                                              + " WHERE CONTAINER=? AND ID > ? AND ID < ?"
+                                              + " AND XID IS NULL AND EXPIRATION > 0 AND EXPIRATION < ?"
+                                              + " AND PRIORITY=?"
+                                              + " ORDER BY ID";
+        }
+        return findExpiredMessagesInRangeByPriorityStatement;
+    }
 
     public String getNextDurableSubscriberMessageStatement() {
         if (nextDurableSubscriberMessageStatement == null) {
@@ -882,6 +954,22 @@ public class Statements {
      */
     public void setFindDurableSubMessagesStatement(String findDurableSubMessagesStatement) {
         this.findDurableSubMessagesStatement = findDurableSubMessagesStatement;
+    }
+
+    public void setFindExpiredDurableSubRangeStatement(String findExpiredDurableSubRangeStatement) {
+        this.findExpiredDurableSubRangeStatement = findExpiredDurableSubRangeStatement;
+    }
+
+    public void setFindExpiredDurableSubRangeByPriorityStatement(String findExpiredDurableSubRangeByPriorityStatement) {
+        this.findExpiredDurableSubRangeByPriorityStatement = findExpiredDurableSubRangeByPriorityStatement;
+    }
+
+    public void setFindExpiredMessagesInRangeStatement(String findExpiredMessagesInRangeStatement) {
+        this.findExpiredMessagesInRangeStatement = findExpiredMessagesInRangeStatement;
+    }
+
+    public void setFindExpiredMessagesInRangeByPriorityStatement(String findExpiredMessagesInRangeByPriorityStatement) {
+        this.findExpiredMessagesInRangeByPriorityStatement = findExpiredMessagesInRangeByPriorityStatement;
     }
 
     /**
