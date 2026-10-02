@@ -793,8 +793,9 @@ public class ActiveMQMapMessage extends ActiveMQMessage implements MapMessage {
     public void setObject(String name, Object value) throws JMSException {
         initializeWriting();
         if (value != null) {
-            // byte[] not allowed on properties
-            if (!(value instanceof byte[])) {
+            // byte[] and Character are valid MapMessage body types (MapMessage#setBytes,
+            // #setChar) but not valid property types, so they bypass the property check
+            if (!(value instanceof byte[]) && !(value instanceof Character)) {
                 checkValidObject(value);
             }
             put(name, value);
