@@ -617,6 +617,41 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
     }
 
     @Override
+    public void doRecoverExpired(TransactionContext c, ActiveMQDestination destination, String clientId,
+            String subscriptionName, long now, int maxReturned, boolean isPrioritizedMessages,
+            JDBCMessageRecoveryListener listener) throws Exception {
+        if (this.statements.isUseExternalMessageReferences()) {
+            // only references are stored, there is no message to check the expiration of
+            return;
+        }
+        PreparedStatement s = null;
+        ResultSet rs = null;
+        try {
+            s = c.getConnection().prepareStatement(isPrioritizedMessages ?
+                    this.statements.getFindExpiredDurableSubMessagesByPriorityStatement() :
+                    this.statements.getFindExpiredDurableSubMessagesStatement());
+            s.setMaxRows(Math.min(maxReturned, maxRows));
+            s.setString(1, destination.getQualifiedName());
+            s.setString(2, clientId);
+            s.setString(3, subscriptionName);
+            s.setLong(4, now);
+            s.setLong(5, now);
+            rs = s.executeQuery();
+            int count = 0;
+            while (rs.next() && count < maxReturned) {
+                if (listener.recoverMessage(rs.getLong(1), getBinaryData(rs, 2))) {
+                    count++;
+                } else {
+                    break;
+                }
+            }
+        } finally {
+            close(rs);
+            close(s);
+        }
+    }
+
+    @Override
     public void doRecoverNextMessagesWithPriority(TransactionContext c, ActiveMQDestination destination, String clientId,
             String subscriptionName, long seq, long priority, int maxReturned, JDBCMessageRecoveryListener listener) throws Exception {
 

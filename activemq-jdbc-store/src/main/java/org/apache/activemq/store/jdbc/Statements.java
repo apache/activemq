@@ -53,6 +53,8 @@ public class Statements {
     private String findAllDurableSubMessagesStatement;
     private String findDurableSubMessagesStatement;
     private String findDurableSubMessagesByPriorityStatement;
+    private String findExpiredDurableSubMessagesStatement;
+    private String findExpiredDurableSubMessagesByPriorityStatement;
     private String findAllDestinationsStatement;
     private String removeAllMessagesStatement;
     private String removeAllSubscriptionsStatement;
@@ -335,6 +337,49 @@ public class Statements {
         }
         return findDurableSubMessagesByPriorityStatement;
     }    
+
+    /**
+     * Expired messages still pending for a durable subscription, oldest first.
+     * The ack table only records the last acked id, so acking a message implicitly acks
+     * every earlier one: only the run of expired messages that directly follows the last
+     * acked id is returned, stopping at the first message that is not expired or is still
+     * part of a transaction. Parameters: container, client id, sub name, now, now.
+     */
+    public String getFindExpiredDurableSubMessagesStatement() {
+        if (findExpiredDurableSubMessagesStatement == null) {
+            findExpiredDurableSubMessagesStatement = "SELECT M.ID, M.MSG FROM " + getFullMessageTableName() + " M, "
+                                              + getFullAckTableName() + " D "
+                                              + " WHERE D.CONTAINER=? AND D.CLIENT_ID=? AND D.SUB_NAME=?"
+                                              + " AND D.XID IS NULL"
+                                              + " AND M.CONTAINER=D.CONTAINER AND M.ID > D.LAST_ACKED_ID"
+                                              + " AND M.XID IS NULL AND M.EXPIRATION > 0 AND M.EXPIRATION < ?"
+                                              + " AND M.ID < COALESCE((SELECT MIN(B.ID) FROM " + getFullMessageTableName() + " B"
+                                              + " WHERE B.CONTAINER=D.CONTAINER AND B.ID > D.LAST_ACKED_ID"
+                                              + " AND (B.XID IS NOT NULL OR B.EXPIRATION <= 0 OR B.EXPIRATION >= ?)), M.ID + 1)"
+                                              + " ORDER BY M.ID";
+        }
+        return findExpiredDurableSubMessagesStatement;
+    }
+
+    /**
+     * Same as {@link #getFindExpiredDurableSubMessagesStatement()} for prioritized messages,
+     * where the ack table holds one last acked id per priority.
+     */
+    public String getFindExpiredDurableSubMessagesByPriorityStatement() {
+        if (findExpiredDurableSubMessagesByPriorityStatement == null) {
+            findExpiredDurableSubMessagesByPriorityStatement = "SELECT M.ID, M.MSG FROM " + getFullMessageTableName() + " M, "
+                                              + getFullAckTableName() + " D "
+                                              + " WHERE D.CONTAINER=? AND D.CLIENT_ID=? AND D.SUB_NAME=?"
+                                              + " AND D.XID IS NULL"
+                                              + " AND M.CONTAINER=D.CONTAINER AND M.PRIORITY=D.PRIORITY AND M.ID > D.LAST_ACKED_ID"
+                                              + " AND M.XID IS NULL AND M.EXPIRATION > 0 AND M.EXPIRATION < ?"
+                                              + " AND M.ID < COALESCE((SELECT MIN(B.ID) FROM " + getFullMessageTableName() + " B"
+                                              + " WHERE B.CONTAINER=D.CONTAINER AND B.PRIORITY=D.PRIORITY AND B.ID > D.LAST_ACKED_ID"
+                                              + " AND (B.XID IS NOT NULL OR B.EXPIRATION <= 0 OR B.EXPIRATION >= ?)), M.ID + 1)"
+                                              + " ORDER BY M.ID";
+        }
+        return findExpiredDurableSubMessagesByPriorityStatement;
+    }
 
     public String getNextDurableSubscriberMessageStatement() {
         if (nextDurableSubscriberMessageStatement == null) {
@@ -882,6 +927,14 @@ public class Statements {
      */
     public void setFindDurableSubMessagesStatement(String findDurableSubMessagesStatement) {
         this.findDurableSubMessagesStatement = findDurableSubMessagesStatement;
+    }
+
+    public void setFindExpiredDurableSubMessagesStatement(String findExpiredDurableSubMessagesStatement) {
+        this.findExpiredDurableSubMessagesStatement = findExpiredDurableSubMessagesStatement;
+    }
+
+    public void setFindExpiredDurableSubMessagesByPriorityStatement(String findExpiredDurableSubMessagesByPriorityStatement) {
+        this.findExpiredDurableSubMessagesByPriorityStatement = findExpiredDurableSubMessagesByPriorityStatement;
     }
 
     /**

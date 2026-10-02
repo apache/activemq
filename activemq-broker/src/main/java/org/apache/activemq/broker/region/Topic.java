@@ -928,8 +928,9 @@ public class Topic extends BaseDestination implements Task {
     private final Runnable expireMessagesWork = () -> {
         try {
             final TopicMessageStore store = Topic.this.topicStore;
-            if (store != null && store.getType() == StoreType.KAHADB) {
-                if (store.getMessageCount() == 0) {
+            if (store != null && (store.getType() == StoreType.KAHADB || store.getType() == StoreType.JDBC)) {
+                // the message count is a cheap index lookup for KahaDB but a COUNT query for JDBC
+                if (store.getType() == StoreType.KAHADB && store.getMessageCount() == 0) {
                     LOG.debug("Skipping topic expiration check for {}, store size is 0", destination);
                     return;
                 }
@@ -978,7 +979,7 @@ public class Topic extends BaseDestination implements Task {
                     }
                 }
             } else {
-                // If not KahaDB, fall back to the legacy browse method because
+                // If not KahaDB or JDBC, fall back to the legacy browse method because
                 // the recoverExpired() method is not supported
                 doBrowse(new InsertionCountList<>(), getMaxExpirePageSize());
             }

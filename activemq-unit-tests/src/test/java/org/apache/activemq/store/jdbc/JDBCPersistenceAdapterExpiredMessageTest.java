@@ -20,6 +20,9 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import jakarta.jms.Connection;
@@ -38,6 +41,7 @@ import org.apache.activemq.command.MessageId;
 import org.apache.activemq.store.MessageRecoveryListener;
 import org.apache.activemq.store.ProxyTopicMessageStore;
 import org.apache.activemq.store.TopicMessageStore;
+import org.apache.activemq.util.SubscriptionKey;
 import org.apache.activemq.util.Wait;
 import org.apache.activemq.util.Wait.Condition;
 import org.junit.After;
@@ -75,7 +79,8 @@ public class JDBCPersistenceAdapterExpiredMessageTest {
                 ProxyTopicMessageStore proxy = new ProxyTopicMessageStore(super.createTopicMessageStore(destination)) {
 
                     @Override
-                    public void recover(final MessageRecoveryListener listener) throws Exception {
+                    public Map<SubscriptionKey, List<Message>> recoverExpired(Set<SubscriptionKey> subs, int max,
+                        final MessageRecoveryListener listener) throws Exception {
                         MessageRecoveryListener delegate = new MessageRecoveryListener() {
 
                             @Override
@@ -99,7 +104,7 @@ public class JDBCPersistenceAdapterExpiredMessageTest {
                                 return listener.hasSpace();
                             }
                         };
-                        super.recover(delegate);
+                        return super.recoverExpired(subs, max, delegate);
                     }
 
                 };
