@@ -16,7 +16,6 @@
  */
 package org.apache.activemq.console.command;
 
-import org.apache.activemq.util.XmlFactories;
 import org.apache.commons.xml.secure.SecureDocumentBuilderFactory;
 import org.apache.commons.xml.secure.SecureTransformerFactory;
 import org.apache.commons.xml.secure.SecureXPathFactory;
@@ -51,7 +50,9 @@ public class CreateCommand extends AbstractCommand {
     };
 
     protected final String DEFAULT_TARGET_ACTIVEMQ_CONF = "conf/activemq.xml"; // default activemq conf to create in the new broker instance
-    protected final String DEFAULT_BROKERNAME_XPATH = "/beans/broker/@brokerName"; // default broker name xpath to change the broker name
+    protected final String DEFAULT_BROKERNAME_XPATH =
+            "/*[local-name()='beans' and (namespace-uri()='http://www.springframework.org/schema/beans' or namespace-uri()='')]"
+            + "/*[local-name()='broker' and (namespace-uri()='http://activemq.apache.org/schema/core' or namespace-uri()='')]/@brokerName";
 
     protected final String[] BASE_SUB_DIRS = { "bin", "conf" }; // default sub directories that will be created
     protected final String BROKER_NAME_REGEX = "[$][{]brokerName[}]"; // use to replace broker name property holders
