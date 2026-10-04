@@ -182,7 +182,6 @@ public class RuntimeConfigurationBroker extends AbstractRuntimeConfigurationBrok
 
                 // skip beans and pull out the broker node to validate
                 DocumentBuilderFactory dbf = SecureDocumentBuilderFactory.newNSInstance();
-                dbf.setNamespaceAware(true);
 
                 DocumentBuilder db = dbf.newDocumentBuilder();
                 Document doc = db.parse(configToMonitor.getInputStream());
