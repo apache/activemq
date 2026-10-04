@@ -26,13 +26,13 @@ import java.util.Properties;
 import java.util.StringJoiner;
 
 import jakarta.jms.JMSException;
-import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.activemq.command.Message;
 import org.apache.activemq.util.JMSExceptionSupport;
+import org.apache.commons.xml.secure.SecureDocumentBuilderFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,15 +55,11 @@ public final class XPathExpression implements BooleanExpression {
         try {
             try {
                 m = getXPathEvaluatorConstructor(cn);
-                DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
-                builderFactory.setNamespaceAware(true);
+                DocumentBuilderFactory builderFactory = SecureDocumentBuilderFactory.newNSInstance();
                 builderFactory.setIgnoringElementContentWhitespace(true);
                 builderFactory.setIgnoringComments(true);
                 try {
                     // set some reasonable defaults
-                    builderFactory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, Boolean.TRUE);
-                    builderFactory.setFeature("http://xml.org/sax/features/external-general-entities", false);
-                    builderFactory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
                     builderFactory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
                 } catch (ParserConfigurationException e) {
                     LOG.warn("Error setting document builder factory feature", e);

@@ -61,6 +61,7 @@
     <commons-io-version>2.22.0</commons-io-version>
     <commons-logging-version>1.4.0</commons-logging-version>
     <commons-pool2-version>2.13.1</commons-pool2-version>
+    <commons-secure-xml-version>1.0.0</commons-secure-xml-version>
     <commons-text-version>1.15.0</commons-text-version>
     <directory-version>2.0.0.AM25</directory-version>
     <ecj.version>3.46.100</ecj.version>
@@ -929,6 +930,11 @@
         <artifactId>commons-text</artifactId>
         <version>${commons-text-version}</version>
       </dependency>
+      <dependency>
+        <groupId>org.apache.commons</groupId>
+        <artifactId>commons-secure-xml</artifactId>
+        <version>${commons-secure-xml-version}</version>
+      </dependency>
 
       <!-- ACTIVEMQ-WEB Specific Dependencies -->
       <dependency>
@@ -968,7 +974,7 @@
       </dependency>
 
     </dependencies>
-  </dependencyManagement>
+   </dependencyManagement>
 
   <build>
     <defaultGoal>test</defaultGoal>

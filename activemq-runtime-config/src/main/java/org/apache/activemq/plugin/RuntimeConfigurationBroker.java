@@ -43,6 +43,7 @@ import org.apache.activemq.plugin.jmx.RuntimeConfigurationView;
 import org.apache.activemq.schema.core.DtoBroker;
 import org.apache.activemq.spring.Utils;
 import org.apache.activemq.util.XmlFactories;
+import org.apache.commons.xml.secure.SecureSchemaFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;
@@ -227,9 +228,8 @@ public class RuntimeConfigurationBroker extends AbstractRuntimeConfigurationBrok
 
     private Schema getSchema() throws SAXException, IOException {
         if (schema == null) {
-            SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
+            SchemaFactory schemaFactory = SecureSchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
             schemaFactory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
-            schemaFactory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
 
             ArrayList<StreamSource> schemas = new ArrayList<StreamSource>();
             schemas.add(new StreamSource(getClass().getResource("/activemq.xsd").toExternalForm()));

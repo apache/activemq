@@ -16,13 +16,13 @@
  */
 package org.apache.activemq.util;
 
+import org.apache.commons.xml.secure.SecureDocumentBuilderFactory;
+import org.apache.commons.xml.secure.SecureTransformerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerFactory;
 
 /**
@@ -35,27 +35,16 @@ public final class XmlFactories {
     private XmlFactories() { /* Do not instantiate */ }
 
     public static DocumentBuilderFactory getSafeDocumentBuilderFactory() {
-        DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
+        DocumentBuilderFactory builderFactory = SecureDocumentBuilderFactory.newInstance();
 
         // See https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/XML_External_Entity_Prevention_Cheat_Sheet.md#java
-        trySetFeature(builderFactory, XMLConstants.FEATURE_SECURE_PROCESSING, true);
         trySetFeature(builderFactory,"http://apache.org/xml/features/disallow-doctype-decl", true);
-        trySetFeature(builderFactory,"http://xml.org/sax/features/external-general-entities", false);
-        trySetFeature(builderFactory,"http://xml.org/sax/features/external-parameter-entities", false);
-        trySetFeature(builderFactory,"http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
 
         return builderFactory;
     }
 
     public static TransformerFactory getSafeTransformFactory() {
-        TransformerFactory transformerFactory = TransformerFactory.newInstance();
-        trySetFeature(transformerFactory, XMLConstants.FEATURE_SECURE_PROCESSING, true);
-
-        // See https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/XML_External_Entity_Prevention_Cheat_Sheet.md#transformerfactory
-        transformerFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
-        transformerFactory.setAttribute(XMLConstants.ACCESS_EXTERNAL_STYLESHEET, "");
-
-        return transformerFactory;
+        return SecureTransformerFactory.newInstance();
     }
 
     private static void trySetFeature(final DocumentBuilderFactory factory, final String name, final boolean value) {
@@ -66,11 +55,4 @@ public final class XmlFactories {
         }
     }
 
-    private static void trySetFeature(final TransformerFactory factory, final String name, final boolean value) {
-        try {
-            factory.setFeature(name, value);
-        } catch (final TransformerConfigurationException e) {
-            LOG.warn("Error setting transformer factory feature", e);
-        }
-    }
 }

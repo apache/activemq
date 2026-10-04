@@ -17,6 +17,7 @@
 package org.apache.activemq.console.command;
 
 import org.apache.activemq.util.XmlFactories;
+import org.apache.commons.xml.secure.SecureXPathFactory;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
 import org.xml.sax.SAXException;
@@ -29,7 +30,6 @@ import javax.xml.transform.stream.StreamResult;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
-import javax.xml.xpath.XPathFactory;
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
@@ -161,7 +161,7 @@ public class CreateCommand extends AbstractCommand {
         DocumentBuilder builder = XmlFactories.getSafeDocumentBuilderFactory().newDocumentBuilder();
         Element docElem = builder.parse(src).getDocumentElement();
 
-        XPath xpath = XPathFactory.newInstance().newXPath();
+        XPath xpath = SecureXPathFactory.newInstance().newXPath();
         Attr brokerNameAttr = (Attr) xpath.evaluate(DEFAULT_BROKERNAME_XPATH, docElem, XPathConstants.NODE);
         brokerNameAttr.setValue(brokerName);
 
