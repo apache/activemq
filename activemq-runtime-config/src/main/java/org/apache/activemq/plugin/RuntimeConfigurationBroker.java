@@ -17,6 +17,7 @@
 package org.apache.activemq.plugin;
 
 import java.io.IOException;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Properties;
@@ -42,7 +43,6 @@ import org.apache.activemq.broker.jmx.ManagementContext;
 import org.apache.activemq.plugin.jmx.RuntimeConfigurationView;
 import org.apache.activemq.schema.core.DtoBroker;
 import org.apache.activemq.spring.Utils;
-import org.apache.activemq.util.XmlFactories;
 import org.apache.commons.xml.secure.SecureDocumentBuilderFactory;
 import org.apache.commons.xml.secure.SecureSchemaFactory;
 import org.slf4j.Logger;
@@ -231,6 +231,9 @@ public class RuntimeConfigurationBroker extends AbstractRuntimeConfigurationBrok
             SchemaFactory schemaFactory = SecureSchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
 
             ArrayList<StreamSource> schemas = new ArrayList<StreamSource>();
+            // Spring imports the XML namespace without a schema location. Preload it so the secure resolver does not return an empty document.
+            schemas.add(new StreamSource(new StringReader(
+                    "<xs:schema xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" targetNamespace=\"http://www.w3.org/XML/1998/namespace\"/>")));
             schemas.add(new StreamSource(getClass().getResource("/activemq.xsd").toExternalForm()));
             if (getClass().getResource("/org/springframework/beans/factory/xml/spring-beans-3.0.xsd") != null) {
                 schemas.add(new StreamSource(getClass().getResource("/org/springframework/beans/factory/xml/spring-beans-3.0.xsd").toExternalForm()));
