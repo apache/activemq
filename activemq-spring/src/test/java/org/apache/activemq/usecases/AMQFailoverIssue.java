@@ -82,6 +82,7 @@ public class AMQFailoverIssue extends org.apache.activemq.test.TestSupport {
             doneLatch = new CountDownLatch(TOTAL_MESSAGES);
             container1 = createDefaultMessageListenerContainer(acf, new TestMessageListener1(0), QUEUE1_NAME);
             container1.afterPropertiesSet();
+            container1.start();
             Thread.sleep(5000);
             final ExecutorService executor = Executors.newCachedThreadPool();
             for (int i = 0; i < MAX_PRODUCERS; i++) {
