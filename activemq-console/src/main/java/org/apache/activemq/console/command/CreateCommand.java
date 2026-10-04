@@ -17,6 +17,8 @@
 package org.apache.activemq.console.command;
 
 import org.apache.activemq.util.XmlFactories;
+import org.apache.commons.xml.secure.SecureDocumentBuilderFactory;
+import org.apache.commons.xml.secure.SecureTransformerFactory;
 import org.apache.commons.xml.secure.SecureXPathFactory;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
@@ -158,7 +160,7 @@ public class CreateCommand extends AbstractCommand {
         File dest = new File(targetBase, DEFAULT_TARGET_ACTIVEMQ_CONF);
         context.print("Copying from: " + src.getCanonicalPath() + "\n          to: " + dest.getCanonicalPath());
 
-        DocumentBuilder builder = XmlFactories.getSafeDocumentBuilderFactory().newDocumentBuilder();
+        DocumentBuilder builder = SecureDocumentBuilderFactory.newNSInstance().newDocumentBuilder();
         Element docElem = builder.parse(src).getDocumentElement();
 
         XPath xpath = SecureXPathFactory.newInstance().newXPath();
@@ -205,7 +207,7 @@ public class CreateCommand extends AbstractCommand {
     // utlity method to write an xml source to file
     private void writeToFile(Source src, File file) throws TransformerException {
         final Result res = new StreamResult(file);
-        XmlFactories.getSafeTransformFactory()
+        SecureTransformerFactory.newInstance()
                 .newTransformer()
                 .transform(src, res);
     }
