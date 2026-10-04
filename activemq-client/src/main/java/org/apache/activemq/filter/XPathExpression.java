@@ -58,12 +58,6 @@ public final class XPathExpression implements BooleanExpression {
                 DocumentBuilderFactory builderFactory = SecureDocumentBuilderFactory.newNSInstance();
                 builderFactory.setIgnoringElementContentWhitespace(true);
                 builderFactory.setIgnoringComments(true);
-                try {
-                    // set some reasonable defaults
-                    builderFactory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
-                } catch (ParserConfigurationException e) {
-                    LOG.warn("Error setting document builder factory feature", e);
-                }
                 // setup the feature from the system property
                 setupFeatures(builderFactory);
                 builder = builderFactory.newDocumentBuilder();

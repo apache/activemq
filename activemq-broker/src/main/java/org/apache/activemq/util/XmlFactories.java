@@ -35,24 +35,11 @@ public final class XmlFactories {
     private XmlFactories() { /* Do not instantiate */ }
 
     public static DocumentBuilderFactory getSafeDocumentBuilderFactory() {
-        DocumentBuilderFactory builderFactory = SecureDocumentBuilderFactory.newInstance();
-
-        // See https://github.com/OWASP/CheatSheetSeries/blob/master/cheatsheets/XML_External_Entity_Prevention_Cheat_Sheet.md#java
-        trySetFeature(builderFactory,"http://apache.org/xml/features/disallow-doctype-decl", true);
-
-        return builderFactory;
+        return SecureDocumentBuilderFactory.newInstance();
     }
 
     public static TransformerFactory getSafeTransformFactory() {
         return SecureTransformerFactory.newInstance();
-    }
-
-    private static void trySetFeature(final DocumentBuilderFactory factory, final String name, final boolean value) {
-        try {
-            factory.setFeature(name, value);
-        } catch (final ParserConfigurationException e) {
-            LOG.warn("Error setting document builder factory feature", e);
-        }
     }
 
 }
