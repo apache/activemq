@@ -138,53 +138,45 @@ public abstract class Transaction {
         // failing synchronization must not prevent the remaining ones from
         // executing (e.g. the destination synchronization that maintains the
         // destination statistics) - run them all and rethrow the first failure.
-        Throwable firstException = null;
+        // Only Exceptions are isolated; a fatal Error aborts the chain immediately.
+        Exception firstException = null;
         synchronized(synchronizations) {
             for (Iterator<Synchronization> iter = synchronizations.iterator(); iter.hasNext();) {
                 Synchronization s = iter.next();
                 try {
                     s.afterCommit();
-                } catch (Throwable t) {
-                    getLog().warn("Exception from afterCommit for {} of {}", s, this, t);
+                } catch (Exception e) {
+                    getLog().warn("Exception from afterCommit for {} of {}", s, this, e);
                     if (firstException == null) {
-                        firstException = t;
+                        firstException = e;
                     }
                 }
             }
         }
-        rethrow(firstException);
+        if (firstException != null) {
+            throw firstException;
+        }
     }
 
     public void fireAfterRollback() throws Exception {
     	synchronized(synchronizations) {
             Collections.reverse(synchronizations);
-            Throwable firstException = null;
+            Exception firstException = null;
             for (Iterator<Synchronization> iter = synchronizations.iterator(); iter.hasNext();) {
                 Synchronization s = iter.next();
                 try {
                     s.afterRollback();
-                } catch (Throwable t) {
-                    getLog().warn("Exception from afterRollback for {} of {}", s, this, t);
+                } catch (Exception e) {
+                    getLog().warn("Exception from afterRollback for {} of {}", s, this, e);
                     if (firstException == null) {
-                        firstException = t;
+                        firstException = e;
                     }
                 }
             }
-            rethrow(firstException);
+            if (firstException != null) {
+                throw firstException;
+            }
         }
-    }
-
-    private static void rethrow(Throwable t) throws Exception {
-        if (t == null) {
-            return;
-        }
-        if (t instanceof Exception) {
-            throw (Exception) t;
-        }
-        if (t instanceof Error) {
-            throw (Error) t;
-        }
-        throw new RuntimeException(t);
     }
 
     @Override
