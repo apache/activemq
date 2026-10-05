@@ -40,6 +40,7 @@ import jakarta.jms.Connection;
 import jakarta.jms.ConnectionFactory;
 import jakarta.jms.Destination;
 import jakarta.jms.MessageListener;
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -195,6 +196,7 @@ public abstract class DurableSubscriptionOfflineTestBase {
                 break;
         }
         broker.setPersistenceAdapter(adapter);
+        adapter.setDirectory(new File(broker.getBrokerDataDirectory(), choice.name()));
         return adapter;
     }
 }
