@@ -30,9 +30,15 @@ import java.util.Map;
 import java.util.Properties;
 
 import javax.management.MBeanServerConnection;
+import javax.management.MBeanServerInvocationHandler;
+import javax.management.ObjectInstance;
+import javax.management.ObjectName;
 import javax.management.remote.JMXConnector;
 import javax.management.remote.JMXConnectorFactory;
 import javax.management.remote.JMXServiceURL;
+
+import org.apache.activemq.broker.jmx.BrokerViewMBean;
+import org.apache.activemq.console.util.JmxMBeansUtil;
 
 public abstract class AbstractJmxCommand extends AbstractCommand {
     public static String DEFAULT_JMX_URL;
@@ -305,6 +311,31 @@ public abstract class AbstractJmxCommand extends AbstractCommand {
             }
         }
         return jmxConnection;
+    }
+
+    /**
+     * Look up a proxy to the broker's own BrokerViewMBean via JMX.
+     * @return proxy to the broker's BrokerViewMBean
+     * @throws Exception if no broker is found in the JMX context
+     */
+    @SuppressWarnings("unchecked")
+    protected BrokerViewMBean getBrokerViewMBean() throws Exception {
+        List<ObjectInstance> brokers = JmxMBeansUtil.getAllBrokers(createJmxConnection());
+        if (brokers.isEmpty()) {
+            throw new Exception("No broker found in JMX context.");
+        }
+        ObjectName brokerName = brokers.get(0).getObjectName();
+        return MBeanServerInvocationHandler.newProxyInstance(
+                createJmxConnection(), brokerName, BrokerViewMBean.class, true);
+    }
+
+    /**
+     * Build a string of repeated dashes, used for table separators in command output.
+     * @param count - number of dashes
+     * @return string of {@code count} dashes
+     */
+    protected static String dashes(int count) {
+        return "-".repeat(count);
     }
 
     /**
