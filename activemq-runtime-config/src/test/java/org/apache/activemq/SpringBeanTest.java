@@ -29,7 +29,6 @@ import org.apache.activemq.util.Wait;
 import org.junit.Ignore;
 import org.junit.Test;
 
-
 import static org.junit.Assert.*;
 
 public class SpringBeanTest extends RuntimeConfigTestSupport {
@@ -70,7 +69,6 @@ public class SpringBeanTest extends RuntimeConfigTestSupport {
         assertEquals("modified is same", props.get(propOfInterest), propsAfter.get(propOfInterest));
     }
 
-
     @Test
     public void testAddPropertyRef() throws Exception {
 
@@ -80,7 +78,7 @@ public class SpringBeanTest extends RuntimeConfigTestSupport {
         startBroker(brokerConfig);
         assertTrue("broker alive", brokerService.isStarted());
 
-        applyNewConfig(brokerConfig, "emptyUpdatableConfig1000-spring-property-nc", SLEEP);
+        applyNewConfig(brokerConfig, "emptyUpdatableConfig1000-spring-property-nc", WAIT_FOR_CHANGE);
 
         assertTrue("new network connectors", Wait.waitFor(new Wait.Condition() {
             @Override
@@ -104,7 +102,7 @@ public class SpringBeanTest extends RuntimeConfigTestSupport {
         startBroker(brokerConfig);
         assertTrue("broker alive", brokerService.isStarted());
 
-        applyNewConfig(brokerConfig, "emptyUpdatableConfig1000-spring-property-file-nc", SLEEP);
+        applyNewConfig(brokerConfig, "emptyUpdatableConfig1000-spring-property-file-nc", WAIT_FOR_CHANGE);
 
         assertTrue("new network connectors", Wait.waitFor(new Wait.Condition() {
             @Override
@@ -144,7 +142,6 @@ public class SpringBeanTest extends RuntimeConfigTestSupport {
 
         assertNotEquals("unknown", props.get(propOfInterest));
 
-
     }
 
     @Test
@@ -166,7 +163,7 @@ public class SpringBeanTest extends RuntimeConfigTestSupport {
             assertEquals("password resolved", System.getProperty("network.password"), nc.getPassword());
         }
 
-        applyNewConfig(brokerConfig, "emptyUpdatableConfig1000-spring-property-one-nc", SLEEP);
+        applyNewConfig(brokerConfig, "emptyUpdatableConfig1000-spring-property-one-nc", WAIT_FOR_CHANGE);
 
         assertTrue("one network connector remains", Wait.waitFor(new Wait.Condition() {
             @Override
@@ -216,7 +213,7 @@ public class SpringBeanTest extends RuntimeConfigTestSupport {
 
         assertEquals("our custom prop is applied", "isKing", brokerService.getBrokerName());
 
-        applyNewConfig(brokerConfig, "spring-property-file-list-and-beanFactory-new-nc", SLEEP);
+        applyNewConfig(brokerConfig, "spring-property-file-list-and-beanFactory-new-nc", WAIT_FOR_CHANGE);
 
         assertTrue("new network connectors", Wait.waitFor(new Wait.Condition() {
             @Override

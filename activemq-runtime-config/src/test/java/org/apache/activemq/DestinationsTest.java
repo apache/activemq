@@ -42,15 +42,14 @@ public class DestinationsTest extends RuntimeConfigTestSupport {
         assertTrue("contains original", containsDestination(new ActiveMQQueue("ORIGINAL")));
 
         LOG.info("Adding destinations");
-        applyNewConfig(brokerConfig, configurationSeed + "-add", SLEEP);
+        applyNewConfig(brokerConfig, configurationSeed + "-add", WAIT_FOR_CHANGE);
         printDestinations();
         assertTrue("contains original", containsDestination(new ActiveMQQueue("ORIGINAL")));
         assertTrue("contains before", containsDestination(new ActiveMQTopic("BEFORE")));
         assertTrue("contains after", containsDestination(new ActiveMQQueue("AFTER")));
 
-
         LOG.info("Removing destinations");
-        applyNewConfig(brokerConfig, configurationSeed + "-remove", SLEEP);
+        applyNewConfig(brokerConfig, configurationSeed + "-remove", WAIT_FOR_CHANGE);
         printDestinations();
         assertTrue("contains original", containsDestination(new ActiveMQQueue("ORIGINAL")));
         assertTrue("contains before", containsDestination(new ActiveMQTopic("BEFORE")));

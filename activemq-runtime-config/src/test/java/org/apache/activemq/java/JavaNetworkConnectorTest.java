@@ -26,7 +26,6 @@ import static org.junit.Assert.fail;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.concurrent.TimeUnit;
 
 import javax.management.InstanceNotFoundException;
 
@@ -45,7 +44,6 @@ import org.junit.Test;
 
 public class JavaNetworkConnectorTest extends RuntimeConfigTestSupport {
 
-    public static final int SLEEP = 2; // seconds
     private JavaRuntimeConfigurationBroker javaConfigBroker;
 
     public void startBroker(BrokerService brokerService) throws Exception {
@@ -79,7 +77,6 @@ public class JavaNetworkConnectorTest extends RuntimeConfigTestSupport {
 
         NetworkConnector networkConnector = brokerService.getNetworkConnectors().get(0);
         javaConfigBroker.addNetworkConnector(nc);
-        TimeUnit.SECONDS.sleep(SLEEP);
         assertEquals("no new network connectors", 1, brokerService.getNetworkConnectors().size());
         assertSame("same instance", networkConnector, brokerService.getNetworkConnectors().get(0));
 
@@ -96,7 +93,6 @@ public class JavaNetworkConnectorTest extends RuntimeConfigTestSupport {
 
     }
 
-
     @Test
     public void testMod() throws Exception {
         final BrokerService brokerService = new BrokerService();
@@ -106,7 +102,6 @@ public class JavaNetworkConnectorTest extends RuntimeConfigTestSupport {
 
         DiscoveryNetworkConnector nc = createNetworkConnector();
         javaConfigBroker.addNetworkConnector(nc);
-        TimeUnit.SECONDS.sleep(SLEEP);
 
         assertEquals("one network connectors", 1, brokerService.getNetworkConnectors().size());
 
@@ -118,7 +113,6 @@ public class JavaNetworkConnectorTest extends RuntimeConfigTestSupport {
 
         nc.setNetworkTTL(2);
         javaConfigBroker.updateNetworkConnector(nc);
-        TimeUnit.SECONDS.sleep(SLEEP);
         assertEquals("still one network connectors", 1, brokerService.getNetworkConnectors().size());
 
         NetworkConnector modNetworkConnector = brokerService.getNetworkConnectors().get(0);
@@ -154,7 +148,6 @@ public class JavaNetworkConnectorTest extends RuntimeConfigTestSupport {
         javaConfigBroker.addNetworkConnector(nc1);
         javaConfigBroker.addNetworkConnector(nc2);
 
-        TimeUnit.SECONDS.sleep(SLEEP);
         assertEquals("correct network connectors", 2, brokerService.getNetworkConnectors().size());
 
         javaConfigBroker.removeNetworkConnector(nc2);
