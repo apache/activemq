@@ -134,20 +134,47 @@ public abstract class Transaction {
     }
 
     protected void fireAfterCommit() throws Exception {
+        // The transaction outcome is already durable when afterCommit runs, so a
+        // failing synchronization must not prevent the remaining ones from
+        // executing (e.g. the destination synchronization that maintains the
+        // destination statistics) - run them all and rethrow the first failure.
+        // Only Exceptions are isolated; a fatal Error aborts the chain immediately.
+        Exception firstException = null;
         synchronized(synchronizations) {
             for (Iterator<Synchronization> iter = synchronizations.iterator(); iter.hasNext();) {
                 Synchronization s = iter.next();
-                s.afterCommit();
+                try {
+                    s.afterCommit();
+                } catch (Exception e) {
+                    getLog().warn("Exception from afterCommit for {} of {}", s, this, e);
+                    if (firstException == null) {
+                        firstException = e;
+                    }
+                }
             }
+        }
+        if (firstException != null) {
+            throw firstException;
         }
     }
 
     public void fireAfterRollback() throws Exception {
     	synchronized(synchronizations) {
             Collections.reverse(synchronizations);
+            Exception firstException = null;
             for (Iterator<Synchronization> iter = synchronizations.iterator(); iter.hasNext();) {
                 Synchronization s = iter.next();
-               s.afterRollback();
+                try {
+                    s.afterRollback();
+                } catch (Exception e) {
+                    getLog().warn("Exception from afterRollback for {} of {}", s, this, e);
+                    if (firstException == null) {
+                        firstException = e;
+                    }
+                }
+            }
+            if (firstException != null) {
+                throw firstException;
             }
         }
     }
