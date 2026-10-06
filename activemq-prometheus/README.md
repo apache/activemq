@@ -21,18 +21,44 @@
 
 ## Activation
 
-1. Uncomment the `Prometheus Metrics Web Application` block from `conf/jetty/jetty-webapps.xml`.
-2. Restart the broker
+The metrics web application ships with the broker but is not loaded by default.
+
+1. In `conf/jetty-spring.properties`, uncomment `jettyExtraXmlFiles=jetty-webapp-prometheus.xml`.
+2. Restart the broker.
 
 The endpoint uses the existing Jetty management listener, TLS configuration,
-IP allowlist, and JAAS realm. Its path is restricted to the `users` and
-`admins` roles but can be changed in `conf/jetty/jetty-security.xml`.
+IP allowlist, and JAAS realm. Access follows the console's catch-all `/*` rule
+in `conf/jetty/jetty-security.xml`, which allows the `users` and `admins` roles.
+To restrict it further, add a `/metrics/*` rule there.
+
+The endpoint scrapes every JMX-enabled broker registered in the same JVM. It
+uses each broker's own MBean name, so a custom `jmxDomainName` works.
 
 ## Endpoints
 
 Two endpoints because brokers with many destinations might produce large responses:
 - `GET /metrics`: broker-level metrics only.
-- `GET /metrics?per_object=true`: per-destination (queues, topics, temporary queues and topics) and broker-level metrics
+- `GET /metrics?per_object=true`: broker-level metrics plus one series per destination.
+
+`per_object` must be `true` or `false`, given once. Any other value, or a
+repeated parameter, returns `400 Bad Request`.
+
+### Destination types
+
+The destination types reported by `per_object=true` are configured with the
+`destinationTypes` init parameter: a comma separated list of `queue`, `topic`,
+`temp-queue`, `temp-topic`. The default is `queue,topic`; temporary destinations
+are short lived and usually not worth a time series. Set it on the web
+application in `conf/jetty/jetty-webapp-prometheus.xml`:
+
+```xml
+<Call name="setInitParameter">
+  <Arg>destinationTypes</Arg>
+  <Arg>queue,topic,temp-queue,temp-topic</Arg>
+</Call>
+```
+
+An unknown value fails deployment of the web application.
 
 ## Metrics
 
@@ -59,11 +85,16 @@ Two endpoints because brokers with many destinations might produce large respons
 | `job_scheduler_store_percent_usage` | gauge | Percent of job scheduler store limit used |
 | `job_scheduler_store_limit_bytes` | gauge | Job scheduler store limit in bytes |
 
-### Destination metrics (`activemq_queue_*` / `activemq_topic_*` / `activemq_tempqueue_*` / `activemq_temptopic_*`)
+### Destination metrics (`activemq_destination_*`)
 
-Returned only when `?per_object=true` is set.
+Returned only when `?per_object=true` is set. Every series carries the labels
+`broker`, `destination_type` (`queue`, `topic`, `temp-queue` or `temp-topic`)
+and `destination`, so one metric family covers all destination types:
 
-Each destination type is reported as its own metric family.
+```
+activemq_destination_messages{broker="localhost",destination_type="queue",destination="orders"} 12.0
+```
+
 | Metric | Type | Description |
 |--------|------|-------------|
 | `messages` | gauge | Number of messages in destination |

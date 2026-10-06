@@ -41,6 +41,13 @@
             <scope>provided</scope>
         </dependency>
 
+        <!-- Used for JMX naming constants -->
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>activemq-broker</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
@@ -62,6 +69,12 @@
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <!-- Protobuf exposition format, used to round-trip the snapshots through Prometheus -->
+        <dependency>
+            <groupId>io.prometheus</groupId>
+            <artifactId>prometheus-metrics-exposition-formats</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>

@@ -16,16 +16,34 @@
  */
 package org.apache.activemq.prometheus;
 
+import static org.apache.activemq.prometheus.PrometheusConstants.BROKER_METRIC_PREFIX;
+import static org.apache.activemq.prometheus.PrometheusConstants.DEFAULT_DESTINATION_TYPES;
+import static org.apache.activemq.prometheus.PrometheusConstants.DESTINATION_METRIC_PREFIX;
+import static org.apache.activemq.prometheus.PrometheusConstants.INIT_PARAM_DESTINATION_TYPES;
+import static org.apache.activemq.prometheus.PrometheusConstants.LABEL_BROKER;
+import static org.apache.activemq.prometheus.PrometheusConstants.LABEL_DESTINATION;
+import static org.apache.activemq.prometheus.PrometheusConstants.LABEL_DESTINATION_TYPE;
+import static org.apache.activemq.prometheus.PrometheusConstants.PARAM_PER_OBJECT;
+
 import java.io.IOException;
 import java.io.OutputStream;
-import java.lang.management.ManagementFactory;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.function.Supplier;
+import java.util.function.ToDoubleFunction;
+import java.util.stream.Collectors;
 
+import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import javax.management.JMX;
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
 
@@ -38,209 +56,356 @@ import io.prometheus.metrics.model.snapshots.Labels;
 import io.prometheus.metrics.model.snapshots.MetricSnapshot;
 import io.prometheus.metrics.model.snapshots.MetricSnapshots;
 
+import org.apache.activemq.broker.BrokerRegistry;
+import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.jmx.BrokerViewMBean;
+import org.apache.activemq.broker.jmx.DestinationViewMBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-// Exposes ActiveMQ broker and destination JMX metrics via Prometheus
+/**
+ * Exposes ActiveMQ broker and destination JMX metrics in the Prometheus text format.
+ * <p>
+ * {@code GET /metrics} returns broker level metrics.
+ * {@code GET /metrics?per_object=true} also returns per destination metrics.
+ * {@link PrometheusConstants#INIT_PARAM_DESTINATION_TYPES} determines which destinations are added.
+ * <p>
+ * Brokers are found in the {@link BrokerRegistry}. Each broker's destinations come from its
+ * {@link BrokerViewMBean}, and values are read through {@link BrokerViewMBean} and
+ * {@link DestinationViewMBean} proxies.
+ */
 public class PrometheusMetricsServlet extends HttpServlet {
 
     private static final long serialVersionUID = 1L;
     private static final Logger LOG = LoggerFactory.getLogger(PrometheusMetricsServlet.class);
 
     private final PrometheusTextFormatWriter writer = PrometheusTextFormatWriter.create();
+    private final transient Supplier<List<JmxBroker>> brokers;
+    private Set<DestinationType> enabledDestinationTypes = parseDestinationTypes(null);
 
-    // Metrics can be easily extended by adding them here with their base name.
-    // Exporters take care of prefixes and suffixes.
-    private static final MetricDefinition[] BROKER_METRICS = {
-        new MetricDefinition("current_connections", "Current number of connections", "CurrentConnectionsCount", MetricType.GAUGE),
-        new MetricDefinition("connections", "Total connections since last start", "TotalConnectionsCount", MetricType.COUNTER),
-        new MetricDefinition("messages_enqueued", "Total messages enqueued since last start", "TotalEnqueueCount", MetricType.COUNTER),
-        new MetricDefinition("messages_dequeued", "Total messages dequeued since last start", "TotalDequeueCount", MetricType.COUNTER),
-        new MetricDefinition("consumers", "Current number of consumers", "TotalConsumerCount", MetricType.GAUGE),
-        new MetricDefinition("producers", "Current number of producers", "TotalProducerCount", MetricType.GAUGE),
-        new MetricDefinition("messages", "Current number of messages across all destinations", "TotalMessageCount", MetricType.GAUGE),
-        new MetricDefinition("memory_percent_usage", "Percent (0-100) of memory limit used", "MemoryPercentUsage", MetricType.GAUGE),
-        new MetricDefinition("memory_limit_bytes", "Memory limit in bytes", "MemoryLimit", MetricType.GAUGE),
-        new MetricDefinition("store_percent_usage", "Percent (0-100) of store limit used", "StorePercentUsage", MetricType.GAUGE),
-        new MetricDefinition("store_limit_bytes", "Store limit in bytes", "StoreLimit", MetricType.GAUGE),
-        new MetricDefinition("temp_percent_usage", "Percent (0-100) of temp limit used", "TempPercentUsage", MetricType.GAUGE),
-        new MetricDefinition("temp_limit_bytes", "Temp limit in bytes", "TempLimit", MetricType.GAUGE),
-        new MetricDefinition("uptime_milliseconds", "Broker uptime in milliseconds", "UptimeMillis", MetricType.GAUGE),
-        new MetricDefinition("queues", "Number of queues on the broker", "TotalQueuesCount", MetricType.GAUGE),
-        new MetricDefinition("topics", "Number of topics on the broker", "TotalTopicsCount", MetricType.GAUGE),
-        new MetricDefinition("job_scheduler_store_percent_usage", "Percent (0-100) of job scheduler store limit used", "JobSchedulerStorePercentUsage", MetricType.GAUGE),
-        new MetricDefinition("job_scheduler_store_limit_bytes", "Job scheduler store limit in bytes", "JobSchedulerStoreLimit", MetricType.GAUGE)
-    };
+    /** A broker to scrape: its MBean name and the MBean server it is registered in. */
+    static final class JmxBroker {
+        final ObjectName name;
+        final MBeanServer server;
 
-    private static final String[] DESTINATION_TYPES = {"Queue", "Topic", "TempQueue", "TempTopic"};
-    private static final MetricDefinition[] DESTINATION_METRICS = {
-        new MetricDefinition("messages", "Number of messages in this destination", "QueueSize", MetricType.GAUGE),
-        new MetricDefinition("enqueued", "Total messages enqueued to this destination since last start", "EnqueueCount", MetricType.COUNTER),
-        new MetricDefinition("dequeued", "Total messages dequeued from destination since last start", "DequeueCount", MetricType.COUNTER),
-        new MetricDefinition("dispatched", "Total messages dispatched from destination since last start", "DispatchCount", MetricType.COUNTER),
-        new MetricDefinition("messages_inflight", "Messages dispatched but not acknowledged", "InFlightCount", MetricType.GAUGE),
-        new MetricDefinition("expired", "Total messages expired since last start", "ExpiredCount", MetricType.COUNTER),
-        new MetricDefinition("consumers", "Number of consumers", "ConsumerCount", MetricType.GAUGE),
-        new MetricDefinition("producers", "Number of producers", "ProducerCount", MetricType.GAUGE),
-        new MetricDefinition("memory_percent_usage", "Percent (0-100) of destination memory limit used", "MemoryPercentUsage", MetricType.GAUGE),
-        new MetricDefinition("memory_limit_bytes", "Memory limit for this destination in bytes", "MemoryLimit", MetricType.GAUGE),
-        new MetricDefinition("memory_usage_bytes", "Memory used by this destination in bytes", "MemoryUsageByteCount", MetricType.GAUGE),
-        new MetricDefinition("store_message_size_bytes", "Store message size in bytes", "StoreMessageSize", MetricType.GAUGE),
-        new MetricDefinition("average_enqueue_time_milliseconds", "Average time (since last start) messages waited before dispatch", "AverageEnqueueTime", MetricType.GAUGE)
-    };
+        JmxBroker(final ObjectName name, final MBeanServer server) {
+            this.name = name;
+            this.server = server;
+        }
+    }
+
+    /**
+     * Destination types that {@code per_object=true} can include.
+     * Each destination of an enabled type gets its own series.
+     * Each destination type has:
+     * <ul>
+     *   <li>{@code label}, for example {@code temp-queue}: the name used in the {@code destinationTypes}
+     *       setting and in the {@code destination_type} label. It is the broker's destination URI scheme
+     *       ({@code temp-queue://}).</li>
+     *   <li>{@code list}: the {@link BrokerViewMBean} getter that returns the broker's destinations of
+     *       this type.</li>
+     * </ul>
+     */
+    enum DestinationType {
+        QUEUE("queue", BrokerViewMBean::getQueues),
+        TOPIC("topic", BrokerViewMBean::getTopics),
+        TEMP_QUEUE("temp-queue", BrokerViewMBean::getTemporaryQueues),
+        TEMP_TOPIC("temp-topic", BrokerViewMBean::getTemporaryTopics);
+
+        final String label;
+        final Function<BrokerViewMBean, ObjectName[]> list;
+
+        DestinationType(final String label, final Function<BrokerViewMBean, ObjectName[]> list) {
+            this.label = label;
+            this.list = list;
+        }
+
+        static DestinationType fromLabel(final String label) {
+            for (final DestinationType type : values()) {
+                if (type.label.equals(label)) {
+                    return type;
+                }
+            }
+            throw new IllegalArgumentException("Unknown destination type '" + label + "', expected one of "
+                    + Arrays.stream(values()).map(type -> type.label).collect(Collectors.joining(", ")));
+        }
+    }
+
+    // Metrics can be extended by adding them here
+    private static final List<MetricDefinition<BrokerViewMBean>> BROKER_METRICS = List.of(
+        gauge("current_connections", "Current number of connections", BrokerViewMBean::getCurrentConnectionsCount),
+        counter("connections", "Total connections since last start", BrokerViewMBean::getTotalConnectionsCount),
+        counter("messages_enqueued", "Total messages enqueued since last start", BrokerViewMBean::getTotalEnqueueCount),
+        counter("messages_dequeued", "Total messages dequeued since last start", BrokerViewMBean::getTotalDequeueCount),
+        gauge("consumers", "Current number of consumers", BrokerViewMBean::getTotalConsumerCount),
+        gauge("producers", "Current number of producers", BrokerViewMBean::getTotalProducerCount),
+        gauge("messages", "Current number of messages across all destinations", BrokerViewMBean::getTotalMessageCount),
+        gauge("memory_percent_usage", "Percent (0-100) of memory limit used", BrokerViewMBean::getMemoryPercentUsage),
+        gauge("memory_limit_bytes", "Memory limit in bytes", BrokerViewMBean::getMemoryLimit),
+        gauge("store_percent_usage", "Percent (0-100) of store limit used", BrokerViewMBean::getStorePercentUsage),
+        gauge("store_limit_bytes", "Store limit in bytes", BrokerViewMBean::getStoreLimit),
+        gauge("temp_percent_usage", "Percent (0-100) of temp limit used", BrokerViewMBean::getTempPercentUsage),
+        gauge("temp_limit_bytes", "Temp limit in bytes", BrokerViewMBean::getTempLimit),
+        gauge("uptime_milliseconds", "Broker uptime in milliseconds", BrokerViewMBean::getUptimeMillis),
+        gauge("queues", "Number of queues on the broker", BrokerViewMBean::getTotalQueuesCount),
+        gauge("topics", "Number of topics on the broker", BrokerViewMBean::getTotalTopicsCount),
+        gauge("job_scheduler_store_percent_usage", "Percent (0-100) of job scheduler store limit used", BrokerViewMBean::getJobSchedulerStorePercentUsage),
+        gauge("job_scheduler_store_limit_bytes", "Job scheduler store limit in bytes", BrokerViewMBean::getJobSchedulerStoreLimit)
+    );
+
+    private static final List<MetricDefinition<DestinationViewMBean>> DESTINATION_METRICS = List.of(
+        gauge("messages", "Number of messages in this destination", DestinationViewMBean::getQueueSize),
+        counter("enqueued", "Total messages enqueued to this destination since last start", DestinationViewMBean::getEnqueueCount),
+        counter("dequeued", "Total messages dequeued from destination since last start", DestinationViewMBean::getDequeueCount),
+        counter("dispatched", "Total messages dispatched from destination since last start", DestinationViewMBean::getDispatchCount),
+        gauge("messages_inflight", "Messages dispatched but not acknowledged", DestinationViewMBean::getInFlightCount),
+        counter("expired", "Total messages expired since last start", DestinationViewMBean::getExpiredCount),
+        gauge("consumers", "Number of consumers", DestinationViewMBean::getConsumerCount),
+        gauge("producers", "Number of producers", DestinationViewMBean::getProducerCount),
+        gauge("memory_percent_usage", "Percent (0-100) of destination memory limit used", DestinationViewMBean::getMemoryPercentUsage),
+        gauge("memory_limit_bytes", "Memory limit for this destination in bytes", DestinationViewMBean::getMemoryLimit),
+        gauge("memory_usage_bytes", "Memory used by this destination in bytes", DestinationViewMBean::getMemoryUsageByteCount),
+        gauge("store_message_size_bytes", "Store message size in bytes", DestinationViewMBean::getStoreMessageSize),
+        gauge("average_enqueue_time_milliseconds", "Average time (since last start) messages waited before dispatch", DestinationViewMBean::getAverageEnqueueTime)
+    );
+
+    /** Scrapes every JMX-enabled broker registered in this JVM's {@link BrokerRegistry}. */
+    public PrometheusMetricsServlet() {
+        this(PrometheusMetricsServlet::registeredBrokers);
+    }
+
+    /** Scrapes the given brokers. Package-private so tests can supply MBeans without a running broker. */
+    PrometheusMetricsServlet(final Supplier<List<JmxBroker>> brokers) {
+        this.brokers = brokers;
+    }
+
+    @Override
+    public void init() throws ServletException {
+        String destinationTypesParam = getInitParameter(INIT_PARAM_DESTINATION_TYPES);
+        if (destinationTypesParam == null) {
+            destinationTypesParam = getServletContext().getInitParameter(INIT_PARAM_DESTINATION_TYPES);
+        }
+        try {
+            enabledDestinationTypes = parseDestinationTypes(destinationTypesParam);
+        } catch (final IllegalArgumentException exception) {
+            throw new ServletException("Invalid " + INIT_PARAM_DESTINATION_TYPES + ": " + exception.getMessage(), exception);
+        }
+        LOG.info("Prometheus metrics servlet reporting destination types {} when {}=true",
+                enabledDestinationTypes.stream().map(type -> type.label).collect(Collectors.toList()), PARAM_PER_OBJECT);
+    }
+
+    /**
+     * Parses the {@code destinationTypes} init parameter, for example {@code "queue, temp-queue"}.
+     * {@code null} (the parameter is not set) selects the default, {@code "queue,topic"}.
+     * A value with no labels, such as {@code ""} or {@code " "}, reports no destinations.
+     * Each label must exactly match a {@link DestinationType} label, otherwise this throws.
+     */
+    static Set<DestinationType> parseDestinationTypes(final String destinationTypesParam) {
+        final Set<DestinationType> types = EnumSet.noneOf(DestinationType.class);
+        for (final String token : (destinationTypesParam == null ? DEFAULT_DESTINATION_TYPES : destinationTypesParam).split(",")) {
+            final String label = token.trim();
+            if (!label.isEmpty()) {
+                types.add(DestinationType.fromLabel(label));
+            }
+        }
+        return types;
+    }
+
+    Set<DestinationType> getEnabledDestinationTypes() {
+        return enabledDestinationTypes;
+    }
+
+    /**
+     * Parses the {@code per_object} request parameter. Absent means {@code false}. Otherwise it must be given
+     * exactly once, as {@code true} or {@code false}; anything else throws.
+     */
+    static boolean parsePerObject(final String[] values) {
+        if (values == null) {
+            return false;
+        }
+        if (values.length == 1) {
+            if ("true".equals(values[0])) {
+                return true;
+            }
+            if ("false".equals(values[0])) {
+                return false;
+            }
+        }
+        throw new IllegalArgumentException(PARAM_PER_OBJECT + " must be given once, as true or false");
+    }
 
     @Override
     protected void doGet(final HttpServletRequest request, final HttpServletResponse response) throws IOException {
-        final boolean perObject = request != null && "true".equalsIgnoreCase(request.getParameter("per_object"));
-        final MBeanServer mBeanServer = ManagementFactory.getPlatformMBeanServer();
-
-        // If the mBeanServer is unavailable nothing useful can be produced, so return a 500
-        final Set<ObjectName> brokers;
-        final Map<String, Set<ObjectName>> destinationsByType = new LinkedHashMap<>();
+        // The request is only used to determine if the response needs to include per-object metrics.
+        final boolean perObject;
         try {
-            brokers = mBeanServer.queryNames(new ObjectName("org.apache.activemq:type=Broker,brokerName=*"), null);
-            if (perObject) {
-                // Scraping on brokers with many destinations can be expensive.
-                for (final String type : DESTINATION_TYPES) {
-                    destinationsByType.put(type, mBeanServer.queryNames(new ObjectName(
-                            "org.apache.activemq:type=Broker,brokerName=*,destinationType=" + type
-                                    + ",destinationName=*"), null));
-                }
-            }
-        } catch (final Exception exception) {
+            perObject = parsePerObject(request.getParameterValues(PARAM_PER_OBJECT));
+        } catch (final IllegalArgumentException exception) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, exception.getMessage());
+            return;
+        }
+
+        final MetricSnapshots snapshots;
+        try {
+            snapshots = collect(perObject);
+        } catch (final RuntimeException exception) {
             LOG.warn("Prometheus scrape failed while querying broker MBeans", exception);
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Metrics collection failed");
             return;
         }
 
-        // Failed items are skipped or default to 0 (when not possible) to allow partial data..
-        final MetricSnapshots.Builder snapshots = MetricSnapshots.builder();
-        collectBrokerMetrics(mBeanServer, snapshots, brokers);
-        for (final Map.Entry<String, Set<ObjectName>> entry : destinationsByType.entrySet()) {
-            collectDestinationMetrics(mBeanServer, snapshots, entry.getKey(), entry.getValue());
-        }
-
         response.setContentType(writer.getContentType());
         response.setStatus(HttpServletResponse.SC_OK);
         final OutputStream out = response.getOutputStream();
-        writer.write(out, snapshots.build());
+        writer.write(out, snapshots);
         out.flush();
     }
 
-    private void collectBrokerMetrics(final MBeanServer mBeanServer, final MetricSnapshots.Builder snapshots,
-            final Set<ObjectName> brokers) {
-        // In case there is a network of brokers, only use the local one.
-        // Skip unreadable names.
-        final Map<ObjectName, Labels> identified = new LinkedHashMap<>();
-        for (final ObjectName broker : brokers) {
-            final String brokerName = resolveStringAttribute(mBeanServer, broker, "BrokerName");
-            if (brokerName != null) {
-                identified.put(broker, Labels.of("broker", brokerName));
+    /**
+     * Collects the metric families for one scrape. Unreadable attributes are reported as 0 so a partial
+     * scrape still succeeds. Package-private so tests can render the snapshots through any exposition format.
+     */
+    MetricSnapshots collect(final boolean perObject) {
+        final Map<BrokerViewMBean, Labels> brokerSeries = new LinkedHashMap<>();
+        final Map<DestinationViewMBean, Labels> destinationSeries = new LinkedHashMap<>();
+        for (final JmxBroker jmxBroker : brokers.get()) {
+            final BrokerViewMBean broker = JMX.newMBeanProxy(jmxBroker.server, jmxBroker.name, BrokerViewMBean.class);
+            // Skip brokers whose identity cannot be read rather than emit a phantom series.
+            final String brokerName = readName(jmxBroker.name, broker::getBrokerName);
+            if (brokerName == null) {
+                continue;
+            }
+            brokerSeries.put(broker, Labels.of(LABEL_BROKER, brokerName));
+            if (perObject) {
+                // Scraping brokers with many destinations is expensive, so this is opt-in per request.
+                addDestinations(jmxBroker, broker, brokerName, destinationSeries);
             }
         }
-        if (identified.isEmpty()) {
-            return;
-        }
 
-        for (final MetricDefinition metric : BROKER_METRICS) {
-            final String metricName = "activemq_broker_" + metric.name;
-            final MetricSnapshot snapshot = buildSnapshot(mBeanServer, metricName, metric, metric.help, identified);
-            if (snapshot != null) {
-                snapshots.metricSnapshot(snapshot);
+        final MetricSnapshots.Builder snapshots = MetricSnapshots.builder();
+        addFamilies(snapshots, BROKER_METRIC_PREFIX, BROKER_METRICS, brokerSeries);
+        // One family per metric; the destination type is a label, so the family set is fixed.
+        addFamilies(snapshots, DESTINATION_METRIC_PREFIX, DESTINATION_METRICS, destinationSeries);
+        return snapshots.build();
+    }
+
+    private void addDestinations(final JmxBroker jmxBroker, final BrokerViewMBean broker, final String brokerName,
+            final Map<DestinationViewMBean, Labels> series) {
+        for (final DestinationType type : enabledDestinationTypes) {
+            final ObjectName[] names;
+            try {
+                names = type.list.apply(broker);
+            } catch (final RuntimeException exception) {
+                LOG.debug("Skipping {} destinations of {}: list unavailable", type.label, jmxBroker.name, exception);
+                continue;
+            }
+            for (final ObjectName name : names) {
+                final DestinationViewMBean destination = JMX.newMBeanProxy(jmxBroker.server, name, DestinationViewMBean.class);
+                final String destinationName = readName(name, destination::getName);
+                if (destinationName != null) {
+                    series.put(destination, Labels.of(
+                            LABEL_BROKER, brokerName,
+                            LABEL_DESTINATION_TYPE, type.label,
+                            LABEL_DESTINATION, destinationName));
+                }
             }
         }
     }
 
-    private void collectDestinationMetrics(final MBeanServer mBeanServer, final MetricSnapshots.Builder snapshots,
-            final String type, final Set<ObjectName> destinations) {
-        if (destinations.isEmpty()) {
+    /** Brokers registered in this JVM that publish JMX MBeans. */
+    static List<JmxBroker> registeredBrokers() {
+        final BrokerRegistry registry = BrokerRegistry.getInstance();
+        final List<BrokerService> services;
+        synchronized (registry.getRegistryMutext()) {
+            services = new ArrayList<>(registry.getBrokers().values());
+        }
+        final List<JmxBroker> result = new ArrayList<>();
+        for (final BrokerService service : services) {
+            if (!service.isUseJmx()) {
+                continue;
+            }
+            try {
+                result.add(new JmxBroker(service.getBrokerObjectName(), service.getManagementContext().getMBeanServer()));
+            } catch (final Exception exception) {
+                LOG.debug("Skipping broker {}: MBean name unavailable", service.getBrokerName(), exception);
+            }
+        }
+        return result;
+    }
+
+    private static <T> void addFamilies(final MetricSnapshots.Builder snapshots, final String prefix,
+            final List<MetricDefinition<T>> metrics, final Map<T, Labels> objects) {
+        if (objects.isEmpty()) {
             return;
         }
-        final String typeLower = type.toLowerCase();
-
-        final Map<ObjectName, Labels> labelled = new LinkedHashMap<>();
-        for (final ObjectName destination : destinations) {
-            final String brokerName = destination.getKeyProperty("brokerName");
-            final String destinationName = destination.getKeyProperty("destinationName");
-            labelled.put(destination, Labels.of(
-                    "broker", brokerName == null ? "unknown" : brokerName,
-                    "destination", destinationName == null ? "unknown" : destinationName));
-        }
-
-        for (final MetricDefinition metric : DESTINATION_METRICS) {
-            final String metricName = "activemq_" + typeLower + "_" + metric.name;
-            final MetricSnapshot snapshot = buildSnapshot(mBeanServer, metricName, metric,
-                    String.format(metric.help, typeLower), labelled);
-            if (snapshot != null) {
-                snapshots.metricSnapshot(snapshot);
-            }
+        for (final MetricDefinition<T> metric : metrics) {
+            snapshots.metricSnapshot(buildSnapshot(prefix + metric.name, metric, objects));
         }
     }
 
     // Builds one metric family (a gauge or counter) with a data point per object.
-    private MetricSnapshot buildSnapshot(final MBeanServer mBeanServer, final String metricName,
-            final MetricDefinition metric, final String help, final Map<ObjectName, Labels> objects) {
+    private static <T> MetricSnapshot buildSnapshot(final String metricName, final MetricDefinition<T> metric,
+            final Map<T, Labels> objects) {
         if (metric.type == MetricType.COUNTER) {
-            final CounterSnapshot.Builder builder = CounterSnapshot.builder()
-                    .name(metricName)
-                    .help(help);
-            for (final Map.Entry<ObjectName, Labels> entry : objects.entrySet()) {
+            final CounterSnapshot.Builder builder = CounterSnapshot.builder().name(metricName).help(metric.help);
+            for (final Map.Entry<T, Labels> entry : objects.entrySet()) {
                 builder.dataPoint(CounterDataPointSnapshot.builder()
                         .labels(entry.getValue())
-                        .value(getNumber(mBeanServer, entry.getKey(), metric.attribute))
+                        .value(read(metric, entry.getKey(), entry.getValue()))
                         .build());
             }
             return builder.build();
         }
 
-        final GaugeSnapshot.Builder builder = GaugeSnapshot.builder()
-                .name(metricName)
-                .help(help);
-        for (final Map.Entry<ObjectName, Labels> entry : objects.entrySet()) {
+        final GaugeSnapshot.Builder builder = GaugeSnapshot.builder().name(metricName).help(metric.help);
+        for (final Map.Entry<T, Labels> entry : objects.entrySet()) {
             builder.dataPoint(GaugeDataPointSnapshot.builder()
                     .labels(entry.getValue())
-                    .value(getNumber(mBeanServer, entry.getKey(), metric.attribute))
+                    .value(read(metric, entry.getKey(), entry.getValue()))
                     .build());
         }
         return builder.build();
     }
 
-    private String resolveStringAttribute(final MBeanServer mBeanServer, final ObjectName name, final String attribute) {
-        // Partial results are better than no results if something goes wrong
+    // Reads a broker or destination name used as a label. null means the object is skipped.
+    private static String readName(final ObjectName name, final Supplier<String> getter) {
         try {
-            final Object value = mBeanServer.getAttribute(name, attribute);
-            if (value instanceof String) {
-                return (String) value;
-            }
-        } catch (final Exception exception) {
-            LOG.debug("Skipping object {}: identity attribute {} unavailable", name, attribute, exception);
+            return getter.get();
+        } catch (final RuntimeException exception) {
+            // The proxy wraps JMX failures (missing attribute, wrong type, unregistered MBean) in runtime exceptions.
+            LOG.debug("Skipping object {}: name unavailable", name, exception);
+            return null;
         }
-        return null;
     }
 
-    private double getNumber(final MBeanServer mBeanServer, final ObjectName name, final String attribute) {
+    private static <T> double read(final MetricDefinition<T> metric, final T mbean, final Labels labels) {
         try {
-            final Object value = mBeanServer.getAttribute(name, attribute);
-            if (value instanceof Number) {
-                return ((Number) value).doubleValue();
-            }
-        } catch (final Exception exception) {
+            return metric.value.applyAsDouble(mbean);
+        } catch (final RuntimeException exception) {
             // Some attributes are not available on every ActiveMQ deployment (eg: bridge metrics).
-            LOG.debug("Reporting 0 for {} on {}: attribute unavailable", attribute, name, exception);
+            LOG.debug("Reporting 0 for {} on {}: attribute unavailable", metric.name, labels, exception);
+            return 0;
         }
-        return 0;
     }
 
-    private static final class MetricDefinition {
+    private static <T> MetricDefinition<T> gauge(final String name, final String help, final ToDoubleFunction<T> value) {
+        return new MetricDefinition<>(name, help, value, MetricType.GAUGE);
+    }
+
+    private static <T> MetricDefinition<T> counter(final String name, final String help, final ToDoubleFunction<T> value) {
+        return new MetricDefinition<>(name, help, value, MetricType.COUNTER);
+    }
+
+    private static final class MetricDefinition<T> {
         private final String name;
         private final String help;
-        private final String attribute;
+        private final ToDoubleFunction<T> value;
         private final MetricType type;
 
-        private MetricDefinition(final String name, final String help, final String attribute, final MetricType type) {
+        private MetricDefinition(final String name, final String help, final ToDoubleFunction<T> value, final MetricType type) {
             this.name = name;
             this.help = help;
-            this.attribute = attribute;
+            this.value = value;
             this.type = type;
         }
     }
