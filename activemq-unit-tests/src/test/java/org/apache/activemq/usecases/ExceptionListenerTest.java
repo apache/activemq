@@ -24,6 +24,7 @@ import jakarta.jms.ExceptionListener;
 import jakarta.jms.JMSException;
 import jakarta.jms.JMSSecurityException;
 import jakarta.jms.Session;
+import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.ConnectionFailedException;
 import org.apache.activemq.broker.BrokerPlugin;
@@ -106,6 +107,15 @@ public class ExceptionListenerTest implements ExceptionListener {
         assertNotNull(expected.getCause());
 
         assertTrue("expected exception: " + expected, expected.getCause().getCause() instanceof SecurityException);
+
+        // ActiveMQConnection.onException delivers the security failure to the
+        // ExceptionListener and marks the transport failed on two independent
+        // async tasks. The listener firing above does not guarantee the transport
+        // is failed yet, so wait for the failed state; otherwise createSession can
+        // race a mid-dispose transport and see JMSException("Stopped.") instead of
+        // the expected ConnectionFailedException.
+        final ActiveMQConnection amqConnection = (ActiveMQConnection) connection;
+        assertTrue(Wait.waitFor((Wait.Condition) amqConnection::isTransportFailed, 5000, 10));
 
         try {
             connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
