@@ -18,6 +18,7 @@ package org.apache.activemq.filter;
 
 import org.apache.activemq.command.Message;
 import org.apache.activemq.util.ByteArrayInputStream;
+import org.apache.commons.xml.secure.SecureXPathFactory;
 import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
 
@@ -32,7 +33,7 @@ import java.io.StringReader;
 
 public class JAXPXPathEvaluator implements XPathExpression.XPathEvaluator {
 
-    private static final XPathFactory FACTORY = XPathFactory.newInstance();
+    private static final XPathFactory FACTORY = SecureXPathFactory.newInstance();
     private final String xpathExpression;
     private final DocumentBuilder builder;
     private final XPath xpath = FACTORY.newXPath();
