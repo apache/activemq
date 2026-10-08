@@ -52,6 +52,7 @@ public class PolicyEntry extends DestinationMapEntry {
     private DispatchPolicy dispatchPolicy;
     private SubscriptionRecoveryPolicy subscriptionRecoveryPolicy;
     private boolean sendAdvisoryIfNoConsumers;
+    private boolean deliveryDelayEnabled = true;
     private boolean sendDuplicateFromStoreToDLQ = false;
     private DeadLetterStrategy deadLetterStrategy = Destination.DEFAULT_DEAD_LETTER_STRATEGY;
     private PendingMessageLimitStrategy pendingMessageLimitStrategy;
@@ -472,6 +473,27 @@ public class PolicyEntry extends DestinationMapEntry {
 
     public void setSubscriptionRecoveryPolicy(SubscriptionRecoveryPolicy subscriptionRecoveryPolicy) {
         this.subscriptionRecoveryPolicy = subscriptionRecoveryPolicy;
+    }
+
+    public boolean isDeliveryDelayEnabled() {
+        return deliveryDelayEnabled;
+    }
+
+    /**
+     * Whether a JMS delivery delay (JMSDeliveryTime) is honoured for this destination.
+     * Enabled by default.
+     * <p>
+     * Disabling it makes the broker deliver such messages immediately, leaving
+     * JMSDeliveryTime on the message so a downstream broker can serve the remaining
+     * delay -- useful when this broker is only a hop and the delay should be held at
+     * the target instead. Only the JMS delivery delay is affected; messages using the
+     * explicit AMQ_SCHEDULED_* properties are still scheduled as before.
+     * <p>
+     * Note the broker-wide equivalent is {@code schedulerSupport}: with the scheduler
+     * disabled there is no scheduler in the chain at all, so nothing is ever delayed.
+     */
+    public void setDeliveryDelayEnabled(boolean deliveryDelayEnabled) {
+        this.deliveryDelayEnabled = deliveryDelayEnabled;
     }
 
     public boolean isSendAdvisoryIfNoConsumers() {

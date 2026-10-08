@@ -61,8 +61,10 @@ public class ActiveMQContext implements JMSContext {
 
     private static final boolean DEFAULT_AUTO_START = true;
 
-    private final ActiveMQConnection activemqConnection;
-    private final AtomicLong connectionCounter;
+    // protected so a subclass (e.g. SharedJMSContext) can construct a
+    // same-typed child sharing this connection from newChildContext(int).
+    protected final ActiveMQConnection activemqConnection;
+    protected final AtomicLong connectionCounter;
     protected ActiveMQSession activemqSession = null;
 
     // Configuration
@@ -86,7 +88,7 @@ public class ActiveMQContext implements JMSContext {
         this.connectionCounter = new AtomicLong(1l);
     }
 
-    private ActiveMQContext(final ActiveMQConnection activemqConnection, final int sessionMode, final AtomicLong connectionCounter) {
+    protected ActiveMQContext(final ActiveMQConnection activemqConnection, final int sessionMode, final AtomicLong connectionCounter) {
         this.activemqConnection = activemqConnection;
         this.sessionMode = sessionMode;
         this.connectionCounter = connectionCounter;
@@ -99,6 +101,15 @@ public class ActiveMQContext implements JMSContext {
         }
 
         connectionCounter.incrementAndGet();
+        return newChildContext(sessionMode);
+    }
+
+    /**
+     * Creates the context returned by {@link #createContext(int)}, sharing this
+     * context's connection and reference count. A subclass overrides this to
+     * keep its own type for child contexts.
+     */
+    protected JMSContext newChildContext(int sessionMode) {
         return new ActiveMQContext(activemqConnection, sessionMode, connectionCounter);
     }
 
