@@ -1,0 +1,54 @@
+# HELP activemq_broker_connections_total Total connections since last start
+# TYPE activemq_broker_connections_total counter
+activemq_broker_connections_total{broker="TestBroker"} 1000.0
+# HELP activemq_broker_consumers Current number of consumers
+# TYPE activemq_broker_consumers gauge
+activemq_broker_consumers{broker="TestBroker"} 10.0
+# HELP activemq_broker_current_connections Current number of connections
+# TYPE activemq_broker_current_connections gauge
+activemq_broker_current_connections{broker="TestBroker"} 42.0
+# HELP activemq_broker_job_scheduler_store_limit_bytes Job scheduler store limit in bytes
+# TYPE activemq_broker_job_scheduler_store_limit_bytes gauge
+activemq_broker_job_scheduler_store_limit_bytes{broker="TestBroker"} 5.36870912E9
+# HELP activemq_broker_job_scheduler_store_percent_usage Percent (0-100) of job scheduler store limit used
+# TYPE activemq_broker_job_scheduler_store_percent_usage gauge
+activemq_broker_job_scheduler_store_percent_usage{broker="TestBroker"} 20.0
+# HELP activemq_broker_memory_limit_bytes Memory limit in bytes
+# TYPE activemq_broker_memory_limit_bytes gauge
+activemq_broker_memory_limit_bytes{broker="TestBroker"} 1.073741824E9
+# HELP activemq_broker_memory_percent_usage Percent (0-100) of memory limit used
+# TYPE activemq_broker_memory_percent_usage gauge
+activemq_broker_memory_percent_usage{broker="TestBroker"} 25.0
+# HELP activemq_broker_messages Current number of messages across all destinations
+# TYPE activemq_broker_messages gauge
+activemq_broker_messages{broker="TestBroker"} 1000.0
+# HELP activemq_broker_messages_dequeued_total Total messages dequeued since last start
+# TYPE activemq_broker_messages_dequeued_total counter
+activemq_broker_messages_dequeued_total{broker="TestBroker"} 49000.0
+# HELP activemq_broker_messages_enqueued_total Total messages enqueued since last start
+# TYPE activemq_broker_messages_enqueued_total counter
+activemq_broker_messages_enqueued_total{broker="TestBroker"} 50000.0
+# HELP activemq_broker_producers Current number of producers
+# TYPE activemq_broker_producers gauge
+activemq_broker_producers{broker="TestBroker"} 5.0
+# HELP activemq_broker_queues Number of queues on the broker
+# TYPE activemq_broker_queues gauge
+activemq_broker_queues{broker="TestBroker"} 7.0
+# HELP activemq_broker_store_limit_bytes Store limit in bytes
+# TYPE activemq_broker_store_limit_bytes gauge
+activemq_broker_store_limit_bytes{broker="TestBroker"} 1.073741824E11
+# HELP activemq_broker_store_percent_usage Percent (0-100) of store limit used
+# TYPE activemq_broker_store_percent_usage gauge
+activemq_broker_store_percent_usage{broker="TestBroker"} 10.0
+# HELP activemq_broker_temp_limit_bytes Temp limit in bytes
+# TYPE activemq_broker_temp_limit_bytes gauge
+activemq_broker_temp_limit_bytes{broker="TestBroker"} 5.36870912E10
+# HELP activemq_broker_temp_percent_usage Percent (0-100) of temp limit used
+# TYPE activemq_broker_temp_percent_usage gauge
+activemq_broker_temp_percent_usage{broker="TestBroker"} 5.0
+# HELP activemq_broker_topics Number of topics on the broker
+# TYPE activemq_broker_topics gauge
+activemq_broker_topics{broker="TestBroker"} 3.0
+# HELP activemq_broker_uptime_milliseconds Broker uptime in milliseconds
+# TYPE activemq_broker_uptime_milliseconds gauge
+activemq_broker_uptime_milliseconds{broker="TestBroker"} 8.64E7

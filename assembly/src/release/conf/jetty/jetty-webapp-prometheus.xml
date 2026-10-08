@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one or more
+    contributor license agreements.  See the NOTICE file distributed with
+    this work for additional information regarding copyright ownership.
+    The ASF licenses this file to You under the Apache License, Version 2.0
+    (the "License"); you may not use this file except in compliance with
+    the License.  You may obtain a copy of the License at
+    
+    http://www.apache.org/licenses/LICENSE-2.0
+    
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+-->
+<!DOCTYPE Configure PUBLIC "-//Jetty//Configure//EN" "https://www.eclipse.org/jetty/configure_10_0.dtd">
+
+<!-- Prometheus metrics web application (activemq-prometheus).
+    Mounts the metrics endpoint at /metrics on the web console listener.
+    Add this file to jettyExtraXmlFiles in conf/jetty-spring.properties and restart the broker.
+    Access follows the catch-all /* rule in jetty-security.xml (users and admins).
+    Add a /metrics/* rule there to restrict it further. -->
+<Configure class="org.eclipse.jetty.server.handler.ContextHandlerCollection" id="Contexts">
+
+  <Call name="addHandler">
+    <Arg>
+      <New class="org.eclipse.jetty.ee11.webapp.WebAppContext">
+        <Set name="contextPath">/metrics</Set>
+        <Set name="baseResourceAsString"><Property name="activemq.home" default="."/>/webapps/metrics</Set>
+        <Set name="logUrlOnStart">true</Set>
+        <!-- Destination types reported by /metrics?per_object=true.
+            Comma separated list of: queue, topic, temp-queue, temp-topic.
+            Default: queue,topic
+        <Call name="setInitParameter">
+          <Arg>destinationTypes</Arg>
+          <Arg>queue,topic,temp-queue,temp-topic</Arg>
+        </Call>
+        -->
+      </New>
+    </Arg>
+  </Call>
+
+</Configure>
