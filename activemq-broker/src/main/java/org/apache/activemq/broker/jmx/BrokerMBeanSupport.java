@@ -146,6 +146,10 @@ public class BrokerMBeanSupport {
         return objectName;
     }
 
+    public static ObjectName createTransportConnectorPolicyName(ObjectName connectorObjectName, String policyName) throws MalformedObjectNameException {
+        return new ObjectName(connectorObjectName.toString() + ",transportConnectorPolicy=" + JMXSupport.encodeObjectNamePart(policyName));
+    }
+
     public static ObjectName createConnectorName(ObjectName brokerObjectName, String type, String name) throws MalformedObjectNameException {
         return createConnectorName(brokerObjectName.toString(), type, name);
     }

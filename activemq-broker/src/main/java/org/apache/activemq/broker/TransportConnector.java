@@ -41,8 +41,10 @@ import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportAcceptListener;
 import org.apache.activemq.transport.TransportFactorySupport;
 import org.apache.activemq.transport.TransportServer;
+import org.apache.activemq.transport.TransportConnectorPolicy;
 import org.apache.activemq.transport.discovery.DiscoveryAgent;
 import org.apache.activemq.transport.discovery.DiscoveryAgentFactory;
+import org.apache.activemq.transport.tcp.TcpTransportServer;
 import org.apache.activemq.util.ExceptionUtils;
 import org.apache.activemq.util.ServiceStopper;
 import org.apache.activemq.util.ServiceSupport;
@@ -80,6 +82,7 @@ public class TransportConnector implements Connector, BrokerServiceAware {
     private int maximumConsumersAllowedPerConnection  = Integer.MAX_VALUE;
     private PublishedAddressPolicy publishedAddressPolicy = new PublishedAddressPolicy();
     private boolean allowLinkStealing = false;
+    private TransportConnectorPolicy transportConnectorPolicy;
     private boolean warnOnRemoteClose = false;
     private boolean displayStackTrace = false;
     private boolean autoStart = true;
@@ -134,6 +137,7 @@ public class TransportConnector implements Connector, BrokerServiceAware {
         rc.setMaximumProducersAllowedPerConnection(getMaximumProducersAllowedPerConnection());
         rc.setPublishedAddressPolicy(getPublishedAddressPolicy());
         rc.setAllowLinkStealing(allowLinkStealing);
+        rc.setTransportConnectorPolicy(getTransportConnectorPolicy());
         rc.setWarnOnRemoteClose(isWarnOnRemoteClose());
         rc.setAutoStart(isAutoStart());
         return rc;
@@ -268,6 +272,7 @@ public class TransportConnector implements Connector, BrokerServiceAware {
                 }
             }
         });
+        installTransportConnectorPolicy();
         getServer().setBrokerInfo(brokerInfo);
         getServer().start();
 
@@ -618,6 +623,38 @@ public class TransportConnector implements Connector, BrokerServiceAware {
 
     public void setAllowLinkStealing(boolean allowLinkStealing) {
         this.allowLinkStealing = allowLinkStealing;
+    }
+
+    /**
+     * Hands the configured policy to the transport server. Only socket based
+     * servers (tcp, nio, ssl, auto and the protocol variants built on them)
+     * can apply one.
+     */
+    private void installTransportConnectorPolicy() throws Exception {
+        if (transportConnectorPolicy == null) {
+            return;
+        }
+        var transportServer = getServer();
+        if (transportServer instanceof TcpTransportServer) {
+            ((TcpTransportServer) transportServer).setTransportConnectorPolicy(transportConnectorPolicy);
+        } else {
+            LOG.warn("transportConnectorPolicy configured on connector {} but its transport does not support socket policies", getName());
+        }
+    }
+
+    public TransportConnectorPolicy getTransportConnectorPolicy() {
+        return transportConnectorPolicy;
+    }
+
+    /**
+     * A policy applied to each accepted socket before any protocol negotiation,
+     * for example {@link RemoteAddressConnectorPolicy}. Only socket based transports
+     * apply it. Configure one policy instance per connector; a policy that
+     * implements {@link org.apache.activemq.broker.jmx.TransportConnectorPolicyMBean}
+     * is registered in JMX under the connector's object name.
+     */
+    public void setTransportConnectorPolicy(TransportConnectorPolicy transportConnectorPolicy) {
+        this.transportConnectorPolicy = transportConnectorPolicy;
     }
 
     @Override

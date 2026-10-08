@@ -68,6 +68,7 @@ import org.apache.activemq.broker.jmx.ManagementContext;
 import org.apache.activemq.broker.jmx.NetworkConnectorView;
 import org.apache.activemq.broker.jmx.NetworkConnectorViewMBean;
 import org.apache.activemq.broker.jmx.ProxyConnectorView;
+import org.apache.activemq.broker.jmx.TransportConnectorPolicyMBean;
 import org.apache.activemq.broker.region.CompositeDestinationInterceptor;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.DestinationFactory;
@@ -2277,16 +2278,50 @@ public class BrokerService implements Service {
             connector = connector.asManagedConnector(getManagementContext(), objectName);
             ConnectorViewMBean view = new ConnectorView(connector);
             AnnotatedMBean.registerMBean(getManagementContext(), view, objectName);
+            if (connector.getTransportConnectorPolicy() instanceof TransportConnectorPolicyMBean) {
+                var policy = (TransportConnectorPolicyMBean) connector.getTransportConnectorPolicy();
+                registerTransportConnectorPolicyMBean(policy,
+                        BrokerMBeanSupport.createTransportConnectorPolicyName(objectName, policy.getName()));
+            }
             return connector;
         } catch (Throwable e) {
             throw IOExceptionSupport.create("Transport Connector could not be registered in JMX: " + e, e);
         }
     }
 
+    /**
+     * Registers the policy under the most derived TransportConnectorPolicyMBean
+     * interface it implements, so a policy such as RemoteAddressConnectorPolicy
+     * surfaces its full management view and not just the common attributes. The
+     * policy class and its MBean interface live in different packages, so the
+     * standard MBean naming convention cannot resolve the interface on its own.
+     */
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    private void registerTransportConnectorPolicyMBean(TransportConnectorPolicyMBean policy, ObjectName policyObjectName) throws Exception {
+        Class mbeanInterface = TransportConnectorPolicyMBean.class;
+        for (Class<?> type = policy.getClass(); type != null; type = type.getSuperclass()) {
+            for (Class<?> iface : type.getInterfaces()) {
+                if (TransportConnectorPolicyMBean.class.isAssignableFrom(iface) && mbeanInterface.isAssignableFrom(iface)) {
+                    mbeanInterface = iface;
+                }
+            }
+        }
+        getManagementContext().registerMBean(new AnnotatedMBean(policy, mbeanInterface, policyObjectName), policyObjectName);
+    }
+
     protected void unregisterConnectorMBean(TransportConnector connector) throws IOException {
         if (isUseJmx()) {
             try {
                 ObjectName objectName = createConnectorObjectName(connector);
+                if (connector.getTransportConnectorPolicy() instanceof TransportConnectorPolicyMBean) {
+                    var policy = (TransportConnectorPolicyMBean) connector.getTransportConnectorPolicy();
+                    try {
+                        getManagementContext().unregisterMBean(
+                                BrokerMBeanSupport.createTransportConnectorPolicyName(objectName, policy.getName()));
+                    } catch (Throwable e) {
+                        LOG.debug("Transport server policy MBean for connector {} was not unregistered", connector.getName(), e);
+                    }
+                }
                 getManagementContext().unregisterMBean(objectName);
             } catch (Throwable e) {
                 throw IOExceptionSupport.create(
