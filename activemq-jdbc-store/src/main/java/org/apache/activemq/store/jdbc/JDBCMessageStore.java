@@ -272,11 +272,20 @@ public class JDBCMessageStore extends AbstractMessageStore {
 
     @Override
     public void recover(final MessageRecoveryListener listener) throws Exception {
+        recover(listener, 0);
+    }
+
+    /**
+     * The limit is applied to the query: the listener alone cannot bound the memory used
+     * with drivers that read the whole result set up front.
+     */
+    @Override
+    public void recover(final MessageRecoveryListener listener, int maxReturned) throws Exception {
 
         // Get all the Message ids out of the database.
         TransactionContext c = persistenceAdapter.getTransactionContext();
         try {
-            adapter.doRecover(c, destination, new JDBCMessageRecoveryListener() {
+            adapter.doRecover(c, destination, maxReturned, new JDBCMessageRecoveryListener() {
                 @Override
                 public boolean recoverMessage(long sequenceId, byte[] data) throws Exception {
                     if (listener.hasSpace()) {
