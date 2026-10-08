@@ -21,7 +21,10 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.Hashtable;
 import java.util.Vector;
+import java.util.concurrent.atomic.AtomicReference;
 
+import jakarta.jms.JMSContext;
+import jakarta.jms.Queue;
 import jakarta.jms.QueueConnection;
 import jakarta.jms.QueueConnectionFactory;
 import jakarta.jms.QueueSender;
@@ -396,5 +399,162 @@ public class XAConnectionPoolTest extends TestSupport {
 
         connection.close();
         pcf.stop();
+    }
+
+    private TransactionManager trackingTransactionManager(final Vector<Synchronization> syncs, final AtomicReference<Xid> currentXid,
+                                                          final AtomicReference<XAResource> enlisted) {
+        return new TransactionManager() {
+            @Override
+            public void begin() throws NotSupportedException, SystemException {
+            }
+
+            @Override
+            public void commit() throws HeuristicMixedException, HeuristicRollbackException, IllegalStateException, RollbackException, SecurityException, SystemException {
+            }
+
+            @Override
+            public int getStatus() throws SystemException {
+                return Status.STATUS_ACTIVE;
+            }
+
+            @Override
+            public Transaction getTransaction() throws SystemException {
+                return new Transaction() {
+                    @Override
+                    public void commit() throws HeuristicMixedException, HeuristicRollbackException, RollbackException, SecurityException, SystemException {
+                    }
+
+                    @Override
+                    public boolean delistResource(XAResource xaRes, int flag) throws IllegalStateException, SystemException {
+                        return false;
+                    }
+
+                    @Override
+                    public boolean enlistResource(XAResource xaRes) throws IllegalStateException, RollbackException, SystemException {
+                        try {
+                            xaRes.start(currentXid.get(), 0);
+                            enlisted.set(xaRes);
+                        } catch (XAException e) {
+                            SystemException se = new SystemException("XAException errorCode=" + e.errorCode);
+                            se.initCause(e);
+                            throw se;
+                        }
+                        return true;
+                    }
+
+                    @Override
+                    public int getStatus() throws SystemException {
+                        return 0;
+                    }
+
+                    @Override
+                    public void registerSynchronization(Synchronization synch) throws IllegalStateException, RollbackException, SystemException {
+                        syncs.add(synch);
+                    }
+
+                    @Override
+                    public void rollback() throws IllegalStateException, SystemException {
+                    }
+
+                    @Override
+                    public void setRollbackOnly() throws IllegalStateException, SystemException {
+                    }
+                };
+            }
+
+            @Override
+            public void resume(Transaction tobj) throws IllegalStateException, InvalidTransactionException, SystemException {
+            }
+
+            @Override
+            public void rollback() throws IllegalStateException, SecurityException, SystemException {
+            }
+
+            @Override
+            public void setRollbackOnly() throws IllegalStateException, SystemException {
+            }
+
+            @Override
+            public void setTransactionTimeout(int seconds) throws SystemException {
+            }
+
+            @Override
+            public Transaction suspend() throws SystemException {
+                return null;
+            }
+        };
+    }
+
+    public void testCreateContextSpansTransactions() throws Exception {
+        final Vector<Synchronization> syncs = new Vector<Synchronization>();
+        final AtomicReference<Xid> currentXid = new AtomicReference<Xid>(createXid());
+        final AtomicReference<XAResource> enlisted = new AtomicReference<XAResource>();
+        XaPooledConnectionFactory pcf = new XaPooledConnectionFactory();
+        pcf.setConnectionFactory(new ActiveMQXAConnectionFactory("vm://xaConnectionPoolTest?broker.persistent=false"));
+        pcf.setTransactionManager(trackingTransactionManager(syncs, currentXid, enlisted));
+
+        JMSContext context = pcf.createContext();
+        try {
+            Queue queue = context.createQueue("test.xa.pool.context");
+
+            // first transaction
+            Xid firstXid = currentXid.get();
+            context.createProducer().send(queue, "one");
+            assertEquals("first transaction should have enlisted one session", 1, syncs.size());
+            enlisted.get().end(firstXid, XAResource.TMSUCCESS);
+            enlisted.get().rollback(firstXid);
+            syncs.get(0).beforeCompletion();
+            syncs.get(0).afterCompletion(1);
+
+            // second transaction - the context must renew its pooled session and enlist again
+            Xid secondXid = createXid();
+            currentXid.set(secondXid);
+            context.createProducer().send(queue, "two");
+            assertEquals("second transaction should have enlisted a renewed session", 2, syncs.size());
+            enlisted.get().end(secondXid, XAResource.TMSUCCESS);
+            enlisted.get().rollback(secondXid);
+            syncs.get(1).beforeCompletion();
+            syncs.get(1).afterCompletion(1);
+        } finally {
+            context.close();
+            pcf.stop();
+        }
+    }
+
+    public void testJcaCreateContextSpansTransactions() throws Exception {
+        final Vector<Synchronization> syncs = new Vector<Synchronization>();
+        final AtomicReference<Xid> currentXid = new AtomicReference<Xid>(createXid());
+        final AtomicReference<XAResource> enlisted = new AtomicReference<XAResource>();
+        JcaPooledConnectionFactory pcf = new JcaPooledConnectionFactory();
+        pcf.setName("jca-pool-context-test");
+        pcf.setConnectionFactory(new ActiveMQXAConnectionFactory("vm://xaConnectionPoolTest?broker.persistent=false"));
+        pcf.setTransactionManager(trackingTransactionManager(syncs, currentXid, enlisted));
+
+        JMSContext context = pcf.createContext();
+        try {
+            Queue queue = context.createQueue("test.jca.pool.context");
+
+            // first transaction
+            Xid firstXid = currentXid.get();
+            context.createProducer().send(queue, "one");
+            assertEquals("first transaction should have enlisted one session", 1, syncs.size());
+            enlisted.get().end(firstXid, XAResource.TMSUCCESS);
+            enlisted.get().rollback(firstXid);
+            syncs.get(0).beforeCompletion();
+            syncs.get(0).afterCompletion(1);
+
+            // second transaction - the context must renew its pooled session and enlist again
+            Xid secondXid = createXid();
+            currentXid.set(secondXid);
+            context.createProducer().send(queue, "two");
+            assertEquals("second transaction should have enlisted a renewed session", 2, syncs.size());
+            enlisted.get().end(secondXid, XAResource.TMSUCCESS);
+            enlisted.get().rollback(secondXid);
+            syncs.get(1).beforeCompletion();
+            syncs.get(1).afterCompletion(1);
+        } finally {
+            context.close();
+            pcf.stop();
+        }
     }
 }
