@@ -202,6 +202,7 @@
         <include>${pom.groupId}:activemq-jms-pool</include>
         <include>${pom.groupId}:activemq-pool</include>
         <include>${pom.groupId}:activemq-shiro</include>
+        <include>${pom.groupId}:activemq-oauth2</include>
         <include>commons-beanutils:commons-beanutils</include>
         <include>commons-collections:commons-collections</include>
         <include>org.apache.commons:commons-dbcp2</include>
@@ -235,6 +236,9 @@
         <!-- Apache Shiro dependencies: -->
         <include>org.apache.shiro:shiro-core</include>
         <include>org.apache.shiro:shiro-spring</include>
+
+        <!-- OAuth2 dependencies: -->
+        <include>com.nimbusds:nimbus-jose-jwt</include>
       </includes>
       <fileMode>0644</fileMode>
       <directoryMode>0755</directoryMode>
