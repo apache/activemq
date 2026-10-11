@@ -60,7 +60,7 @@ import org.apache.activemq.command.ConnectionInfo;
 public class JaasDualAuthenticationBroker extends BrokerFilter implements AuthenticationBroker {
     private final JaasCertificateAuthenticationBroker sslBroker;
     private final JaasAuthenticationBroker nonSslBroker;
-
+    private final boolean certificateRequired;
 
     /*** Simple constructor. Leaves everything to superclass.
      *
@@ -70,11 +70,12 @@ public class JaasDualAuthenticationBroker extends BrokerFilter implements Authen
      * @param jaasSslConfiguration The JAAS domain configuration name for
      *                SSL connections (refer to JAAS documentation).
      */
-    public JaasDualAuthenticationBroker(Broker next, String jaasConfiguration, String jaasSslConfiguration) {
+    public JaasDualAuthenticationBroker(Broker next, String jaasConfiguration, String jaasSslConfiguration, boolean certificateRequired) {
         super(next);
 
         this.nonSslBroker = new JaasAuthenticationBroker(new EmptyBroker(), jaasConfiguration);
         this.sslBroker = new JaasCertificateAuthenticationBroker(new EmptyBroker(), jaasSslConfiguration);
+        this.certificateRequired = certificateRequired;
     }
 
     /**
@@ -112,16 +113,26 @@ public class JaasDualAuthenticationBroker extends BrokerFilter implements Authen
 
     protected boolean isSSL(ConnectionContext context, ConnectionInfo info) throws Exception {
         boolean sslCapable = false;
+        boolean sslCertificatePresent = false;
+
         Connector connector = context.getConnector();
         if (connector instanceof TransportConnector) {
             TransportConnector transportConnector = (TransportConnector) connector;
             sslCapable = transportConnector.getServer().isSslServer();
         }
+
         // AMQ-5943, also check if transport context carries X509 cert
-        if (!sslCapable && info.getTransportContext() instanceof X509Certificate[]) {
+        // AMQ-9750, optionally require a sslCertificate be present in order to support both one-way and two-way
+        if (info.getTransportContext() instanceof X509Certificate[]) {
             sslCapable = true;
+            sslCertificatePresent = true;
         }
-        return sslCapable;
+
+        if(certificateRequired) {
+            return sslCertificatePresent;
+        } else {
+            return sslCapable;
+        }
     }
 
     @Override
