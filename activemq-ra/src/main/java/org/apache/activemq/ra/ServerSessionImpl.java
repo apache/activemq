@@ -154,7 +154,7 @@ public class ServerSessionImpl implements ServerSession, InboundContext, Work, D
                 }
 
             });
-        } catch (final WorkException e) {
+        } catch (Exception e) {
             log.warn("Failed to schedule work for session {}, marking not running", this, e);
             running.set(false); // make sure we don't leave the ServerSession in a running state (misleading)
             throw (JMSException)new JMSException("Start failed: " + e).initCause(e);
