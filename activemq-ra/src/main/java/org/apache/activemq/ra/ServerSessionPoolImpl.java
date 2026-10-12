@@ -207,6 +207,10 @@ public class ServerSessionPoolImpl implements ServerSessionPool {
     public void returnToPool(ServerSessionImpl ss) {
         sessionLock.lock();
         try {
+            if (ss.isRunning()) {
+                LOG.debug("Session {} is still running, not returning to pool", ss);
+                return;
+            }
             if (!activeSessions.remove(ss)) {
                 LOG.debug("Session {} already returned to pool", ss);
                 return;
