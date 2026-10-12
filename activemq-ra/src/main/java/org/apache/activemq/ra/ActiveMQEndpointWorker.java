@@ -304,7 +304,7 @@ public class ActiveMQEndpointWorker {
 
             try {
                 workManager.scheduleWork(connectWork, WorkManager.INDEFINITE, null, null);
-            } catch (WorkException e) {
+            } catch (Exception e) {
                 running = false;
                 LOG.error("Work Manager did not accept work: ", e);
             }
