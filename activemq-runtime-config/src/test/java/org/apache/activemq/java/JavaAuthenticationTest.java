@@ -21,7 +21,6 @@ import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import jakarta.jms.JMSException;
 import jakarta.jms.Session;
@@ -44,7 +43,6 @@ import org.junit.Test;
 
 public class JavaAuthenticationTest extends RuntimeConfigTestSupport {
 
-    public static final int SLEEP = 2; // seconds
     private JavaRuntimeConfigurationBroker javaConfigBroker;
     private SimpleAuthenticationPlugin authenticationPlugin;
 
@@ -109,8 +107,6 @@ public class JavaAuthenticationTest extends RuntimeConfigTestSupport {
         authenticationPlugin.setUsers(users);
         authenticationPlugin.setAnonymousAccessAllowed(true);
         javaConfigBroker.updateSimpleAuthenticationPlugin(authenticationPlugin);
-
-        TimeUnit.SECONDS.sleep(SLEEP);
 
         assertAllowed("test_user_password", "USERS.A");
         assertAllowed("another_test_user_password", "USERS.A");

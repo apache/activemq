@@ -18,6 +18,7 @@ package org.apache.activemq.transport.ws;
 
 import java.io.IOException;
 import java.security.cert.X509Certificate;
+import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -50,6 +51,7 @@ public abstract class AbstractStompSocket extends TransportSupport implements St
     protected volatile int receiveCounter;
     protected final String remoteAddress;
     protected X509Certificate[] certificates;
+    private long connectAttemptTimeout = -1;
 
     public AbstractStompSocket(String remoteAddress) {
         super();
@@ -88,7 +90,22 @@ public abstract class AbstractStompSocket extends TransportSupport implements St
     protected void doStart() throws Exception {
         socketTransportStarted.countDown();
         stompInactivityMonitor.setTransportListener(getTransportListener());
-        stompInactivityMonitor.startConnectCheckTask();
+        if (connectAttemptTimeout > 0) {
+            stompInactivityMonitor.startConnectCheckTask(connectAttemptTimeout);
+        } else {
+            stompInactivityMonitor.startConnectCheckTask();
+        }
+    }
+
+    /**
+     * Applies the connector's transport options; today only
+     * {@code transport.connectAttemptTimeout}, matching the tcp transports.
+     */
+    public void setTransportOptions(Map<String, Object> transportOptions) {
+        Object timeout = transportOptions != null ? transportOptions.get("connectAttemptTimeout") : null;
+        if (timeout != null) {
+            connectAttemptTimeout = Long.parseLong(timeout.toString());
+        }
     }
 
     //----- Abstract methods for subclasses to implement ---------------------//

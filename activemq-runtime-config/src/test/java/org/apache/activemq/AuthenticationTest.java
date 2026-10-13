@@ -40,7 +40,7 @@ public class AuthenticationTest extends RuntimeConfigTestSupport {
         // anonymous
         assertDenied(null, "USERS.A");
 
-        applyNewConfig(brokerConfig, configurationSeed + "-two-users", SLEEP);
+        applyNewConfig(brokerConfig, configurationSeed + "-two-users", WAIT_FOR_CHANGE);
 
         assertAllowed("test_user_password", "USERS.A");
         assertAllowed("another_test_user_password", "USERS.A");

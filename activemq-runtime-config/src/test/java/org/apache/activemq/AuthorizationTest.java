@@ -38,7 +38,7 @@ public class AuthorizationTest extends AbstractAuthorizationTest {
 
         assertDeniedTemp("guest");
 
-        applyNewConfig(brokerConfig, configurationSeed + "-users-guests", SLEEP);
+        applyNewConfig(brokerConfig, configurationSeed + "-users-guests", WAIT_FOR_CHANGE);
 
         assertAllowed("user", "USERS.A");
         assertAllowed("guest", "GUESTS.A");
@@ -59,7 +59,7 @@ public class AuthorizationTest extends AbstractAuthorizationTest {
         assertDenied("user", "GUESTS.A");
         assertAllowedTemp("guest");
 
-        applyNewConfig(brokerConfig, configurationSeed + "-users", SLEEP);
+        applyNewConfig(brokerConfig, configurationSeed + "-users", WAIT_FOR_CHANGE);
 
         assertAllowed("user", "USERS.A");
         assertDenied("user", "GUESTS.A");
@@ -76,7 +76,7 @@ public class AuthorizationTest extends AbstractAuthorizationTest {
         assertAllowedWrite("user", "USERS.A");
         assertDeniedWrite("guest", "USERS.A");
 
-        applyNewConfig(brokerConfig, configurationSeed + "-users-add-write-guest", SLEEP);
+        applyNewConfig(brokerConfig, configurationSeed + "-users-add-write-guest", WAIT_FOR_CHANGE);
 
         assertAllowedWrite("user", "USERS.A");
         assertAllowedWrite("guest", "USERS.A");
@@ -90,10 +90,10 @@ public class AuthorizationTest extends AbstractAuthorizationTest {
         assertTrue("broker alive", brokerService.isStarted());
 
         assertAllowed("user", "USERS.A");
-        applyNewConfig(brokerConfig, configurationSeed + "-users-dud-groupClass", SLEEP);
+        applyNewConfig(brokerConfig, configurationSeed + "-users-dud-groupClass", WAIT_FOR_CHANGE);
         assertDenied("user", "USERS.A");
 
-        applyNewConfig(brokerConfig, configurationSeed + "-users", SLEEP);
+        applyNewConfig(brokerConfig, configurationSeed + "-users", WAIT_FOR_CHANGE);
         assertAllowed("user", "USERS.A");
     }
 
@@ -124,7 +124,6 @@ public class AuthorizationTest extends AbstractAuthorizationTest {
 
         assertDenied("user", "USERS.>");
         assertDenied("guest", "GUESTS.>");
-
 
         assertAllowedTemp("guest");
     }

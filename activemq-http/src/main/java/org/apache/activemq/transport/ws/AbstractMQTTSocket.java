@@ -159,5 +159,10 @@ public abstract class AbstractMQTTSocket extends TransportSupport implements MQT
 
     public void setTransportOptions(Map<String, Object> transportOptions) {
         this.transportOptions = transportOptions;
+        // transport.connectAttemptTimeout on the connector URI, matching the tcp transports
+        Object connectAttemptTimeout = transportOptions != null ? transportOptions.get("connectAttemptTimeout") : null;
+        if (connectAttemptTimeout != null) {
+            wireFormat.setConnectAttemptTimeout(Long.parseLong(connectAttemptTimeout.toString()));
+        }
     }
 }

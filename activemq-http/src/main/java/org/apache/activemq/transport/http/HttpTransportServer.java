@@ -39,6 +39,8 @@ import org.eclipse.jetty.ee11.servlet.ServletHolder;
 
 public class HttpTransportServer extends WebTransportServerSupport {
 
+    private HttpTunnelServlet tunnelServlet;
+
     private TextWireFormat wireFormat;
     private final HttpTransportFactory transportFactory;
     private Map<String, Object> wireFormatOptions = new HashMap<>();
@@ -99,7 +101,8 @@ public class HttpTransportServer extends WebTransportServerSupport {
         server.setHandler(contextHandler);
 
         ServletHolder holder = new ServletHolder();
-        holder.setServlet(new HttpTunnelServlet());
+        tunnelServlet = new HttpTunnelServlet();
+        holder.setServlet(tunnelServlet);
         contextHandler.addServlet(holder, "/");
 
         contextHandler.setAttribute("acceptListener", getAcceptListener());
@@ -170,6 +173,11 @@ public class HttpTransportServer extends WebTransportServerSupport {
         Server temp = server;
         server = null;
         if (temp != null) {
+            // wake every waiting long poll first so graceful shutdown has nothing to wait for
+            HttpTunnelServlet servlet = tunnelServlet;
+            if (servlet != null) {
+                servlet.releaseClients();
+            }
             temp.stop();
         }
     }

@@ -28,7 +28,7 @@ import org.apache.activemq.store.kahadb.data.KahaXATransactionId;
 
 public class TransactionIdConversion {
 
-    static KahaTransactionInfo convertToLocal(TransactionId tx) {
+    public static KahaTransactionInfo convertToLocal(TransactionId tx) {
         KahaTransactionInfo rc = new KahaTransactionInfo();
         LocalTransactionId t = (LocalTransactionId) tx;
         KahaLocalTransactionId kahaTxId = new KahaLocalTransactionId();
@@ -38,7 +38,7 @@ public class TransactionIdConversion {
         return rc;
     }
 
-    static KahaTransactionInfo convert(TransactionId txid) {
+    public static KahaTransactionInfo convert(TransactionId txid) {
         if (txid == null) {
             return null;
         }
@@ -58,7 +58,7 @@ public class TransactionIdConversion {
         return rc;
     }
 
-    static TransactionId convert(KahaTransactionInfo transactionInfo) {
+    public static TransactionId convert(KahaTransactionInfo transactionInfo) {
         if (transactionInfo.hasLocalTransactionId()) {
             KahaLocalTransactionId tx = transactionInfo.getLocalTransactionId();
             LocalTransactionId rc = new LocalTransactionId();

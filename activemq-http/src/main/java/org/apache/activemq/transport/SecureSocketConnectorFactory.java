@@ -155,6 +155,7 @@ public class SecureSocketConnectorFactory extends SocketConnectorFactory {
             }
 
             server.setStopTimeout(30_000L);
+            connector.setShutdownIdleTimeout(SHUTDOWN_IDLE_TIMEOUT_MS);
             return connector;
         }
     }

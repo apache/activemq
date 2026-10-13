@@ -19,26 +19,26 @@ package org.apache.activemq;
 import jakarta.jms.JMSConsumer;
 import jakarta.jms.JMSException;
 import jakarta.jms.JMSRuntimeException;
-import jakarta.jms.Message;
 import jakarta.jms.MessageConsumer;
 import jakarta.jms.MessageListener;
+import jakarta.jms.Message;
 
 import org.apache.activemq.util.JMSExceptionSupport;
 
 public class ActiveMQConsumer implements JMSConsumer {
-    
-    private final ActiveMQContext activemqContext;
-    private final MessageConsumer activemqMessageConsumer;
 
-    ActiveMQConsumer(ActiveMQContext activemqContext, MessageConsumer activemqMessageConsumer) {
+    private final ActiveMQContext activemqContext;
+    private final ActiveMQMessageConsumer consumer;
+
+    ActiveMQConsumer(ActiveMQContext activemqContext, MessageConsumer consumer) {
         this.activemqContext = activemqContext;
-        this.activemqMessageConsumer = activemqMessageConsumer;
+        this.consumer = (ActiveMQMessageConsumer) consumer;
     }
 
     @Override
     public String getMessageSelector() {
         try {
-            return activemqMessageConsumer.getMessageSelector();
+            return consumer.getMessageSelector();
         } catch (JMSException e) {
             throw JMSExceptionSupport.convertToJMSRuntimeException(e);
         }
@@ -47,7 +47,7 @@ public class ActiveMQConsumer implements JMSConsumer {
     @Override
     public MessageListener getMessageListener() throws JMSRuntimeException {
         try {
-            return activemqMessageConsumer.getMessageListener();
+            return consumer.getMessageListener();
         } catch (JMSException e) {
             throw JMSExceptionSupport.convertToJMSRuntimeException(e);
         }
@@ -56,7 +56,7 @@ public class ActiveMQConsumer implements JMSConsumer {
     @Override
     public void setMessageListener(MessageListener listener) throws JMSRuntimeException {
         try {
-            activemqMessageConsumer.setMessageListener(listener);
+            consumer.setMessageListener(listener);
         } catch (JMSException e) {
             throw JMSExceptionSupport.convertToJMSRuntimeException(e);
         }
@@ -65,7 +65,7 @@ public class ActiveMQConsumer implements JMSConsumer {
     @Override
     public Message receive() {
         try {
-            return activemqMessageConsumer.receive();
+            return consumer.receive();
         } catch (JMSException e) {
             throw JMSExceptionSupport.convertToJMSRuntimeException(e);
         }
@@ -74,7 +74,7 @@ public class ActiveMQConsumer implements JMSConsumer {
     @Override
     public Message receive(long timeout) {
         try {
-            return activemqMessageConsumer.receive(timeout);
+            return consumer.receive(timeout);
         } catch (JMSException e) {
             throw JMSExceptionSupport.convertToJMSRuntimeException(e);
         }
@@ -83,7 +83,7 @@ public class ActiveMQConsumer implements JMSConsumer {
     @Override
     public Message receiveNoWait() {
         try {
-            return activemqMessageConsumer.receiveNoWait();
+            return consumer.receiveNoWait();
         } catch (JMSException e) {
             throw JMSExceptionSupport.convertToJMSRuntimeException(e);
         }
@@ -92,25 +92,37 @@ public class ActiveMQConsumer implements JMSConsumer {
     @Override
     public void close() {
         try {
-            activemqMessageConsumer.close();
+            consumer.close();
         } catch (JMSException e) {
             throw JMSExceptionSupport.convertToJMSRuntimeException(e);
-        }        
+        }
     }
 
     @Override
     public <T> T receiveBody(Class<T> c) {
-        throw new UnsupportedOperationException("receiveBody(Class<T>) is not supported");
+        try {
+            return consumer.receiveBody(c);
+        } catch (JMSException e) {
+            throw JMSExceptionSupport.convertToJMSRuntimeException(e);
+        }
     }
 
     @Override
     public <T> T receiveBody(Class<T> c, long timeout) {
-        throw new UnsupportedOperationException("receiveBody(Class<T>, long) is not supported");
+        try {
+            return consumer.receiveBody(c, timeout);
+        } catch (JMSException e) {
+            throw JMSExceptionSupport.convertToJMSRuntimeException(e);
+        }
     }
 
     @Override
     public <T> T receiveBodyNoWait(Class<T> c) {
-        throw new UnsupportedOperationException("receiveBodyNoWait(Class<T>) is not supported");
+        try {
+            return consumer.receiveBodyNoWait(c);
+        } catch (JMSException e) {
+            throw JMSExceptionSupport.convertToJMSRuntimeException(e);
+        }
     }
 
 }

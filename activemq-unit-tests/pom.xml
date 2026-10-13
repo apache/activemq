@@ -29,10 +29,6 @@
   <name>ActiveMQ :: Unit Tests</name>
   <description>The ActiveMQ Message Broker and Client Unit Tests</description>
 
-  <properties>
-    <surefire.version>3.5.3</surefire.version>
-  </properties>
-
   <dependencies>
 
     <!-- =============================== -->
@@ -416,7 +412,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
-        <version>${surefire.version}</version>
+        <version>${maven-surefire-plugin-version}</version>
         <configuration>
           <forkCount>1</forkCount>
           <enableProcessChecker>all</enableProcessChecker>
@@ -504,7 +500,7 @@
           <dependency>
             <groupId>org.apache.maven.surefire</groupId>
             <artifactId>surefire-junit47</artifactId>
-            <version>${surefire.version}</version>
+            <version>${maven-surefire-plugin-version}</version>
           </dependency>
           <dependency>
             <groupId>me.fabriciorby</groupId>

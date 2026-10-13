@@ -123,6 +123,7 @@ public class WSServlet extends JettyWebSocketServlet implements BrokerServiceAwa
                         }
                     case STOMP:
                         socket = new StompSocket(HttpTransportUtils.generateWsRemoteAddress(req.getHttpServletRequest()));
+                        ((StompSocket) socket).setTransportOptions(new HashMap<>(transportOptions));
                         ((StompSocket) socket).setPeerCertificates(req.getCertificates());
                         resp.setAcceptedSubProtocol(getAcceptedSubProtocol(stompProtocols, req.getSubProtocols(), "stomp"));
                         break;

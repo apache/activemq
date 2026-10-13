@@ -196,7 +196,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
-        <version>${surefire.version}</version>
+        <version>${maven-surefire-plugin-version}</version>
         <configuration>
           <argLine>${surefire.argLine}</argLine>
           <runOrder>alphabetical</runOrder>
@@ -252,7 +252,7 @@
           <dependency>
             <groupId>org.apache.maven.surefire</groupId>
             <artifactId>surefire-junit47</artifactId>
-            <version>${surefire.version}</version>
+            <version>${maven-surefire-plugin-version}</version>
           </dependency>
           <dependency>
             <groupId>me.fabriciorby</groupId>
