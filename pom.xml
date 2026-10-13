@@ -73,7 +73,7 @@
     <jakarta-servlet-api-version>6.1.0</jakarta-servlet-api-version>
     <jakarta-servlet-jsp-api-version>4.0.0</jakarta-servlet-jsp-api-version>
     <jakarta-el-api-version>6.0.1</jakarta-el-api-version>
-    <asm-version>9.10.1</asm-version>
+    <asm-version>9.11</asm-version>
     <jasypt-version>1.9.3</jasypt-version>
     <jaxb-version>4.0.9</jaxb-version>
     <jetty-version>12.1.12</jetty-version>
