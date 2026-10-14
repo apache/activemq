@@ -19,6 +19,7 @@ package org.apache.activemq.store.jdbc;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.HashSet;
 import java.util.Set;
@@ -27,6 +28,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import javax.sql.DataSource;
 import org.apache.activemq.broker.AbstractLocker;
 import org.apache.activemq.broker.BrokerService;
@@ -56,6 +58,7 @@ public class LeaseDatabaseLockerTest {
     JDBCPersistenceAdapter jdbc;
     BrokerService brokerService;
     DataSource dataSource;
+    long acquiredLeaseExpiresIn;
 
     @Before
     public void setUpStore() throws Exception {
@@ -214,6 +217,117 @@ public class LeaseDatabaseLockerTest {
 
         lockedSet.iterator().next().stop();
         printLockTable(connection);
+    }
+
+    @Test
+    public void testReleasedLeaseAcquiredWithinLockAcquireRetryInterval() throws Exception {
+        final long sleepInterval = AbstractLocker.DEFAULT_LOCK_ACQUIRE_SLEEP_INTERVAL;
+        final long retryInterval = 250;
+
+        final long elapsed = timeToAcquireReleasedLease(sleepInterval, retryInterval);
+
+        assertTrue("released lease acquired well within lockAcquireSleepInterval, took: " + elapsed,
+                elapsed < sleepInterval / 4);
+        assertTrue("lease duration is still lockAcquireSleepInterval, expired in: " + acquiredLeaseExpiresIn,
+                acquiredLeaseExpiresIn > sleepInterval / 2);
+    }
+
+    @Test
+    public void testDefaultLockAcquireRetryIntervalIsLockAcquireSleepInterval() throws Exception {
+        final long sleepInterval = 3000;
+
+        assertTrue("retry interval unset by default", new LeaseDatabaseLocker().getLockAcquireRetryInterval() < 0);
+
+        final long elapsed = timeToAcquireReleasedLease(sleepInterval, -1);
+
+        assertTrue("released lease acquired on the next lockAcquireSleepInterval poll, took: " + elapsed,
+                elapsed >= sleepInterval / 2);
+    }
+
+    // holds a lease for another broker, starts a locker that polls for it, then releases it
+    // shortly after the locker's first attempt, returning the time until the locker acquires it
+    // and recording how long the acquired lease has left to run
+    private long timeToAcquireReleasedLease(long sleepInterval, long retryInterval) throws Exception {
+        final String fakeId = "Anon";
+        final Connection connection = dataSource.getConnection();
+        try {
+            PreparedStatement statement = connection.prepareStatement(jdbc.getStatements().getLeaseObtainStatement());
+            final long now = System.currentTimeMillis();
+            statement.setString(1, fakeId);
+            statement.setLong(2, now + 60000);
+            statement.setLong(3, now);
+            assertEquals("we got the lease", 1, statement.executeUpdate());
+            statement.close();
+
+            final AtomicInteger attempts = new AtomicInteger();
+            final LeaseDatabaseLocker locker = new LeaseDatabaseLocker() {
+                @Override
+                protected Connection getConnection() throws SQLException {
+                    attempts.incrementAndGet();
+                    return super.getConnection();
+                }
+            };
+            locker.setLeaseHolderId("Poller");
+            locker.setLockAcquireSleepInterval(sleepInterval);
+            if (retryInterval > 0) {
+                locker.setLockAcquireRetryInterval(retryInterval);
+            }
+            jdbc.setLocker(locker);
+
+            final CountDownLatch acquired = new CountDownLatch(1);
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+            try {
+                executor.execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            locker.start();
+                            acquired.countDown();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                });
+
+                assertTrue("locker made an attempt", Wait.waitFor(new Wait.Condition() {
+                    @Override
+                    public boolean isSatisified() throws Exception {
+                        return attempts.get() > 0;
+                    }
+                }, 5000, 10));
+                // let the first attempt complete against the held lease
+                TimeUnit.MILLISECONDS.sleep(200);
+                assertEquals("locker is blocked", 1, acquired.getCount());
+
+                statement = connection.prepareStatement(jdbc.getStatements().getLeaseUpdateStatement());
+                statement.setString(1, null);
+                statement.setLong(2, 0l);
+                statement.setString(3, fakeId);
+                assertEquals("we released " + fakeId, 1, statement.executeUpdate());
+                statement.close();
+                final long released = System.currentTimeMillis();
+
+                assertTrue("locker acquired the lease", acquired.await(2 * sleepInterval, TimeUnit.MILLISECONDS));
+                final long elapsed = System.currentTimeMillis() - released;
+                acquiredLeaseExpiresIn = leaseExpiry(connection) - System.currentTimeMillis();
+                LOG.info("acquired released lease after " + elapsed + "ms, sleepInterval: " + sleepInterval + ", retryInterval: " + retryInterval);
+                printLockTable(connection);
+                return elapsed;
+            } finally {
+                locker.stop();
+                executor.shutdownNow();
+            }
+        } finally {
+            connection.close();
+        }
+    }
+
+    private long leaseExpiry(Connection connection) throws Exception {
+        try (PreparedStatement statement = connection.prepareStatement(jdbc.getStatements().getLeaseOwnerStatement());
+             ResultSet resultSet = statement.executeQuery()) {
+            assertTrue("lease row exists", resultSet.next());
+            return resultSet.getLong(2);
+        }
     }
 
     @Test

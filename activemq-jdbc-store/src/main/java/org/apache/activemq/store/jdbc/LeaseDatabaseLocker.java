@@ -43,6 +43,7 @@ public class LeaseDatabaseLocker extends AbstractJDBCLocker {
     protected long diffFromCurrentTime = Long.MAX_VALUE;
     protected String leaseHolderId;
     protected boolean handleStartException;
+    protected long lockAcquireRetryInterval = -1;
 
     public void doStart() throws Exception {
 
@@ -50,6 +51,12 @@ public class LeaseDatabaseLocker extends AbstractJDBCLocker {
             LOG.warn("LockableService keep alive period: " + lockable.getLockKeepAlivePeriod()
                     + ", which renews the lease, is greater than lockAcquireSleepInterval: " + lockAcquireSleepInterval
                     + ", the lease duration. These values will allow the lease to expire.");
+        }
+
+        final long retryInterval = getEffectiveLockAcquireRetryInterval();
+        if (retryInterval > lockAcquireSleepInterval) {
+            LOG.warn("lockAcquireRetryInterval: " + retryInterval + ", the wait between lease acquire attempts, is greater than lockAcquireSleepInterval: "
+                    + lockAcquireSleepInterval + ", the lease duration. An expired or released lease will not be acquired promptly.");
         }
 
         LOG.info(getLeaseHolderId() + " attempting to acquire exclusive lease to become the master");
@@ -98,8 +105,8 @@ public class LeaseDatabaseLocker extends AbstractJDBCLocker {
                 close(connection);
             }
 
-            LOG.debug(getLeaseHolderId() + " failed to acquire lease.  Sleeping for " + lockAcquireSleepInterval + " milli(s) before trying again...");
-            TimeUnit.MILLISECONDS.sleep(lockAcquireSleepInterval);
+            LOG.debug(getLeaseHolderId() + " failed to acquire lease.  Sleeping for " + retryInterval + " milli(s) before trying again...");
+            TimeUnit.MILLISECONDS.sleep(retryInterval);
         }
         if (isStopping()) {
             throw new RuntimeException(getLeaseHolderId() + " failing lease acquire due to stop");
@@ -243,8 +250,29 @@ public class LeaseDatabaseLocker extends AbstractJDBCLocker {
         this.handleStartException = handleStartException;
     }
 
+    public long getLockAcquireRetryInterval() {
+        return lockAcquireRetryInterval;
+    }
+
+    /**
+     * Sets the time, in milliseconds, to wait between attempts to acquire the lease.
+     * lockAcquireSleepInterval remains the lease duration, so a shorter retry interval lets
+     * a waiting broker pick up an expired or released lease sooner without shortening the lease.
+     * A value less than or equal to zero (the default) uses lockAcquireSleepInterval.
+     *
+     * @param lockAcquireRetryInterval the wait between lease acquire attempts in milliseconds
+     */
+    public void setLockAcquireRetryInterval(long lockAcquireRetryInterval) {
+        this.lockAcquireRetryInterval = lockAcquireRetryInterval;
+    }
+
+    protected long getEffectiveLockAcquireRetryInterval() {
+        return lockAcquireRetryInterval > 0 ? lockAcquireRetryInterval : lockAcquireSleepInterval;
+    }
+
     @Override
     public String toString() {
-        return "LeaseDatabaseLocker owner:" + leaseHolderId + ",duration:" + lockAcquireSleepInterval + ",renew:" + lockAcquireSleepInterval;
+        return "LeaseDatabaseLocker owner:" + leaseHolderId + ",duration:" + lockAcquireSleepInterval + ",renew:" + lockAcquireSleepInterval
+                + ",retry:" + getEffectiveLockAcquireRetryInterval();
     }
 }
