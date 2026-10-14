@@ -26,9 +26,9 @@ import jakarta.jms.MessageProducer;
 import jakarta.jms.ServerSession;
 import jakarta.jms.Session;
 import jakarta.resource.spi.endpoint.MessageEndpoint;
+import jakarta.resource.spi.work.RetryableWorkRejectedException;
 import jakarta.resource.spi.work.Work;
 import jakarta.resource.spi.work.WorkEvent;
-import jakarta.resource.spi.work.WorkException;
 import jakarta.resource.spi.work.WorkListener;
 import jakarta.resource.spi.work.WorkManager;
 
@@ -152,11 +152,12 @@ public class ServerSessionImpl implements ServerSession, InboundContext, Work, D
                 public void workCompleted(WorkEvent event) {
                     log.debug("Work completed: " + event);
                 }
-
             });
         } catch (Exception e) {
-            log.warn("Failed to schedule work for session {}, marking not running", this, e);
-            running.set(false); // make sure we don't leave the ServerSession in a running state (misleading)
+            if (!(e instanceof RetryableWorkRejectedException)) {
+                log.warn("Failed to schedule work for session {}, marking not running", this, e);
+                running.set(false); // make sure we don't leave the ServerSession in a running state (misleading)
+            }
             throw (JMSException)new JMSException("Start failed: " + e).initCause(e);
         }
     }
