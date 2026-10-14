@@ -255,9 +255,15 @@ public class JaasNetworkConnectionAuthorizationTest {
         }
     }
 
+    /**
+     * Every bridge side now sends BrokerInfo before it authenticates, so a BrokerInfo
+     * arriving afterwards is a client promoting itself. On a realm with clientId
+     * authorization that is refused even for a user whose rule allows network
+     * connections; the principal attributes are still checked here as this is the
+     * one case that authenticates a bridge user over tcp.
+     */
     @Test(timeout = 60000)
-    public void testFlaggedUserCanPromoteConnectionWithLateBrokerInfo() throws Exception {
-        // the local side of a real bridge does exactly this: connect, then forward BrokerInfo
+    public void testLateBrokerInfoRefusedEvenForFlaggedUser() throws Exception {
         var clientId = "NC_brokerA_inbound_brokerB";
         var transport = TransportFactory.connect(new URI(brokerBUri));
         try {
@@ -282,9 +288,8 @@ public class JaasNetworkConnectionAuthorizationTest {
                     principal.getRemoteAddress());
 
             var rejected = requestBrokerInfo(transport);
-            assertFalse("late BrokerInfo from a flagged user must be accepted", rejected);
-            assertTrue("connection should now be a network connection",
-                    Wait.waitFor(() -> isNetworkConnection(brokerB, clientId), 5000, 10));
+            assertTrue("late BrokerInfo must be refused once authentication has happened", rejected);
+            assertFalse("connection must not have been promoted", isNetworkConnection(brokerB, clientId));
         } finally {
             transport.stop();
         }

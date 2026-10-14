@@ -1481,10 +1481,11 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
             setDuplexNetworkConnectorId(duplexNetworkConnectorId);
         }
 
-        // A connection that authenticated as an ordinary client and only now declares
-        // itself a network connection must have been permitted to do so. Bridges normally
-        // send BrokerInfo first, in which case authentication already saw the flag and
-        // there are no connection states here yet.
+        // Every bridge sends BrokerInfo before ConnectionInfo, so authentication sees the
+        // network flag and the login module decides. A BrokerInfo arriving after a
+        // connection has authenticated is a client promoting itself after the fact; where
+        // network connection authorization is configured that is refused outright, as the
+        // decision was taken without the flag.
         var connectionStates = listConnectionStates();
         for (var cs : connectionStates) {
             var securityContext = cs.getContext().getSecurityContext();
@@ -1492,11 +1493,10 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
                 LOG.debug("Network connection authorization not configured for {}", getRemoteAddress());
                 continue;
             }
-            if (!securityContext.isNetworkConnectionAllowed()) {
-                LOG.warn("Rejecting network connection from {}: user {} is not allowed to register a network connection",
-                        getRemoteAddress(), securityContext.getUserName());
-                throw new IOException("User " + securityContext.getUserName() + " is not allowed to register a network connection");
-            }
+            LOG.warn("Rejecting BrokerInfo from {}: user {} authenticated before declaring a network connection",
+                    getRemoteAddress(), securityContext.getUserName());
+            throw new IOException("BrokerInfo received after authentication from " + getRemoteAddress()
+                    + "; network connections must send BrokerInfo first");
         }
 
         this.brokerInfo = info;
