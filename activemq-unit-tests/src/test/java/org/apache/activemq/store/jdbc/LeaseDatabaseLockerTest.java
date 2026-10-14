@@ -34,7 +34,6 @@ import org.apache.activemq.store.jdbc.adapter.DefaultJDBCAdapter;
 import org.apache.activemq.util.Wait;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,7 +48,6 @@ import static org.mockito.Mockito.when;
 import org.junit.experimental.categories.Category;
 import org.apache.activemq.test.annotations.ParallelTest;
 
-@Ignore // AMQ-9239 FIXME: mock / byte-buddy opens
 @Category(ParallelTest.class)
 public class LeaseDatabaseLockerTest {
 
@@ -247,6 +245,7 @@ public class LeaseDatabaseLockerTest {
         Timestamp timestamp = mock(Timestamp.class);
 
         when(jdbcPersistenceAdapter.getStatements()).thenReturn(statements);
+        when(statements.getCurrentDateTime()).thenReturn("SELECT CURRENT_TIMESTAMP");
         when(connection.prepareStatement(anyString())).thenReturn(preparedStatement);
         when(preparedStatement.executeQuery()).thenReturn(resultSet);
         when(resultSet.next()).thenReturn(true);
