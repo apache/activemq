@@ -272,7 +272,7 @@ public class LeaseDatabaseLocker extends AbstractJDBCLocker {
 
     @Override
     public String toString() {
-        return "LeaseDatabaseLocker owner:" + leaseHolderId + ",duration:" + lockAcquireSleepInterval + ",renew:" + lockAcquireSleepInterval
+        return "LeaseDatabaseLocker owner:" + leaseHolderId + ",duration:" + lockAcquireSleepInterval + ",renew:" + (lockable != null ? lockable.getLockKeepAlivePeriod() : -1)
                 + ",retry:" + getEffectiveLockAcquireRetryInterval();
     }
 }

@@ -331,6 +331,18 @@ public class LeaseDatabaseLockerTest {
     }
 
     @Test
+    public void testToStringReportsLeaseTimings() throws Exception {
+        LeaseDatabaseLocker locker = new LeaseDatabaseLocker();
+        locker.setLeaseHolderId("Reporter");
+        locker.setLockAcquireSleepInterval(20000);
+        locker.setLockAcquireRetryInterval(2000);
+        jdbc.setLockKeepAlivePeriod(5000);
+        jdbc.setLocker(locker);
+
+        assertEquals("LeaseDatabaseLocker owner:Reporter,duration:20000,renew:5000,retry:2000", locker.toString());
+    }
+
+    @Test
     public void testDiffOffsetAhead() throws Exception {
         LeaseDatabaseLocker underTest = new LeaseDatabaseLocker();
         assertTrue("when ahead of db adjustment is negative", callDiffOffset(underTest, System.currentTimeMillis() - 60000) < 0);
