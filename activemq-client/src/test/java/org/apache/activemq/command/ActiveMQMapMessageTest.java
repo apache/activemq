@@ -68,6 +68,28 @@ public class ActiveMQMapMessageTest {
     }
 
     @Test
+    public void nestedListPreservesPrimitiveBoundariesAndZeroValues() throws Exception {
+        List<Object> expected = Arrays.asList(
+                null,
+                false, true,
+                Byte.MIN_VALUE, (byte) 0, Byte.MAX_VALUE,
+                Short.MIN_VALUE, (short) 0, Short.MAX_VALUE,
+                Character.MIN_VALUE, Character.MAX_VALUE,
+                Integer.MIN_VALUE, 0, Integer.MAX_VALUE,
+                Long.MIN_VALUE, 0L, Long.MAX_VALUE,
+                Float.MIN_VALUE, 0.0f, Float.MAX_VALUE,
+                Double.MIN_VALUE, 0.0d, Double.MAX_VALUE);
+        ActiveMQMapMessage message = new ActiveMQMapMessage();
+        message.setObject("nested", List.of(expected));
+        message.storeContentAndClear();
+        message.setReadOnlyBody(true);
+
+        List<?> nested = (List<?>) message.getObject("nested");
+        assertEquals(1, nested.size());
+        assertEquals(expected, nested.get(0));
+    }
+
+    @Test
     public void compressedNestedValuesPreserveLargeUnicodeStrings() throws Exception {
         String largeString = "\u03a9\u4e2d\ud83d\ude03".repeat(2048);
         Map<String, Object> nested = Map.of("list", List.of(largeString, Map.of("text", largeString)));
