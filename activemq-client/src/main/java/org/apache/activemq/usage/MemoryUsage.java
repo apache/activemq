@@ -17,6 +17,7 @@
 package org.apache.activemq.usage;
 
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Used to keep track of how much of something is being used so that a
@@ -28,7 +29,17 @@ import java.util.concurrent.TimeUnit;
  */
 public class MemoryUsage extends Usage<MemoryUsage> {
 
-    private long usage;
+    /*
+     * Usage is updated without taking usageLock: it is changed on every message reference count change, and a
+     * broker-wide ReentrantReadWriteLock acquired on that path serialises all producer and dispatch threads.
+     *
+     * percentUsage is still only written with the write lock held (so listeners, waitForSpace waiters and
+     * notifyCallbackWhenNotFull callbacks are signalled exactly as before), but it is only taken when the
+     * percentage actually changes. Every writer of percentUsage re-reads usage after publishing (see
+     * updatePercentUsage), and every lock-free updater reads percentUsage after changing usage, so a stale
+     * percentage cannot survive a concurrent update.
+     */
+    private final AtomicLong usage = new AtomicLong();
 
     public MemoryUsage() {
         this(null, null);
@@ -65,26 +76,19 @@ public class MemoryUsage extends Usage<MemoryUsage> {
         if (parent != null) {
             parent.waitForSpace();
         }
-        usageLock.readLock().lock();
+        if (percentUsage < 100) {
+            return;
+        }
+        usageLock.writeLock().lock();
         try {
-            if (percentUsage >= 100 && isStarted()) {
-                usageLock.readLock().unlock();
-                usageLock.writeLock().lock();
-                try {
-                    while (percentUsage >= 100 && isStarted()) {
-                        waitForSpaceCondition.await();
-                    }
-                } finally {
-                    usageLock.writeLock().unlock();
-                    usageLock.readLock().lock();
-                }
+            while (percentUsage >= 100 && isStarted()) {
+                waitForSpaceCondition.await();
             }
-
             if (percentUsage >= 100 && !isStarted()) {
                 throw new InterruptedException("waitForSpace stopped during wait.");
             }
         } finally {
-            usageLock.readLock().unlock();
+            usageLock.writeLock().unlock();
         }
     }
 
@@ -95,32 +99,30 @@ public class MemoryUsage extends Usage<MemoryUsage> {
      */
     @Override
     public boolean waitForSpace(final long timeout) throws InterruptedException {
+        return waitForSpace(timeout, 100);
+    }
+
+    @Override
+    public boolean waitForSpace(final long timeout, final int highWaterMark) throws InterruptedException {
         if (parent != null) {
-            if (!parent.waitForSpace(timeout)) {
+            if (!parent.waitForSpace(timeout, highWaterMark)) {
                 return false;
             }
         }
-        usageLock.readLock().lock();
+        if (percentUsage < highWaterMark) {
+            return true;
+        }
+        usageLock.writeLock().lock();
         try {
-            if (percentUsage >= 100) {
-                usageLock.readLock().unlock();
-                usageLock.writeLock().lock();
-                try {
-                    final long deadline = timeout > 0 ? System.currentTimeMillis() + timeout : Long.MAX_VALUE;
-                    long timeleft = deadline;
-                    while (percentUsage >= 100 && timeleft > 0) {
-                        waitForSpaceCondition.await(Math.min(getPollingTime(), timeleft), TimeUnit.MILLISECONDS);
-                        timeleft = deadline - System.currentTimeMillis();
-                    }
-                } finally {
-                    usageLock.writeLock().unlock();
-                    usageLock.readLock().lock();
-                }
+            final long deadline = timeout > 0 ? System.currentTimeMillis() + timeout : Long.MAX_VALUE;
+            long timeleft = deadline;
+            while (percentUsage >= highWaterMark && timeleft > 0) {
+                waitForSpaceCondition.await(Math.min(getPollingTime(), timeleft), TimeUnit.MILLISECONDS);
+                timeleft = deadline - System.currentTimeMillis();
             }
-
-            return percentUsage < 100;
+            return percentUsage < highWaterMark;
         } finally {
-            usageLock.readLock().unlock();
+            usageLock.writeLock().unlock();
         }
     }
 
@@ -129,12 +131,15 @@ public class MemoryUsage extends Usage<MemoryUsage> {
         if (parent != null && parent.isFull()) {
             return true;
         }
-        usageLock.readLock().lock();
-        try {
-            return percentUsage >= 100;
-        } finally {
-            usageLock.readLock().unlock();
+        return percentUsage >= 100;
+    }
+
+    @Override
+    public boolean isFull(int highWaterMark) {
+        if (parent != null && parent.isFull(highWaterMark)) {
+            return true;
         }
+        return percentUsage >= highWaterMark;
     }
 
     /**
@@ -159,13 +164,8 @@ public class MemoryUsage extends Usage<MemoryUsage> {
             return;
         }
 
-        usageLock.writeLock().lock();
-        try {
-            usage += value;
-            setPercentUsage(caclPercentUsage());
-        } finally {
-            usageLock.writeLock().unlock();
-        }
+        usage.addAndGet(value);
+        updatePercentUsage();
 
         if (parent != null) {
             parent.increaseUsage(value);
@@ -182,13 +182,8 @@ public class MemoryUsage extends Usage<MemoryUsage> {
             return;
         }
 
-        usageLock.writeLock().lock();
-        try {
-            usage -= value;
-            setPercentUsage(caclPercentUsage());
-        } finally {
-            usageLock.writeLock().unlock();
-        }
+        usage.addAndGet(-value);
+        updatePercentUsage();
 
         if (parent != null) {
             parent.decreaseUsage(value);
@@ -197,16 +192,50 @@ public class MemoryUsage extends Usage<MemoryUsage> {
 
     @Override
     protected long retrieveUsage() {
-        return usage;
+        return usage.get();
     }
 
     @Override
     public long getUsage() {
-        return usage;
+        return usage.get();
     }
 
     public void setUsage(long usage) {
-        this.usage = usage;
+        this.usage.set(usage);
+        updatePercentUsage();
+    }
+
+    @Override
+    protected void onLimitChange() {
+        super.onLimitChange();
+        updatePercentUsage();
+    }
+
+    @Override
+    public void setPercentUsageMinDelta(int percentUsageMinDelta) {
+        super.setPercentUsageMinDelta(percentUsageMinDelta);
+        updatePercentUsage();
+    }
+
+    /**
+     * Publishes the percentage for the current usage, taking the write lock only when it has changed. The value is
+     * re-checked after it is published so that a concurrent lock-free usage change that read the old percentage
+     * cannot leave a stale value behind.
+     */
+    private void updatePercentUsage() {
+        if (caclPercentUsage() == percentUsage) {
+            return;
+        }
+        usageLock.writeLock().lock();
+        try {
+            int value;
+            do {
+                value = caclPercentUsage();
+                setPercentUsage(value);
+            } while (value != caclPercentUsage());
+        } finally {
+            usageLock.writeLock().unlock();
+        }
     }
 
     public void setPercentOfJvmHeap(int percentOfJvmHeap) {

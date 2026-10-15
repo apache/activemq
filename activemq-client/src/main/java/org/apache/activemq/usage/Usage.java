@@ -42,15 +42,16 @@ public abstract class Usage<T extends Usage> implements Service {
 
     protected final ReentrantReadWriteLock usageLock = new ReentrantReadWriteLock();
     protected final Condition waitForSpaceCondition = usageLock.writeLock().newCondition();
-    protected int percentUsage;
+    // Written under usageLock's write lock; volatile so hot-path readers do not need the lock.
+    protected volatile int percentUsage;
     protected T parent;
     protected String name;
 
-    private UsageCapacity limiter = new DefaultUsageCapacity();
-    private int percentUsageMinDelta = 1;
+    private volatile UsageCapacity limiter = new DefaultUsageCapacity();
+    private volatile int percentUsageMinDelta = 1;
     private final List<UsageListener> listeners = new CopyOnWriteArrayList<UsageListener>();
     private final boolean debug = LOG.isDebugEnabled();
-    private float usagePortion = 1.0f;
+    private volatile float usagePortion = 1.0f;
     private final List<T> children = new CopyOnWriteArrayList<T>();
     private final List<Runnable> callbacks = new LinkedList<Runnable>();
     private int pollingTime = 100;
@@ -143,12 +144,7 @@ public abstract class Usage<T extends Usage> implements Service {
     }
 
     public long getLimit() {
-        usageLock.readLock().lock();
-        try {
-            return limiter.getLimit();
-        } finally {
-            usageLock.readLock().unlock();
-        }
+        return limiter.getLimit();
     }
 
     /**
@@ -197,12 +193,7 @@ public abstract class Usage<T extends Usage> implements Service {
     }
 
     public float getUsagePortion() {
-        usageLock.readLock().lock();
-        try {
-            return usagePortion;
-        } finally {
-            usageLock.readLock().unlock();
-        }
+        return usagePortion;
     }
 
     public void setUsagePortion(float usagePortion) {
@@ -216,21 +207,11 @@ public abstract class Usage<T extends Usage> implements Service {
     }
 
     public int getPercentUsage() {
-        usageLock.readLock().lock();
-        try {
-            return percentUsage;
-        } finally {
-            usageLock.readLock().unlock();
-        }
+        return percentUsage;
     }
 
     public int getPercentUsageMinDelta() {
-        usageLock.readLock().lock();
-        try {
-            return percentUsageMinDelta;
-        } finally {
-            usageLock.readLock().unlock();
-        }
+        return percentUsageMinDelta;
     }
 
     /**
@@ -277,10 +258,13 @@ public abstract class Usage<T extends Usage> implements Service {
     }
 
     protected int caclPercentUsage() {
-        if (limiter.getLimit() == 0) {
+        // Read each volatile once: the limit can change concurrently and must not become 0 between check and divide.
+        final long limit = limiter.getLimit();
+        if (limit == 0) {
             return 0;
         }
-        return (int) ((((retrieveUsage() * 100) / limiter.getLimit()) / percentUsageMinDelta) * percentUsageMinDelta);
+        final int minDelta = percentUsageMinDelta;
+        return (int) ((((retrieveUsage() * 100) / limit) / minDelta) * minDelta);
     }
 
     // Must be called with the usage lock's writeLock held.

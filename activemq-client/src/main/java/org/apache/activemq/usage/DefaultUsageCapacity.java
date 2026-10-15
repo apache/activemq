@@ -27,7 +27,7 @@ package org.apache.activemq.usage;
  */
 public class DefaultUsageCapacity implements UsageCapacity{
 
-    private long limit;
+    private volatile long limit;
     
     /**
      * @param size
