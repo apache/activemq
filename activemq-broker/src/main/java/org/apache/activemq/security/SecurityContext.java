@@ -83,6 +83,25 @@ public abstract class SecurityContext {
 
     public abstract Set<Principal> getPrincipals();
 
+    /**
+     * Whether the authenticated user may register this connection as a network
+     * connection. Consulted when a connection identifies itself as a network
+     * bridge after it has already been authenticated. Defaults to allowed so
+     * authentication plugins that do not make the distinction are unaffected.
+     */
+    public boolean isNetworkConnectionAllowed() {
+        return true;
+    }
+
+    /**
+     * Whether the authenticating plugin made a network connection decision for this
+     * connection. When false the broker applies no network connection restriction and
+     * {@link #isNetworkConnectionAllowed()} is not consulted.
+     */
+    public boolean isNetworkConnectionAuthorizationRequired() {
+        return false;
+    }
+
     public boolean contains(Object principal) {
         Set<Principal> principals = getPrincipals();
         return principals != null && principals.contains(principal);
