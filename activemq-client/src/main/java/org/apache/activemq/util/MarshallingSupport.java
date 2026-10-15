@@ -399,15 +399,18 @@ public final class MarshallingSupport {
         return offset;
     }
 
+    // Used to read BIG_STRING_TYPE
     public static String readUTF8(DataInputStream dataIn) throws IOException {
         return readUTF8(dataIn, Integer.MAX_VALUE);
     }
 
-    static String readUTF8(DataInputStream dataIn, int maxBufferSize) throws IOException {
+    // USed to read BIG_STRING_TYPE
+    public static String readUTF8(DataInputStream dataIn, int maxBufferSize) throws IOException {
         return readUTF8(dataIn, maxBufferSize, dataIn.readInt());
     }
 
-    static String readShortUTF8(DataInputStream dataIn, int maxBufferSize) throws IOException {
+    // Used to read STRING_TYPE
+    public static String readShortUTF8(DataInputStream dataIn, int maxBufferSize) throws IOException {
         return readUTF8(dataIn, maxBufferSize, dataIn.readUnsignedShort());
     }
 
