@@ -81,7 +81,12 @@ public class JdbcMemoryTransactionStore extends MemoryTransactionStore {
             persistenceAdapter.commitTransaction(ctx);
 
         } catch ( IOException e ) {
-            persistenceAdapter.rollbackTransaction(ctx);
+            try {
+                persistenceAdapter.rollbackTransaction(ctx);
+            } catch (IOException rollbackFailure) {
+                // a failed store commit has already rolled back, report the original failure
+                e.addSuppressed(rollbackFailure);
+            }
             throw e;
         }
 
