@@ -39,16 +39,23 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManagerFactory;
 import javax.rmi.ssl.SslRMIClientSocketFactory;
 
+import org.apache.activemq.broker.DefaultSslContext;
 import org.apache.activemq.broker.SslContext;
 import org.apache.activemq.util.Wait;
 import org.junit.After;
 import org.junit.AfterClass;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/*
+ * The JVM default SSLContext is pinned to the test context for the whole class.
+ * SslRMIClientSocketFactory, which the exported RMI stubs carry so that any JMX client
+ * can deserialize them, caches SSLSocketFactory.getDefault() in a static field on first
+ * use, and RMI's distributed GC uses it as soon as the first SSL connector binds. Setting
+ * the default per test would therefore depend on test order.
+ */
 public class ManagementContextSslTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(ManagementContextSslTest.class);
@@ -57,10 +64,9 @@ public class ManagementContextSslTest {
     private static Path tempDir;
     private static Path keystoreFile;
     private static SSLContext testSslContext;
+    private static SslContext brokerSslContext;
+    private static SSLContext savedDefaultSslContext;
     private ManagementContext context;
-    private SSLContext savedDefaultSslContext;
-    private String savedTrustStore;
-    private String savedTrustStorePassword;
 
     @BeforeClass
     public static void createKeyStore() throws Exception {
@@ -92,10 +98,16 @@ public class ManagementContextSslTest {
         tmf.init(ks);
         testSslContext = SSLContext.getInstance("TLS");
         testSslContext.init(kmf.getKeyManagers(), tmf.getTrustManagers(), null);
+        // what a broker's <sslContext> element produces, built from the same key material
+        brokerSslContext = new DefaultSslContext(kmf.getKeyManagers(), tmf.getTrustManagers(), null);
+
+        savedDefaultSslContext = SSLContext.getDefault();
+        SSLContext.setDefault(testSslContext);
     }
 
     @AfterClass
     public static void cleanupKeyStore() throws Exception {
+        SSLContext.setDefault(savedDefaultSslContext);
         if (keystoreFile != null) {
             Files.deleteIfExists(keystoreFile);
         }
@@ -104,21 +116,11 @@ public class ManagementContextSslTest {
         }
     }
 
-    @Before
-    public void setUp() throws Exception {
-        savedDefaultSslContext = SSLContext.getDefault();
-        savedTrustStore = System.getProperty("javax.net.ssl.trustStore");
-        savedTrustStorePassword = System.getProperty("javax.net.ssl.trustStorePassword");
-    }
-
     @After
     public void tearDown() throws Exception {
         if (context != null) {
             context.stop();
         }
-        SSLContext.setDefault(savedDefaultSslContext);
-        restoreSystemProperty("javax.net.ssl.trustStore", savedTrustStore);
-        restoreSystemProperty("javax.net.ssl.trustStorePassword", savedTrustStorePassword);
     }
 
     @Test
@@ -126,7 +128,7 @@ public class ManagementContextSslTest {
         context = new ManagementContext();
         assertNull("sslContext should be null by default", context.getSslContext());
 
-        final SslContext ssl = new SslContext();
+        final SslContext ssl = new DefaultSslContext();
         context.setSslContext(ssl);
         assertSame("sslContext should be the one we set", ssl, context.getSslContext());
     }
@@ -186,32 +188,22 @@ public class ManagementContextSslTest {
 
     @Test
     public void testConnectorStartsWithSsl() throws Exception {
-        // SslRMIClientSocketFactory uses SSLSocketFactory.getDefault() which relies on
-        // SSLContext.getDefault(). Setting system properties alone is insufficient if the
-        // default SSLContext was already cached by a previous test in the same JVM.
-        SSLContext.setDefault(testSslContext);
-        System.setProperty("javax.net.ssl.trustStore", keystoreFile.toString());
-        System.setProperty("javax.net.ssl.trustStorePassword", KEYSTORE_PASSWORD);
-
+        // isConnectorStarted() reports true once the start attempt has finished either way,
+        // so the connector server's own state is what proves the bind succeeded.
         context = createSslManagementContext();
         context.start();
 
-        assertTrue("Connector should be started",
+        assertTrue("Connector start should have completed",
                 Wait.waitFor(context::isConnectorStarted, 10_000, 100));
+        assertTrue("Connector server should be active after binding to the SSL registry",
+                context.isConnectorActive());
         assertTrue("SSL connector port should be resolved", context.getConnectorPort() > 0);
     }
 
     @Test
     public void testSslJmxConnectionSucceeds() throws Exception {
-        // SslRMIClientSocketFactory uses SSLSocketFactory.getDefault() which relies on
-        // SSLContext.getDefault(). We must set our test SSLContext as the JVM default so
-        // both the server-side JNDI binding (daemon thread) and client connections trust
-        // our self-signed certificate. System properties alone are insufficient if the
-        // default SSLContext was already cached by a previous test in the same JVM.
-        SSLContext.setDefault(testSslContext);
-        System.setProperty("javax.net.ssl.trustStore", keystoreFile.toString());
-        System.setProperty("javax.net.ssl.trustStorePassword", KEYSTORE_PASSWORD);
-
+        // the client side resolves its sockets from the JVM default context, pinned to the
+        // test context for this class; the server binds through the configured sslContext
         context = createSslManagementContext();
         context.start();
 
@@ -276,23 +268,13 @@ public class ManagementContextSslTest {
     }
 
     private ManagementContext createSslManagementContext() {
-        final SslContext sslContext = new SslContext();
-        sslContext.setSSLContext(testSslContext);
-
         final ManagementContext ctx = new ManagementContext();
         ctx.setCreateConnector(true);
         ctx.setConnectorPort(0);
         ctx.setConnectorHost("localhost");
-        ctx.setSslContext(sslContext);
+        ctx.setSslContext(brokerSslContext);
 
         return ctx;
     }
 
-    private static void restoreSystemProperty(final String key, final String value) {
-        if (value == null) {
-            System.clearProperty(key);
-        } else {
-            System.setProperty(key, value);
-        }
-    }
 }

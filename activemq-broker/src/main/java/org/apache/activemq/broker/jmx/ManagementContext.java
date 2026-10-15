@@ -19,6 +19,7 @@ package org.apache.activemq.broker.jmx;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.net.ServerSocket;
+import java.net.Socket;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -30,6 +31,7 @@ import java.rmi.registry.Registry;
 import java.rmi.server.RMIClientSocketFactory;
 import java.rmi.server.RMIServerSocketFactory;
 import java.rmi.server.UnicastRemoteObject;
+import java.security.GeneralSecurityException;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -106,6 +108,8 @@ public class ManagementContext implements Service {
     private boolean findTigerMbeanServer = true;
     private String connectorHost = "localhost";
     private int connectorPort = 1099;
+    // true when the configured port was 0; a restart then picks a fresh port instead of reusing the first
+    private boolean ephemeralConnectorPort;
     private Map<String, ?> environment;
     private int rmiServerPort;
     private String connectorPath = "/jmxrmi";
@@ -376,6 +380,15 @@ public class ManagementContext implements Service {
     }
 
     /**
+     * Whether the JMX connector server is bound and accepting connections.
+     * {@link #isConnectorStarted()} also reports true once a start attempt has
+     * failed, since it tracks that the attempt finished; this reports the outcome.
+     */
+    public boolean isConnectorActive() {
+        return connectorServer != null && connectorServer.isActive();
+    }
+
+    /**
      * Enables/disables the searching for the Java 5 platform MBeanServer
      */
     public void setFindTigerMbeanServer(boolean findTigerMbeanServer) {
@@ -574,7 +587,8 @@ public class ManagementContext implements Service {
 
     private void createConnector(MBeanServer mbeanServer) throws IOException {
         // Resolve ephemeral port (0) to an actual free port, similar to tcp://localhost:0
-        if (connectorPort == 0) {
+        if (connectorPort == 0 || ephemeralConnectorPort) {
+            ephemeralConnectorPort = true;
             try (final ServerSocket ss = new ServerSocket(0)) {
                 connectorPort = ss.getLocalPort();
             }
@@ -643,7 +657,11 @@ public class ManagementContext implements Service {
             if (environment != null) {
                 connectorEnv.putAll(environment);
             }
-            connectorEnv.put("com.sun.jndi.rmi.factory.socket", csf);
+            // The JDK factory in the exported stubs resolves sockets from the JVM default
+            // SSLContext, which remote clients need since that class is all they have. The
+            // bind from this process can use the configured context directly, so a broker
+            // whose sslContext trust store differs from the JVM default still starts.
+            connectorEnv.put("com.sun.jndi.rmi.factory.socket", new ConfiguredSslClientSocketFactory(sslContext));
         } else {
             connectorEnv = environment != null ? new HashMap<>(environment) : null;
         }
@@ -675,6 +693,7 @@ public class ManagementContext implements Service {
      */
     public void setConnectorPort(int connectorPort) {
         this.connectorPort = connectorPort;
+        this.ephemeralConnectorPort = false;
     }
 
     public int getRmiServerPort() {
@@ -734,12 +753,24 @@ public class ManagementContext implements Service {
      * Set the SSL context to use for the JMX connector.
      * When configured, the JMX RMI connector will use SSL with the
      * keyStore and trustStore from this context, allowing reuse of
-     * the broker's {@code <sslContext>} configuration.
+     * the broker's {@code <sslContext>} configuration. The context is
+     * read once when the connector is created, so {@link SslContext#reload()}
+     * does not affect a running connector; restart the management context
+     * to pick up new key material.
      *
-     * Example XML configuration:
+     * Example XML configuration, referring to an {@code sslContext} declared as a
+     * top level bean (an {@code id} on the broker's nested {@code <sslContext>} is
+     * not visible by reference):
      * <pre>
-     * &lt;managementContext createConnector="true" sslContext="#brokerSslContext"/&gt;
+     * &lt;amq:sslContext id="brokerSslContext" keyStore="broker.ks" .../&gt;
+     * &lt;broker sslContext="#brokerSslContext" ...&gt;
+     *   &lt;managementContext&gt;
+     *     &lt;managementContext createConnector="true" sslContext="#brokerSslContext"/&gt;
+     *   &lt;/managementContext&gt;
+     * &lt;/broker&gt;
      * </pre>
+     * A nested {@code <sslContext>} element inside {@code <managementContext>} gives the
+     * JMX connector a context of its own instead.
      */
     public void setSslContext(SslContext sslContext) {
         this.sslContext = sslContext;
@@ -797,5 +828,27 @@ public class ManagementContext implements Service {
                         throw ite.getTargetException();
                     }
                 }));
+    }
+
+    /**
+     * Client socket factory for this process's own JNDI bind to the SSL RMI registry,
+     * backed by the configured {@link SslContext} rather than the JVM default. Never
+     * exported in a stub, so remote clients are not asked to deserialize it.
+     */
+    private static final class ConfiguredSslClientSocketFactory implements RMIClientSocketFactory {
+        private final SslContext sslContext;
+
+        ConfiguredSslClientSocketFactory(SslContext sslContext) {
+            this.sslContext = sslContext;
+        }
+
+        @Override
+        public Socket createSocket(String host, int port) throws IOException {
+            try {
+                return sslContext.getSSLContext().getSocketFactory().createSocket(host, port);
+            } catch (GeneralSecurityException e) {
+                throw new IOException("Failed to create SSL socket for the JMX registry bind", e);
+            }
+        }
     }
 }
