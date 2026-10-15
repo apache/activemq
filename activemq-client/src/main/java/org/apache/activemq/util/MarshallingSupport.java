@@ -241,9 +241,15 @@ public final class MarshallingSupport {
             in.readFully((byte[])value);
             break;
         case STRING_TYPE:
-            value = readUTF(in, maxBufferSize, in.readUnsignedShort());
+            // force flag means we want to return it as a String and not a Buffer
+            if (force) {
+                value = readShortUTF8(in, maxBufferSize);
+            } else {
+                value = readUTF(in, maxBufferSize, in.readUnsignedShort());
+            }
             break;
         case BIG_STRING_TYPE: {
+            // force flag means we want to return it as a String and not a Buffer
             if (force) {
                 value = readUTF8(in, maxBufferSize);
             } else {
@@ -398,10 +404,18 @@ public final class MarshallingSupport {
     }
 
     static String readUTF8(DataInputStream dataIn, int maxBufferSize) throws IOException {
-        int utflen = validateBufferSize(dataIn, maxBufferSize, dataIn.readInt());
+        return readUTF8(dataIn, maxBufferSize, dataIn.readInt());
+    }
+
+    static String readShortUTF8(DataInputStream dataIn, int maxBufferSize) throws IOException {
+        return readUTF8(dataIn, maxBufferSize, dataIn.readUnsignedShort());
+    }
+
+    private static String readUTF8(DataInputStream dataIn, int maxBufferSize, int size) throws IOException {
+        int utflen = validateBufferSize(dataIn, maxBufferSize, size);
         if (utflen > -1) {
-            byte bytearr[] = new byte[utflen];
-            char chararr[] = new char[utflen];
+            byte[] bytearr = new byte[utflen];
+            char[] chararr = new char[utflen];
             dataIn.readFully(bytearr, 0, utflen);
             return convertUTF8WithBuf(bytearr, chararr, 0, utflen);
         } else {
