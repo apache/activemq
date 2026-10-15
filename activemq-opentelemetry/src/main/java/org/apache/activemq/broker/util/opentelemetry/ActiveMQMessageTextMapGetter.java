@@ -21,8 +21,12 @@ import java.util.Collections;
 
 import io.opentelemetry.context.propagation.TextMapGetter;
 import org.apache.activemq.command.Message;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ActiveMQMessageTextMapGetter implements TextMapGetter<Message> {
+
+    private static final Logger LOG = LoggerFactory.getLogger(ActiveMQMessageTextMapGetter.class);
 
     public static final ActiveMQMessageTextMapGetter INSTANCE = new ActiveMQMessageTextMapGetter();
 
@@ -33,7 +37,7 @@ public class ActiveMQMessageTextMapGetter implements TextMapGetter<Message> {
                 return message.getProperties().keySet();
             }
         } catch (IOException e) {
-            // ignore
+            LOG.debug("Failed to read message properties for trace context extraction", e);
         }
         return Collections.emptyList();
     }
@@ -46,7 +50,7 @@ public class ActiveMQMessageTextMapGetter implements TextMapGetter<Message> {
                 return (String) value;
             }
         } catch (IOException e) {
-            // ignore
+            LOG.debug("Failed to read trace context property '{}' from message", key, e);
         }
         return null;
     }

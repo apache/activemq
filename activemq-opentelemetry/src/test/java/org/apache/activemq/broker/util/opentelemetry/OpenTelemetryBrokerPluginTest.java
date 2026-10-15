@@ -113,7 +113,7 @@ public class OpenTelemetryBrokerPluginTest {
         SpanData publishSpan = findSpan(spans, queueName + " publish");
         assertNotNull("Publish span should exist", publishSpan);
         assertEquals(SpanKind.PRODUCER, publishSpan.getKind());
-        assertEquals("activemq", publishSpan.getAttributes().get(io.opentelemetry.api.common.AttributeKey.stringKey("messaging.system.name")));
+        assertEquals("activemq", publishSpan.getAttributes().get(io.opentelemetry.api.common.AttributeKey.stringKey("messaging.system")));
         assertEquals(queueName, publishSpan.getAttributes().get(io.opentelemetry.api.common.AttributeKey.stringKey("messaging.destination.name")));
         assertEquals("publish", publishSpan.getAttributes().get(io.opentelemetry.api.common.AttributeKey.stringKey("messaging.operation.type")));
     }
@@ -157,7 +157,7 @@ public class OpenTelemetryBrokerPluginTest {
         SpanData deliverSpan = findSpan(spans, queueName + " deliver");
         assertNotNull("Deliver span should exist", deliverSpan);
         assertEquals(SpanKind.CONSUMER, deliverSpan.getKind());
-        assertEquals("activemq", deliverSpan.getAttributes().get(io.opentelemetry.api.common.AttributeKey.stringKey("messaging.system.name")));
+        assertEquals("activemq", deliverSpan.getAttributes().get(io.opentelemetry.api.common.AttributeKey.stringKey("messaging.system")));
         assertEquals("deliver", deliverSpan.getAttributes().get(io.opentelemetry.api.common.AttributeKey.stringKey("messaging.operation.type")));
     }
 
@@ -180,8 +180,8 @@ public class OpenTelemetryBrokerPluginTest {
         SpanData ackSpan = findSpan(spans, queueName + " ack");
         assertNotNull("Ack span should exist", ackSpan);
         assertEquals(SpanKind.INTERNAL, ackSpan.getKind());
-        assertEquals("activemq", ackSpan.getAttributes().get(io.opentelemetry.api.common.AttributeKey.stringKey("messaging.system.name")));
-        assertEquals("ack", ackSpan.getAttributes().get(io.opentelemetry.api.common.AttributeKey.stringKey("messaging.operation.type")));
+        assertEquals("activemq", ackSpan.getAttributes().get(io.opentelemetry.api.common.AttributeKey.stringKey("messaging.system")));
+        assertEquals("settle", ackSpan.getAttributes().get(io.opentelemetry.api.common.AttributeKey.stringKey("messaging.operation.type")));
     }
 
     @Test
@@ -228,6 +228,36 @@ public class OpenTelemetryBrokerPluginTest {
                 spans.stream().anyMatch(s -> s.getName().contains("deliver")));
         assertFalse("Should have no ack spans when tracing disabled",
                 spans.stream().anyMatch(s -> s.getName().contains("ack")));
+    }
+
+    @Test
+    public void testMessagingSystemConfigurable() throws Exception {
+        broker.stop();
+        broker.waitUntilStopped();
+
+        OpenTelemetryBrokerPlugin plugin = new OpenTelemetryBrokerPlugin();
+        plugin.setMessagingSystem("my-broker");
+        broker = new BrokerService();
+        broker.setBrokerName("otelTestBroker2");
+        broker.setPersistent(false);
+        broker.setUseJmx(false);
+        broker.setPlugins(new BrokerPlugin[]{plugin});
+        connector = broker.addConnector("tcp://localhost:0");
+        broker.start();
+        broker.waitUntilStarted();
+
+        Connection c = new ActiveMQConnectionFactory(connector.getConnectUri()).createConnection();
+        try {
+            c.start();
+            Session s = c.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            s.createProducer(s.createQueue(queueName)).send(s.createTextMessage("test"));
+        } finally {
+            c.close();
+        }
+
+        assertTrue("Expected publish span", Wait.waitFor(() -> findSpan(spanExporter.getFinishedSpanItems(), queueName + " publish") != null));
+        SpanData publishSpan = findSpan(spanExporter.getFinishedSpanItems(), queueName + " publish");
+        assertEquals("my-broker", publishSpan.getAttributes().get(io.opentelemetry.api.common.AttributeKey.stringKey("messaging.system")));
     }
 
     private SpanData findSpan(List<SpanData> spans, String name) {

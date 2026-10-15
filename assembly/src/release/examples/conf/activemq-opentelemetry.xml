@@ -69,15 +69,16 @@
               traceProducer    - trace message send operations (default: true)
               traceConsumer    - trace message dispatch/deliver operations (default: true)
               traceAcknowledge - trace message acknowledgment operations (default: true)
+              messagingSystem  - value of the messaging.system attribute (default: activemq)
 
             Span details:
               send()               -> "{destination} publish"  (PRODUCER span)
               preProcessDispatch() -> "{destination} deliver"  (CONSUMER span)
-              acknowledge()        -> "{destination} ack"      (INTERNAL span)
+              acknowledge()        -> "{destination} ack"      (INTERNAL span, operation type "settle")
 
             Each span includes standard OTel messaging attributes:
-              messaging.system, messaging.destination.name, messaging.operation,
-              messaging.message.id, messaging.client_id
+              messaging.system, messaging.destination.name, messaging.operation.type,
+              messaging.message.id, messaging.client.id
         -->
         <plugins>
             <openTelemetryPlugin traceProducer="true" traceConsumer="true" traceAcknowledge="true"/>
