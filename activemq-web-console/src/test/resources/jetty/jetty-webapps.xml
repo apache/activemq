@@ -21,8 +21,9 @@
 <Configure class="org.eclipse.jetty.server.handler.ContextHandlerCollection" id="Contexts">
 
   <!-- Rewrite Handler for Security Headers -->
-  <Call name="addHandler">
-    <Arg>
+  <Ref refid="Server">
+    <Call name="insertHandler">
+      <Arg>
       <New class="org.eclipse.jetty.rewrite.handler.RewriteHandler">
         <Call name="addRule">
           <Arg>
@@ -40,8 +41,8 @@
               <Set name="headerName">X-XSS-Protection</Set>
               <Set name="headerValue">1; mode=block</Set>
             </New>
-          </Arg>
-        </Call>
+            </Arg>
+          </Call>
         <Call name="addRule">
           <Arg>
             <New class="org.eclipse.jetty.rewrite.handler.HeaderPatternRule">
@@ -49,8 +50,8 @@
               <Set name="headerName">X-Content-Type-Options</Set>
               <Set name="headerValue">nosniff</Set>
             </New>
-          </Arg>
-        </Call>
+            </Arg>
+          </Call>
         <Call name="addRule">
           <Arg>
             <New class="org.eclipse.jetty.rewrite.handler.HeaderPatternRule">
@@ -58,8 +59,8 @@
               <Set name="headerName">Cache-Control</Set>
               <Set name="headerValue">no-store</Set>
             </New>
-          </Arg>
-        </Call>
+            </Arg>
+          </Call>
         <Call name="addRule">
           <Arg>
             <New class="org.eclipse.jetty.rewrite.handler.HeaderPatternRule">
@@ -67,8 +68,8 @@
               <Set name="headerName">Content-Security-Policy</Set>
               <Set name="headerValue">style-src-elem 'self'; style-src 'self'; img-src 'self'; script-src-elem 'self'; default-src 'none'; object-src 'none'; frame-ancestors 'none'; base-uri 'none';</Set>
             </New>
-          </Arg>
-        </Call>
+            </Arg>
+          </Call>
         <!-- Relaxed CSP rules for XML admin pages -->
         <Call name="addRule">
           <Arg>
@@ -80,8 +81,9 @@
           </Arg>
         </Call>
       </New>
-    </Arg>
-  </Call>
+      </Arg>
+    </Call>
+  </Ref>
 
   <!-- Admin Web Application -->
   <Call name="addHandler">

@@ -21,8 +21,9 @@
 <Configure class="org.eclipse.jetty.server.handler.ContextHandlerCollection" id="Contexts">
 
   <!-- Rewrite Handler for Security Headers -->
-  <Call name="addHandler">
-    <Arg>
+  <Ref refid="Server">
+    <Call name="insertHandler">
+      <Arg>
       <New class="org.eclipse.jetty.rewrite.handler.RewriteHandler">
         <Call name="addRule">
           <Arg>
@@ -40,8 +41,8 @@
               <Set name="headerName">X-XSS-Protection</Set>
               <Set name="headerValue">1; mode=block</Set>
             </New>
-          </Arg>
-        </Call>
+            </Arg>
+          </Call>
         <Call name="addRule">
           <Arg>
             <New class="org.eclipse.jetty.rewrite.handler.HeaderPatternRule">
@@ -128,8 +129,9 @@
         </Call>
         -->
       </New>
-    </Arg>
-  </Call>
+      </Arg>
+    </Call>
+  </Ref>
 
   <!-- Admin Web Application -->
   <Call name="addHandler">
