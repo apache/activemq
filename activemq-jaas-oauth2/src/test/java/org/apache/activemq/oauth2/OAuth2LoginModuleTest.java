@@ -54,6 +54,8 @@ import com.nimbusds.jwt.proc.ConfigurableJWTProcessor;
 import com.nimbusds.jwt.proc.DefaultJWTClaimsVerifier;
 import com.nimbusds.jwt.proc.DefaultJWTProcessor;
 
+import org.apache.activemq.jaas.ConnectionCallback;
+import org.apache.activemq.jaas.ConnectionPrincipal;
 import org.apache.activemq.jaas.GroupPrincipal;
 import org.apache.activemq.jaas.UserPrincipal;
 
@@ -878,7 +880,75 @@ public class OAuth2LoginModuleTest extends TestCase {
         assertNull("Token should be null after reset", callback.getToken());
     }
 
+    public void testNetworkConnectionAllowedForConfiguredGroup() throws Exception {
+        Subject subject = new Subject();
+        OAuth2LoginModule module = networkModule(subject, true, "amq-network", Arrays.asList("amq-network", "other"));
+        assertTrue(module.login());
+        module.commit();
+
+        ConnectionPrincipal principal = subject.getPrincipals(ConnectionPrincipal.class).iterator().next();
+        assertTrue(principal.isNetworkConnection());
+        assertEquals("ID:conn-1", principal.getName());
+    }
+
+    public void testNetworkConnectionDeniedWithoutConfiguredGroup() throws Exception {
+        OAuth2LoginModule module = networkModule(new Subject(), true, "amq-network", Arrays.asList("users"));
+        try {
+            module.login();
+            fail("network connection should be denied");
+        } catch (FailedLoginException e) {
+            assertEquals("network connection is not allowed for user", e.getMessage());
+        }
+    }
+
+    public void testApplicationConnectionUnaffectedAndNotAllowedAsNetwork() throws Exception {
+        Subject subject = new Subject();
+        OAuth2LoginModule module = networkModule(subject, false, "amq-network", Arrays.asList("users"));
+        assertTrue(module.login());
+        module.commit();
+
+        assertFalse(subject.getPrincipals(ConnectionPrincipal.class).iterator().next().isNetworkConnection());
+    }
+
+    public void testNoConnectionPrincipalWhenNetworkGroupsNotConfigured() throws Exception {
+        Subject subject = new Subject();
+        OAuth2LoginModule module = createModule(
+                createToken("testuser", Arrays.asList("users"), new Date(System.currentTimeMillis() + 300000)), subject);
+        assertTrue(module.login());
+        module.commit();
+
+        assertTrue(subject.getPrincipals(ConnectionPrincipal.class).isEmpty());
+    }
+
     // --- Helper methods ---
+
+    private OAuth2LoginModule networkModule(Subject subject, final boolean network, String networkGroups,
+            List<String> tokenGroups) throws JOSEException {
+        String token = createToken("testuser", tokenGroups, new Date(System.currentTimeMillis() + 300000));
+        Map<String, String> options = new HashMap<>();
+        options.put(OAuth2LoginModule.JWKS_URL_OPTION, "https://idp.example.com/.well-known/jwks.json");
+        options.put(OAuth2LoginModule.ISSUER_OPTION, ISSUER);
+        options.put(OAuth2LoginModule.AUDIENCE_OPTION, AUDIENCE);
+        options.put(OAuth2LoginModule.NETWORK_CONNECTION_GROUPS_OPTION, " " + networkGroups + " ,");
+
+        CallbackHandler handler = callbacks -> {
+            for (Callback callback : callbacks) {
+                if (callback instanceof ConnectionCallback) {
+                    ConnectionCallback cc = (ConnectionCallback) callback;
+                    cc.setConnectionId("ID:conn-1");
+                    cc.setNetworkConnection(network);
+                } else if (callback instanceof OAuth2TokenCallback) {
+                    ((OAuth2TokenCallback) callback).setToken(token);
+                } else {
+                    throw new UnsupportedCallbackException(callback);
+                }
+            }
+        };
+        OAuth2LoginModule module = new OAuth2LoginModule();
+        module.initialize(subject, handler, new HashMap<>(), options);
+        module.setJwtProcessor(jwtProcessor);
+        return module;
+    }
 
     private String createToken(String subject, List<String> groups, Date expiration) throws JOSEException {
         JWTClaimsSet.Builder builder = new JWTClaimsSet.Builder()
