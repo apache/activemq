@@ -47,7 +47,7 @@ public class StatisticImpl implements Statistic, Resettable {
         }
     }
 
-    protected synchronized void updateSampleTime() {
+    protected void updateSampleTime() {
         this.lastSampleTime = System.currentTimeMillis();
     }
 
@@ -72,11 +72,11 @@ public class StatisticImpl implements Statistic, Resettable {
         return this.description;
     }
 
-    public synchronized long getStartTime() {
+    public long getStartTime() {
         return this.startTime;
     }
 
-    public synchronized long getLastSampleTime() {
+    public long getLastSampleTime() {
         return this.lastSampleTime;
     }
 
