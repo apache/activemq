@@ -40,9 +40,9 @@
               <Set name="pattern">*</Set>
               <Set name="headerName">X-XSS-Protection</Set>
               <Set name="headerValue">1; mode=block</Set>
-           </New>
-         </Arg>
-       </Call>
+            </New>
+          </Arg>
+        </Call>
         <Call name="addRule">
           <Arg>
             <New class="org.eclipse.jetty.rewrite.handler.HeaderPatternRule">
@@ -59,8 +59,8 @@
               <Set name="headerName">Cache-Control</Set>
               <Set name="headerValue">no-store</Set>
             </New>
-            </Arg>
-          </Call>
+          </Arg>
+        </Call>
         <Call name="addRule">
           <Arg>
             <New class="org.eclipse.jetty.rewrite.handler.HeaderPatternRule">
