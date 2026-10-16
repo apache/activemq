@@ -786,6 +786,72 @@ public class OAuth2LoginModuleTest extends TestCase {
         assertEquals("default-group", subject.getPrincipals(GroupPrincipal.class).iterator().next().getName());
     }
 
+    public void testNonHttpsJwksUrlRejected() throws Exception {
+        Map<String, String> options = new HashMap<>();
+        options.put(OAuth2LoginModule.JWKS_URL_OPTION, "http://idp.example.com/.well-known/jwks.json");
+        options.put(OAuth2LoginModule.ISSUER_OPTION, ISSUER);
+
+        String token = createToken("testuser", Arrays.asList("admin"), new Date(System.currentTimeMillis() + 300000));
+        OAuth2LoginModule module = new OAuth2LoginModule();
+        module.initialize(new Subject(), new TokenCallbackHandler(token), new HashMap<>(), options);
+        try {
+            module.login();
+            fail("http JWKS URL should be rejected");
+        } catch (LoginException e) {
+            assertTrue(e.getCause().getMessage().contains("https"));
+        }
+    }
+
+    public void testNestedGroupsClaim() throws Exception {
+        Map<String, String> options = new HashMap<>();
+        options.put(OAuth2LoginModule.JWKS_URL_OPTION, "https://idp.example.com/.well-known/jwks.json");
+        options.put(OAuth2LoginModule.ISSUER_OPTION, ISSUER);
+        options.put(OAuth2LoginModule.AUDIENCE_OPTION, AUDIENCE);
+        options.put(OAuth2LoginModule.GROUPS_CLAIM_OPTION, "realm_access.roles");
+
+        JWTClaimsSet claims = new JWTClaimsSet.Builder()
+                .subject("nesteduser")
+                .issuer(ISSUER)
+                .audience(AUDIENCE)
+                .claim("realm_access", Collections.singletonMap("roles", Arrays.asList("r1", "r2")))
+                .expirationTime(new Date(System.currentTimeMillis() + 300000))
+                .build();
+
+        Subject subject = new Subject();
+        OAuth2LoginModule module = new OAuth2LoginModule();
+        module.initialize(subject, new TokenCallbackHandler(signToken(claims)), new HashMap<>(), options);
+        module.setJwtProcessor(jwtProcessor);
+        assertTrue(module.login());
+        module.commit();
+
+        assertEquals(2, subject.getPrincipals(GroupPrincipal.class).size());
+    }
+
+    public void testUnsupportedGroupsClaimTypeYieldsNoGroups() throws Exception {
+        Map<String, String> options = new HashMap<>();
+        options.put(OAuth2LoginModule.JWKS_URL_OPTION, "https://idp.example.com/.well-known/jwks.json");
+        options.put(OAuth2LoginModule.ISSUER_OPTION, ISSUER);
+        options.put(OAuth2LoginModule.AUDIENCE_OPTION, AUDIENCE);
+
+        JWTClaimsSet claims = new JWTClaimsSet.Builder()
+                .subject("user")
+                .issuer(ISSUER)
+                .audience(AUDIENCE)
+                .claim("groups", Collections.singletonMap("a", "b"))
+                .expirationTime(new Date(System.currentTimeMillis() + 300000))
+                .build();
+
+        Subject subject = new Subject();
+        OAuth2LoginModule module = new OAuth2LoginModule();
+        module.initialize(subject, new TokenCallbackHandler(signToken(claims)), new HashMap<>(), options);
+        module.setJwtProcessor(jwtProcessor);
+        assertTrue(module.login());
+        module.commit();
+
+        assertEquals(1, subject.getPrincipals(UserPrincipal.class).size());
+        assertEquals(0, subject.getPrincipals(GroupPrincipal.class).size());
+    }
+
     public void testTokenWithManyGroups() throws Exception {
         List<String> manyGroups = Arrays.asList("group1", "group2", "group3", "group4", "group5",
                 "group6", "group7", "group8", "group9", "group10");
