@@ -555,6 +555,11 @@ o  'org.eclipse.jetty:apache-jsp'
       <artifactId>junit</artifactId>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-secure-xml</artifactId>
+      <scope>test</scope>
+    </dependency>
 
     <!-- dependencies specific to this module -->
     <dependency>
