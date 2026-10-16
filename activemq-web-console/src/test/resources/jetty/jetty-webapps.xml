@@ -49,8 +49,8 @@
               <Set name="pattern">*</Set>
               <Set name="headerName">X-Content-Type-Options</Set>
               <Set name="headerValue">nosniff</Set>
-            </New>
-            </Arg>
+        </New>
+        </Arg>
           </Call>
         <Call name="addRule">
           <Arg>
@@ -58,8 +58,8 @@
               <Set name="pattern">*</Set>
               <Set name="headerName">Cache-Control</Set>
               <Set name="headerValue">no-store</Set>
-            </New>
-            </Arg>
+        </New>
+        </Arg>
           </Call>
         <Call name="addRule">
           <Arg>
@@ -67,8 +67,8 @@
               <Set name="pattern">*</Set>
               <Set name="headerName">Content-Security-Policy</Set>
               <Set name="headerValue">style-src-elem 'self'; style-src 'self'; img-src 'self'; script-src-elem 'self'; default-src 'none'; object-src 'none'; frame-ancestors 'none'; base-uri 'none';</Set>
-            </New>
-            </Arg>
+        </New>
+        </Arg>
           </Call>
         <!-- Relaxed CSP rules for XML admin pages -->
         <Call name="addRule">
