@@ -27,7 +27,14 @@ import java.util.concurrent.CancellationException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -83,6 +90,14 @@ import static org.apache.activemq.transaction.Transaction.IN_USE_STATE;
 public class Topic extends BaseDestination implements Task {
     protected static final Logger LOG = LoggerFactory.getLogger(Topic.class);
     private final TopicMessageStore topicStore;
+    static final int FANOUT_THREADS = Integer.getInteger("org.apache.activemq.broker.region.Topic.fanoutThreads", 0);
+    static final int FANOUT_QUEUE_LIMIT = Integer.getInteger("org.apache.activemq.broker.region.Topic.fanoutQueueLimit", 1000);
+    static final int FANOUT_BATCH = Integer.getInteger("org.apache.activemq.broker.region.Topic.fanoutBatch", 256);
+    private static final ExecutorService FANOUT_POOL = FANOUT_THREADS > 0 ? createFanoutPool(FANOUT_THREADS) : null;
+    private final ConcurrentLinkedQueue<PendingFanout> fanoutQueue = new ConcurrentLinkedQueue<>();
+    private final AtomicBoolean fanoutScheduled = new AtomicBoolean();
+    private final Semaphore fanoutPermits = new Semaphore(FANOUT_QUEUE_LIMIT);
+    private final Object fanoutOrderLock = new Object();
     protected final CopyOnWriteArrayList<Subscription> consumers = new CopyOnWriteArrayList<Subscription>();
     private final ReentrantReadWriteLock dispatchLock = new ReentrantReadWriteLock();
     private DispatchPolicy dispatchPolicy = new SimpleDispatchPolicy();
@@ -516,7 +531,11 @@ public class Topic extends BaseDestination implements Task {
             }
         }
 
-        doMessageSend(producerExchange, message);
+        if (canFanoutAsync(context, message)) {
+            enqueueFanout(context, message);
+        } else {
+            doMessageSend(producerExchange, message);
+        }
         messageDelivered(context, message);
         if (sendProducerAck) {
             ProducerAck ack = new ProducerAck(producerInfo.getProducerId(), message.getSize());
@@ -631,6 +650,81 @@ public class Topic extends BaseDestination implements Task {
                 // ignore - the task has been cancelled if the message
                 // has already been deleted
             }
+        }
+    }
+
+    private static ExecutorService createFanoutPool(int threads) {
+        AtomicInteger seq = new AtomicInteger();
+        return new ThreadPoolExecutor(threads, threads, 60, TimeUnit.SECONDS, new LinkedBlockingQueue<>(), r -> {
+            Thread t = new Thread(r, "ActiveMQ Topic Fanout-" + seq.incrementAndGet());
+            t.setDaemon(true);
+            return t;
+        });
+    }
+
+    private static final class PendingFanout {
+        private final ConnectionContext context;
+        private final Message message;
+
+        PendingFanout(ConnectionContext context, Message message) {
+            this.context = context;
+            this.message = message;
+        }
+
+        ConnectionContext context() {
+            return context;
+        }
+
+        Message message() {
+            return message;
+        }
+    }
+
+    private boolean canFanoutAsync(ConnectionContext context, Message message) {
+        return FANOUT_POOL != null && !message.isPersistent() && !context.isInTransaction();
+    }
+
+    private void enqueueFanout(ConnectionContext context, Message message) throws Exception {
+        while (!fanoutPermits.tryAcquire(1, TimeUnit.SECONDS)) {
+            if (context.getStopping().get()) {
+                throw new IOException("Connection closed, send aborted.");
+            }
+        }
+        message.incrementReferenceCount();
+        synchronized (fanoutOrderLock) {
+            message.getMessageId().setBrokerSequenceId(getDestinationSequenceId());
+            fanoutQueue.add(new PendingFanout(context, message));
+        }
+        scheduleFanout();
+    }
+
+    private void scheduleFanout() {
+        if (!fanoutQueue.isEmpty() && fanoutScheduled.compareAndSet(false, true)) {
+            FANOUT_POOL.execute(this::drainFanout);
+        }
+    }
+
+    private void drainFanout() {
+        try {
+            for (int i = 0; i < FANOUT_BATCH; i++) {
+                PendingFanout pending = fanoutQueue.poll();
+                if (pending == null) {
+                    break;
+                }
+                try {
+                    synchronized (this) {
+                        dispatch(pending.context(), pending.message());
+                    }
+                } catch (Throwable e) {
+                    LOG.warn("Async fanout failed on {} for {}", getActiveMQDestination().getQualifiedName(), pending.message().getMessageId(), e);
+                } finally {
+                    pending.message().decrementReferenceCount();
+                    fanoutPermits.release();
+                }
+            }
+        } finally {
+            fanoutScheduled.set(false);
+            scheduleFanout();
         }
     }
 

@@ -16,7 +16,7 @@
  */
 package org.apache.activemq.management;
 
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.LongAdder;
 
 /**
  * A count statistic implementation
@@ -25,7 +25,7 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public class CountStatisticImpl extends StatisticImpl implements CountStatistic {
 
-    private final AtomicLong counter = new AtomicLong(0);
+    private final LongAdder counter = new LongAdder();
     private CountStatisticImpl parent;
 
     public CountStatisticImpl(CountStatisticImpl parent, String name, String description) {
@@ -44,23 +44,24 @@ public class CountStatisticImpl extends StatisticImpl implements CountStatistic 
     public void reset() {
         if (isDoReset()) {
             super.reset();
-            counter.set(0);
+            counter.reset();
         }
     }
 
     public long getCount() {
-        return counter.get();
+        return counter.sum();
     }
 
     public void setCount(long count) {
         if (isEnabled()) {
-            counter.set(count);
+            counter.reset();
+            counter.add(count);
         }
     }
 
     public void add(long amount) {
         if (isEnabled()) {
-            counter.addAndGet(amount);
+            counter.add(amount);
             updateSampleTime();
             if (parent != null) {
                 parent.add(amount);
@@ -70,7 +71,7 @@ public class CountStatisticImpl extends StatisticImpl implements CountStatistic 
 
     public void increment() {
         if (isEnabled()) {
-            counter.incrementAndGet();
+            counter.increment();
             updateSampleTime();
             if (parent != null) {
                 parent.increment();
@@ -80,7 +81,7 @@ public class CountStatisticImpl extends StatisticImpl implements CountStatistic 
 
     public void subtract(long amount) {
         if (isEnabled()) {
-            counter.addAndGet(-amount);
+            counter.add(-amount);
             updateSampleTime();
             if (parent != null) {
                 parent.subtract(amount);
@@ -90,7 +91,7 @@ public class CountStatisticImpl extends StatisticImpl implements CountStatistic 
 
     public void decrement() {
         if (isEnabled()) {
-            counter.decrementAndGet();
+            counter.decrement();
             updateSampleTime();
             if (parent != null) {
                 parent.decrement();
@@ -111,7 +112,7 @@ public class CountStatisticImpl extends StatisticImpl implements CountStatistic 
 
     protected void appendFieldDescription(StringBuffer buffer) {
         buffer.append(" count: ");
-        buffer.append(Long.toString(counter.get()));
+        buffer.append(Long.toString(counter.sum()));
         super.appendFieldDescription(buffer);
     }
 
@@ -120,7 +121,7 @@ public class CountStatisticImpl extends StatisticImpl implements CountStatistic 
      *         since the last reset.
      */
     public double getPeriod() {
-        double count = counter.get();
+        double count = counter.sum();
         if (count == 0) {
             return 0;
         }
@@ -133,7 +134,7 @@ public class CountStatisticImpl extends StatisticImpl implements CountStatistic 
      *         since the last reset.
      */
     public double getFrequency() {
-        double count = counter.get();
+        double count = counter.sum();
         double time = System.currentTimeMillis() - getStartTime();
         return count * 1000.0 / time;
     }
