@@ -54,6 +54,8 @@ import com.nimbusds.jwt.proc.ConfigurableJWTProcessor;
 import com.nimbusds.jwt.proc.DefaultJWTClaimsVerifier;
 import com.nimbusds.jwt.proc.DefaultJWTProcessor;
 
+import org.apache.activemq.jaas.ConnectionCallback;
+import org.apache.activemq.jaas.ConnectionPrincipal;
 import org.apache.activemq.jaas.GroupPrincipal;
 import org.apache.activemq.jaas.UserPrincipal;
 
@@ -74,18 +76,25 @@ import org.slf4j.LoggerFactory;
  *   <li>{@code oauth2.audience} (optional) - Expected token audience (aud claim)</li>
  *   <li>{@code oauth2.usernameClaim} (optional, default: "sub") - JWT claim to use as username</li>
  *   <li>{@code oauth2.groupsClaim} (optional, default: "groups") - JWT claim containing group memberships</li>
+ *   <li>{@code oauth2.networkConnectionGroups} (optional) - Comma-separated list of groups whose members
+ *       may register a network connection (broker bridge). When set, a connection that declares itself a
+ *       network connection is rejected unless the user belongs to one of these groups, and a
+ *       {@link ConnectionPrincipal} carrying that decision is added to the Subject so the broker can
+ *       enforce it if the connection declares itself a network connection after authenticating.
+ *       When not set, network connections are not restricted by this module.</li>
  *   <li>{@code debug} (optional) - Enable debug logging</li>
  * </ul>
  * <p>
  * Example login.config:
  * <pre>
- * activemq-oauth2 {
+ * activemq-jaas-oauth2 {
  *     org.apache.activemq.oauth2.OAuth2LoginModule required
  *         oauth2.jwksUrl="https://idp.example.com/.well-known/jwks.json"
  *         oauth2.issuer="https://idp.example.com"
  *         oauth2.audience="activemq"
  *         oauth2.usernameClaim="preferred_username"
- *         oauth2.groupsClaim="roles";
+ *         oauth2.groupsClaim="roles"
+ *         oauth2.networkConnectionGroups="amq-network";
  * };
  * </pre>
  */
@@ -98,6 +107,7 @@ public class OAuth2LoginModule implements LoginModule {
     static final String AUDIENCE_OPTION = "oauth2.audience";
     static final String USERNAME_CLAIM_OPTION = "oauth2.usernameClaim";
     static final String GROUPS_CLAIM_OPTION = "oauth2.groupsClaim";
+    static final String NETWORK_CONNECTION_GROUPS_OPTION = "oauth2.networkConnectionGroups";
 
     private static final String DEFAULT_USERNAME_CLAIM = "sub";
     private static final String DEFAULT_GROUPS_CLAIM = "groups";
@@ -115,6 +125,9 @@ public class OAuth2LoginModule implements LoginModule {
     private String audience;
     private String usernameClaim;
     private String groupsClaim;
+    private Set<String> networkConnectionGroups;
+    private ConnectionCallback connection;
+    private boolean networkConnectionAllowed;
 
     private String user;
     private final LinkedHashSet<Principal> principals = new LinkedHashSet<>();
@@ -148,6 +161,19 @@ public class OAuth2LoginModule implements LoginModule {
         String grpClaim = option(options, GROUPS_CLAIM_OPTION);
         this.groupsClaim = (grpClaim != null && !grpClaim.isEmpty()) ? grpClaim : DEFAULT_GROUPS_CLAIM;
 
+        String networkGroups = option(options, NETWORK_CONNECTION_GROUPS_OPTION);
+        if (networkGroups != null && !networkGroups.trim().isEmpty()) {
+            this.networkConnectionGroups = new HashSet<>();
+            for (String group : networkGroups.split(",")) {
+                String trimmed = group.trim();
+                if (!trimmed.isEmpty()) {
+                    this.networkConnectionGroups.add(trimmed);
+                }
+            }
+        } else {
+            this.networkConnectionGroups = null;
+        }
+
         if (debug) {
             LOG.debug("OAuth2LoginModule initialized with jwksUrl={}, issuer={}, audience={}, usernameClaim={}, groupsClaim={}",
                     jwksUrl, issuer, audience, usernameClaim, groupsClaim);
@@ -175,9 +201,26 @@ public class OAuth2LoginModule implements LoginModule {
                 throw new FailedLoginException("JWT token does not contain the username claim: " + usernameClaim);
             }
 
+            List<String> groups = getGroupsFromClaims(claims);
+
+            // When enabled, a network connection is denied unless the user belongs to one of the
+            // configured groups. Application connections are unaffected.
+            if (networkConnectionGroups != null) {
+                connection = getConnectionCallback();
+                networkConnectionAllowed = groups != null && !Collections.disjoint(groups, networkConnectionGroups);
+                if (connection.isNetworkConnection() && !networkConnectionAllowed) {
+                    throw new FailedLoginException("network connection is not allowed for user");
+                }
+            }
+
             principals.add(new UserPrincipal(user));
 
-            List<String> groups = getGroupsFromClaims(claims);
+            if (connection != null) {
+                principals.add(new ConnectionPrincipal(connection.getConnectionId(), connection.getClientId(),
+                        networkConnectionAllowed, connection.isSsl(), connection.getRemoteAddress(),
+                        connection.getTransportConnectorName()));
+            }
+
             if (groups != null) {
                 for (String group : groups) {
                     principals.add(new GroupPrincipal(group));
@@ -246,6 +289,20 @@ public class OAuth2LoginModule implements LoginModule {
         succeeded = false;
         commitSucceeded = false;
         return true;
+    }
+
+    private ConnectionCallback getConnectionCallback() throws LoginException {
+        ConnectionCallback connectionCallback = new ConnectionCallback();
+        try {
+            callbackHandler.handle(new Callback[]{connectionCallback});
+        } catch (IOException e) {
+            LoginException le = new LoginException("Error retrieving connection details: " + e.getMessage());
+            le.initCause(e);
+            throw le;
+        } catch (UnsupportedCallbackException e) {
+            // callback handler does not describe the connection; treat as an application connection
+        }
+        return connectionCallback;
     }
 
     private String getToken() throws LoginException {
@@ -396,6 +453,8 @@ public class OAuth2LoginModule implements LoginModule {
 
     private void clear() {
         user = null;
+        connection = null;
+        networkConnectionAllowed = false;
         principals.clear();
     }
 

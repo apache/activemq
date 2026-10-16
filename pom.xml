@@ -220,7 +220,7 @@
     <module>activemq-run</module>
     <module>activemq-shiro</module>
     <module>activemq-opentelemetry</module>
-    <module>activemq-oauth2</module>
+    <module>activemq-jaas-oauth2</module>
     <module>activemq-spring</module>
     <module>activemq-runtime-config</module>
     <module>activemq-tooling</module>
@@ -360,7 +360,7 @@
       </dependency>
       <dependency>
         <groupId>org.apache.activemq</groupId>
-        <artifactId>activemq-oauth2</artifactId>
+        <artifactId>activemq-jaas-oauth2</artifactId>
         <version>${project.version}</version>
       </dependency>
       <dependency>
