@@ -744,7 +744,7 @@ public class Topic extends BaseDestination implements Task {
                     public boolean isDuplicate(MessageId id) {
                         return false;
                     }
-                });
+                }, max);
                 final ConnectionContext connectionContext = createConnectionContext();
                 for (Message message : toExpire) {
                     for (DurableTopicSubscription sub : durableSubscribers.values()) {
