@@ -79,10 +79,9 @@
                 <configuration>
                     <instructions>
                         <Bundle-SymbolicName>org.apache.activemq.oauth2</Bundle-SymbolicName>
-                        <Export-Package>org.apache.activemq.oauth2*;version=${project.version};-noimport:=true;-split-package:=merge-first</Export-Package>
+                        <Export-Package>org.apache.activemq.oauth2*;version=${project.version};-noimport:=true</Export-Package>
                         <Import-Package>
-                            org.apache.activemq*;version=${project.version};resolution:=optional,
-                            com.nimbusds*,
+                            com.nimbusds*;version="[9,11)",
                             *
                         </Import-Package>
                         <_noee>true</_noee>

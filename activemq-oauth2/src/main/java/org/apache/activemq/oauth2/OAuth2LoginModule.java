@@ -17,13 +17,16 @@
 package org.apache.activemq.oauth2;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 import java.security.Principal;
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -99,6 +102,8 @@ public class OAuth2LoginModule implements LoginModule {
     private static final String DEFAULT_USERNAME_CLAIM = "sub";
     private static final String DEFAULT_GROUPS_CLAIM = "groups";
 
+    private static final int MAX_CACHED_PROCESSORS = 100;
+
     private static final Map<String, ConfigurableJWTProcessor<SecurityContext>> PROCESSOR_CACHE = new ConcurrentHashMap<>();
 
     private Subject subject;
@@ -123,24 +128,24 @@ public class OAuth2LoginModule implements LoginModule {
         this.subject = subject;
         this.callbackHandler = callbackHandler;
         this.succeeded = false;
-        this.debug = Boolean.parseBoolean((String) options.get("debug"));
+        this.debug = Boolean.parseBoolean(String.valueOf(options.get("debug")));
 
-        this.jwksUrl = (String) options.get(JWKS_URL_OPTION);
+        this.jwksUrl = option(options, JWKS_URL_OPTION);
         if (jwksUrl == null || jwksUrl.isEmpty()) {
             throw new IllegalArgumentException("OAuth2 JWKS URL (" + JWKS_URL_OPTION + ") is required");
         }
 
-        this.issuer = (String) options.get(ISSUER_OPTION);
+        this.issuer = option(options, ISSUER_OPTION);
         if (issuer == null || issuer.isEmpty()) {
             throw new IllegalArgumentException("OAuth2 issuer (" + ISSUER_OPTION + ") is required");
         }
 
-        this.audience = (String) options.get(AUDIENCE_OPTION);
+        this.audience = option(options, AUDIENCE_OPTION);
 
-        String userClaim = (String) options.get(USERNAME_CLAIM_OPTION);
+        String userClaim = option(options, USERNAME_CLAIM_OPTION);
         this.usernameClaim = (userClaim != null && !userClaim.isEmpty()) ? userClaim : DEFAULT_USERNAME_CLAIM;
 
-        String grpClaim = (String) options.get(GROUPS_CLAIM_OPTION);
+        String grpClaim = option(options, GROUPS_CLAIM_OPTION);
         this.groupsClaim = (grpClaim != null && !grpClaim.isEmpty()) ? grpClaim : DEFAULT_GROUPS_CLAIM;
 
         if (debug) {
@@ -149,8 +154,15 @@ public class OAuth2LoginModule implements LoginModule {
         }
     }
 
+    private static String option(Map<String, ?> options, String key) {
+        Object value = options.get(key);
+        return value == null ? null : value.toString();
+    }
+
     @Override
     public boolean login() throws LoginException {
+        clear();
+        succeeded = false;
         String token = getToken();
         if (token == null || token.isEmpty()) {
             throw new FailedLoginException("No JWT token provided");
@@ -174,12 +186,14 @@ public class OAuth2LoginModule implements LoginModule {
 
             succeeded = true;
             if (debug) {
-                LOG.debug("OAuth2 login succeeded for user={} with groups={}", user, groups);
+                LOG.debug("OAuth2 login succeeded for user={}", user);
             }
         } catch (FailedLoginException e) {
             throw e;
         } catch (Exception e) {
-            LoginException le = new FailedLoginException("JWT token validation failed: " + e.getMessage());
+            LOG.warn("OAuth2 login failed: {}", e.getMessage());
+            clear();
+            LoginException le = new FailedLoginException("JWT token validation failed");
             le.initCause(e);
             throw le;
         }
@@ -248,19 +262,25 @@ public class OAuth2LoginModule implements LoginModule {
                 LOG.debug("OAuth2TokenCallback not supported, falling back to PasswordCallback");
             }
         } catch (IOException e) {
-            throw new LoginException("Error retrieving OAuth2 token: " + e.getMessage());
+            LoginException le = new LoginException("Error retrieving OAuth2 token: " + e.getMessage());
+            le.initCause(e);
+            throw le;
         }
 
         // Fall back to PasswordCallback (token passed as password)
+        PasswordCallback passwordCallback = new PasswordCallback("Token: ", false);
         try {
-            PasswordCallback passwordCallback = new PasswordCallback("Token: ", false);
             callbackHandler.handle(new Callback[]{passwordCallback});
             char[] tokenChars = passwordCallback.getPassword();
             if (tokenChars != null) {
                 return new String(tokenChars);
             }
         } catch (IOException | UnsupportedCallbackException e) {
-            throw new LoginException("Error retrieving token from PasswordCallback: " + e.getMessage());
+            LoginException le = new LoginException("Error retrieving token from PasswordCallback: " + e.getMessage());
+            le.initCause(e);
+            throw le;
+        } finally {
+            passwordCallback.clearPassword();
         }
 
         return null;
@@ -271,11 +291,14 @@ public class OAuth2LoginModule implements LoginModule {
             ConfigurableJWTProcessor<SecurityContext> processor = getJWTProcessor();
             return processor.process(token, null);
         } catch (ParseException e) {
-            throw new FailedLoginException("Invalid JWT format: " + e.getMessage());
+            LOG.warn("Invalid JWT format: {}", e.getMessage());
+            throw new FailedLoginException("Invalid JWT format");
         } catch (BadJOSEException e) {
-            throw new FailedLoginException("JWT validation failed: " + e.getMessage());
+            LOG.warn("JWT validation failed: {}", e.getMessage());
+            throw new FailedLoginException("JWT validation failed");
         } catch (JOSEException e) {
-            throw new FailedLoginException("JWT processing error: " + e.getMessage());
+            LOG.warn("JWT processing error: {}", e.getMessage());
+            throw new FailedLoginException("JWT processing error");
         }
     }
 
@@ -284,73 +307,91 @@ public class OAuth2LoginModule implements LoginModule {
             return jwtProcessor;
         }
 
-        String cacheKey = jwksUrl + "|" + issuer + "|" + (audience != null ? audience : "");
-        ConfigurableJWTProcessor<SecurityContext> cached = PROCESSOR_CACHE.get(cacheKey);
-        if (cached != null) {
-            return cached;
-        }
-
+        URL jwksEndpoint;
         try {
-            URL jwksEndpoint = new URL(jwksUrl);
-            JWKSource<SecurityContext> keySource = JWKSourceBuilder
-                    .create(jwksEndpoint)
-                    .retrying(true)
-                    .build();
-
-            JWSKeySelector<SecurityContext> keySelector = new JWSVerificationKeySelector<>(
-                    JWSAlgorithm.Family.SIGNATURE, keySource);
-
-            ConfigurableJWTProcessor<SecurityContext> processor = new DefaultJWTProcessor<>();
-            processor.setJWSKeySelector(keySelector);
-
-            // Build the claims verifier with issuer and optional audience
-            JWTClaimsSet.Builder exactMatchBuilder = new JWTClaimsSet.Builder()
-                    .issuer(issuer);
-
-            Set<String> requiredClaims = new HashSet<>();
-            requiredClaims.add("sub");
-            requiredClaims.add("iss");
-            requiredClaims.add("exp");
-
-            if (audience != null && !audience.isEmpty()) {
-                exactMatchBuilder.audience(audience);
-                requiredClaims.add("aud");
-            }
-
-            processor.setJWTClaimsSetVerifier(new DefaultJWTClaimsVerifier<>(
-                    exactMatchBuilder.build(),
-                    requiredClaims));
-
-            PROCESSOR_CACHE.putIfAbsent(cacheKey, processor);
-            return PROCESSOR_CACHE.get(cacheKey);
-        } catch (MalformedURLException e) {
+            jwksEndpoint = URI.create(jwksUrl).toURL();
+        } catch (IllegalArgumentException | java.net.MalformedURLException e) {
             throw new LoginException("Invalid JWKS URL: " + jwksUrl);
         }
+        if (!"https".equalsIgnoreCase(jwksEndpoint.getProtocol())) {
+            throw new LoginException("JWKS URL must use https: " + jwksUrl);
+        }
+
+        String cacheKey = jwksUrl + "|" + issuer + "|" + (audience != null ? audience : "") + "|" + usernameClaim;
+        if (PROCESSOR_CACHE.size() >= MAX_CACHED_PROCESSORS && !PROCESSOR_CACHE.containsKey(cacheKey)) {
+            PROCESSOR_CACHE.clear();
+        }
+        return PROCESSOR_CACHE.computeIfAbsent(cacheKey, k -> createProcessor(jwksEndpoint));
+    }
+
+    private ConfigurableJWTProcessor<SecurityContext> createProcessor(URL jwksEndpoint) {
+        JWKSource<SecurityContext> keySource = JWKSourceBuilder
+                .create(jwksEndpoint)
+                .retrying(true)
+                .build();
+
+        // Only asymmetric algorithms: never accept HMAC-signed tokens
+        Set<JWSAlgorithm> algorithms = new HashSet<>();
+        algorithms.addAll(JWSAlgorithm.Family.RSA);
+        algorithms.addAll(JWSAlgorithm.Family.EC);
+        algorithms.add(JWSAlgorithm.EdDSA);
+        JWSKeySelector<SecurityContext> keySelector = new JWSVerificationKeySelector<>(algorithms, keySource);
+
+        ConfigurableJWTProcessor<SecurityContext> processor = new DefaultJWTProcessor<>();
+        processor.setJWSKeySelector(keySelector);
+
+        JWTClaimsSet.Builder exactMatchBuilder = new JWTClaimsSet.Builder().issuer(issuer);
+
+        Set<String> requiredClaims = new HashSet<>();
+        requiredClaims.add(usernameClaim);
+        requiredClaims.add("iss");
+        requiredClaims.add("exp");
+
+        if (audience != null && !audience.isEmpty()) {
+            exactMatchBuilder.audience(audience);
+            requiredClaims.add("aud");
+        }
+
+        processor.setJWTClaimsSetVerifier(new DefaultJWTClaimsVerifier<>(exactMatchBuilder.build(), requiredClaims));
+        return processor;
     }
 
     private List<String> getGroupsFromClaims(JWTClaimsSet claims) {
-        try {
-            Object groupsValue = claims.getClaim(groupsClaim);
-            if (groupsValue instanceof List<?>) {
-                List<?> list = (List<?>) groupsValue;
-                return list.stream()
-                        .filter(item -> item != null)
-                        .map(Object::toString)
-                        .map(String::trim)
-                        .filter(s -> !s.isEmpty())
-                        .toList();
-            } else if (groupsValue instanceof String) {
-                return Arrays.stream(((String) groupsValue).split(","))
-                        .map(String::trim)
-                        .filter(s -> !s.isEmpty())
-                        .toList();
+        Object groupsValue = resolveClaim(claims, groupsClaim);
+        if (groupsValue instanceof Collection<?>) {
+            List<String> groups = new ArrayList<>();
+            for (Object item : (Collection<?>) groupsValue) {
+                if (item != null && !item.toString().trim().isEmpty()) {
+                    groups.add(item.toString().trim());
+                }
             }
-        } catch (Exception e) {
-            if (debug) {
-                LOG.debug("Could not extract groups from claim '{}': {}", groupsClaim, e.getMessage());
-            }
+            return groups;
+        } else if (groupsValue instanceof String) {
+            return Arrays.stream(((String) groupsValue).split(","))
+                    .map(String::trim)
+                    .filter(s -> !s.isEmpty())
+                    .toList();
+        } else if (groupsValue != null) {
+            LOG.warn("Ignoring groups claim '{}': unsupported type {}", groupsClaim, groupsValue.getClass().getName());
         }
-        return null;
+        return Collections.emptyList();
+    }
+
+    /**
+     * Resolves a claim by exact name first, then as a dotted path into nested JSON objects
+     * (e.g. {@code realm_access.roles}).
+     */
+    private static Object resolveClaim(JWTClaimsSet claims, String name) {
+        Object value = claims.getClaim(name);
+        if (value != null || name.indexOf('.') < 0) {
+            return value;
+        }
+        String[] parts = name.split("\\.");
+        Object current = claims.getClaim(parts[0]);
+        for (int i = 1; i < parts.length && current != null; i++) {
+            current = current instanceof Map<?, ?> ? ((Map<?, ?>) current).get(parts[i]) : null;
+        }
+        return current;
     }
 
     private void clear() {
