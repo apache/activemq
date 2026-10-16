@@ -22,10 +22,22 @@
     <method>post</method>
   </http>
 
-  <!-- Enforce that an Origin/Referer header is present to prevent CSRF.
-       Add explicit <allow-origin> entries below if the console is served from
-       a different host. -->
+  <!-- CSRF protection: with <strict-checking/> every request must carry an
+       Origin (or Referer) header matching one of the <allow-origin> entries.
+       The list must not be empty: without any entry Jolokia accepts every
+       origin and only rejects requests that have no such header at all.
+       The entries below are the console's own loopback addresses on the default
+       http / https ports. Add the exact scheme://host:port the console is
+       reached through when the bind address, port or host name is changed, and
+       avoid a leading wildcard. Non-browser clients must send one of these
+       values as their Origin header. -->
   <cors>
+    <allow-origin>http://localhost:8161</allow-origin>
+    <allow-origin>http://127.0.0.1:8161</allow-origin>
+    <allow-origin>http://[::1]:8161</allow-origin>
+    <allow-origin>https://localhost:8443</allow-origin>
+    <allow-origin>https://127.0.0.1:8443</allow-origin>
+    <allow-origin>https://[::1]:8443</allow-origin>
     <strict-checking/>
   </cors>
 
@@ -37,13 +49,117 @@
     <command>search</command>
   </commands>
 
+  <!--
+       How Jolokia combines <commands>, <allow> and <deny>: the two lists are
+       never applied to the same request.
+         - A command type listed in <commands> (read) is permitted everywhere
+           except where <deny> matches. <allow> is not consulted.
+         - A command type NOT listed in <commands> (write, exec) is refused
+           everywhere except where <allow> matches. <deny> is not consulted.
+       <allow> is therefore the only thing limiting write and exec, so each
+       entry must name the exact operations it opens. A wildcard such as
+       <operation>*</operation> or <attribute>*</attribute> on the broker
+       MBeans re-enables every operation / attribute write, including the ones
+       listed in <deny> below.
+
+       Operation names are matched as plain strings against what the client
+       sent, which may carry a signature, e.g. "browse(java.lang.String)". Both
+       spellings are listed for each operation.
+
+       To open an additional management operation, add it to <allow>. Do not add
+       exec or write to <commands>: that permits everything <deny> does not name,
+       on every MBean in the JVM.
+  -->
   <allow>
-    <!-- Allow all operations for the broker itself -->
+    <!-- Broker: read-only queries -->
     <mbean>
-      <name>org.apache.activemq:*</name>
-      <attribute>*</attribute>
-      <operation>*</operation>
+      <name>org.apache.activemq:type=Broker,brokerName=*</name>
+      <operation>queryQueues</operation>
+      <operation>queryQueues(java.lang.String,int,int)</operation>
+      <operation>queryTopics</operation>
+      <operation>queryTopics(java.lang.String,int,int)</operation>
+      <operation>browseQueue</operation>
+      <operation>browseQueue(java.lang.String)</operation>
+      <operation>getTransportConnectorByType</operation>
+      <operation>getTransportConnectorByType(java.lang.String)</operation>
     </mbean>
+
+    <!-- Destinations: browsing and cursor state -->
+    <mbean>
+      <name>org.apache.activemq:type=Broker,brokerName=*,destinationType=*,destinationName=*</name>
+      <operation>browse</operation>
+      <operation>browse()</operation>
+      <operation>browse(java.lang.String)</operation>
+      <operation>browseAsTable</operation>
+      <operation>browseAsTable()</operation>
+      <operation>browseAsTable(java.lang.String)</operation>
+      <operation>getMessage</operation>
+      <operation>getMessage(java.lang.String)</operation>
+      <operation>cursorSize</operation>
+      <operation>cursorSize()</operation>
+      <operation>doesCursorHaveMessagesBuffered</operation>
+      <operation>doesCursorHaveMessagesBuffered()</operation>
+      <operation>doesCursorHaveSpace</operation>
+      <operation>doesCursorHaveSpace()</operation>
+    </mbean>
+
+    <!-- Subscriptions: browsing, cursor state and selector matching -->
+    <mbean>
+      <name>org.apache.activemq:type=Broker,brokerName=*,destinationType=*,destinationName=*,endpoint=Consumer,clientId=*,consumerId=*</name>
+      <operation>browse</operation>
+      <operation>browse()</operation>
+      <operation>browseAsTable</operation>
+      <operation>browseAsTable()</operation>
+      <operation>cursorSize</operation>
+      <operation>cursorSize()</operation>
+      <operation>doesCursorHaveMessagesBuffered</operation>
+      <operation>doesCursorHaveMessagesBuffered()</operation>
+      <operation>doesCursorHaveSpace</operation>
+      <operation>doesCursorHaveSpace()</operation>
+      <operation>isMatchingQueue</operation>
+      <operation>isMatchingQueue(java.lang.String)</operation>
+      <operation>isMatchingTopic</operation>
+      <operation>isMatchingTopic(java.lang.String)</operation>
+    </mbean>
+
+    <!-- Health checks -->
+    <mbean>
+      <name>org.apache.activemq:type=Broker,brokerName=*,service=Health</name>
+      <operation>health</operation>
+      <operation>health()</operation>
+      <operation>healthList</operation>
+      <operation>healthList()</operation>
+      <operation>healthStatus</operation>
+      <operation>healthStatus()</operation>
+    </mbean>
+
+    <!-- JobScheduler: listing scheduled jobs -->
+    <mbean>
+      <name>org.apache.activemq:type=Broker,brokerName=*,service=JobScheduler,name=*</name>
+      <operation>getAllJobs</operation>
+      <operation>getAllJobs(boolean)</operation>
+      <operation>getAllJobs(java.lang.String,java.lang.String)</operation>
+      <operation>getAllJobs(java.lang.String,java.lang.String,boolean)</operation>
+      <operation>getNextScheduleJobs</operation>
+      <operation>getNextScheduleJobs(boolean)</operation>
+      <operation>getExecutionCount</operation>
+      <operation>getExecutionCount(java.lang.String)</operation>
+    </mbean>
+
+    <!-- Log4JConfiguration: reading a logger level -->
+    <mbean>
+      <name>org.apache.activemq:type=Broker,brokerName=*,service=Log4JConfiguration</name>
+      <operation>getLogLevel</operation>
+      <operation>getLogLevel(java.lang.String)</operation>
+    </mbean>
+
+    <!-- Transport connectors: connection count -->
+    <mbean>
+      <name>org.apache.activemq:type=Broker,brokerName=*,connector=clientConnectors,connectorName=*</name>
+      <operation>connectionCount</operation>
+      <operation>connectionCount()</operation>
+    </mbean>
+
     <!-- Allow all operations for Jolokia Config -->
     <mbean>
       <name>jolokia:type=Config</name>
@@ -51,7 +167,10 @@
     </mbean>
   </allow>
 
-  <!-- deny all operations or getting attributes from these mbeans -->
+  <!-- deny all operations or getting attributes from these mbeans.
+       Attribute entries apply to reads. Operation entries only take effect if
+       exec is added to <commands>; they end with a wildcard so that they also
+       match a name sent with its signature. -->
   <deny>
     <!-- ActiveMQ broker: deny destructive / privileged operations.
          Safe read-only getters, browse*, and statistics queries remain allowed
@@ -59,74 +178,74 @@
     <mbean>
       <name>org.apache.activemq:type=Broker,brokerName=*</name>
       <!-- JVM and broker lifecycle -->
-      <operation>terminateJVM</operation>
-      <operation>stop</operation>
-      <operation>stopGracefully</operation>
-      <operation>restart</operation>
-      <operation>gc</operation>
+      <operation>terminateJVM*</operation>
+      <operation>stop*</operation>
+      <operation>stopGracefully*</operation>
+      <operation>restart*</operation>
+      <operation>gc*</operation>
       <!-- Topology and destination management -->
-      <operation>addConnector</operation>
-      <operation>removeConnector</operation>
-      <operation>addNetworkConnector</operation>
-      <operation>removeNetworkConnector</operation>
-      <operation>addQueue</operation>
-      <operation>removeQueue</operation>
-      <operation>addTopic</operation>
-      <operation>removeTopic</operation>
-      <operation>createDurableSubscriber</operation>
-      <operation>destroyDurableSubscriber</operation>
+      <operation>addConnector*</operation>
+      <operation>removeConnector*</operation>
+      <operation>addNetworkConnector*</operation>
+      <operation>removeNetworkConnector*</operation>
+      <operation>addQueue*</operation>
+      <operation>removeQueue*</operation>
+      <operation>addTopic*</operation>
+      <operation>removeTopic*</operation>
+      <operation>createDurableSubscriber*</operation>
+      <operation>destroyDurableSubscriber*</operation>
       <!-- Runtime configuration mutation -->
-      <operation>reloadLog4jProperties</operation>
-      <operation>setMemoryLimit</operation>
-      <operation>setStoreLimit</operation>
-      <operation>setTempLimit</operation>
-      <operation>setJobSchedulerStoreLimit</operation>
-      <operation>setMaxUncommittedCount</operation>
+      <operation>reloadLog4jProperties*</operation>
+      <operation>setMemoryLimit*</operation>
+      <operation>setStoreLimit*</operation>
+      <operation>setTempLimit*</operation>
+      <operation>setJobSchedulerStoreLimit*</operation>
+      <operation>setMaxUncommittedCount*</operation>
     </mbean>
 
     <!-- Destinations: deny message data manipulation and injection.
          browse / browseAsTable / counters remain allowed. -->
     <mbean>
       <name>org.apache.activemq:type=Broker,brokerName=*,destinationType=*,destinationName=*</name>
-      <operation>purge</operation>
-      <operation>removeMessage</operation>
-      <operation>removeMatchingMessages</operation>
-      <operation>copyMessageTo</operation>
-      <operation>copyMatchingMessagesTo</operation>
-      <operation>moveMessageTo</operation>
-      <operation>moveMatchingMessagesTo</operation>
-      <operation>retryMessage</operation>
-      <operation>retryMessages</operation>
-      <operation>removeMessageGroup</operation>
-      <operation>removeAllMessageGroups</operation>
-      <operation>sendTextMessage</operation>
-      <operation>sendTextMessageWithProperties</operation>
-      <operation>pause</operation>
-      <operation>resume</operation>
+      <operation>purge*</operation>
+      <operation>removeMessage*</operation>
+      <operation>removeMatchingMessages*</operation>
+      <operation>copyMessageTo*</operation>
+      <operation>copyMatchingMessagesTo*</operation>
+      <operation>moveMessageTo*</operation>
+      <operation>moveMatchingMessagesTo*</operation>
+      <operation>retryMessage*</operation>
+      <operation>retryMessages*</operation>
+      <operation>removeMessageGroup*</operation>
+      <operation>removeAllMessageGroups*</operation>
+      <operation>sendTextMessage*</operation>
+      <operation>sendTextMessageWithProperties*</operation>
+      <operation>pause*</operation>
+      <operation>resume*</operation>
     </mbean>
 
     <!-- Durable subscriptions: deny destroy and selector tampering -->
     <mbean>
       <name>org.apache.activemq:type=Broker,brokerName=*,destinationType=*,destinationName=*,endpoint=Consumer,clientId=*,consumerId=*</name>
-      <operation>destroy</operation>
-      <operation>removeMessage</operation>
-      <operation>setSelector</operation>
+      <operation>destroy*</operation>
+      <operation>removeMessage*</operation>
+      <operation>setSelector*</operation>
     </mbean>
 
     <!-- JobScheduler: deny job removal -->
     <mbean>
       <name>org.apache.activemq:type=Broker,brokerName=*,service=JobScheduler,name=*</name>
-      <operation>removeJob</operation>
-      <operation>removeAllJobs</operation>
-      <operation>removeAllJobsAtScheduledTime</operation>
+      <operation>removeJob*</operation>
+      <operation>removeAllJobs*</operation>
+      <operation>removeAllJobsAtScheduledTime*</operation>
     </mbean>
 
     <!-- Log4JConfiguration MBean: deny runtime log level / config changes -->
     <mbean>
       <name>org.apache.activemq:type=Broker,brokerName=*,service=Log4JConfiguration</name>
-      <operation>setRootLogLevel</operation>
-      <operation>setLogLevel</operation>
-      <operation>reloadLog4jProperties</operation>
+      <operation>setRootLogLevel*</operation>
+      <operation>setLogLevel*</operation>
+      <operation>reloadLog4jProperties*</operation>
     </mbean>
 
     <!-- NetworkConnector: deny credential exposure and config mutation -->
@@ -134,21 +253,21 @@
       <name>org.apache.activemq:type=Broker,brokerName=*,connector=networkConnectors,networkConnectorName=*</name>
       <attribute>Password</attribute>
       <attribute>RemotePassword</attribute>
-      <operation>setUserName</operation>
-      <operation>setPassword</operation>
-      <operation>setRemoteUserName</operation>
-      <operation>setRemotePassword</operation>
-      <operation>setBridgeTempDestinations</operation>
-      <operation>setConduitSubscriptions</operation>
-      <operation>setDispatchAsync</operation>
-      <operation>setDynamicOnly</operation>
-      <operation>setMessageTTL</operation>
-      <operation>setConsumerTTL</operation>
-      <operation>setPrefetchSize</operation>
-      <operation>setAdvisoryPrefetchSize</operation>
-      <operation>setDecreaseNetworkConsumerPriority</operation>
-      <operation>setSuppressDuplicateQueueSubscriptions</operation>
-      <operation>setSuppressDuplicateTopicSubscriptions</operation>
+      <operation>setUserName*</operation>
+      <operation>setPassword*</operation>
+      <operation>setRemoteUserName*</operation>
+      <operation>setRemotePassword*</operation>
+      <operation>setBridgeTempDestinations*</operation>
+      <operation>setConduitSubscriptions*</operation>
+      <operation>setDispatchAsync*</operation>
+      <operation>setDynamicOnly*</operation>
+      <operation>setMessageTTL*</operation>
+      <operation>setConsumerTTL*</operation>
+      <operation>setPrefetchSize*</operation>
+      <operation>setAdvisoryPrefetchSize*</operation>
+      <operation>setDecreaseNetworkConsumerPriority*</operation>
+      <operation>setSuppressDuplicateQueueSubscriptions*</operation>
+      <operation>setSuppressDuplicateTopicSubscriptions*</operation>
     </mbean>
 
     <!-- MLet allows remote class loading: well-known JMX/Jolokia RCE vector -->
