@@ -50,6 +50,9 @@ public class JettyServerBean implements InitializingBean, DisposableBean {
     public static final String PROPERTY_HTTP_ENABLED = "httpEnabled";
     public static final String PROPERTY_HTTPS_ENABLED = "httpsEnabled";
     public static final String PROPERTY_EXTRA_XML_FILES = "jettyExtraXmlFiles";
+    public static final String PROPERTY_HTTP_HOST = "jetty.http.host";
+    public static final String PROPERTY_HTTPS_HOST = "jetty.ssl.host";
+    public static final String SYSTEM_PROPERTY_HOST = "jetty.host";
 
     public static final int PROPERTY_XML_FILES_LIMIT = 128;
     public static final String PROPERTY_XML_FILES_SEPARATOR = ",";
@@ -160,6 +163,14 @@ public class JettyServerBean implements InitializingBean, DisposableBean {
             // request log resolve under the distribution rather than the working directory.
             jettyProperties.putIfAbsent("jetty.home", jettyProperties.get("activemq.home"));
             jettyProperties.putIfAbsent("jetty.base", jettyProperties.get("activemq.base"));
+
+            // -Djetty.host overrides the bind address of the http and https connectors set in
+            // jetty-spring.properties (jetty.http.host / jetty.ssl.host), e.g. for the docker image.
+            var jettyHost = System.getProperty(SYSTEM_PROPERTY_HOST);
+            if (jettyHost != null && !jettyHost.isBlank()) {
+                jettyProperties.put(PROPERTY_HTTP_HOST, jettyHost);
+                jettyProperties.put(PROPERTY_HTTPS_HOST, jettyHost);
+            }
 
             // Now lets tie it all together
             idMap = configure(xmls, jettyProperties);
