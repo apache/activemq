@@ -902,7 +902,7 @@ public class DurableFiveBrokerNetworkBridgeTest extends JmsMultipleBrokersTestSu
             // Duplex bridges (accessible via transport connections)
             for (final TransportConnector tc : broker.getTransportConnectors()) {
                 for (final TransportConnection conn : tc.getConnections()) {
-                    if (conn.getConnectionId() != null && conn.getConnectionId().startsWith("networkConnector_")) {
+                    if (conn.getClientId() != null && conn.getClientId().startsWith("to-")) {
                         final DemandForwardingBridgeSupport duplexBridge =
                             (DemandForwardingBridgeSupport) duplexBridgeField.get(conn);
                         if (duplexBridge != null) {

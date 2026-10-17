@@ -103,7 +103,7 @@ public class ConnectionView implements ConnectionViewMBean {
 
     @Override
     public String getClientId() {
-        return connection.getConnectionId();
+        return connection.getClientId();
     }
 
     @Override
@@ -127,7 +127,7 @@ public class ConnectionView implements ConnectionViewMBean {
         if (connection != null && managementContext != null) {
 
             try {
-                ObjectName query = createConsumerQueury(connection.getConnectionId());
+                ObjectName query = createConsumerQuery(connection.getClientId());
                 Set<ObjectName> names = managementContext.queryNames(query, null);
                 result = names.toArray(new ObjectName[0]);
             } catch (Exception e) {
@@ -144,7 +144,7 @@ public class ConnectionView implements ConnectionViewMBean {
         if (connection != null && managementContext != null) {
 
             try {
-                ObjectName query = createProducerQueury(connection.getConnectionId());
+                ObjectName query = createProducerQueury(connection.getClientId());
                 Set<ObjectName> names = managementContext.queryNames(query, null);
                 result = names.toArray(new ObjectName[0]);
             } catch (Exception e) {
@@ -154,7 +154,7 @@ public class ConnectionView implements ConnectionViewMBean {
         return result;
     }
 
-    private ObjectName createConsumerQueury(String clientId) throws IOException {
+    private ObjectName createConsumerQuery(String clientId) throws IOException {
         try {
             return BrokerMBeanSupport.createConsumerQueury(managementContext.getJmxDomainName(), clientId);
         } catch (Throwable e) {

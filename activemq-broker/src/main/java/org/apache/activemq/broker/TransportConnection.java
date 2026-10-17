@@ -1608,10 +1608,18 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
     public String getConnectionId() {
         List<TransportConnectionState> connectionStates = listConnectionStates();
         for (TransportConnectionState cs : connectionStates) {
+            return cs.getInfo().getConnectionId().toString();
+        }
+        return null;
+    }
+
+    @Override
+    public String getClientId() {
+        List<TransportConnectionState> connectionStates = listConnectionStates();
+        for (TransportConnectionState cs : connectionStates) {
             if (cs.getInfo().getClientId() != null) {
                 return cs.getInfo().getClientId();
             }
-            return cs.getInfo().getConnectionId().toString();
         }
         return null;
     }

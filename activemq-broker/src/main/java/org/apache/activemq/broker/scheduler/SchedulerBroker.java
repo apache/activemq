@@ -164,6 +164,11 @@ public class SchedulerBroker extends BrokerFilter implements JobListener {
             }
 
             @Override
+            public String getClientId() {
+                return null;
+            }
+
+            @Override
             public boolean isNetworkConnection() {
                 return false;
             }

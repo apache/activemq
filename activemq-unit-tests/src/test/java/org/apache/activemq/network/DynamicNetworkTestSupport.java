@@ -233,8 +233,8 @@ public abstract class DynamicNetworkTestSupport {
         assertNotNull(connector);
 
         for (final TransportConnection tc : connector.getConnections()) {
-            final String connectionId = tc.getConnectionId();
-            if (connectionId != null && connectionId.startsWith("networkConnector_")) {
+            final String clientId = tc.getClientId();
+            if (clientId != null && clientId.startsWith("networkConnector_")) {
                 final Field bridgeField = TransportConnection.class.getDeclaredField("duplexBridge");
                 bridgeField.setAccessible(true);
                 return (DemandForwardingBridge) bridgeField.get(tc);

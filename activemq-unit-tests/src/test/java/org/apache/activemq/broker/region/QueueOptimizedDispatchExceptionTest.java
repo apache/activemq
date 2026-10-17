@@ -196,6 +196,11 @@ public class QueueOptimizedDispatchExceptionTest {
             }
 
             @Override
+            public String getClientId() {
+                return null;
+            }
+
+            @Override
             public void dispatchSync(Command message) {
             }
 
