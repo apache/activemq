@@ -1497,6 +1497,7 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
         // unsubscribe
         connection.request(consumerInfo.createRemoveCommand());
         RemoveSubscriptionInfo removeSubscriptionInfo = new RemoveSubscriptionInfo();
+        removeSubscriptionInfo.setConnectionId(connectionInfo.getConnectionId());
         removeSubscriptionInfo.setClientId(connectionInfo.getClientId());
         removeSubscriptionInfo.setSubscriptionName(consumerInfo.getSubscriptionName());
         connection.request(removeSubscriptionInfo);
@@ -1579,6 +1580,7 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
         // unsubscribe
         connection.request(consumerInfo.createRemoveCommand());
         RemoveSubscriptionInfo removeSubscriptionInfo = new RemoveSubscriptionInfo();
+        removeSubscriptionInfo.setConnectionId(connectionInfo.getConnectionId());
         removeSubscriptionInfo.setClientId(connectionInfo.getClientId());
         removeSubscriptionInfo.setSubscriptionName(consumerInfo.getSubscriptionName());
         connection.request(removeSubscriptionInfo);
@@ -1671,6 +1673,7 @@ public class XARecoveryBrokerTest extends BrokerRestartTestSupport {
         // unsubscribe
         connection.request(consumerInfo.createRemoveCommand());
         RemoveSubscriptionInfo removeSubscriptionInfo = new RemoveSubscriptionInfo();
+        removeSubscriptionInfo.setConnectionId(connectionInfo.getConnectionId());
         removeSubscriptionInfo.setClientId(connectionInfo.getClientId());
         removeSubscriptionInfo.setSubscriptionName(consumerInfo.getSubscriptionName());
         connection.request(removeSubscriptionInfo);
