@@ -39,6 +39,10 @@ import jakarta.jms.TextMessage;
 import java.util.Arrays;
 import java.util.Collection;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.region.AbstractRegion;
+import org.apache.activemq.broker.region.QueueRegion;
+import org.apache.activemq.broker.region.RegionBroker;
+import org.apache.activemq.broker.region.TopicRegion;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ConsumerInfo;
@@ -221,8 +225,13 @@ public class JmsTempDestinationTest {
             assertTrue(((ExceptionResponse) result).getException().getMessage()
                     .contains("created by another connection is not permitted"));
         }
-    }
 
+        // verify the subscription is properly tracked if allowTempDestinationStealing=true
+        // or cleaned up if allowTempDestinationStealing=false
+        RegionBroker rg = (RegionBroker) brokerService.getRegionBroker();
+        AbstractRegion region = (AbstractRegion) (topic ? rg.getTempTopicRegion() : rg.getTempQueueRegion());
+        assertEquals(tempDestStealing, region.getSubscriptions().containsKey(info.getConsumerId()));
+    }
 
     /**
      * Make sure that a temp queue does not drop message if there is an active

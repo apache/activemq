@@ -407,12 +407,25 @@ public abstract class AbstractRegion implements Region {
                 try {
                     dest.addSubscription(context, sub);
                     removeList.add(dest);
-                } catch (SecurityException e){
+                } catch (Exception e){
                     if (sub.isWildcard()) {
-                        LOG.debug("Subscription denied for {} to destination {}: {}",
+                        LOG.debug("Subscription {} for {} to destination {}: {}",
+                                e instanceof SecurityException ? "denied" : "failed",
                                 sub, dest.getActiveMQDestination(), e.getMessage());
                     } else {
-                        // remove partial subscriptions
+                        // Clean up current dest that failed in case it was partially added
+                        // to the destination tracking, and failed after. This might be in a
+                        // bad state and my not need to be cleaned up at all, so just log as debug
+                        try {
+                            dest.removeSubscription(context, sub, info.getLastDeliveredSequenceId());
+                        } catch (Exception ex) {
+                            LOG.debug("Error cleaning up failed subscription {} from {}: {}",
+                                    sub, dest, ex.getMessage(), ex);
+                        }
+
+                        // remove partial subscriptions that were already added on another
+                        // destination before the failure. These previously succeeded so log
+                        // as an error if we can't remove
                         for (Destination remove : removeList) {
                             try {
                                 remove.removeSubscription(context, sub, info.getLastDeliveredSequenceId());
