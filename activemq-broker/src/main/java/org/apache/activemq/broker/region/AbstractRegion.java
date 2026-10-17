@@ -419,7 +419,7 @@ public abstract class AbstractRegion implements Region {
                         try {
                             dest.removeSubscription(context, sub, info.getLastDeliveredSequenceId());
                         } catch (Exception ex) {
-                            LOG.warn("Error cleaning up failed subscription {} from {}: {}",
+                            LOG.debug("Error cleaning up failed subscription {} from {}: {}",
                                     sub, dest, ex.getMessage(), ex);
                         }
 
