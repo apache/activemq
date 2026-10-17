@@ -149,6 +149,11 @@
             </dependency>
             <dependency>
                 <groupId>org.apache.activemq</groupId>
+                <artifactId>activemq-opentelemetry</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.activemq</groupId>
                 <artifactId>activemq-spring</artifactId>
                 <version>${project.version}</version>
             </dependency>

@@ -161,6 +161,15 @@
         </systemUsage>
 
         <!--
+            The plugins element can be used to configure broker plugins.
+            For example, to enable OpenTelemetry distributed tracing, uncomment the following:
+
+        <plugins>
+            <openTelemetryPlugin traceProducer="true" traceConsumer="true" traceAcknowledge="true"/>
+        </plugins>
+        -->
+
+        <!--
             The transport connectors expose ActiveMQ over a given protocol to
             clients and other brokers. For more information, see:
 
