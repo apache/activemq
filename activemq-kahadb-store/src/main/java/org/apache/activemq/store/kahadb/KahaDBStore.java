@@ -103,6 +103,7 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
     public static final String PROPERTY_ASYNC_EXECUTOR_MAX_THREADS = "org.apache.activemq.store.kahadb.ASYNC_EXECUTOR_MAX_THREADS";
     private static final int asyncExecutorMaxThreads = Integer.parseInt(System.getProperty(
             PROPERTY_ASYNC_EXECUTOR_MAX_THREADS, "1"), 10);;
+    static final int MAX_SUBSCRIPTION_KEY_LENGTH = 65535;
 
     protected ExecutorService queueExecutor;
     protected ExecutorService topicExecutor;
@@ -1381,7 +1382,11 @@ public class KahaDBStore extends MessageDatabase implements PersistenceAdapter, 
     }
 
     String subscriptionKey(String clientId, String subscriptionName) {
-        return clientId + ":" + subscriptionName;
+        String key = clientId + ":" + subscriptionName;
+        if (key.length() > MAX_SUBSCRIPTION_KEY_LENGTH) {
+            throw new IllegalArgumentException("Subscription key exceeds max length " + MAX_SUBSCRIPTION_KEY_LENGTH);
+        }
+        return key;
     }
 
     @Override
