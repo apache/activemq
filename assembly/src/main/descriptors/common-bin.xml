@@ -73,6 +73,23 @@
       <directoryMode>0755</directoryMode>
     </fileSet>
 
+    <!-- the Prometheus metrics web app -->
+    <fileSet>
+      <directory>../activemq-prometheus/src/main/webapp</directory>
+      <outputDirectory>webapps/metrics</outputDirectory>
+      <fileMode>0644</fileMode>
+      <directoryMode>0755</directoryMode>
+    </fileSet>
+    <fileSet>
+      <directory>../activemq-prometheus/target/classes</directory>
+      <outputDirectory>webapps/metrics/WEB-INF/classes</outputDirectory>
+      <includes>
+        <include>**/*.class</include>
+      </includes>
+      <fileMode>0644</fileMode>
+      <directoryMode>0755</directoryMode>
+    </fileSet>
+
     <!-- the web demo -->
     <fileSet>
       <directory>../activemq-web-demo/src/main/webapp</directory>
