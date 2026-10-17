@@ -24,6 +24,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 
 import org.apache.xbean.spring.context.ClassPathXmlApplicationContext;
 import org.eclipse.jetty.server.Server;
@@ -55,6 +56,13 @@ public class JettyServerBeanTest {
                 HttpResponse.BodyHandlers.ofString());
         assertEquals("Web console must require authentication", 401, response.statusCode());
 
+        HttpResponse<String> authenticatedResponse = client.send(
+                HttpRequest.newBuilder(URI.create("http://127.0.0.1:" + port + "/admin/"))
+                        .header("Authorization", "Basic " + java.util.Base64.getEncoder().encodeToString(
+                                "admin:admin".getBytes(StandardCharsets.ISO_8859_1)))
+                        .GET().build(),
+                HttpResponse.BodyHandlers.ofString());
+        assertEquals("SAMEORIGIN", authenticatedResponse.headers().firstValue("X-Frame-Options").orElse(null));
         // jetty.http.host from jetty-spring.properties: without it Jetty binds every interface
         assertEquals("127.0.0.1", ((ServerConnector) server.getConnectors()[0]).getHost());
 
