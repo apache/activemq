@@ -40,9 +40,9 @@ import org.apache.activemq.store.PersistenceAdapter;
 public abstract class DurableSubscriptionTestSupport extends TestSupport {
 
     protected Connection connection;
-    private Session session;
-    private TopicSubscriber consumer;
-    private MessageProducer producer;
+    protected Session session;
+    protected TopicSubscriber consumer;
+    protected MessageProducer producer;
     protected BrokerService broker;
 
     @Override
