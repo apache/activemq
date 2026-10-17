@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import java.util.Objects;
 import org.apache.activemq.command.ConnectionId;
 import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.ProducerId;
@@ -32,35 +33,35 @@ import org.apache.activemq.command.SessionId;
  * 
  */
 
-public class SingleTransportConnectionStateRegister  implements TransportConnectionStateRegister{
+public class SingleTransportConnectionStateRegister implements TransportConnectionStateRegister{
 
-    private  TransportConnectionState connectionState;
-    private ConnectionId connectionId;
+    // Only store connectionState because it contains the connectionId inside
+    // ConnectionInfo
+    private TransportConnectionState connectionState;
 
-    public TransportConnectionState registerConnectionState(ConnectionId connectionId,
+    public synchronized TransportConnectionState registerConnectionState(ConnectionId connectionId,
                                                                TransportConnectionState state) {
-        TransportConnectionState rc = connectionState;
-        connectionState = state;
-        this.connectionId = connectionId;
-        return rc;
+        Objects.requireNonNull(connectionId, "connectionId must not be null");
+        Objects.requireNonNull(state, "state must not be null");
+        Objects.requireNonNull(state.getInfo(), "state must not have a null ConnectionInfo");
+        if (!connectionId.equals(state.getInfo().getConnectionId())) {
+            throw new IllegalArgumentException("connectionId and stateInfo must have same connectionId");
+        }
+        this.connectionState = state;
+        return connectionState;
     }
 
     public synchronized TransportConnectionState unregisterConnectionState(ConnectionId connectionId) {
-        TransportConnectionState rc = null;
-        
-       
-        if (connectionId != null && connectionState != null && this.connectionId!=null){
-        if (this.connectionId.equals(connectionId)){
-			rc = connectionState;
-			connectionState = null;
-			connectionId = null;
-		}
+        TransportConnectionState existing = findConnectionState(connectionId);
+        if (existing != null) {
+            this.connectionState = null;
+            return existing;
         }
-        return rc;
+        return null;
     }
 
     public synchronized List<TransportConnectionState> listConnectionStates() {
-        List<TransportConnectionState> rc = new ArrayList<TransportConnectionState>();
+        List<TransportConnectionState> rc = new ArrayList<>();
         if (connectionState != null) {
             rc.add(connectionState);
         }
@@ -68,7 +69,7 @@ public class SingleTransportConnectionStateRegister  implements TransportConnect
     }
 
     public synchronized TransportConnectionState lookupConnectionState(String connectionId) {
-        TransportConnectionState cs = connectionState;
+        TransportConnectionState cs = findConnectionState(connectionId);
         if (cs == null) {
             throw new IllegalStateException(
                                             "Cannot lookup a connectionId for a connection that had not been registered: "
@@ -78,7 +79,7 @@ public class SingleTransportConnectionStateRegister  implements TransportConnect
     }
 
     public synchronized TransportConnectionState lookupConnectionState(ConsumerId id) {
-        TransportConnectionState cs = connectionState;
+        TransportConnectionState cs = findConnectionState(id.getConnectionId());
         if (cs == null) {
             throw new IllegalStateException(
                                             "Cannot lookup a consumer from a connection that had not been registered: "
@@ -88,7 +89,7 @@ public class SingleTransportConnectionStateRegister  implements TransportConnect
     }
 
     public synchronized TransportConnectionState lookupConnectionState(ProducerId id) {
-        TransportConnectionState cs = connectionState;
+        TransportConnectionState cs = findConnectionState(id.getConnectionId());
         if (cs == null) {
             throw new IllegalStateException(
                                             "Cannot lookup a producer from a connection that had not been registered: "
@@ -98,7 +99,7 @@ public class SingleTransportConnectionStateRegister  implements TransportConnect
     }
 
     public synchronized TransportConnectionState lookupConnectionState(SessionId id) {
-        TransportConnectionState cs = connectionState;
+        TransportConnectionState cs = findConnectionState(id.getConnectionId());
         if (cs == null) {
             throw new IllegalStateException(
                                             "Cannot lookup a session from a connection that had not been registered: "
@@ -108,8 +109,11 @@ public class SingleTransportConnectionStateRegister  implements TransportConnect
     }
 
     public synchronized TransportConnectionState lookupConnectionState(ConnectionId connectionId) {
-        TransportConnectionState cs = connectionState;
-        return cs;
+        // If null then this will just return a null value, this is expected in some cases
+        // (such as duplex bridging)
+        // This could be improved in the future to error if not registered, but the important
+        // thing is to not return an existing registered state, unless it matches the connectionId
+        return findConnectionState(connectionId);
     }
 
 	public synchronized boolean doesHandleMultipleConnectionStates() {
@@ -120,32 +124,44 @@ public class SingleTransportConnectionStateRegister  implements TransportConnect
 		return connectionState == null;
 	}
 
-	public void intialize(TransportConnectionStateRegister other) {
-		
+	public synchronized void intialize(TransportConnectionStateRegister other) {
 		if (other.isEmpty()){
 			clear();
-		}else{
-			Map map = other.mapStates();
-			Iterator i = map.entrySet().iterator();
-			Map.Entry<ConnectionId, TransportConnectionState> entry = (Entry<ConnectionId, TransportConnectionState>) i.next();
-			connectionId = entry.getKey();
-			connectionState =entry.getValue();
+		} else {
+			Map<ConnectionId, TransportConnectionState> map = other.mapStates();
+			Iterator<Entry<ConnectionId, TransportConnectionState>> i = map.entrySet().iterator();
+			Map.Entry<ConnectionId, TransportConnectionState> entry = i.next();
+			connectionState = entry.getValue();
 		}
-		
 	}
 
-	public Map<ConnectionId, TransportConnectionState> mapStates() {
-		Map<ConnectionId, TransportConnectionState> map = new HashMap<ConnectionId, TransportConnectionState>();
+	public synchronized Map<ConnectionId, TransportConnectionState> mapStates() {
+		Map<ConnectionId, TransportConnectionState> map = new HashMap<>();
 		if (!isEmpty()) {
-			map.put(connectionId, connectionState);
+			map.put(getConnectionId(), connectionState);
 		}
 		return map;
 	}
 
-	public void clear() {
-		connectionState=null;
-		connectionId=null;
-		
+	public synchronized void clear() {
+		connectionState = null;
 	}
 
+    private ConnectionId getConnectionId() {
+        return !isEmpty() && connectionState.getInfo() != null ?
+                connectionState.getInfo().getConnectionId() : null;
+    }
+
+    private TransportConnectionState findConnectionState(String connectionId) {
+        return findConnectionState(new ConnectionId(connectionId));
+    }
+
+    private TransportConnectionState findConnectionState(ConnectionId connectionId) {
+        // Only return the state if provided id is not null, and it matches the
+        // existing connectionId of the state
+        if (connectionId != null && connectionId.equals(getConnectionId())) {
+            return connectionState;
+        }
+        return null;
+    }
 }

@@ -1705,6 +1705,10 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
     @Override
     public Response processConsumerControl(ConsumerControl control) throws Exception {
         ConsumerBrokerExchange consumerExchange = getConsumerBrokerExchange(control.getConsumerId());
+        if (consumerExchange == null) {
+            throw new IllegalStateException(broker.getBrokerName()
+                    + " Cannot process ConsumerControl for a consumer that had not been registered: " + control.getConsumerId());
+        }
         broker.processConsumerControl(consumerExchange, control);
         return null;
     }
