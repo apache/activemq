@@ -16,6 +16,11 @@
  */
 package org.apache.activemq.usecases;
 
+import static org.junit.Assert.assertThrows;
+
+import javax.jms.DeliveryMode;
+import javax.jms.JMSException;
+import javax.jms.Topic;
 import java.io.IOException;
 import org.apache.activemq.store.PersistenceAdapter;
 
@@ -23,5 +28,18 @@ public class KahaDBDurableSubscriptionTest extends DurableSubscriptionTestSuppor
 
     protected PersistenceAdapter createPersistenceAdapter() throws IOException {
         return null; // use default
+    }
+
+    public void testDurableSubscriptionKeyValidation() throws Exception {
+        connection.start();
+        session = connection.createSession(false, javax.jms.Session.AUTO_ACKNOWLEDGE);
+
+        Topic topic = session.createTopic("TestTopic");
+        // This should throw an exception back to the client because the sub key
+        // value is too large and validation should catch it
+        assertThrows(JMSException.class, () -> session.createDurableSubscriber(topic, "s".repeat(65535)));
+
+        // Ensure we can restart the broker without error
+        restartBroker();
     }
 }
