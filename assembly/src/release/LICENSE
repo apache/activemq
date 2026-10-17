@@ -813,6 +813,13 @@ License: Eclipse Distribution License - v 1.0 (http://www.eclipse.org/org/docume
 
 -------------------------------------------------------------------------
 
+This binary distribution contains Nimbus JOSE+JWT.
+
+Project URL: https://connect2id.com/products/nimbus-jose-jwt
+License: The Apache Software License, Version 2.0 (http://www.apache.org/licenses/LICENSE-2.0.txt)
+
+-------------------------------------------------------------------------
+
 This binary distribution contains SLF4J.
 
 Project URL: https://slf4j.org/
