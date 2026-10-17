@@ -33,15 +33,7 @@ public class AuthorizationPluginProcessor extends DefaultConfigurationProcessor 
 
     @Override
     public void modify(Object existing, Object candidate) {
-        try {
-            // replace authorization map - need exclusive write lock to total broker
-            AuthorizationBroker authorizationBroker =
-                    (AuthorizationBroker) plugin.getBrokerService().getBroker().getAdaptor(AuthorizationBroker.class);
-
-            authorizationBroker.setAuthorizationMap(fromDto(filter(candidate, DtoAuthorizationPlugin.Map.class)));
-        } catch (Exception e) {
-            plugin.info("failed to apply modified AuthorizationMap to AuthorizationBroker", e);
-        }
+        plugin.updateAuthorizationMap(fromDto(filter(candidate, DtoAuthorizationPlugin.Map.class)));
     }
 
     private AuthorizationMap fromDto(List<Object> map) {
