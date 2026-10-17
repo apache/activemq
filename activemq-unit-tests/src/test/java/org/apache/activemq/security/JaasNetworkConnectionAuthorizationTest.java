@@ -378,7 +378,7 @@ public class JaasNetworkConnectionAuthorizationTest {
 
     private static String transportRemoteAddress(BrokerService broker, String clientId) {
         for (TransportConnection connection : broker.getTransportConnectors().get(0).getConnections()) {
-            if (clientId.equals(connection.getConnectionId())) {
+            if (clientId.equals(connection.getClientId())) {
                 return connection.getRemoteAddress();
             }
         }
@@ -388,7 +388,7 @@ public class JaasNetworkConnectionAuthorizationTest {
     /** TransportConnection.getConnectionId() reports the clientId when the connection set one. */
     private static boolean isNetworkConnection(BrokerService broker, String clientId) {
         for (TransportConnection connection : broker.getTransportConnectors().get(0).getConnections()) {
-            if (clientId.equals(connection.getConnectionId())) {
+            if (clientId.equals(connection.getClientId())) {
                 return connection.isNetworkConnection();
             }
         }
