@@ -176,7 +176,6 @@
       </New>
     </Arg>
   </Call>
-
   <!-- Static Resource Handler -->
   <Call name="addHandler">
     <Arg>
