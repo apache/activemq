@@ -618,10 +618,20 @@ public class Topic extends BaseDestination implements Task {
     private static ExecutorService createFanoutPool(int threads) {
         AtomicInteger seq = new AtomicInteger();
         return new ThreadPoolExecutor(threads, threads, 60, TimeUnit.SECONDS, new LinkedBlockingQueue<>(), r -> {
-            Thread t = new Thread(r, "ActiveMQ Topic Fanout-" + seq.incrementAndGet());
+            Thread t = new FanoutThread(r, "ActiveMQ Topic Fanout-" + seq.incrementAndGet());
             t.setDaemon(true);
             return t;
         });
+    }
+
+    private static final class FanoutThread extends Thread {
+        FanoutThread(Runnable r, String name) {
+            super(r, name);
+        }
+    }
+
+    static boolean isFanoutThread() {
+        return Thread.currentThread() instanceof FanoutThread;
     }
 
     private static final class PendingFanout {
