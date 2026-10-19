@@ -690,6 +690,22 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
         return rc;
     }
 
+    /**
+     * Takes a reference like {@link #incrementReferenceCount()}, but when this is the first
+     * reference only if {@link MemoryUsage#tryEnqueueUsage(long)} admits the message's size.
+     *
+     * @return true if the reference was taken, false if the memory usage is full
+     */
+    public boolean tryIncrementReferenceCount() {
+        synchronized (this) {
+            if (referenceCount == 0 && getMemoryUsage() != null && !getMemoryUsage().tryEnqueueUsage(getSize())) {
+                return false;
+            }
+            ++referenceCount;
+            return true;
+        }
+    }
+
     @Override
 	public int decrementReferenceCount() {
         int rc;
