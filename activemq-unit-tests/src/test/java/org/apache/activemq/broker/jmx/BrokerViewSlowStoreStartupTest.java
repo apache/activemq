@@ -117,53 +117,21 @@ public class BrokerViewSlowStoreStartupTest {
 
         final BrokerView view = broker.getAdminView();
 
-        try {
-            view.getBrokerName();
-            fail("Should have thrown an IllegalStateException");
-        } catch(IllegalStateException e) {
-        }
+        assertEquals(brokerName, view.getBrokerName());
 
-        try {
-            view.getBrokerId();
-            fail("Should have thrown an IllegalStateException");
-        } catch(IllegalStateException e) {
-        }
+        assertNull(view.getBrokerId());
 
-        try {
-            view.getTotalEnqueueCount();
-            fail("Should have thrown an IllegalStateException");
-        } catch(IllegalStateException e) {
-        }
+        assertEquals(0, view.getTotalEnqueueCount());
 
-        try {
-            view.getTotalDequeueCount();
-            fail("Should have thrown an IllegalStateException");
-        } catch(IllegalStateException e) {
-        }
+        assertEquals(0, view.getTotalDequeueCount());
 
-        try {
-            view.getTotalConsumerCount();
-            fail("Should have thrown an IllegalStateException");
-        } catch(IllegalStateException e) {
-        }
+        assertEquals(0, view.getTotalConsumerCount());
 
-        try {
-            view.getTotalProducerCount();
-            fail("Should have thrown an IllegalStateException");
-        } catch(IllegalStateException e) {
-        }
+        assertEquals(0, view.getTotalProducerCount());
 
-        try {
-            view.getTotalMessageCount();
-            fail("Should have thrown an IllegalStateException");
-        } catch(IllegalStateException e) {
-        }
+        assertEquals(0, view.getTotalMessageCount());
 
-        try {
-            view.getTotalMessagesCached();
-            fail("Should have thrown an IllegalStateException");
-        } catch(IllegalStateException e) {
-        }
+        assertEquals(0, view.getTotalMessagesCached());
 
         try {
             view.resetStatistics();
@@ -183,101 +151,37 @@ public class BrokerViewSlowStoreStartupTest {
         } catch(IllegalStateException e) {
         }
 
-        try {
-            view.isStatisticsEnabled();
-            fail("Should have thrown an IllegalStateException");
-        } catch(IllegalStateException e) {
-        }
+        assertFalse(view.isStatisticsEnabled());
 
-        try {
-            view.getTopics();
-            fail("Should have thrown an IllegalStateException");
-        } catch(IllegalStateException e) {
-        }
+        assertEquals(0, view.getTopics().length);
 
-        try {
-            view.getQueues();
-            fail("Should have thrown an IllegalStateException");
-        } catch(IllegalStateException e) {
-        }
+        assertEquals(0, view.getQueues().length);
 
-        try {
-            view.getTemporaryTopics();
-            fail("Should have thrown an IllegalStateException");
-        } catch(IllegalStateException e) {
-        }
+        assertEquals(0, view.getTemporaryTopics().length);
 
-        try {
-            view.getTemporaryQueues();
-            fail("Should have thrown an IllegalStateException");
-        } catch(IllegalStateException e) {
-        }
+        assertEquals(0, view.getTemporaryQueues().length);
 
-        try {
-            view.getTopicSubscribers();
-            fail("Should have thrown an IllegalStateException");
-        } catch(IllegalStateException e) {
-        }
+        assertEquals(0, view.getTopicSubscribers().length);
 
-        try {
-            view.getDurableTopicSubscribers();
-            fail("Should have thrown an IllegalStateException");
-        } catch(IllegalStateException e) {
-        }
+        assertEquals(0, view.getDurableTopicSubscribers().length);
 
-        try {
-            view.getQueueSubscribers();
-            fail("Should have thrown an IllegalStateException");
-        } catch(IllegalStateException e) {
-        }
+        assertEquals(0, view.getQueueSubscribers().length);
 
-        try {
-            view.getTemporaryTopicSubscribers();
-            fail("Should have thrown an IllegalStateException");
-        } catch(IllegalStateException e) {
-        }
+        assertEquals(0, view.getTemporaryTopicSubscribers().length);
 
-        try {
-            view.getTemporaryQueueSubscribers();
-            fail("Should have thrown an IllegalStateException");
-        } catch(IllegalStateException e) {
-        }
+        assertEquals(0, view.getTemporaryQueueSubscribers().length);
 
-        try {
-            view.getInactiveDurableTopicSubscribers();
-            fail("Should have thrown an IllegalStateException");
-        } catch(IllegalStateException e) {
-        }
+        assertEquals(0, view.getInactiveDurableTopicSubscribers().length);
 
-        try {
-            view.getTopicProducers();
-            fail("Should have thrown an IllegalStateException");
-        } catch(IllegalStateException e) {
-        }
+        assertEquals(0, view.getTopicProducers().length);
 
-        try {
-            view.getQueueProducers();
-            fail("Should have thrown an IllegalStateException");
-        } catch(IllegalStateException e) {
-        }
+        assertEquals(0, view.getQueueProducers().length);
 
-        try {
-            view.getTemporaryTopicProducers();
-            fail("Should have thrown an IllegalStateException");
-        } catch(IllegalStateException e) {
-        }
+        assertEquals(0, view.getTemporaryTopicProducers().length);
 
-        try {
-            view.getTemporaryQueueProducers();
-            fail("Should have thrown an IllegalStateException");
-        } catch(IllegalStateException e) {
-        }
+        assertEquals(0, view.getTemporaryQueueProducers().length);
 
-        try {
-            view.getDynamicDestinationProducers();
-            fail("Should have thrown an IllegalStateException");
-        } catch(IllegalStateException e) {
-        }
+        assertEquals(0, view.getDynamicDestinationProducers().length);
 
         try {
             view.removeConnector("tcp");
