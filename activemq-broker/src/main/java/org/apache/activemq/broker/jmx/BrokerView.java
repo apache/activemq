@@ -144,7 +144,7 @@ public class BrokerView implements BrokerViewMBean {
     @Override
     public long getTotalEnqueueCount() {
         if (broker == null) {
-            return 0;
+            return 0L;
         }
         return broker.getDestinationStatistics().getEnqueues().getCount();
     }
@@ -152,7 +152,7 @@ public class BrokerView implements BrokerViewMBean {
     @Override
     public long getTotalDequeueCount() {
         if (broker == null) {
-            return 0;
+            return 0L;
         }
         return broker.getDestinationStatistics().getDequeues().getCount();
     }
@@ -160,7 +160,7 @@ public class BrokerView implements BrokerViewMBean {
     @Override
     public long getTotalConsumerCount() {
         if (broker == null) {
-            return 0;
+            return 0L;
         }
         return broker.getDestinationStatistics().getConsumers().getCount();
     }
@@ -168,7 +168,7 @@ public class BrokerView implements BrokerViewMBean {
     @Override
     public long getTotalProducerCount() {
         if (broker == null) {
-            return 0;
+            return 0L;
         }
         return broker.getDestinationStatistics().getProducers().getCount();
     }
@@ -176,7 +176,7 @@ public class BrokerView implements BrokerViewMBean {
     @Override
     public long getTotalMessageCount() {
         if (broker == null) {
-            return 0;
+            return 0L;
         }
         return broker.getDestinationStatistics().getMessages().getCount();
     }
@@ -187,7 +187,7 @@ public class BrokerView implements BrokerViewMBean {
     @Override
     public long getAverageMessageSize() {
         if (broker == null) {
-            return 0;
+            return 0L;
         }
         // we are okay with the size without decimals so cast to long
         return (long) broker.getDestinationStatistics().getMessageSize().getAverageSize();
@@ -199,7 +199,7 @@ public class BrokerView implements BrokerViewMBean {
     @Override
     public long getMaxMessageSize() {
         if (broker == null) {
-            return 0;
+            return 0L;
         }
         return broker.getDestinationStatistics().getMessageSize().getMaxSize();
     }
@@ -210,14 +210,14 @@ public class BrokerView implements BrokerViewMBean {
     @Override
     public long getMinMessageSize() {
         if (broker == null) {
-            return 0;
+            return 0L;
         }
         return broker.getDestinationStatistics().getMessageSize().getMinSize();
     }
 
     public long getTotalMessagesCached() {
         if (broker == null) {
-            return 0;
+            return 0L;
         }
         return broker.getDestinationStatistics().getMessagesCached().getCount();
     }
@@ -702,7 +702,7 @@ public class BrokerView implements BrokerViewMBean {
     @Override
     public long getTotalMaxUncommittedExceededCount() {
         if (broker == null) {
-            return 0;
+            return 0L;
         }
         return broker.getDestinationStatistics().getMaxUncommittedExceededCount().getCount();
     }
