@@ -30,9 +30,7 @@ import javax.naming.ldap.Rdn;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.jaas.GroupPrincipal;
-import org.apache.activemq.test.annotations.ParallelTest;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 /**
  * LDAPAuthorizationMap builds the LDAP search base by substituting the destination physical
@@ -44,7 +42,6 @@ import org.junit.experimental.categories.Category;
  * separate destinations before the DN is built. These tests use + (an LDAP multi-valued RDN
  * separator) which reaches the DN construction intact.
  */
-@Category(ParallelTest.class)
 public class LDAPAuthorizationMapDestinationNameTest {
 
     static class CapturingLDAPAuthorizationMap extends LDAPAuthorizationMap {
