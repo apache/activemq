@@ -82,7 +82,7 @@ The Apache ActiveMQ team has initiated a security hardening project to move from
 
 5. Long-term: Replace Spring as the primary means of configuring and booting Apache ActiveMQ servers.
 
-6. [#2539] Add allow/deny lists to transport connectors to limit IP addresses
+6. [Done] Add allow/deny lists to transport connectors to limit IP addresses
 
 7. [Done] VM Transport creation blocks the XBean factory by default
 
@@ -92,7 +92,7 @@ The Apache ActiveMQ team has initiated a security hardening project to move from
 
 10. [Done] The WebConsole and Jolokia have been restricted to only admins.
 
-11. [#2461] Authorize connection clientIds allowed for given userId
+11. [Done] Authorize connection clientIds allowed for given userId
 
 12. [#2595] Add support for Post Quantum Cryptography
 
