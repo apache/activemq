@@ -700,7 +700,19 @@ public class Topic extends BaseDestination implements Task {
                 throw new IOException("Connection closed, send aborted.");
             }
         }
-        message.incrementReferenceCount();
+        try {
+            // reserve the memory atomically: producers that all passed isFull() in send() would
+            // otherwise each charge and push usage past the limit
+            while (!message.tryIncrementReferenceCount()) {
+                if (context.getStopping().get()) {
+                    throw new IOException("Connection closed, send aborted.");
+                }
+                memoryUsage.waitForSpace(1000);
+            }
+        } catch (Exception e) {
+            fanoutPermits.release();
+            throw e;
+        }
         synchronized (fanoutOrderLock) {
             message.getMessageId().setBrokerSequenceId(getDestinationSequenceId());
             fanoutQueue.add(new PendingFanout(context, message));

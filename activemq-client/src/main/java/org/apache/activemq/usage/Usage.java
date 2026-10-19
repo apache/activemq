@@ -51,6 +51,9 @@ public abstract class Usage<T extends Usage> implements Service {
     // and percentUsageMinDelta changes via onLimitChange/setPercentUsageMinDelta. Lock-free
     // hot paths compare a usage value against it to decide if a locked recompute is needed.
     protected volatile PercentBounds bounds = PercentBounds.ALWAYS_CROSS;
+    // The limit the current bounds were computed from, published alongside them so lock-free
+    // admission checks can read it without the usageLock; -1 until a percent is first published.
+    protected volatile long publishedLimit = -1;
     protected T parent;
     protected String name;
 
@@ -287,7 +290,8 @@ public abstract class Usage<T extends Usage> implements Service {
         try {
             int oldValue = percentUsage;
             percentUsage = value;
-            bounds = PercentBounds.compute(value, limiter.getLimit(), percentUsageMinDelta);
+            publishedLimit = limiter.getLimit();
+            bounds = PercentBounds.compute(value, publishedLimit, percentUsageMinDelta);
             if (oldValue != value) {
                 fireEvent(oldValue, value);
             }
@@ -304,7 +308,8 @@ public abstract class Usage<T extends Usage> implements Service {
      */
     protected void refreshPercentUsage(int value) {
         percentUsage = value;
-        bounds = PercentBounds.compute(value, limiter.getLimit(), percentUsageMinDelta);
+        publishedLimit = limiter.getLimit();
+        bounds = PercentBounds.compute(value, publishedLimit, percentUsageMinDelta);
     }
 
     protected int caclPercentUsage() {

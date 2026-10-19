@@ -155,6 +155,49 @@ public class MemoryUsage extends Usage<MemoryUsage> {
     }
 
     /**
+     * Non-blocking counterpart of {@link #enqueueUsage(long)}: increases the usage by value only
+     * if this usage (and every parent) is below its limit, checked and charged atomically. A
+     * caller that tests {@link #isFull()} and then calls {@link #increaseUsage(long)} lets every
+     * thread that passed the check charge, so the limit is overshot by one charge per concurrent
+     * caller; with this method at most one charge crosses the limit, exactly as isFull() reports.
+     *
+     * @param value
+     * @return true if the usage was increased, false if this usage or a parent is full
+     */
+    public boolean tryEnqueueUsage(long value) {
+        if (value <= 0) {
+            increaseUsage(value);
+            return true;
+        }
+        if (parent != null && !parent.tryEnqueueUsage(value)) {
+            return false;
+        }
+        long limit = publishedLimit;
+        if (limit < 0) {
+            limit = getLimit();
+        }
+        long v;
+        while (true) {
+            final long current = usage.get();
+            if (limit > 0 && current >= limit) {
+                if (parent != null) {
+                    parent.decreaseUsage(value);
+                }
+                return false;
+            }
+            v = current + value;
+            if (usage.compareAndSet(current, v)) {
+                break;
+            }
+        }
+        // same invariant as increaseUsage: the successful CAS is always followed by the bounds check
+        if (!bounds.contains(v)) {
+            updatePercent();
+        }
+        return true;
+    }
+
+    /**
      * Increases the usage by the value amount.
      *
      * @param value
