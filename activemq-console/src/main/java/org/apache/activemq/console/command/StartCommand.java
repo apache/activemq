@@ -93,10 +93,10 @@ public class StartCommand extends AbstractCommand {
             }
 
             while (!broker.waitUntilStarted()) {
-                if (broker.getStartException() != null) {
+                if (broker.getStartException() != null || !broker.isSlave()) {
                     throw new Exception(broker.getStartException());
                 }
-                // still starting (e.g. a slave waiting on the lock under startAsync) - keep waiting
+                // still a slave waiting on the lock (e.g. under startAsync) - keep waiting
             }
 
             // The broker started up fine.  Now lets wait for it to stop...
