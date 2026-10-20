@@ -380,7 +380,7 @@ public class LDAPLoginModule implements LoginModule {
             MessageFormat expandRolesMatchingFormat = new MessageFormat(getLDAPPropertyValue(EXPAND_ROLES_MATCHING));
             while (!pendingNameExpansion.isEmpty()) {
                 String name = pendingNameExpansion.remove();
-                filter = expandRolesMatchingFormat.format(new String[]{name});
+                filter = expandRolesMatchingFormat.format(new String[]{doRFC2254Encoding(name)});
                 results = context.search(getLDAPPropertyValue(ROLE_BASE), filter, constraints);
                 while (results.hasMore()) {
                     SearchResult result = results.next();
@@ -429,6 +429,12 @@ public class LDAPLoginModule implements LoginModule {
         boolean isValid = false;
         if (log.isDebugEnabled()) {
             log.debug("Binding the user.");
+        }
+        // An empty or null password is not a valid credential, so fail authentication here
+        // instead of attempting a bind that some directories would accept as anonymous.
+        if (password == null || password.isEmpty()) {
+            log.debug("No password supplied for dn={}, failing authentication", dn);
+            return false;
         }
         context.addToEnvironment(Context.SECURITY_AUTHENTICATION, "simple");
         context.addToEnvironment(Context.SECURITY_PRINCIPAL, dn);
