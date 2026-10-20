@@ -40,6 +40,13 @@
             <artifactId>activemq-jaas</artifactId>
         </dependency>
 
+        <!-- Only needed at compile time for the @Experimental annotation (CLASS retention) -->
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>activemq-client</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
         <dependency>
             <groupId>com.nimbusds</groupId>
             <artifactId>nimbus-jose-jwt</artifactId>

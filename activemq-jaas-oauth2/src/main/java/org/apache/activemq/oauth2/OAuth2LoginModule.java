@@ -54,6 +54,7 @@ import com.nimbusds.jwt.proc.ConfigurableJWTProcessor;
 import com.nimbusds.jwt.proc.DefaultJWTClaimsVerifier;
 import com.nimbusds.jwt.proc.DefaultJWTProcessor;
 
+import org.apache.activemq.annotation.Experimental;
 import org.apache.activemq.jaas.ConnectionCallback;
 import org.apache.activemq.jaas.ConnectionPrincipal;
 import org.apache.activemq.jaas.GroupPrincipal;
@@ -64,6 +65,9 @@ import org.slf4j.LoggerFactory;
 
 /**
  * A JAAS LoginModule that authenticates users via OAuth2 JWT access tokens.
+ * <p>
+ * <b>Experimental:</b> this module is new and still needs field testing. Its
+ * configuration options and behavior may change or be removed between any release.
  * <p>
  * The client passes the JWT access token as the password in the connection info.
  * The module validates the token signature using the JWKS endpoint and verifies
@@ -98,6 +102,7 @@ import org.slf4j.LoggerFactory;
  * };
  * </pre>
  */
+@Experimental("Tech Preview for OAuth2 JWT authentication")
 public class OAuth2LoginModule implements LoginModule {
 
     private static final Logger LOG = LoggerFactory.getLogger(OAuth2LoginModule.class);

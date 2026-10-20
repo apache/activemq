@@ -18,9 +18,14 @@ package org.apache.activemq.oauth2;
 
 import javax.security.auth.callback.Callback;
 
+import org.apache.activemq.annotation.Experimental;
+
 /**
  * A JAAS Callback for passing an OAuth2 JWT token.
+ * <p>
+ * <b>Experimental:</b> may change or be removed between any release.
  */
+@Experimental("Tech Preview for OAuth2 JWT authentication")
 public class OAuth2TokenCallback implements Callback {
 
     private String token;
