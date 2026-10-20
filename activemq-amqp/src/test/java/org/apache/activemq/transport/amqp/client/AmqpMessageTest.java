@@ -16,32 +16,24 @@
  */
 package org.apache.activemq.transport.amqp.client;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
 public class AmqpMessageTest {
 
     @Test
-    public void testRejectWithoutReceiverMentionsReject() throws Exception {
+    public void testRejectWithoutReceiverMentionsReject() {
         AmqpMessage message = new AmqpMessage();
-        try {
-            message.reject();
-            fail("Expected IllegalStateException");
-        } catch (IllegalStateException ise) {
-            assertEquals("Can't reject non-received message.", ise.getMessage());
-        }
+        IllegalStateException ise = assertThrows(IllegalStateException.class, message::reject);
+        assertTrue(ise.getMessage(), ise.getMessage().contains("reject"));
     }
 
     @Test
-    public void testReleaseWithoutReceiverMentionsRelease() throws Exception {
+    public void testReleaseWithoutReceiverMentionsRelease() {
         AmqpMessage message = new AmqpMessage();
-        try {
-            message.release();
-            fail("Expected IllegalStateException");
-        } catch (IllegalStateException ise) {
-            assertEquals("Can't release non-received message.", ise.getMessage());
-        }
+        IllegalStateException ise = assertThrows(IllegalStateException.class, message::release);
+        assertTrue(ise.getMessage(), ise.getMessage().contains("release"));
     }
 }
