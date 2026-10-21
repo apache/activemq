@@ -52,18 +52,26 @@ public class SizeStatisticImpl extends StatisticImpl {
         return count;
     }
 
-    public synchronized void addSize(long size) {
-        count++;
-        totalSize += size;
-        if (size > maxSize) {
-            maxSize = size;
+    public void addSize(long size) {
+        // Same enabled gate as CountStatisticImpl.increment(): skip the monitor
+        // (and parent propagation) entirely when statistics are disabled —
+        // enabled is a volatile read, so the disabled fast path is contention-free.
+        if (!isEnabled()) {
+            return;
         }
-        if (size < minSize || minSize == 0) {
-            minSize = size;
-        }
-        updateSampleTime();
-        if (parent != null) {
-            parent.addSize(size);
+        synchronized (this) {
+            count++;
+            totalSize += size;
+            if (size > maxSize) {
+                maxSize = size;
+            }
+            if (size < minSize || minSize == 0) {
+                minSize = size;
+            }
+            updateSampleTime();
+            if (parent != null) {
+                parent.addSize(size);
+            }
         }
     }
 
