@@ -55,6 +55,26 @@ public class JettyServerBeanTest {
                 HttpResponse.BodyHandlers.ofString());
         assertEquals("Web console must require authentication", 401, response.statusCode());
 
+        // jetty.http.host from jetty-spring.properties: without it Jetty binds every interface
+        assertEquals("127.0.0.1", ((ServerConnector) server.getConnectors()[0]).getHost());
+
         context.stop();
+    }
+
+    @Test
+    public void testJettyHostSystemPropertyOverridesBindAddress() throws Exception {
+        System.setProperty(JettyServerBean.SYSTEM_PROPERTY_HOST, "localhost");
+        try {
+            var context = new ClassPathXmlApplicationContext("conf/jetty-spring.xml");
+            context.start();
+            try {
+                var jettyServer = (JettyServerBean) context.getBean("jettyServer");
+                assertEquals("localhost", ((ServerConnector) jettyServer.getServer().getConnectors()[0]).getHost());
+            } finally {
+                context.stop();
+            }
+        } finally {
+            System.clearProperty(JettyServerBean.SYSTEM_PROPERTY_HOST);
+        }
     }
 }
