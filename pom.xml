@@ -68,7 +68,7 @@
     <hawtdispatch-version>1.22</hawtdispatch-version>
     <httpclient-version>4.5.14</httpclient-version>
     <httpcore-version>4.4.16</httpcore-version>
-    <jackson-version>2.22.3</jackson-version>
+    <jackson-version>2.22.4</jackson-version>
     <jackson-annotations-version>2.22</jackson-annotations-version>
     <nimbus-jose-jwt-version>10.3</nimbus-jose-jwt-version>
     <jakarta-jms-api-version>3.1.0</jakarta-jms-api-version>
