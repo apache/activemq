@@ -26,11 +26,11 @@ import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import jakarta.jms.Connection;
-import jakarta.jms.DeliveryMode;
-import jakarta.jms.JMSException;
-import jakarta.jms.Session;
-import jakarta.jms.TextMessage;
+import javax.jms.Connection;
+import javax.jms.DeliveryMode;
+import javax.jms.JMSException;
+import javax.jms.Session;
+import javax.jms.TextMessage;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
@@ -41,13 +41,11 @@ import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
-import org.apache.activemq.test.annotations.ParallelTest;
 import org.apache.activemq.util.IOHelper;
 import org.apache.activemq.util.Wait;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -66,7 +64,6 @@ import org.slf4j.LoggerFactory;
  * confirms this is not the case: the store must drain to empty and queueSize
  * must settle to 0, meaning M2 is still deliverable.
  */
-@Category(ParallelTest.class)
 public class TransactedProduceWithThrowingAckQueueSizeTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(TransactedProduceWithThrowingAckQueueSizeTest.class);
@@ -207,7 +204,7 @@ public class TransactedProduceWithThrowingAckQueueSizeTest {
         var received = new ArrayList<String>();
         try (var drainSession = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
              var drainConsumer = drainSession.createConsumer(dest)) {
-            jakarta.jms.Message m;
+            javax.jms.Message m;
             while ((m = drainConsumer.receive(2000)) != null) {
                 received.add(((TextMessage) m).getText());
             }

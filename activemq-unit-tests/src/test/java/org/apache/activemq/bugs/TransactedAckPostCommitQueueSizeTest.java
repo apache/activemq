@@ -26,12 +26,12 @@ import java.nio.file.Files;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import jakarta.jms.Connection;
-import jakarta.jms.DeliveryMode;
-import jakarta.jms.JMSException;
-import jakarta.jms.Message;
-import jakarta.jms.MessageConsumer;
-import jakarta.jms.Session;
+import javax.jms.Connection;
+import javax.jms.DeliveryMode;
+import javax.jms.JMSException;
+import javax.jms.Message;
+import javax.jms.MessageConsumer;
+import javax.jms.Session;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
@@ -42,13 +42,11 @@ import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
-import org.apache.activemq.test.annotations.ParallelTest;
 import org.apache.activemq.util.IOHelper;
 import org.apache.activemq.util.Wait;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -79,7 +77,6 @@ import org.slf4j.LoggerFactory;
  * pending cursor reset() (the first call dispatchPending makes), commits,
  * and asserts the counter returns to 0.
  */
-@Category(ParallelTest.class)
 public class TransactedAckPostCommitQueueSizeTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(TransactedAckPostCommitQueueSizeTest.class);
