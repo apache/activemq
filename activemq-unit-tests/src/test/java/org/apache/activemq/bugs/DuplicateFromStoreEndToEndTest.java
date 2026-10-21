@@ -26,10 +26,10 @@ import java.nio.file.Files;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import jakarta.jms.Connection;
-import jakarta.jms.DeliveryMode;
-import jakarta.jms.Session;
-import jakarta.jms.TextMessage;
+import javax.jms.Connection;
+import javax.jms.DeliveryMode;
+import javax.jms.Session;
+import javax.jms.TextMessage;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerPlugin;
@@ -47,13 +47,11 @@ import org.apache.activemq.command.SessionId;
 import org.apache.activemq.filter.NonCachedMessageEvaluationContext;
 import org.apache.activemq.state.ProducerState;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
-import org.apache.activemq.test.annotations.ParallelTest;
 import org.apache.activemq.util.IOHelper;
 import org.apache.activemq.util.Wait;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -81,7 +79,6 @@ import org.slf4j.LoggerFactory;
  * Invariant confirmed by both tests: every real message is consumed exactly
  * once, and after draining, messages == 0 and enqueues - dequeues == messages.
  */
-@Category(ParallelTest.class)
 public class DuplicateFromStoreEndToEndTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(DuplicateFromStoreEndToEndTest.class);
@@ -209,7 +206,7 @@ public class DuplicateFromStoreEndToEndTest {
             // 3. Drain the queue, all 3 real messages must still be consumable
             var received = 0;
             try (var consumer = session.createConsumer(dest)) {
-                jakarta.jms.Message msg;
+                javax.jms.Message msg;
                 while ((msg = consumer.receive(2000)) != null) {
                     LOG.info("received {} -> {}", msg.getJMSMessageID(), ((TextMessage) msg).getText());
                     received++;
@@ -276,7 +273,7 @@ public class DuplicateFromStoreEndToEndTest {
             try (var consumer = session.createConsumer(dest)) {
                 // Receive (but do not ack) all three, their rows stay in the
                 // store while the cursor audit has recorded their ids.
-                var toAck = new CopyOnWriteArrayList<jakarta.jms.Message>();
+                var toAck = new CopyOnWriteArrayList<javax.jms.Message>();
                 for (var i = 0; i < MESSAGE_COUNT; i++) {
                     var m = consumer.receive(5000);
                     assertNotNull("message " + i, m);

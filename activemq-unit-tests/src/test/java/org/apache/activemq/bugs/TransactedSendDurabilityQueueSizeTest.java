@@ -23,23 +23,21 @@ import static org.junit.Assert.assertTrue;
 import java.io.File;
 import java.nio.file.Files;
 
-import jakarta.jms.Connection;
-import jakarta.jms.DeliveryMode;
-import jakarta.jms.Session;
-import jakarta.jms.TextMessage;
+import javax.jms.Connection;
+import javax.jms.DeliveryMode;
+import javax.jms.Session;
+import javax.jms.TextMessage;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.Queue;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
-import org.apache.activemq.test.annotations.ParallelTest;
 import org.apache.activemq.util.IOHelper;
 import org.apache.activemq.util.Wait;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,7 +58,6 @@ import org.slf4j.LoggerFactory;
  * configuration the duplicate-send fix targets, so the transacted path runs
  * with the async store machinery in play.
  */
-@Category(ParallelTest.class)
 public class TransactedSendDurabilityQueueSizeTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(TransactedSendDurabilityQueueSizeTest.class);
@@ -138,7 +135,7 @@ public class TransactedSendDurabilityQueueSizeTest {
         var received = 0;
         try (var consumeSession = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
              var consumer = consumeSession.createConsumer(dest)) {
-            jakarta.jms.Message m;
+            javax.jms.Message m;
             while ((m = consumer.receive(2000)) != null) {
                 LOG.info("received {}", ((TextMessage) m).getText());
                 received++;

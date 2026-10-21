@@ -27,10 +27,10 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import jakarta.jms.Connection;
-import jakarta.jms.DeliveryMode;
-import jakarta.jms.Session;
-import jakarta.jms.TextMessage;
+import javax.jms.Connection;
+import javax.jms.DeliveryMode;
+import javax.jms.Session;
+import javax.jms.TextMessage;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerPlugin;
@@ -51,13 +51,11 @@ import org.apache.activemq.filter.NonCachedMessageEvaluationContext;
 import org.apache.activemq.state.ProducerState;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
 import org.apache.activemq.store.kahadb.KahaDBStore;
-import org.apache.activemq.test.annotations.ParallelTest;
 import org.apache.activemq.util.IOHelper;
 import org.apache.activemq.util.Wait;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -87,7 +85,6 @@ import org.slf4j.LoggerFactory;
  * = messages counter permanently +1 with the queue fully drained, browse
  * empty, inflight 0, the production symptom, with no ERROR logs.
  */
-@Category(ParallelTest.class)
 public class DuplicateSendStoreRaceQueueSizeTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(DuplicateSendStoreRaceQueueSizeTest.class);
@@ -229,7 +226,7 @@ public class DuplicateSendStoreRaceQueueSizeTest {
         try(var consumeSession = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
             var consumer = consumeSession.createConsumer(dest)) {
             var received = 0;
-            jakarta.jms.Message msg;
+            javax.jms.Message msg;
 
             while ((msg = consumer.receive(3000)) != null) {
                 LOG.info("received {} -> {}", msg.getJMSMessageID(), ((TextMessage) msg).getText());

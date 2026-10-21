@@ -26,10 +26,10 @@ import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import jakarta.jms.Connection;
-import jakarta.jms.DeliveryMode;
-import jakarta.jms.Session;
-import jakarta.jms.TextMessage;
+import javax.jms.Connection;
+import javax.jms.DeliveryMode;
+import javax.jms.Session;
+import javax.jms.TextMessage;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerPlugin;
@@ -49,13 +49,11 @@ import org.apache.activemq.command.SessionId;
 import org.apache.activemq.filter.NonCachedMessageEvaluationContext;
 import org.apache.activemq.state.ProducerState;
 import org.apache.activemq.store.kahadb.KahaDBPersistenceAdapter;
-import org.apache.activemq.test.annotations.ParallelTest;
 import org.apache.activemq.util.IOHelper;
 import org.apache.activemq.util.Wait;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.slf4j.Logger;
@@ -84,7 +82,6 @@ import org.slf4j.LoggerFactory;
  * pending async add, where neither of these checks applies.
  */
 @RunWith(Parameterized.class)
-@Category(ParallelTest.class)
 public class AsyncDuplicateSendStoreRaceQueueSizeTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(AsyncDuplicateSendStoreRaceQueueSizeTest.class);
@@ -222,7 +219,7 @@ public class AsyncDuplicateSendStoreRaceQueueSizeTest {
         try (var consumeSession = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
              var consumer = consumeSession.createConsumer(dest)) {
             var received = 0;
-            jakarta.jms.Message msg;
+            javax.jms.Message msg;
             while ((msg = consumer.receive(3000)) != null) {
                 LOG.info("received {} -> {}", msg.getJMSMessageID(), ((TextMessage) msg).getText());
                 received++;
