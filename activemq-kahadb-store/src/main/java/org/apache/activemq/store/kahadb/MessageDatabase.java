@@ -44,6 +44,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -3307,9 +3308,10 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
         manager.setArchiveDataLogs(isArchiveDataLogs());
         manager.setSizeAccumulator(journalSize);
         manager.setEnableAsyncDiskSync(isEnableJournalDiskSyncs());
-        manager.setPreallocationScope(Journal.PreallocationScope.valueOf(preallocationScope.trim().toUpperCase()));
+        manager.setPreallocationScope(
+                Journal.PreallocationScope.valueOf(preallocationScope.trim().toUpperCase(Locale.ENGLISH)));
         manager.setPreallocationStrategy(
-                Journal.PreallocationStrategy.valueOf(preallocationStrategy.trim().toUpperCase()));
+                Journal.PreallocationStrategy.valueOf(preallocationStrategy.trim().toUpperCase(Locale.ENGLISH)));
         manager.setJournalDiskSyncStrategy(journalDiskSyncStrategy);
         if (getDirectoryArchive() != null) {
             IOHelper.mkdirs(getDirectoryArchive());
@@ -3401,7 +3403,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
     }
 
     public void setJournalDiskSyncStrategy(String journalDiskSyncStrategy) {
-        this.journalDiskSyncStrategy = JournalDiskSyncStrategy.valueOf(journalDiskSyncStrategy.trim().toUpperCase());
+        this.journalDiskSyncStrategy = JournalDiskSyncStrategy.valueOf(journalDiskSyncStrategy.trim().toUpperCase(Locale.ENGLISH));
     }
 
     public long getJournalDiskSyncInterval() {
@@ -3520,7 +3522,7 @@ public abstract class MessageDatabase extends ServiceSupport implements BrokerSe
 
     public void setPurgeRecoveredXATransactionStrategy(String purgeRecoveredXATransactionStrategy) {
         this.purgeRecoveredXATransactionStrategy = PurgeRecoveredXATransactionStrategy.valueOf(
-                purgeRecoveredXATransactionStrategy.trim().toUpperCase());
+                purgeRecoveredXATransactionStrategy.trim().toUpperCase(Locale.ENGLISH));
     }
 
     public boolean isChecksumJournalFiles() {
