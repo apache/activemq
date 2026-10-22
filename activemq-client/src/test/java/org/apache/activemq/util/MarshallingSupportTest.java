@@ -32,6 +32,7 @@ import java.io.DataOutputStream;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.UTFDataFormatException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -251,12 +252,50 @@ public class MarshallingSupportTest {
                 {(byte) 0x80}, {(byte) 0xff}, {(byte) 0xc2}, {(byte) 0xc2, 0x41},
                 {(byte) 0xe1}, {(byte) 0xe1, (byte) 0x80},
                 {(byte) 0xe1, 0x41, (byte) 0x80}, {(byte) 0xe1, (byte) 0x80, 0x41},
-                {(byte) 0xf0, (byte) 0x9f, (byte) 0x98, (byte) 0x83}
+                // Four-byte sequences: cut short, a bad continuation byte, an overlong form, beyond
+                // U+10FFFF, and lead bytes UTF-8 never uses.
+                {(byte) 0xf0}, {(byte) 0xf0, (byte) 0x9f, (byte) 0x98},
+                {(byte) 0xf0, (byte) 0x9f, 0x41, (byte) 0x83},
+                {(byte) 0xf0, (byte) 0x8f, (byte) 0xbf, (byte) 0xbf},
+                {(byte) 0xf4, (byte) 0x90, (byte) 0x80, (byte) 0x80},
+                {(byte) 0xf5, (byte) 0x80, (byte) 0x80, (byte) 0x80},
+                {(byte) 0xf8, (byte) 0x88, (byte) 0x80, (byte) 0x80, (byte) 0x80}
         };
         for (byte[] bytes : malformed) {
             assertThrows(UTFDataFormatException.class,
                     () -> MarshallingSupport.convertUTF8WithBuf(bytes, new char[bytes.length], 0, bytes.length));
         }
+    }
+
+    @Test
+    public void testConvertUTF8WithBufDecodesStandardFourByteSequences() throws Exception {
+        // What a non-Java OpenWire client such as ActiveMQ-CPP sends for a supplementary character:
+        // standard UTF-8, one four-byte sequence where modified UTF-8 has a surrogate pair.
+        String[] values = {"😃", "A😃B", "𐀀", "􏿿", "𠮷ࠀ"};
+        for (String value : values) {
+            byte[] standard = value.getBytes(StandardCharsets.UTF_8);
+            assertEquals("Decoded value for " + Arrays.toString(standard), value,
+                    MarshallingSupport.convertUTF8WithBuf(standard, new char[standard.length], 0, standard.length));
+        }
+
+        // Both forms of the same character, side by side in one buffer and at an offset.
+        String value = "😃";
+        byte[] modified = modifiedUTFBytes(value);
+        byte[] standard = value.getBytes(StandardCharsets.UTF_8);
+        byte[] buffer = new byte[1 + modified.length + standard.length];
+        buffer[0] = (byte) 0xff;
+        System.arraycopy(modified, 0, buffer, 1, modified.length);
+        System.arraycopy(standard, 0, buffer, 1 + modified.length, standard.length);
+        assertEquals(value + value, MarshallingSupport.convertUTF8WithBuf(buffer,
+                new char[modified.length + standard.length], 1, modified.length + standard.length));
+    }
+
+    @Test
+    public void testReadUTF8AcceptsStandardFourByteSequences() throws Exception {
+        String value = "text 😃 𠮷";
+        byte[] standard = value.getBytes(StandardCharsets.UTF_8);
+        assertEquals(value, MarshallingSupport.readUTF8(input(lengthPrefixed(standard, false))));
+        assertEquals(value, MarshallingSupport.readShortUTF8(input(lengthPrefixed(standard, true)), standard.length));
     }
 
     @Test
