@@ -190,3 +190,50 @@ Nimbus JOSE+JWT NOTICE:
 | Licensed under the Apache License, Version 2.0.
 
 -------------------------------------------------------------------------
+
+Apache Shiro NOTICE:
+| The implementation for org.apache.shiro.util.SoftHashMap is based
+| on initial ideas from Dr. Heinz Kabutz's publicly posted version
+| available at http://www.javaspecialists.eu/archive/Issue015.html,
+| with continued modifications.
+|
+| Certain parts (StringUtils, IpAddressMatcher, etc.) of the source
+| code for this  product was copied for simplicity and to reduce
+| dependencies  from the source code developed by the Spring Framework
+| Project  (http://www.springframework.org).
+
+-------------------------------------------------------------------------
+
+Apache Log4j Core NOTICE:
+| ResolverUtil.java
+| Copyright 2005-2006 Tim Fennell
+
+-------------------------------------------------------------------------
+
+Jasypt NOTICE:
+| Copyright (c) 2007-2010, The JASYPT team (http://www.jasypt.org)
+|
+| This distribution includes cryptographic software.  The country in
+| which you currently reside may have restrictions on the import,
+| possession, use, and/or re-export to another country, of
+| encryption software.  BEFORE using any encryption software, please
+| check your country's laws, regulations and policies concerning the
+| import, possession, or use, and re-export of encryption software, to
+| see if this is permitted.  See http://www.wassenaar.org/ for more
+| information.
+
+-------------------------------------------------------------------------
+
+Spring Framework NOTICE:
+| Copyright (c) 2002-2026 Pivotal, Inc.
+|
+| This product is licensed to you under the Apache License, Version 2.0
+| (the "License"). You may not use this product except in compliance with
+| the License.
+|
+| This product may include a number of subcomponents with separate
+| copyright notices and license terms. Your use of the source code for
+| these subcomponents is subject to the terms and conditions of the
+| subcomponent's license, as noted in the license.txt file.
+
+-------------------------------------------------------------------------

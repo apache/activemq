@@ -749,3 +749,66 @@ This product includes code from the standardista-table-sorting.js library.
 |       </ol>
 
 -------------------------------------------------------------------------
+
+This product includes code from the jQuery library (MIT License).
+
+* activemq-web-demo/src/main/webapp/js/jquery-1.4.2.min.js
+* assembly/src/release/examples/mqtt/websocket/js/jquery-3.4.1.min.js
+* assembly/src/release/examples/stomp/websocket/js/jquery-3.4.1.min.js
+
+| Copyright 2010, John Resig (jQuery 1.4.2)
+| Copyright JS Foundation and other contributors (jQuery 3.4.1)
+| 
+| Permission is hereby granted, free of charge, to any person obtaining
+| a copy of this software and associated documentation files (the
+| "Software"), to deal in the Software without restriction, including
+| without limitation the rights to use, copy, modify, merge, publish,
+| distribute, sublicense, and/or sell copies of the Software, and to
+| permit persons to whom the Software is furnished to do so, subject to
+| the following conditions:
+| 
+| The above copyright notice and this permission notice shall be
+| included in all copies or substantial portions of the Software.
+| 
+| THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+| EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+| MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+| NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+| LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+| OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+| WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+-------------------------------------------------------------------------
+
+This product includes code from the Dojo Toolkit.
+
+* activemq-web-demo/src/main/webapp/js/dojo.js
+
+Project URL: http://dojotoolkit.org/
+Copyright (c) 2004-2009, The Dojo Foundation. All Rights Reserved.
+License: Academic Free License >= 2.1 or the modified BSD license
+(http://dojotoolkit.org/license)
+
+-------------------------------------------------------------------------
+
+This product includes code from the Eclipse Paho JavaScript client.
+
+* activemq-web-demo/src/main/webapp/mqtt/mqttws31.js
+* assembly/src/release/examples/mqtt/websocket/js/mqttws31.js
+
+Project URL: https://www.eclipse.org/paho/
+Copyright (c) 2013 IBM Corp.
+License: Eclipse Public License 1.0 (http://www.eclipse.org/legal/epl-v10.html)
+and Eclipse Distribution License 1.0 (http://www.eclipse.org/org/documents/edl-v10.php)
+
+-------------------------------------------------------------------------
+
+This product includes code from Jsunittest 0.7.3.
+
+* activemq-web-demo/src/main/webapp/test/assets/jsunittest.js
+
+Project URL: http://jsunittest.rubyforge.org
+Copyright (c) 2008 Dr Nic Williams
+License: MIT-style license, as stated in the source file header
+
+-------------------------------------------------------------------------

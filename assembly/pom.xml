@@ -642,10 +642,92 @@ o  'org.eclipse.jetty:apache-jsp'
 
   <build>
     <plugins>
+      <!-- The Tanuki Java Service Wrapper native binaries are not part of the source distribution:
+           they are downloaded (and checksum verified) at build time and only packaged in the
+           binary distributions. -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>get-wrapper-native-lib</id>
+            <phase>generate-resources</phase>
+            <goals>
+              <goal>run</goal>
+            </goals>
+            <configuration>
+              <target>
+                <property name="wrapper.dir" value="${project.build.directory}/wrapper" />
+                <property name="wrapper.version" value="${tanukisoft-wrapper-version}" />
+                <mkdir dir="${wrapper.dir}/download" />
+
+                <!-- Linux x86 64 -->
+                <get src="https://download.tanukisoftware.com/wrapper/${wrapper.version}/wrapper-linux-x86-64-${wrapper.version}.tar.gz" dest="${wrapper.dir}/download/wrapper-linux-x86-64-${wrapper.version}.tar.gz" retries="5" skipexisting="true" maxtime="300" />
+                <checksum file="${wrapper.dir}/download/wrapper-linux-x86-64-${wrapper.version}.tar.gz" algorithm="SHA-256" property="55fb1515da1165a995c4dc89f4592231ac3dafbcac3b6bb3f1a3b4cb2df9887e" verifyproperty="wrapper.linux.valid" />
+                <fail message="Checksum mismatch for wrapper-linux-x86-64-${wrapper.version}.tar.gz">
+                  <condition>
+                    <isfalse value="${wrapper.linux.valid}" />
+                  </condition>
+                </fail>
+                <untar src="${wrapper.dir}/download/wrapper-linux-x86-64-${wrapper.version}.tar.gz" dest="${wrapper.dir}/download" compression="gzip" />
+                <copy file="${wrapper.dir}/download/wrapper-linux-x86-64-${wrapper.version}/bin/wrapper" todir="${wrapper.dir}/linux-x86-64" />
+                <copy file="${wrapper.dir}/download/wrapper-linux-x86-64-${wrapper.version}/lib/libwrapper.so" todir="${wrapper.dir}/linux-x86-64" />
+
+                <!-- MacOS (universal) -->
+                <get src="https://download.tanukisoftware.com/wrapper/${wrapper.version}/wrapper-macosx-universal-32-${wrapper.version}.tar.gz" dest="${wrapper.dir}/download/wrapper-macosx-universal-32-${wrapper.version}.tar.gz" retries="5" skipexisting="true" maxtime="300" />
+                <checksum file="${wrapper.dir}/download/wrapper-macosx-universal-32-${wrapper.version}.tar.gz" algorithm="SHA-256" property="c08166fc4d1801126a5f13b438e6c65273f8f2aa3b44456e7baa499d26898d1d" verifyproperty="wrapper.macosx.valid" />
+                <fail message="Checksum mismatch for wrapper-macosx-universal-32-${wrapper.version}.tar.gz">
+                  <condition>
+                    <isfalse value="${wrapper.macosx.valid}" />
+                  </condition>
+                </fail>
+                <untar src="${wrapper.dir}/download/wrapper-macosx-universal-32-${wrapper.version}.tar.gz" dest="${wrapper.dir}/download" compression="gzip" />
+                <copy file="${wrapper.dir}/download/wrapper-macosx-universal-32-${wrapper.version}/bin/wrapper" todir="${wrapper.dir}/macosx" />
+                <copy file="${wrapper.dir}/download/wrapper-macosx-universal-32-${wrapper.version}/lib/libwrapper.jnilib" todir="${wrapper.dir}/macosx" />
+
+                <!-- Windows x86 64 (hosted by the Apache Karaf project) -->
+                <get src="https://downloads.apache.org/karaf/wrapper/windows64/karaf-wrapper.exe" dest="${wrapper.dir}/download/karaf-wrapper.exe" retries="5" skipexisting="true" maxtime="300" />
+                <checksum file="${wrapper.dir}/download/karaf-wrapper.exe" algorithm="SHA-256" property="47709dab25ee3988d27c74ed0043aa91dd5cf4d51713d703c1db9de6666d4311" verifyproperty="wrapper.win.exe.valid" />
+                <fail message="Checksum mismatch for karaf-wrapper.exe">
+                  <condition>
+                    <isfalse value="${wrapper.win.exe.valid}" />
+                  </condition>
+                </fail>
+                <get src="https://downloads.apache.org/karaf/wrapper/windows64/wrapper.dll" dest="${wrapper.dir}/download/wrapper.dll" retries="5" skipexisting="true" maxtime="300" />
+                <checksum file="${wrapper.dir}/download/wrapper.dll" algorithm="SHA-256" property="010bfd551ec3a4a0d37058dd47adaab3c32bfb4e5a91e9d37f508da8ed533ea0" verifyproperty="wrapper.win.dll.valid" />
+                <fail message="Checksum mismatch for wrapper.dll">
+                  <condition>
+                    <isfalse value="${wrapper.win.dll.valid}" />
+                  </condition>
+                </fail>
+                <copy file="${wrapper.dir}/download/karaf-wrapper.exe" tofile="${wrapper.dir}/win64/wrapper.exe" />
+                <copy file="${wrapper.dir}/download/wrapper.dll" todir="${wrapper.dir}/win64" />
+              </target>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-dependency-plugin</artifactId>
         <executions>
+          <execution>
+            <id>copy-wrapper-jar</id>
+            <phase>generate-resources</phase>
+            <goals>
+              <goal>copy</goal>
+            </goals>
+            <configuration>
+              <artifactItems>
+                <artifactItem>
+                  <groupId>tanukisoft</groupId>
+                  <artifactId>wrapper</artifactId>
+                  <outputDirectory>${project.build.directory}/wrapper</outputDirectory>
+                  <destFileName>wrapper.jar</destFileName>
+                </artifactItem>
+              </artifactItems>
+            </configuration>
+          </execution>
           <execution>
             <id>unpack</id>
             <phase>package</phase>
