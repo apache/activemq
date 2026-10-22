@@ -21,8 +21,9 @@
 <Configure class="org.eclipse.jetty.server.handler.ContextHandlerCollection" id="Contexts">
 
   <!-- Rewrite Handler for Security Headers -->
-  <Call name="addHandler">
-    <Arg>
+  <Ref refid="Server">
+    <Call name="insertHandler">
+      <Arg>
       <New class="org.eclipse.jetty.rewrite.handler.RewriteHandler">
         <Call name="addRule">
           <Arg>
@@ -82,6 +83,7 @@
       </New>
     </Arg>
   </Call>
+  </Ref>
 
   <!-- Admin Web Application -->
   <Call name="addHandler">
