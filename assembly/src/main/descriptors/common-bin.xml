@@ -24,11 +24,21 @@
       <directory>src/release</directory>
       <outputDirectory></outputDirectory>
       <includes>
-        <include>bin/*.jar</include>
         <include>conf/*.ts</include>
         <include>conf/*.ks</include>
         <include>conf/*.cert</include>
         <include>webapps/*.ico</include>
+      </includes>
+      <fileMode>0644</fileMode>
+      <directoryMode>0755</directoryMode>
+    </fileSet>
+
+    <!-- Tanuki wrapper jar, resolved from Maven Central at build time (see assembly/pom.xml) -->
+    <fileSet>
+      <directory>${project.build.directory}/wrapper</directory>
+      <outputDirectory>bin</outputDirectory>
+      <includes>
+        <include>wrapper.jar</include>
       </includes>
       <fileMode>0644</fileMode>
       <directoryMode>0755</directoryMode>

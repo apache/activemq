@@ -69,14 +69,15 @@
     </fileSet>
 
     <!-- Copy over the files that should not get the line endings converted but need to be chmod to 755 -->
+    <!-- Tanuki wrapper native binaries, downloaded at build time (see assembly/pom.xml) -->
     <fileSet>
-      <directory>src/release</directory>
-      <outputDirectory></outputDirectory>
+      <directory>${project.build.directory}/wrapper</directory>
+      <outputDirectory>bin</outputDirectory>
       <includes>
-        <include>bin/linux-*/wrapper</include>
-        <include>bin/linux-*/libwrapper.so</include>
-        <include>bin/macosx/wrapper</include>
-        <include>bin/macosx/libwrapper.jnilib</include>
+        <include>linux-x86-64/wrapper</include>
+        <include>linux-x86-64/libwrapper.so</include>
+        <include>macosx/wrapper</include>
+        <include>macosx/libwrapper.jnilib</include>
       </includes>
       <fileMode>0755</fileMode>
       <directoryMode>0755</directoryMode>

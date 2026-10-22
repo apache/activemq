@@ -106,6 +106,7 @@
     <spring-version>7.0.9</spring-version>
     <spring-version-range>[7,8)</spring-version-range>
     <taglibs-version>1.2.5</taglibs-version>
+    <tanukisoft-wrapper-version>3.2.3</tanukisoft-wrapper-version>
     <xpp3-version>1.1.4c</xpp3-version>
     <xstream-version>1.4.21</xstream-version>
     <xbean-version>4.31</xbean-version>
@@ -993,6 +994,12 @@
         <groupId>org.openjdk.jmh</groupId>
         <artifactId>jmh-generator-annprocess</artifactId>
         <version>${jmh-version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>tanukisoft</groupId>
+        <artifactId>wrapper</artifactId>
+        <version>${tanukisoft-wrapper-version}</version>
       </dependency>
 
     </dependencies>

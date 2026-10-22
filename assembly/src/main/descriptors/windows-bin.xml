@@ -70,13 +70,13 @@
       <lineEnding>unix</lineEnding>
     </fileSet>
 
-    <!-- Copy over files that should not get the line endings converted -->
+    <!-- Tanuki wrapper native binaries, downloaded at build time (see assembly/pom.xml) -->
     <fileSet>
-      <directory>src/release</directory>
-      <outputDirectory></outputDirectory>
+      <directory>${project.build.directory}/wrapper</directory>
+      <outputDirectory>bin</outputDirectory>
       <includes>
-        <include>bin/win64/*.exe</include>
-        <include>bin/win64/*.dll</include>
+        <include>win64/wrapper.exe</include>
+        <include>win64/wrapper.dll</include>
       </includes>
     </fileSet>
     <!-- include patched JAR files -->
