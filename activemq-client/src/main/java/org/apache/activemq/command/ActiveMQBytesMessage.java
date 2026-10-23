@@ -965,7 +965,10 @@ public class ActiveMQBytesMessage extends ActiveMQMessage implements BytesMessag
     @Override
     @SuppressWarnings("unchecked")
     public boolean isBodyAssignableTo(Class c) {
-        return getContent() == null || c.isAssignableFrom(byte[].class);
+        // Bytes written in write-only mode sit in bytesOut until stored, so a null
+        // content alone does not mean the message has no body.
+        var hasBody = getContent() != null || (bytesOut != null && bytesOut.size() > 0);
+        return !hasBody || c.isAssignableFrom(byte[].class);
     }
 
     @SuppressWarnings("unchecked")

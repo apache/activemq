@@ -308,6 +308,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
      */
     @Override
     public JMSContext createContext(String userName, String password, int sessionMode) {
+        ActiveMQSession.validateSessionMode(sessionMode);
         try {
             return new ActiveMQContext(createActiveMQConnection(userName, password), sessionMode);
         } catch (JMSException e) {
@@ -320,6 +321,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
      */
     @Override
     public JMSContext createContext(int sessionMode) {
+        ActiveMQSession.validateSessionMode(sessionMode);
         try {
             return new ActiveMQContext(createActiveMQConnection(getUserName(), getPassword()), sessionMode);
         } catch (JMSException e) {
@@ -396,6 +398,15 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
 
             if (clientID != null) {
                 connection.setDefaultClientID(clientID);
+            }
+
+            // Jakarta Messaging expects createConnection/createContext to authenticate
+            // the caller immediately (JMSSecurityException on bad credentials). ActiveMQ
+            // historically defers the ConnectionInfo exchange until first use, so the
+            // eager check is only performed under strictCompliance, and it uses a probe
+            // so the connection's own identity stays unset for a later setClientID().
+            if (isStrictCompliance()) {
+                connection.authenticate();
             }
 
             return connection;
