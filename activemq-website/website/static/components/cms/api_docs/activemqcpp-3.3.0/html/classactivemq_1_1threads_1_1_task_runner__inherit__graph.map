@@ -1,0 +1,4 @@
+<map id="G" name="G">
+<area shape="rect" id="node3" href="$classactivemq_1_1threads_1_1_composite_task_runner.html" title="A Task Runner that can contain one or more CompositeTasks that are each checked for pending work and ..." alt="" coords="5,83,312,112"/>
+<area shape="rect" id="node5" href="$classactivemq_1_1threads_1_1_dedicated_task_runner.html" title="activemq::threads::DedicatedTaskRunner" alt="" coords="336,83,640,112"/>
+</map>

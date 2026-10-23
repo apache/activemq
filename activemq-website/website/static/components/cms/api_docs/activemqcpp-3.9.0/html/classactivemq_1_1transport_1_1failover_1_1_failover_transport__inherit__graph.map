@@ -1,0 +1,8 @@
+<map id="activemq::transport::failover::FailoverTransport" name="activemq::transport::failover::FailoverTransport">
+<area shape="rect" id="node2" href="$classactivemq_1_1transport_1_1_composite_transport.html" title="A Composite Transport is a Transport implementation that is composed of several Transports. " alt="" coords="93,171,240,213"/>
+<area shape="rect" id="node3" href="$classactivemq_1_1transport_1_1_transport.html" title="Interface for a transport layer for command objects. " alt="" coords="98,81,232,122"/>
+<area shape="rect" id="node4" href="$classactivemq_1_1util_1_1_service.html" title="Base interface for all classes that run as a Service inside the application. " alt="" coords="5,5,157,32"/>
+<area shape="rect" id="node5" href="$classdecaf_1_1io_1_1_closeable.html" title="Interface for a class that implements the close method. " alt="" coords="181,5,320,32"/>
+<area shape="rect" id="node6" href="$classactivemq_1_1threads_1_1_composite_task.html" title="Represents a single task that can be part of a set of Tasks that are contained in a CompositeTaskRunn..." alt="" coords="269,171,403,213"/>
+<area shape="rect" id="node7" href="$classactivemq_1_1threads_1_1_task.html" title="Represents a unit of work that requires one or more iterations to complete. " alt="" coords="257,88,420,115"/>
+</map>

@@ -1,0 +1,31 @@
+---
+title: ActiveMQ 5.19.11 Release
+version: 5.19.11
+release_date: 2026-09-05
+java_version: 11, 17, 21
+release_notes: https://github.com/apache/activemq/releases/tag/activemq-5.19.11
+shortDescription: Maintenance release on the 5.19.x series.
+---
+
+import ClassicRelease from '@site/src/components/ClassicRelease';
+
+<ClassicRelease frontMatter={frontMatter}>
+
+Apache Classic 5.19.11 was released on Sep 5th, 2026.
+
+This is a maintenance release on the 5.19.x series, including:
+
+Features:
+   - Support destination gc sweep of destinations with only wildcard consumers
+
+Fixes:
+   - Fix network bridge local-side close
+   - Harden soTimeout vs InactivityMonitor
+   - Update TopicRegion removeSubscription to use connection clientId
+
+Dependency updates:
+   - 5 minor dependency updates
+
+You can find details on the [release notes](https://github.com/apache/activemq/releases/tag/activemq-5.19.11).
+
+</ClassicRelease>

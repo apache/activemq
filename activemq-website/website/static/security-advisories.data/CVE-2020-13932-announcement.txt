@@ -1,0 +1,19 @@
+CVE-2020-13932: Apache ActiveMQ Artemis - Remote XSS in Web console Diagram Plugin
+
+Severity: Medium
+
+Vendor: The Apache Software Foundation
+
+Affected Version: Apache ActiveMQ Artemis 2.5.0 to 2.13.0
+
+Vulnerability details:
+A specifically crafted MQTT packet which has an XSS payload as
+client-id or topic name can exploit this vulnerability. The XSS
+payload is being injected into the admin console's browser. The XSS
+payload is triggered in the diagram plugin; queue node and the info
+section.
+
+Mitigation:
+Upgrade to Apache ActiveMQ Artemis 2.14.0
+
+Credit: This issue was discovered by Arun Magesh from Payatu Software Labs

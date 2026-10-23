@@ -1,0 +1,5 @@
+<map id="decaf::net::URLStreamHandler" name="decaf::net::URLStreamHandler">
+<area shape="rect" id="node2" href="$classdecaf_1_1internal_1_1net_1_1file_1_1_file_handler.html" title="decaf::internal::net\l::file::FileHandler" alt="" coords="263,5,393,46"/>
+<area shape="rect" id="node3" href="$classdecaf_1_1internal_1_1net_1_1http_1_1_http_handler.html" title="decaf::internal::net\l::http::HttpHandler" alt="" coords="263,70,393,111"/>
+<area shape="rect" id="node4" href="$classdecaf_1_1internal_1_1net_1_1https_1_1_https_handler.html" title="decaf::internal::net\l::https::HttpsHandler" alt="" coords="256,135,400,177"/>
+</map>

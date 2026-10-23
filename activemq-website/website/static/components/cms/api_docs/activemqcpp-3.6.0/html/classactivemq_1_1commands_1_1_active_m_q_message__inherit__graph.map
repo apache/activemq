@@ -1,0 +1,10 @@
+<map id="activemq::commands::ActiveMQMessage" name="activemq::commands::ActiveMQMessage">
+<area shape="rect" id="node2" href="$classactivemq_1_1commands_1_1_active_m_q_message_template.html" title="activemq::commands\l::ActiveMQMessageTemplate\l\&lt; cms::Message \&gt;" alt="" coords="33,566,223,626"/>
+<area shape="rect" id="node4" href="$classcms_1_1_message.html" title="Root of all messages." alt="" coords="5,481,107,509"/>
+<area shape="rect" id="node6" href="$classactivemq_1_1commands_1_1_message.html" title="activemq::commands\l::Message" alt="" coords="131,473,272,517"/>
+<area shape="rect" id="node8" href="$classactivemq_1_1commands_1_1_base_command.html" title="activemq::commands\l::BaseCommand" alt="" coords="131,379,272,423"/>
+<area shape="rect" id="node10" href="$classactivemq_1_1commands_1_1_command.html" title="activemq::commands\l::Command" alt="" coords="131,286,272,330"/>
+<area shape="rect" id="node12" href="$classactivemq_1_1commands_1_1_base_data_structure.html" title="activemq::commands\l::BaseDataStructure" alt="" coords="131,193,272,237"/>
+<area shape="rect" id="node14" href="$classactivemq_1_1commands_1_1_data_structure.html" title="activemq::commands\l::DataStructure" alt="" coords="131,99,272,143"/>
+<area shape="rect" id="node16" href="$classactivemq_1_1wireformat_1_1_marshal_aware.html" title="activemq::wireformat\l::MarshalAware" alt="" coords="132,6,271,50"/>
+</map>

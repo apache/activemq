@@ -1,0 +1,7 @@
+<map id="G" name="G">
+<area shape="rect" id="node11" href="$classactivemq_1_1core_1_1_active_m_q_x_a_connection.html" title="activemq::core::ActiveMQXAConnection" alt="" coords="65,237,364,267"/>
+<area shape="rect" id="node2" href="$classcms_1_1_connection.html" title="The client&#39;s connection to its provider." alt="" coords="147,83,283,112"/>
+<area shape="rect" id="node4" href="$classcms_1_1_startable.html" title="Interface for a class that implements the start method." alt="" coords="5,5,128,35"/>
+<area shape="rect" id="node6" href="$classcms_1_1_stoppable.html" title="Interface for a class that implements the stop method." alt="" coords="152,5,277,35"/>
+<area shape="rect" id="node8" href="$classcms_1_1_closeable.html" title="Interface for a class that implements the close method." alt="" coords="301,5,427,35"/>
+</map>

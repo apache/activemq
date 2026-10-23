@@ -1,0 +1,19 @@
+CVE-2014-8110: ActiveMQ Web Console - Cross-Site Scripting
+
+Severity: Important
+
+Vendor:
+The Apache Software Foundation
+
+Versions Affected:
+Apache ActiveMQ 5.0.0 - 5.10.0
+
+Description:
+Several instances of cross-site scripting vulnerabilities were identified to be present in the web based administration console. The root cause of this issue is improper user data output validation.
+
+
+Mitigation:
+Upgrade to Apache ActiveMQ 5.10.1 or 5.11.0
+
+Credit:
+This issue was discovered by ﻿Georgi Geshev from MWR Labs

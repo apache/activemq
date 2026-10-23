@@ -1,0 +1,5 @@
+<map id="cms::MapMessage" name="cms::MapMessage">
+<area shape="rect" id="node3" href="$classactivemq_1_1commands_1_1_active_m_q_message_template.html" title="activemq::commands\l::ActiveMQMessageTemplate\l\&lt; cms::MapMessage \&gt;" alt="" coords="5,155,200,211"/>
+<area shape="rect" id="node2" href="$classcms_1_1_message.html" title="Root of all messages. " alt="" coords="49,5,156,32"/>
+<area shape="rect" id="node4" href="$classactivemq_1_1commands_1_1_active_m_q_map_message.html" title="activemq::commands\l::ActiveMQMapMessage" alt="" coords="19,259,185,301"/>
+</map>

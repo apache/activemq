@@ -1,0 +1,10 @@
+<map id="decaf::util::concurrent::BlockingQueue&lt; E &gt;" name="decaf::util::concurrent::BlockingQueue&lt; E &gt;">
+<area shape="rect" id="node16" href="$classdecaf_1_1util_1_1concurrent_1_1_linked_blocking_queue.html" title="A BlockingQueue derivative that allows for a bound to be placed on the number of elements that can be..." alt="" coords="1144,5,1328,49"/>
+<area shape="rect" id="node18" href="$classdecaf_1_1util_1_1concurrent_1_1_synchronous_queue.html" title="A blocking queue in which each insert operation must wait for a corresponding remove operation by ano..." alt="" coords="1151,71,1321,115"/>
+<area shape="rect" id="node2" href="$classdecaf_1_1util_1_1_abstract_queue.html" title="This class provides skeletal implementations of some Queue operations." alt="" coords="703,46,900,74"/>
+<area shape="rect" id="node4" href="$classdecaf_1_1util_1_1_queue.html" title="A kind of collection provides advanced operations than other basic collections, such as insertion..." alt="" coords="469,21,619,49"/>
+<area shape="rect" id="node6" href="$classdecaf_1_1util_1_1_collection.html" title="The root interface in the collection hierarchy." alt="" coords="216,46,387,74"/>
+<area shape="rect" id="node12" href="$classdecaf_1_1util_1_1_abstract_collection.html" title="This class provides a skeletal implementation of the Collection interface, to minimize the effort req..." alt="" coords="435,71,653,99"/>
+<area shape="rect" id="node8" href="$classdecaf_1_1lang_1_1_iterable.html" title="Implementing this interface allows an object to be cast to an Iterable type for generic collections A..." alt="" coords="5,17,168,45"/>
+<area shape="rect" id="node10" href="$classdecaf_1_1util_1_1concurrent_1_1_synchronizable.html" title="The interface for all synchronizable objects (that is, objects that can be locked and unlocked)..." alt="" coords="15,67,159,111"/>
+</map>

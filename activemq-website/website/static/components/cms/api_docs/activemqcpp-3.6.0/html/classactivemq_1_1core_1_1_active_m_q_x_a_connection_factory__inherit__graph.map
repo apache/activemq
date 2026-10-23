@@ -1,0 +1,5 @@
+<map id="activemq::core::ActiveMQXAConnectionFactory" name="activemq::core::ActiveMQXAConnectionFactory">
+<area shape="rect" id="node2" href="$classcms_1_1_x_a_connection_factory.html" title="The XAConnectionFactory interface is specialized interface that defines an ConnectionFactory that cre..." alt="" coords="5,91,184,119"/>
+<area shape="rect" id="node4" href="$classactivemq_1_1core_1_1_active_m_q_connection_factory.html" title="activemq::core::ActiveMQConnection\lFactory" alt="" coords="208,83,440,127"/>
+<area shape="rect" id="node6" href="$classcms_1_1_connection_factory.html" title="Defines the interface for a factory that creates connection objects, the Connection objects returned ..." alt="" coords="244,6,404,34"/>
+</map>

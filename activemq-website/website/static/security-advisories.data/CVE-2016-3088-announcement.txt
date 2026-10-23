@@ -1,0 +1,26 @@
+CVE-2016-3088 - ActiveMQ Fileserver web application vulnerabilities﻿
+Severity: Important
+
+Vendor:
+The Apache Software Foundation
+
+Versions Affected:
+Apache ActiveMQ 5.0.0 - 5.13.x
+
+Description:
+
+Multiple vulnerabilities have been identified in the Apache ActiveMQ Fileserver web application. These are similar to those reported in CVE-2015-1830 and can allow attackers to replace web application files with malicious code and perform remote code execution on the system.
+
+Mitigation:
+
+Fileserver feature will be completely removed starting with 5.14.0 release. Users are advised to use other FTP and HTTP based file servers for transferring blob messages. Fileserver web application SHOULD NOT be used in older version of the broker and it should be disabled (it has been disabled by default since 5.12.0). This can be done by removing (commenting out) the following lines from conf\jetty.xml file
+
+<bean class="org.eclipse.jetty.webapp.WebAppContext">
+    <property name="contextPath" value="/fileserver" />
+    <property name="resourceBase" value="${activemq.home}/webapps/fileserver" />
+    <property name="logUrlOnStart" value="true" />
+    <property name="parentLoaderPriority" value="true" />
+</bean>
+
+Credit:
+This issue was discovered by separated reports of Simon Zuckerbraun and Andrea Micalizzi (rgod) of Trend Micro Zero Day Initiative

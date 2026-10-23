@@ -1,0 +1,19 @@
+CVE-2014-3612: ActiveMQ JAAS: LDAPLoginModule allows empty password authentication and Wildcard Interpretation
+
+Severity: Important
+
+Vendor:
+The Apache Software Foundation
+
+Versions Affected:
+Apache ActiveMQ 5.0.0 - 5.10.0
+
+Description:
+It was found that if a configured LDAP server supported the unauthenticated authentication mechanism (as described by RFC 4513), the LDAPLoginModule implementation, provided by ActiveMQ Java Authentication and Authorization Service (JAAS), would consider an authentication attempt to be successful for a valid user that provided an empty password. A remote attacker could use this flaw to bypass the authentication mechanism of an application using LDAPLoginModule, and assume a role of any valid user within that application. Additionally, when LDAP authentication is enabled, it is possible for an attacker to supply a wildcard operator instead of a username, which will effectively allow him to brute force a password for an unknown but valid account as opposed to brute forcing a combination of username and password. Once a valid password is found, the attacker can successfully authenticate with LDAP and publish/subscribe to a queue.
+
+
+Mitigation:
+Upgrade to Apache ActiveMQ 5.10.1 or 5.11.0
+
+Credit:
+This issue was discovered by ﻿Georgi Geshev from MWR Labs and Arun Babu Neelicattu from RedHat.

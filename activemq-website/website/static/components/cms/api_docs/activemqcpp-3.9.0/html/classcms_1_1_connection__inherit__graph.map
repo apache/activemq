@@ -1,0 +1,9 @@
+<map id="cms::Connection" name="cms::Connection">
+<area shape="rect" id="node5" href="$classcms_1_1_enhanced_connection.html" title="An enhanced CMS Connection instance that provides additional features above the default required feat..." alt="" coords="57,155,236,181"/>
+<area shape="rect" id="node8" href="$classcms_1_1_x_a_connection.html" title="The XAConnection interface defines an extended Connection type that is used to create XASession objec..." alt="" coords="269,229,408,256"/>
+<area shape="rect" id="node2" href="$classcms_1_1_startable.html" title="Interface for a class that implements the start method. " alt="" coords="21,5,128,32"/>
+<area shape="rect" id="node3" href="$classcms_1_1_stoppable.html" title="Interface for a class that implements the stop method. " alt="" coords="153,5,265,32"/>
+<area shape="rect" id="node4" href="$classcms_1_1_closeable.html" title="Interface for a class that implements the close method. " alt="" coords="290,5,403,32"/>
+<area shape="rect" id="node6" href="$classactivemq_1_1core_1_1_active_m_q_connection.html" title="Concrete connection used for all connectors to the ActiveMQ broker. " alt="" coords="5,229,245,256"/>
+<area shape="rect" id="node7" href="$classactivemq_1_1core_1_1_active_m_q_x_a_connection.html" title="activemq::core::ActiveMQXAConnection" alt="" coords="103,304,360,331"/>
+</map>

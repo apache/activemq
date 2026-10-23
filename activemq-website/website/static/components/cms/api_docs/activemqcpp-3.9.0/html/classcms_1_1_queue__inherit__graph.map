@@ -1,0 +1,6 @@
+<map id="cms::Queue" name="cms::Queue">
+<area shape="rect" id="node3" href="$classactivemq_1_1commands_1_1_active_m_q_queue.html" title="activemq::commands\l::ActiveMQQueue" alt="" coords="5,155,152,197"/>
+<area shape="rect" id="node4" href="$classcms_1_1_temporary_queue.html" title="Defines a Temporary Queue based Destination. " alt="" coords="176,163,329,189"/>
+<area shape="rect" id="node2" href="$classcms_1_1_destination.html" title="A Destination object encapsulates a provider&#45;specific address. " alt="" coords="105,5,225,32"/>
+<area shape="rect" id="node5" href="$classactivemq_1_1commands_1_1_active_m_q_temp_queue.html" title="activemq::commands\l::ActiveMQTempQueue" alt="" coords="174,246,332,287"/>
+</map>

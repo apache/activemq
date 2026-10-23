@@ -1,0 +1,16 @@
+<map id="G" name="G">
+<area shape="rect" id="node3" href="$classactivemq_1_1core_1_1_active_m_q_connection.html" title="Concrete connection used for all connectors to the ActiveMQ broker." alt="" coords="400,19,680,48"/>
+<area shape="rect" id="node7" href="$classactivemq_1_1transport_1_1_default_transport_listener.html" title="A Utility class that create empty implementations for the TransportListener interface so that a subcl..." alt="" coords="371,99,709,128"/>
+<area shape="rect" id="node13" href="$classactivemq_1_1transport_1_1failover_1_1_failover_transport_listener.html" title="Utility class used by the Transport to perform the work of responding to events from the active Trans..." alt="" coords="341,152,739,181"/>
+<area shape="rect" id="node15" href="$classactivemq_1_1transport_1_1_transport_filter.html" title="A filter on the transport layer." alt="" coords="408,245,672,275"/>
+<area shape="rect" id="node5" href="$classactivemq_1_1core_1_1_active_m_q_x_a_connection.html" title="activemq::core::ActiveMQXAConnection" alt="" coords="833,5,1132,35"/>
+<area shape="rect" id="node9" href="$classactivemq_1_1transport_1_1failover_1_1_backup_transport.html" title="activemq::transport::failover::BackupTransport" alt="" coords="813,59,1152,88"/>
+<area shape="rect" id="node11" href="$classactivemq_1_1transport_1_1mock_1_1_internal_command_listener.html" title="Listens for Commands sent from the MockTransport." alt="" coords="788,112,1177,141"/>
+<area shape="rect" id="node17" href="$classactivemq_1_1transport_1_1correlator_1_1_response_correlator.html" title="This type of transport filter is responsible for correlating asynchronous responses with requests..." alt="" coords="793,165,1172,195"/>
+<area shape="rect" id="node19" href="$classactivemq_1_1transport_1_1inactivity_1_1_inactivity_monitor.html" title="activemq::transport::inactivity::InactivityMonitor" alt="" coords="805,219,1160,248"/>
+<area shape="rect" id="node21" href="$classactivemq_1_1transport_1_1logging_1_1_logging_transport.html" title="A transport filter that logs commands as they are sent/received." alt="" coords="813,272,1152,301"/>
+<area shape="rect" id="node23" href="$classactivemq_1_1transport_1_1tcp_1_1_tcp_transport.html" title="Implements a TCP/IP based transport filter, this transport is meant to wrap an instance of an IOTrans..." alt="" coords="840,325,1125,355"/>
+<area shape="rect" id="node27" href="$classactivemq_1_1wireformat_1_1_wire_format_negotiator.html" title="Defines a WireFormatNegotiator which allows a WireFormat to." alt="" coords="817,379,1148,408"/>
+<area shape="rect" id="node25" href="$classactivemq_1_1transport_1_1tcp_1_1_ssl_transport.html" title="Transport for connecting to a Broker using an SSL Socket." alt="" coords="1305,325,1588,355"/>
+<area shape="rect" id="node29" href="$classactivemq_1_1wireformat_1_1openwire_1_1_open_wire_format_negotiator.html" title="activemq::wireformat::openwire::OpenWireFormatNegotiator" alt="" coords="1228,379,1665,408"/>
+</map>

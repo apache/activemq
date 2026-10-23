@@ -1,0 +1,4 @@
+<map id="activemq::transport::mock::MockTransportFactory" name="activemq::transport::mock::MockTransportFactory">
+<area shape="rect" id="node2" href="$classactivemq_1_1transport_1_1_abstract_transport_factory.html" title="Abstract implementation of the TransportFactory interface, providing the base functionality that&#39;s co..." alt="" coords="16,97,195,138"/>
+<area shape="rect" id="node3" href="$classactivemq_1_1transport_1_1_transport_factory.html" title="Defines the interface for Factories that create Transports or TransportFilters. " alt="" coords="38,6,172,47"/>
+</map>

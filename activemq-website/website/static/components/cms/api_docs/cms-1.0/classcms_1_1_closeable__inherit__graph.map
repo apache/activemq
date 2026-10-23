@@ -1,0 +1,5 @@
+base referer
+rect $classcms_1_1_connection.html 5,80 125,107
+rect $classcms_1_1_message_consumer.html 149,80 320,107
+rect $classcms_1_1_message_producer.html 344,80 507,107
+rect $classcms_1_1_session.html 531,80 632,107

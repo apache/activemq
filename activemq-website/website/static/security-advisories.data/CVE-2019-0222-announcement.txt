@@ -1,0 +1,22 @@
+CVE-2019-0222 - Corrupt MQTT frame can cause broker shutdown
+
+Severity: Important
+
+Vendor:
+The Apache Software Foundation
+
+Versions Affected:
+Apache ActiveMQ 5.0.0 - 5.15.8
+
+Description:
+Unmarshalling corrupt MQTT frame can lead to broker Out of Memory exception making it unresponsive.
+
+Mitigation:
+Upgrade to Apache ActiveMQ 5.15.9. Alternatevly, you can manually upgrade MQTT library to version 1.15 in lib/extra directory. You can download the jar from https://repo1.maven.org/maven2/org/fusesource/mqtt-client/mqtt-client/1.15/mqtt-client-1.15.jar. If you don't use MQTT protocol, you can disable the transport as well.
+
+
+Credit:
+This issue was discovered by:
+
+* Indrajeet Singh - <insi_2304@ymail.com>
+

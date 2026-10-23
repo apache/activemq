@@ -1,0 +1,4 @@
+<map id="activemq::transport::inactivity::ReadChecker" name="activemq::transport::inactivity::ReadChecker">
+<area shape="rect" id="node2" href="$classdecaf_1_1util_1_1_timer_task.html" title="A Base class for a task object that can be scheduled for one&#45;time or repeated execution by a Timer..." alt="" coords="15,83,159,111"/>
+<area shape="rect" id="node4" href="$classdecaf_1_1lang_1_1_runnable.html" title="Interface for a runnable object &#45; defines a task that can be run by a thread." alt="" coords="15,6,159,34"/>
+</map>

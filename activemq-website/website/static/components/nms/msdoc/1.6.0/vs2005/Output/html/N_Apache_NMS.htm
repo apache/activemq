@@ -1,0 +1,331 @@
+﻿<html xmlns:MSHelp="http://msdn.microsoft.com/mshelp" xmlns:mshelp="http://msdn.microsoft.com/mshelp" xmlns:ddue="http://ddue.schemas.microsoft.com/authoring/2003/5" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:msxsl="urn:schemas-microsoft-com:xslt">
+  <head>
+    <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8" />
+    <META NAME="save" CONTENT="history" />
+    <title>Apache.NMS Namespace</title>
+    <meta name="Language" content="en-us" />
+    <meta name="System.Keywords" content="Apache.NMS namespace" />
+    <meta name="Microsoft.Help.F1" content="Apache.NMS" />
+    <meta name="Microsoft.Help.Id" content="N:Apache.NMS" />
+    <meta name="Microsoft.Help.ContentType" content="Reference" />
+    <link rel="stylesheet" type="text/css" href="../styles/Presentation.css" />
+    <link rel="stylesheet" type="text/css" href="ms-help://Hx/HxRuntime/HxLink.css" />
+    <script type="text/javascript" src="../scripts/EventUtilities.js"> </script>
+    <script type="text/javascript" src="../scripts/SplitScreen.js"> </script>
+    <script type="text/javascript" src="../scripts/Dropdown.js"> </script>
+    <script type="text/javascript" src="../scripts/script_manifold.js"> </script>
+    <script type="text/javascript" src="../scripts/script_feedBack.js"> </script>
+    <script type="text/javascript" src="../scripts/CheckboxMenu.js"> </script>
+    <script type="text/javascript" src="../scripts/CommonUtilities.js"> </script>
+    <meta name="container" content="Apache.NMS" />
+    <meta name="file" content="N_Apache_NMS" />
+    <meta name="guid" content="N_Apache_NMS" />
+    <xml>
+      <MSHelp:Attr Name="AssetID" Value="N:Apache.NMS" />
+      <MSHelp:TOCTitle Title="Apache.NMS Namespace" />
+      <MSHelp:RLTitle Title="Apache.NMS Namespace ()" />
+      <MSHelp:Keyword Index="A" Term="N:Apache.NMS" />
+      <MSHelp:Keyword Index="A" Term="frlrfApacheNMS" />
+      <MSHelp:Keyword Index="K" Term="Apache.NMS namespace" />
+      <MSHelp:Keyword Index="F" Term="Apache.NMS" />
+      <MSHelp:Attr Name="HelpPriority" Value="1" />
+      <MSHelp:Attr Name="DevLang" Value="VB" />
+      <MSHelp:Attr Name="DevLang" Value="CSharp" />
+      <MSHelp:Attr Name="Locale" Value="en-us" />
+      <MSHelp:Attr Name="TopicType" Value="kbSyntax" />
+      <MSHelp:Attr Name="TopicType" Value="apiref" />
+    </xml>
+  </head>
+  <body>
+    <input type="hidden" id="userDataCache" class="userDataStyle" />
+    <input type="hidden" id="hiddenScrollOffset" />
+    <img id="collapseImage" style="display:none; height:0; width:0;" src="../icons/collapse_all.gif" alt="Collapse image" title="Collapse image" />
+    <img id="expandImage" style="display:none; height:0; width:0;" src="../icons/expand_all.gif" alt="Expand Image" title="Expand Image" />
+    <img id="collapseAllImage" style="display:none; height:0; width:0;" src="../icons/collapse_all.gif" />
+    <img id="expandAllImage" style="display:none; height:0; width:0;" src="../icons/expand_all.gif" />
+    <img id="dropDownImage" style="display:none; height:0; width:0;" src="../icons/dropdown.gif" />
+    <img id="dropDownHoverImage" style="display:none; height:0; width:0;" src="../icons/dropdownHover.gif" />
+    <img id="copyImage" style="display:none; height:0; width:0;" src="../icons/copycode.gif" alt="Copy image" title="Copy image" />
+    <img id="copyHoverImage" style="display:none; height:0; width:0;" src="../icons/copycodeHighlight.gif" alt="CopyHover image" title="CopyHover image" />
+    <div id="header">
+      <table id="topTable" cellspacing="0" cellpadding="0">
+        <tr>
+          <td>
+            <span onclick="ExpandCollapseAll(toggleAllImage)" style="cursor:default;" onkeypress="ExpandCollapseAll_CheckKey(toggleAllImage, event)" tabindex="0">
+              <img ID="toggleAllImage" class="toggleAll" src="../icons/collapse_all.gif" /> <label id="collapseAllLabel" for="toggleAllImage" style="display: none;">Collapse All</label><label id="expandAllLabel" for="toggleAllImage" style="display: none;">Expand All</label> </span>
+            <span>    </span>
+            <span id="devlangsDropdown" class="filter" tabindex="0">
+              <img id="devlangsDropdownImage" src="../icons/dropdown.gif" /> <label id="devlangsMenuAllLabel" for="devlangsDropdownImage" style="display: none;"><nobr>Code: All </nobr></label><label id="devlangsMenuMultipleLabel" for="devlangsDropdownImage" style="display: none;"><nobr>Code: Multiple </nobr></label><label id="devlangsMenuVisualBasicLabel" for="devlangsDropdownImage" style="display: none;"><nobr>Code: Visual Basic </nobr></label><label id="devlangsMenuCSharpLabel" for="devlangsDropdownImage" style="display: none;"><nobr>Code: C# </nobr></label><label id="devlangsMenuManagedCPlusPlusLabel" for="devlangsDropdownImage" style="display: none;"><nobr>Code: Visual C++ </nobr></label><label id="devlangsMenuJavaScriptLabel" for="devlangsDropdownImage" style="display: none;"><nobr>Code: JavaScript </nobr></label></span>
+          </td>
+        </tr>
+      </table>
+      <div id="devlangsMenu">
+        <input id="VisualBasicCheckbox" type="checkbox" data="VisualBasic,vb,'persist'" value="on" onClick="SetLanguage(this)" />
+        <label class="checkboxLabel" for="VisualBasicCheckbox">Visual Basic</label>
+        <br />
+        <input id="CSharpCheckbox" type="checkbox" data="CSharp,cs,'persist'" value="on" onClick="SetLanguage(this)" />
+        <label class="checkboxLabel" for="CSharpCheckbox">C#</label>
+        <br />
+        <input id="ManagedCPlusPlusCheckbox" type="checkbox" data="ManagedCPlusPlus,cpp,'persist'" value="on" onClick="SetLanguage(this)" />
+        <label class="checkboxLabel" for="ManagedCPlusPlusCheckbox">Visual C++</label>
+        <br />
+        <input id="JavaScriptCheckbox" type="checkbox" data="JavaScript,cs,'persist'" value="on" onClick="SetLanguage(this)" />
+        <label class="checkboxLabel" for="JavaScriptCheckbox">JavaScript</label>
+        <br />
+      </div>
+      <table id="bottomTable" cellpadding="0" cellspacing="0">
+        <tr id="headerTableRow1">
+          <td align="left">
+            <span id="runningHeaderText">.NET Framework Class Library</span>
+          </td>
+        </tr>
+        <tr id="headerTableRow2">
+          <td align="left">
+            <span id="nsrTitle">Apache.NMS Namespace</span>
+          </td>
+        </tr>
+        <tr id="headerTableRow3">
+          <td align="left">
+  <span id="headfeedbackarea" class="feedbackhead">
+      <a href="javascript:SubmitFeedback('activemq.docs@apache.org','','','','','%0\dThank%20you%20for%20your%20feedback.%20The%20developer%20writing%20teams%20use%20your%20feedback%20to%20improve%20documentation.%20While%20we%20are%20reviewing%20your%20feedback,%20we%20may%20send%20you%20e-mail%20to%20ask%20for%20clarification%20or%20feedback%20on%20a%20solution.%20We%20do%20not%20use%20your%20e-mail%20address%20for%20any%20other%20purpose.%0\d','Customer%20Feedback');">
+        
+        Send Feedback
+      </a>
+	</span>
+</td>
+        </tr>
+      </table>
+      <table id="gradientTable">
+        <tr>
+          <td class="nsrBottom" background="../icons/gradient.gif" />
+        </tr>
+      </table>
+    </div>
+    <div id="mainSection">
+      <div id="mainBody">
+        <div id="allHistory" class="saveHistory" onsave="saveAll()" onload="loadAll()" />
+        <font color="DarkGray"></font>
+        <p /> <h1 class="heading"><span onclick="ExpandCollapse(classToggle)" style="cursor:default;" onkeypress="ExpandCollapse_CheckKey(classToggle, event)" tabindex="0"><img id="classToggle" class="toggle" name="toggleSwitch" src="../icons/collapse_all.gif" />Classes</span></h1><div id="classSection" class="section" name="collapseableSection" style=""><table id="typeList" class="members" frame="lhs" cellpadding="2"><col width="10%" /><tr><th class="iconColumn">
+           
+       </th><th class="nameColumn">Class</th><th class="descriptionColumn">Description</th></tr><tr data="class; public"><td><img src="../icons/pubclass.gif" alt="Public class" title="Public class" /></td><td><a href="T_Apache_NMS_IllegalStateException.htm">IllegalStateException</a></td><td /></tr><tr data="class; public"><td><img src="../icons/pubclass.gif" alt="Public class" title="Public class" /></td><td><a href="T_Apache_NMS_InvalidClientIDException.htm">InvalidClientIDException</a></td><td /></tr><tr data="class; public"><td><img src="../icons/pubclass.gif" alt="Public class" title="Public class" /></td><td><a href="T_Apache_NMS_InvalidDestinationException.htm">InvalidDestinationException</a></td><td><div class="summary">
+            An attempt is made to access an invalid destination
+            </div></td></tr><tr data="class; public"><td><img src="../icons/pubclass.gif" alt="Public class" title="Public class" /></td><td><a href="T_Apache_NMS_InvalidSelectorException.htm">InvalidSelectorException</a></td><td /></tr><tr data="class; public"><td><img src="../icons/pubclass.gif" alt="Public class" title="Public class" /></td><td><a href="T_Apache_NMS_MessageConsumerExtensions.htm">MessageConsumerExtensions</a></td><td /></tr><tr data="class; public"><td><img src="../icons/pubclass.gif" alt="Public class" title="Public class" /></td><td><a href="T_Apache_NMS_MessageEOFException.htm">MessageEOFException</a></td><td /></tr><tr data="class; public"><td><img src="../icons/pubclass.gif" alt="Public class" title="Public class" /></td><td><a href="T_Apache_NMS_MessageExtensions.htm">MessageExtensions</a></td><td /></tr><tr data="class; public"><td><img src="../icons/pubclass.gif" alt="Public class" title="Public class" /></td><td><a href="T_Apache_NMS_MessageFormatException.htm">MessageFormatException</a></td><td /></tr><tr data="class; public"><td><img src="../icons/pubclass.gif" alt="Public class" title="Public class" /></td><td><a href="T_Apache_NMS_MessageNotReadableException.htm">MessageNotReadableException</a></td><td /></tr><tr data="class; public"><td><img src="../icons/pubclass.gif" alt="Public class" title="Public class" /></td><td><a href="T_Apache_NMS_MessageNotWriteableException.htm">MessageNotWriteableException</a></td><td /></tr><tr data="class; public"><td><img src="../icons/pubclass.gif" alt="Public class" title="Public class" /></td><td><a href="T_Apache_NMS_MessageProducerExtensions.htm">MessageProducerExtensions</a></td><td /></tr><tr data="class; public"><td><img src="../icons/pubclass.gif" alt="Public class" title="Public class" /></td><td><a href="T_Apache_NMS_NMSConnectionException.htm">NMSConnectionException</a></td><td><div class="summary">
+            Represents a connection failure.
+            </div></td></tr><tr data="class; public"><td><img src="../icons/pubclass.gif" alt="Public class" title="Public class" /></td><td><a href="T_Apache_NMS_NMSConnectionFactory.htm">NMSConnectionFactory</a></td><td><div class="summary">
+            Implementation of a factory for <a href="T_Apache_NMS_IConnection.htm">IConnection</a> instances.
+            </div></td></tr><tr data="class; public"><td><img src="../icons/pubclass.gif" alt="Public class" title="Public class" /></td><td><a href="T_Apache_NMS_NMSConstants.htm">NMSConstants</a></td><td><div class="summary">
+            Defines a number of constants
+            </div></td></tr><tr data="class; public"><td><img src="../icons/pubclass.gif" alt="Public class" title="Public class" /></td><td><a href="T_Apache_NMS_NMSException.htm">NMSException</a></td><td><div class="summary">
+            Represents an NMS exception
+            </div></td></tr><tr data="class; public"><td><img src="../icons/pubclass.gif" alt="Public class" title="Public class" /></td><td><a href="T_Apache_NMS_NMSSecurityException.htm">NMSSecurityException</a></td><td><div class="summary">
+            Represents a security failure.
+            </div></td></tr><tr data="class; public"><td><img src="../icons/pubclass.gif" alt="Public class" title="Public class" /></td><td><a href="T_Apache_NMS_ProviderFactoryInfo.htm">ProviderFactoryInfo</a></td><td><div class="summary">
+            Provider implementation mapping class.
+            </div></td></tr><tr data="class; public"><td><img src="../icons/pubclass.gif" alt="Public class" title="Public class" /></td><td><a href="T_Apache_NMS_ResourceAllocationException.htm">ResourceAllocationException</a></td><td /></tr><tr data="class; public"><td><img src="../icons/pubclass.gif" alt="Public class" title="Public class" /></td><td><a href="T_Apache_NMS_SessionExtensions.htm">SessionExtensions</a></td><td /></tr><tr data="class; public"><td><img src="../icons/pubclass.gif" alt="Public class" title="Public class" /></td><td><a href="T_Apache_NMS_Tracer.htm">Tracer</a></td><td /></tr><tr data="class; public"><td><img src="../icons/pubclass.gif" alt="Public class" title="Public class" /></td><td><a href="T_Apache_NMS_TransactionInProgressException.htm">TransactionInProgressException</a></td><td /></tr><tr data="class; public"><td><img src="../icons/pubclass.gif" alt="Public class" title="Public class" /></td><td><a href="T_Apache_NMS_TransactionRolledBackException.htm">TransactionRolledBackException</a></td><td /></tr></table></div><h1 class="heading"><span onclick="ExpandCollapse(interfaceToggle)" style="cursor:default;" onkeypress="ExpandCollapse_CheckKey(interfaceToggle, event)" tabindex="0"><img id="interfaceToggle" class="toggle" name="toggleSwitch" src="../icons/collapse_all.gif" />Interfaces</span></h1><div id="interfaceSection" class="section" name="collapseableSection" style=""><table id="typeList" class="members" frame="lhs" cellpadding="2"><col width="10%" /><tr><th class="iconColumn">
+           
+       </th><th class="nameColumn">Interface</th><th class="descriptionColumn">Description</th></tr><tr data="interface; public"><td><img src="../icons/pubinterface.gif" alt="Public interface" title="Public interface" /></td><td><a href="T_Apache_NMS_IBytesMessage.htm">IBytesMessage</a></td><td><div class="summary">
+            A BytesMessage object is used to send a message containing a stream of uninterpreted
+            bytes. It inherits from the Message interface and adds a bytes message body. The
+            receiver of the message supplies the interpretation of the bytes.
+            This message type is for client encoding of existing message formats. If possible,
+            one of the other self-defining message types should be used instead.
+            Although the NMS API allows the use of message properties with byte messages, they
+            are typically not used, since the inclusion of properties may affect the format.
+            When the message is first created, and when ClearBody is called, the body of the
+            message is in write-only mode. After the first call to Reset has been made, the
+            message body is in read-only mode. After a message has been sent, the client that
+            sent it can retain and modify it without affecting the message that has been sent.
+            The same message object can be sent multiple times. When a message has been received,
+            the provider has called Reset so that the message body is in read-only mode for the
+            client.
+            If ClearBody is called on a message in read-only mode, the message body is cleared and
+            the message is in write-only mode.
+            If a client attempts to read a message in write-only mode, a MessageNotReadableException
+            is thrown.
+            If a client attempts to write a message in read-only mode, a MessageNotWriteableException
+            is thrown.
+            </div></td></tr><tr data="interface; public"><td><img src="../icons/pubinterface.gif" alt="Public interface" title="Public interface" /></td><td><a href="T_Apache_NMS_IConnection.htm">IConnection</a></td><td><div class="summary">
+            Represents a connection with a message broker
+            </div></td></tr><tr data="interface; public"><td><img src="../icons/pubinterface.gif" alt="Public interface" title="Public interface" /></td><td><a href="T_Apache_NMS_IConnectionFactory.htm">IConnectionFactory</a></td><td><div class="summary">
+            A Factory of IConnection objects
+            </div></td></tr><tr data="interface; public"><td><img src="../icons/pubinterface.gif" alt="Public interface" title="Public interface" /></td><td><a href="T_Apache_NMS_IConnectionMetaData.htm">IConnectionMetaData</a></td><td><div class="summary">
+            Provides information describing the NMS IConnection instance.
+            </div></td></tr><tr data="interface; public"><td><img src="../icons/pubinterface.gif" alt="Public interface" title="Public interface" /></td><td><a href="T_Apache_NMS_IDestination.htm">IDestination</a></td><td><div class="summary">
+            A base interface for destinations such as queues or topics
+            </div></td></tr><tr data="interface; public"><td><img src="../icons/pubinterface.gif" alt="Public interface" title="Public interface" /></td><td><a href="T_Apache_NMS_IMapMessage.htm">IMapMessage</a></td><td><div class="summary">
+            Represents a Map message which contains key and value pairs which are
+            of primitive types
+            </div></td></tr><tr data="interface; public"><td><img src="../icons/pubinterface.gif" alt="Public interface" title="Public interface" /></td><td><a href="T_Apache_NMS_IMessage.htm">IMessage</a></td><td><div class="summary">
+            Represents a message either to be sent to a message broker or received from a message broker.
+            </div></td></tr><tr data="interface; public"><td><img src="../icons/pubinterface.gif" alt="Public interface" title="Public interface" /></td><td><a href="T_Apache_NMS_IMessageConsumer.htm">IMessageConsumer</a></td><td><div class="summary">
+            A consumer of messages
+            </div></td></tr><tr data="interface; public"><td><img src="../icons/pubinterface.gif" alt="Public interface" title="Public interface" /></td><td><a href="T_Apache_NMS_IMessageProducer.htm">IMessageProducer</a></td><td><div class="summary">
+            An object capable of sending messages to some destination
+            </div></td></tr><tr data="interface; public"><td><img src="../icons/pubinterface.gif" alt="Public interface" title="Public interface" /></td><td><a href="T_Apache_NMS_INetTxConnection.htm">INetTxConnection</a></td><td><div class="summary">
+            The INetTxConnection extends the functionality of the IConnection interface by
+            adding the createNetTxSession method (optional).
+            The INetTxConnection interface is optional. NMS providers are not required to support this
+            interface. This interface is for use by NMS providers to support transactional environments.
+            </div></td></tr><tr data="interface; public"><td><img src="../icons/pubinterface.gif" alt="Public interface" title="Public interface" /></td><td><a href="T_Apache_NMS_INetTxConnectionFactory.htm">INetTxConnectionFactory</a></td><td><div class="summary">
+            Some application servers provide support for use in a .NET transactions (optional).
+            To include NMS API transactions in a MSDTC transaction, an application server requires a
+            .NET Transaction aware NMS provider that is capable of mapping the MSDTC transaction model
+            into operations that are supported by the application server. An NMS provider exposes its
+            .NET Transaction support using an INetTxConnectionFactory object, which an application
+            server uses to create INetTxConnection objects.
+            The INetTxConnectionFactory interface is optional. NMS providers are not required to support this
+            interface. This interface is for use by NMS providers to support transactional environments.
+            </div></td></tr><tr data="interface; public"><td><img src="../icons/pubinterface.gif" alt="Public interface" title="Public interface" /></td><td><a href="T_Apache_NMS_INetTxSession.htm">INetTxSession</a></td><td><div class="summary">
+            The INetTxSession interface extends the capability of Session by adding access to a NMS
+            provider's support for the Distributed Transactions (optional).  The transaction support
+            leverages the .NET Frameworks System.Transactions API.
+            The NMS Provider implements this interface by participating in the current ambient transaction
+            as defined by the System.Transactions.Transaction.Current static member.  Whenever a new
+            Transaction is entered the NMS provider should enlist in that transaction.  When there is no
+            ambient transaction then the NMS Prodiver should allow the INetTxSession instance to behave
+            as a session that is in Auto Acknowledge mode.
+            Calling the Commit or Rollback methods on a INetTxSession instance should throw an exception
+            as those operations are controlled by the Transaction Manager.
+            The INetTxSession interface is optional. NMS providers are not required to support this
+            interface. This interface is for use by NMS providers to support transactional environments.
+            </div></td></tr><tr data="interface; public"><td><img src="../icons/pubinterface.gif" alt="Public interface" title="Public interface" /></td><td><a href="T_Apache_NMS_IObjectMessage.htm">IObjectMessage</a></td><td><div class="summary">
+            Represents an Object message which contains a serializable .Net object.
+            </div></td></tr><tr data="interface; public"><td><img src="../icons/pubinterface.gif" alt="Public interface" title="Public interface" /></td><td><a href="T_Apache_NMS_IPrimitiveMap.htm">IPrimitiveMap</a></td><td><div class="summary">
+            Represents a Map of primitive types where the keys are all string instances
+            and the values are strings or numbers.
+            </div></td></tr><tr data="interface; public"><td><img src="../icons/pubinterface.gif" alt="Public interface" title="Public interface" /></td><td><a href="T_Apache_NMS_IQueue.htm">IQueue</a></td><td><div class="summary">
+            Represents a queue in a message broker. A message sent to a queue is delivered
+            to at most one consumer on the queue.
+            </div></td></tr><tr data="interface; public"><td><img src="../icons/pubinterface.gif" alt="Public interface" title="Public interface" /></td><td><a href="T_Apache_NMS_IQueueBrowser.htm">IQueueBrowser</a></td><td><div class="summary">
+            A client uses a QueueBrowser object to look at messages on a queue without removing them.
+            The Enumeration method returns a java.util.Enumeration that is used to scan the queue's
+            messages. It may be an enumeration of the entire content of a queue, or it may contain
+            only the messages matching a message selector.
+            Messages may be arriving and expiring while the scan is done. The NMS API does not
+            require the content of an enumeration to be a static snapshot of queue content. Whether
+            these changes are visible or not depends on the NMS provider.
+            </div></td></tr><tr data="interface; public"><td><img src="../icons/pubinterface.gif" alt="Public interface" title="Public interface" /></td><td><a href="T_Apache_NMS_IRedeliveryPolicy.htm">IRedeliveryPolicy</a></td><td /></tr><tr data="interface; public"><td><img src="../icons/pubinterface.gif" alt="Public interface" title="Public interface" /></td><td><a href="T_Apache_NMS_ISession.htm">ISession</a></td><td><div class="summary">
+            Represents a single unit of work on an IConnection.
+            So the ISession can be used to perform transactional receive and sends
+            </div></td></tr><tr data="interface; public"><td><img src="../icons/pubinterface.gif" alt="Public interface" title="Public interface" /></td><td><a href="T_Apache_NMS_IStartable.htm">IStartable</a></td><td><div class="summary">
+            A lifecycle for NMS objects to indicate they can be started
+            </div></td></tr><tr data="interface; public"><td><img src="../icons/pubinterface.gif" alt="Public interface" title="Public interface" /></td><td><a href="T_Apache_NMS_IStoppable.htm">IStoppable</a></td><td><div class="summary">
+            A lifecycle for NMS objects to indicate they can be stopped
+            </div></td></tr><tr data="interface; public"><td><img src="../icons/pubinterface.gif" alt="Public interface" title="Public interface" /></td><td><a href="T_Apache_NMS_IStreamMessage.htm">IStreamMessage</a></td><td><div class="summary">
+            A StreamMessage object is used to send a stream of primitive types in the
+            .NET programming language. It is filled and read sequentially. It inherits
+            from the Message interface and adds a stream message body.
+            The primitive types can be read or written explicitly using methods for each
+            type. They may also be read or written generically as objects. For instance,
+            a call to IStreamMessage.WriteInt32(6) is equivalent to
+            StreamMessage.WriteObject( (Int32)6 ). Both forms are provided, because the
+            explicit form is convenient for static programming, and the object form is
+            needed when types are not known at compile time.
+            When the message is first created, and when ClearBody is called, the body of
+            the message is in write-only mode. After the first call to reset has been made,
+            the message body is in read-only mode. After a message has been sent, the
+            client that sent it can retain and modify it without affecting the message
+            that has been sent. The same message object can be sent multiple times. When a
+            message has been received, the provider has called reset so that the message
+            body is in read-only mode for the client.
+            If ClearBody is called on a message in read-only mode, the message body is
+            cleared and the message body is in write-only mode.
+            If a client attempts to read a message in write-only mode, a
+            MessageNotReadableException is thrown.
+            If a client attempts to write a message in read-only mode, a
+            MessageNotWriteableException is thrown.
+            IStreamMessage objects support the following conversion table. The marked cases
+            must be supported. The unmarked cases must throw a NMSException. The
+            String-to-primitive conversions may throw a runtime exception if the primitive's
+            valueOf() method does not accept it as a valid String representation of the
+            primitive.
+            A value written as the row type can be read as the column type.
+            |        | boolean byte short char int long float double String byte[]
+            |----------------------------------------------------------------------
+            |boolean |    X                                            X
+            |byte    |          X     X         X   X                  X
+            |short   |                X         X   X                  X
+            |char    |                     X                           X
+            |int     |                          X   X                  X
+            |long    |                              X                  X
+            |float   |                                    X     X      X
+            |double  |                                          X      X
+            |String  |    X     X     X         X   X     X     X      X
+            |byte[]  |                                                        X
+            |----------------------------------------------------------------------
+            </div></td></tr><tr data="interface; public"><td><img src="../icons/pubinterface.gif" alt="Public interface" title="Public interface" /></td><td><a href="T_Apache_NMS_ITemporaryQueue.htm">ITemporaryQueue</a></td><td><div class="summary">
+            Represents a temporary queue which exists for the duration
+            of the IConnection which created it.
+            </div></td></tr><tr data="interface; public"><td><img src="../icons/pubinterface.gif" alt="Public interface" title="Public interface" /></td><td><a href="T_Apache_NMS_ITemporaryTopic.htm">ITemporaryTopic</a></td><td><div class="summary">
+            Represents a temporary topic which exists for the duration
+            of the IConnection which created it.
+            </div></td></tr><tr data="interface; public"><td><img src="../icons/pubinterface.gif" alt="Public interface" title="Public interface" /></td><td><a href="T_Apache_NMS_ITextMessage.htm">ITextMessage</a></td><td><div class="summary">
+            Represents a text based message
+            </div></td></tr><tr data="interface; public"><td><img src="../icons/pubinterface.gif" alt="Public interface" title="Public interface" /></td><td><a href="T_Apache_NMS_ITopic.htm">ITopic</a></td><td><div class="summary">
+            Represents a topic in a message broker. A message sent to a topic
+            is delivered to all consumers on the topic who are interested in the message.
+            </div></td></tr><tr data="interface; public"><td><img src="../icons/pubinterface.gif" alt="Public interface" title="Public interface" /></td><td><a href="T_Apache_NMS_ITrace.htm">ITrace</a></td><td><div class="summary">
+            The ITrace interface is used internally by ActiveMQ to log messages.
+            The client aplication may provide an implementation of ITrace if it wishes to
+            route messages to a specific destination.
+            </div></td></tr></table></div><h1 class="heading"><span onclick="ExpandCollapse(delegateToggle)" style="cursor:default;" onkeypress="ExpandCollapse_CheckKey(delegateToggle, event)" tabindex="0"><img id="delegateToggle" class="toggle" name="toggleSwitch" src="../icons/collapse_all.gif" />Delegates</span></h1><div id="delegateSection" class="section" name="collapseableSection" style=""><table id="typeList" class="members" frame="lhs" cellpadding="2"><col width="10%" /><tr><th class="iconColumn">
+           
+       </th><th class="nameColumn">Delegate</th><th class="descriptionColumn">Description</th></tr><tr data="delegate; public"><td><img src="../icons/pubdelegate.gif" alt="Public delegate" title="Public delegate" /></td><td><a href="T_Apache_NMS_ConnectionInterruptedListener.htm">ConnectionInterruptedListener</a></td><td><div class="summary">
+            A delegate that is used by Fault tolerant NMS Implementation to notify their
+            clients that the Connection is not currently active to due some error.
+            </div></td></tr><tr data="delegate; public"><td><img src="../icons/pubdelegate.gif" alt="Public delegate" title="Public delegate" /></td><td><a href="T_Apache_NMS_ConnectionResumedListener.htm">ConnectionResumedListener</a></td><td><div class="summary">
+            A delegate that is used by Fault tolerant NMS Implementation to notify their
+            clients that the Connection that was interrupted has now been restored.
+            </div></td></tr><tr data="delegate; public"><td><img src="../icons/pubdelegate.gif" alt="Public delegate" title="Public delegate" /></td><td><a href="T_Apache_NMS_ConsumerTransformerDelegate.htm">ConsumerTransformerDelegate</a></td><td><div class="summary">
+            A delegate that a client can register that will be called each time a consumer dispatches a message
+            to the client code to allow the client to Transform a received message from one type to another,
+            StreamMessage to TextMessage, ObjectMessage to TextMessage containing XML, etc.  This allows a
+            client to create a consumer that will automatically transform a message to a type that the client is
+            capable of processing or adding additional information to a received message.  For messages that do
+            not need to be processed the client should return null from this method, in this case the original
+            message will be dispatched to the client.
+            </div></td></tr><tr data="delegate; public"><td><img src="../icons/pubdelegate.gif" alt="Public delegate" title="Public delegate" /></td><td><a href="T_Apache_NMS_ExceptionListener.htm">ExceptionListener</a></td><td><div class="summary">
+            A delegate that can receive transport level exceptions.
+            </div></td></tr><tr data="delegate; public"><td><img src="../icons/pubdelegate.gif" alt="Public delegate" title="Public delegate" /></td><td><a href="T_Apache_NMS_MessageListener.htm">MessageListener</a></td><td><div class="summary">
+            A delegate that can receive messages async.
+            </div></td></tr><tr data="delegate; public"><td><img src="../icons/pubdelegate.gif" alt="Public delegate" title="Public delegate" /></td><td><a href="T_Apache_NMS_ProducerTransformerDelegate.htm">ProducerTransformerDelegate</a></td><td><div class="summary">
+            A delegate that a client can register that will be called each time a Producer's send method is
+            called to allow the client to Transform a sent message from one type to another, StreamMessage to
+            TextMessage, ObjectMessage to TextMessage containing XML, etc.  This allows a client to create a
+            producer that will automatically transform a message to a type that some receiving client is
+            capable of processing or adding additional information to a sent message such as additional message
+            headers, etc.  For messages that do not need to be processed the client should return null from
+            this method, in this case the original message will be sent.
+            </div></td></tr><tr data="delegate; public"><td><img src="../icons/pubdelegate.gif" alt="Public delegate" title="Public delegate" /></td><td><a href="T_Apache_NMS_SessionTxEventDelegate.htm">SessionTxEventDelegate</a></td><td><div class="summary">
+            A delegate that is notified whenever a Transational evemt occurs for
+            the specified session such as TX started, committed or rolled back.
+            </div></td></tr></table></div><h1 class="heading"><span onclick="ExpandCollapse(enumerationToggle)" style="cursor:default;" onkeypress="ExpandCollapse_CheckKey(enumerationToggle, event)" tabindex="0"><img id="enumerationToggle" class="toggle" name="toggleSwitch" src="../icons/collapse_all.gif" />Enumerations</span></h1><div id="enumerationSection" class="section" name="collapseableSection" style=""><table id="typeList" class="members" frame="lhs" cellpadding="2"><col width="10%" /><tr><th class="iconColumn">
+           
+       </th><th class="nameColumn">Enumeration</th><th class="descriptionColumn">Description</th></tr><tr data="enumeration; public"><td><img src="../icons/pubenumeration.gif" alt="Public enumeration" title="Public enumeration" /></td><td><a href="T_Apache_NMS_AcknowledgementMode.htm">AcknowledgementMode</a></td><td><div class="summary">
+            The mode used to acknowledge messages after they are consumed
+            </div></td></tr><tr data="enumeration; public"><td><img src="../icons/pubenumeration.gif" alt="Public enumeration" title="Public enumeration" /></td><td><a href="T_Apache_NMS_DestinationType.htm">DestinationType</a></td><td><div class="summary">
+            Represents the type of the destination such as a queue or topic.
+            </div></td></tr><tr data="enumeration; public"><td><img src="../icons/pubenumeration.gif" alt="Public enumeration" title="Public enumeration" /></td><td><a href="T_Apache_NMS_MsgDeliveryMode.htm">MsgDeliveryMode</a></td><td><div class="summary">
+            Define an enumerated array of message delivery modes.  Provider-specific
+            values can be used to extend this enumerated mode.  TIBCO is known to
+            provide a third value of ReliableDelivery.  At minimum, a provider must
+            support Persistent and NonPersistent.
+            </div></td></tr><tr data="enumeration; public"><td><img src="../icons/pubenumeration.gif" alt="Public enumeration" title="Public enumeration" /></td><td><a href="T_Apache_NMS_MsgPriority.htm">MsgPriority</a></td><td><div class="summary">
+            Define an enumerated array of message priorities.
+            </div></td></tr></table></div></div>
+      <div id="footer">
+        <div class="footerLine">
+          <img width="100%" height="3px" src="../icons/footer.gif" alt="Footer image" title="Footer image" />
+        </div>
+<span id="feedbackarea">
+			Send
+		<a href="javascript:SubmitFeedback('activemq.docs@apache.org','','','','','%0\dThank%20you%20for%20your%20feedback.%20The%20developer%20writing%20teams%20use%20your%20feedback%20to%20improve%20documentation.%20While%20we%20are%20reviewing%20your%20feedback,%20we%20may%20send%20you%20e-mail%20to%20ask%20for%20clarification%20or%20feedback%20on%20a%20solution.%20We%20do%20not%20use%20your%20e-mail%20address%20for%20any%20other%20purpose.%0\d','Customer%20Feedback');">
+			
+      feedback
+		</a>
+			on this topic to Microsoft.
+		</span>
+</div>
+    </div>
+  </body>
+</html>

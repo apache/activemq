@@ -1,0 +1,4 @@
+<map id="activemq::cmsutil::CmsAccessor" name="activemq::cmsutil::CmsAccessor">
+<area shape="rect" id="node3" href="$classactivemq_1_1cmsutil_1_1_cms_destination_accessor.html" title="Extends the CmsAccessor to add support for resolving destination names." alt="" coords="5,99,173,143"/>
+<area shape="rect" id="node5" href="$classactivemq_1_1cmsutil_1_1_cms_template.html" title="CmsTemplate simplifies performing synchronous CMS operations." alt="" coords="28,193,151,237"/>
+</map>

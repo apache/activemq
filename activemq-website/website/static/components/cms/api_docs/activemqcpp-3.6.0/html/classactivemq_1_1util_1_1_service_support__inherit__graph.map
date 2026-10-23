@@ -1,0 +1,4 @@
+<map id="activemq::util::ServiceSupport" name="activemq::util::ServiceSupport">
+<area shape="rect" id="node5" href="$classactivemq_1_1threads_1_1_scheduler.html" title="Scheduler class for use in executing Runnable Tasks either periodically or one time only with optiona..." alt="" coords="37,161,163,205"/>
+<area shape="rect" id="node2" href="$classactivemq_1_1util_1_1_service.html" title="Base interface for all classes that run as a Service inside the application." alt="" coords="27,6,173,34"/>
+</map>

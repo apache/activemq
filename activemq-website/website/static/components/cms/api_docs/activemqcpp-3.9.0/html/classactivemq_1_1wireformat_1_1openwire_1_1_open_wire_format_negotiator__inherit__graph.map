@@ -1,0 +1,8 @@
+<map id="activemq::wireformat::openwire::OpenWireFormatNegotiator" name="activemq::wireformat::openwire::OpenWireFormatNegotiator">
+<area shape="rect" id="node2" href="$classactivemq_1_1wireformat_1_1_wire_format_negotiator.html" title="Defines a WireFormatNegotiator which allows a WireFormat to. " alt="" coords="165,262,323,303"/>
+<area shape="rect" id="node3" href="$classactivemq_1_1transport_1_1_transport_filter.html" title="A filter on the transport layer. " alt="" coords="177,171,311,213"/>
+<area shape="rect" id="node4" href="$classactivemq_1_1transport_1_1_transport.html" title="Interface for a transport layer for command objects. " alt="" coords="98,81,232,122"/>
+<area shape="rect" id="node5" href="$classactivemq_1_1util_1_1_service.html" title="Base interface for all classes that run as a Service inside the application. " alt="" coords="5,5,157,32"/>
+<area shape="rect" id="node6" href="$classdecaf_1_1io_1_1_closeable.html" title="Interface for a class that implements the close method. " alt="" coords="181,5,320,32"/>
+<area shape="rect" id="node7" href="$classactivemq_1_1transport_1_1_transport_listener.html" title="A listener of asynchronous exceptions from a command transport object. " alt="" coords="257,81,391,122"/>
+</map>

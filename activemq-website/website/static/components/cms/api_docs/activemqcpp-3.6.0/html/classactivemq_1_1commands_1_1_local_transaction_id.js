@@ -1,0 +1,26 @@
+var classactivemq_1_1commands_1_1_local_transaction_id =
+[
+    [ "COMPARATOR", "classactivemq_1_1commands_1_1_local_transaction_id.html#ad96b41373ce7848174489d19f4255291", null ],
+    [ "LocalTransactionId", "classactivemq_1_1commands_1_1_local_transaction_id.html#a43f7b74407c6b43f3865e12d0298d8ad", null ],
+    [ "LocalTransactionId", "classactivemq_1_1commands_1_1_local_transaction_id.html#a5ccfb15852d1f29f56407f88c69c5df0", null ],
+    [ "~LocalTransactionId", "classactivemq_1_1commands_1_1_local_transaction_id.html#a4df87895ccce51bc374e6036f136a53b", null ],
+    [ "cloneDataStructure", "classactivemq_1_1commands_1_1_local_transaction_id.html#a5db05f19d03d795f15f808205e9f1248", null ],
+    [ "compareTo", "classactivemq_1_1commands_1_1_local_transaction_id.html#a4df4a85fccb5fccc0152abe68c42f93f", null ],
+    [ "copyDataStructure", "classactivemq_1_1commands_1_1_local_transaction_id.html#ab718c1f085be35a822a25222b560ed16", null ],
+    [ "equals", "classactivemq_1_1commands_1_1_local_transaction_id.html#ad983c55ca50ef849350b5a61286faeda", null ],
+    [ "equals", "classactivemq_1_1commands_1_1_local_transaction_id.html#ac6cfa11dfe0a97002753973e1aec1e1b", null ],
+    [ "getConnectionId", "classactivemq_1_1commands_1_1_local_transaction_id.html#a995686a614c9e6c6116e5e072e7d2f34", null ],
+    [ "getConnectionId", "classactivemq_1_1commands_1_1_local_transaction_id.html#a3e9eded58d59aa6cbabffb8ef4bf8281", null ],
+    [ "getDataStructureType", "classactivemq_1_1commands_1_1_local_transaction_id.html#a78ebf5241310e2fa907ed4db735621ab", null ],
+    [ "getValue", "classactivemq_1_1commands_1_1_local_transaction_id.html#a7fc9f2f770fea2610af83c7f3a5ded2b", null ],
+    [ "isLocalTransactionId", "classactivemq_1_1commands_1_1_local_transaction_id.html#a77ddd87c898371f443fcfcfaa58a21fb", null ],
+    [ "operator<", "classactivemq_1_1commands_1_1_local_transaction_id.html#a9bb8d20f06d5d8f55e86caf55bd07648", null ],
+    [ "operator=", "classactivemq_1_1commands_1_1_local_transaction_id.html#af9d1f5056b4909b9954dbfe64484feee", null ],
+    [ "operator==", "classactivemq_1_1commands_1_1_local_transaction_id.html#a384ce245f166f28a0b6eb64397ef254f", null ],
+    [ "setConnectionId", "classactivemq_1_1commands_1_1_local_transaction_id.html#abb4cede667939515521b38ca4da6cd14", null ],
+    [ "setValue", "classactivemq_1_1commands_1_1_local_transaction_id.html#a9894c2f52861f5f8ccc0c81b50311869", null ],
+    [ "toString", "classactivemq_1_1commands_1_1_local_transaction_id.html#a24b292f134e5131d457541d0952ba780", null ],
+    [ "connectionId", "classactivemq_1_1commands_1_1_local_transaction_id.html#a9a48edf0ebc18c27039053ab5ee21453", null ],
+    [ "ID_LOCALTRANSACTIONID", "classactivemq_1_1commands_1_1_local_transaction_id.html#a62a62f5c20e0ba720c49e580865d0e19", null ],
+    [ "value", "classactivemq_1_1commands_1_1_local_transaction_id.html#a855d7ad5011f8a7455f5806d7d765905", null ]
+];

@@ -1,0 +1,5 @@
+<map id="cms::DestinationSource" name="cms::DestinationSource">
+<area shape="rect" id="node4" href="$classactivemq_1_1core_1_1_active_m_q_destination_source.html" title="activemq::core::ActiveMQDestination\lSource" alt="" coords="5,155,245,197"/>
+<area shape="rect" id="node2" href="$classcms_1_1_startable.html" title="Interface for a class that implements the start method. " alt="" coords="5,5,112,32"/>
+<area shape="rect" id="node3" href="$classcms_1_1_stoppable.html" title="Interface for a class that implements the stop method. " alt="" coords="137,5,249,32"/>
+</map>

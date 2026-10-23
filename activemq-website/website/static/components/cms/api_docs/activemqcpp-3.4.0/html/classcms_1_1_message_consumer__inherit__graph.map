@@ -1,0 +1,7 @@
+<map id="G" name="G">
+<area shape="rect" id="node9" href="$classactivemq_1_1cmsutil_1_1_cached_consumer.html" title="A cached message consumer contained within a pooled session." alt="" coords="5,160,280,189"/>
+<area shape="rect" id="node11" href="$classactivemq_1_1core_1_1_active_m_q_consumer.html" title="activemq::core::ActiveMQConsumer" alt="" coords="304,160,573,189"/>
+<area shape="rect" id="node2" href="$classcms_1_1_closeable.html" title="Interface for a class that implements the close method." alt="" coords="80,5,205,35"/>
+<area shape="rect" id="node4" href="$classcms_1_1_startable.html" title="Interface for a class that implements the start method." alt="" coords="229,5,352,35"/>
+<area shape="rect" id="node6" href="$classcms_1_1_stoppable.html" title="Interface for a class that implements the stop method." alt="" coords="376,5,501,35"/>
+</map>

@@ -1,0 +1,5 @@
+<map id="decaf::internal::net::ssl::openssl::OpenSSLSocket" name="decaf::internal::net::ssl::openssl::OpenSSLSocket">
+<area shape="rect" id="node2" href="$classdecaf_1_1net_1_1ssl_1_1_s_s_l_socket.html" title="decaf::net::ssl::SSLSocket" alt="" coords="19,155,197,181"/>
+<area shape="rect" id="node3" href="$classdecaf_1_1net_1_1_socket.html" title="decaf::net::Socket" alt="" coords="43,80,172,107"/>
+<area shape="rect" id="node4" href="$classdecaf_1_1io_1_1_closeable.html" title="Interface for a class that implements the close method. " alt="" coords="39,5,177,32"/>
+</map>

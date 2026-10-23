@@ -1,0 +1,4 @@
+<map id="activemq::cmsutil::CmsTemplate" name="activemq::cmsutil::CmsTemplate">
+<area shape="rect" id="node2" href="$classactivemq_1_1cmsutil_1_1_cms_destination_accessor.html" title="Extends the CmsAccessor to add support for resolving destination names. " alt="" coords="5,97,176,138"/>
+<area shape="rect" id="node3" href="$classactivemq_1_1cmsutil_1_1_cms_accessor.html" title="Base class for activemq.cmsutil.CmsTemplate and other CMS&#45;accessing gateway helpers, defining common properties such as the CMS cms.ConnectionFactory to operate on. " alt="" coords="24,6,157,47"/>
+</map>

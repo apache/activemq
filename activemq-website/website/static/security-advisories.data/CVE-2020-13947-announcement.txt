@@ -1,0 +1,23 @@
+CVE-2020-13947 - XSS in WebConsole
+
+Severity: Medium
+
+Vendor:
+The Apache Software Foundation
+
+Versions Affected:
+Apache ActiveMQ prior to 5.15.14 and 5.16.1
+
+Description:
+An instance of a cross-site scripting
+vulnerability was identified to be present in the web based
+administration console on the message.jsp page of Apache ActiveMQ
+versions prior to 5.15.14 and 5.16.1.
+
+Mitigation:
+Upgrade to at least Apache ActiveMQ 5.15.14 or 5.16.1
+
+Credit:
+This issue was discovery by:
+
+* qiang qiang <silbul2017@gmail.com>

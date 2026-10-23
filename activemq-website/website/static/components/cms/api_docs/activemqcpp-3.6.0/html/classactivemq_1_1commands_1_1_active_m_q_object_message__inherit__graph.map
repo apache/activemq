@@ -1,0 +1,11 @@
+<map id="activemq::commands::ActiveMQObjectMessage" name="activemq::commands::ActiveMQObjectMessage">
+<area shape="rect" id="node2" href="$classactivemq_1_1commands_1_1_active_m_q_message_template.html" title="activemq::commands\l::ActiveMQMessageTemplate\l\&lt; cms::ObjectMessage \&gt;" alt="" coords="64,566,253,626"/>
+<area shape="rect" id="node4" href="$classcms_1_1_object_message.html" title="Place holder for interaction with JMS systems that support Java, the C++ client is not responsible fo..." alt="" coords="5,481,147,509"/>
+<area shape="rect" id="node6" href="$classcms_1_1_message.html" title="Root of all messages." alt="" coords="25,387,127,415"/>
+<area shape="rect" id="node8" href="$classactivemq_1_1commands_1_1_message.html" title="activemq::commands\l::Message" alt="" coords="171,473,312,517"/>
+<area shape="rect" id="node10" href="$classactivemq_1_1commands_1_1_base_command.html" title="activemq::commands\l::BaseCommand" alt="" coords="171,379,312,423"/>
+<area shape="rect" id="node12" href="$classactivemq_1_1commands_1_1_command.html" title="activemq::commands\l::Command" alt="" coords="171,286,312,330"/>
+<area shape="rect" id="node14" href="$classactivemq_1_1commands_1_1_base_data_structure.html" title="activemq::commands\l::BaseDataStructure" alt="" coords="171,193,312,237"/>
+<area shape="rect" id="node16" href="$classactivemq_1_1commands_1_1_data_structure.html" title="activemq::commands\l::DataStructure" alt="" coords="171,99,312,143"/>
+<area shape="rect" id="node18" href="$classactivemq_1_1wireformat_1_1_marshal_aware.html" title="activemq::wireformat\l::MarshalAware" alt="" coords="172,6,311,50"/>
+</map>

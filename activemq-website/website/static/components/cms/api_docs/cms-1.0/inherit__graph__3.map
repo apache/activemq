@@ -1,0 +1,6 @@
+base referer
+rect $classcms_1_1_destination.html 7,81 127,108
+rect $classcms_1_1_queue.html 209,5 303,32
+rect $classcms_1_1_temporary_queue.html 177,56 335,83
+rect $classcms_1_1_temporary_topic.html 180,107 332,133
+rect $classcms_1_1_topic.html 213,157 299,184

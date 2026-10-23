@@ -1,0 +1,9 @@
+<map id="activemq::commands::XATransactionId" name="activemq::commands::XATransactionId">
+<area shape="rect" id="node2" href="$classactivemq_1_1commands_1_1_transaction_id.html" title="activemq::commands\l::TransactionId" alt="" coords="615,39,761,81"/>
+<area shape="rect" id="node3" href="$classactivemq_1_1commands_1_1_base_data_structure.html" title="activemq::commands\l::BaseDataStructure" alt="" coords="401,6,548,47"/>
+<area shape="rect" id="node4" href="$classactivemq_1_1commands_1_1_data_structure.html" title="activemq::commands\l::DataStructure" alt="" coords="197,6,344,47"/>
+<area shape="rect" id="node5" href="$classactivemq_1_1wireformat_1_1_marshal_aware.html" title="activemq::wireformat\l::MarshalAware" alt="" coords="5,6,149,47"/>
+<area shape="rect" id="node6" href="$classdecaf_1_1lang_1_1_comparable.html" title="decaf::lang::Comparable\l\&lt; TransactionId \&gt;" alt="" coords="393,71,557,113"/>
+<area shape="rect" id="node7" href="$classcms_1_1_xid.html" title="An interface which provides a mapping for the X/Open XID transaction identifier structure. " alt="" coords="651,105,725,132"/>
+<area shape="rect" id="node8" href="$classdecaf_1_1lang_1_1_comparable.html" title="decaf::lang::Comparable\l\&lt; XATransactionId \&gt;" alt="" coords="606,157,770,198"/>
+</map>

@@ -1,0 +1,24 @@
+---
+title: ActiveMQ 5.19.7 Release
+version: 5.19.7
+release_date: 2026-05-31
+java_version: 11+
+release_notes: https://github.com/apache/activemq/releases/tag/activemq-5.19.7
+shortDescription: Maintenance release on the 5.19.x series.
+---
+
+import ClassicRelease from '@site/src/components/ClassicRelease';
+
+<ClassicRelease frontMatter={frontMatter}>
+
+Apache Classic 5.19.7 was released on May 31st, 2026.
+
+This is a maintenance release on the 5.19.x series, including:
+- Additional transport types to the JMX denied list
+- Fix authorization check on the removeDestination
+- Block XBeanBrokerFactory by default inside the VMTransportFactory
+- Security enforcements: message servlet disabled by default, harden default configuration for the broker, the webconsole, and jolokia
+
+You can find details on the [release notes](https://github.com/apache/activemq/releases/tag/activemq-5.19.7).
+
+</ClassicRelease>

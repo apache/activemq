@@ -1,0 +1,21 @@
+<map id="decaf::io::IOException" name="decaf::io::IOException">
+<area shape="rect" id="node7" href="$classdecaf_1_1io_1_1_e_o_f_exception.html" title="decaf::io::EOFException" alt="" coords="627,5,784,33"/>
+<area shape="rect" id="node9" href="$classdecaf_1_1io_1_1_interrupted_i_o_exception.html" title="decaf::io::InterruptedIOException" alt="" coords="601,55,809,83"/>
+<area shape="rect" id="node13" href="$classdecaf_1_1io_1_1_unsupported_encoding_exception.html" title="Thrown when the the Character Encoding is not supported." alt="" coords="605,106,805,150"/>
+<area shape="rect" id="node15" href="$classdecaf_1_1io_1_1_u_t_f_data_format_exception.html" title="Thrown from classes that attempt to read or write a UTF&#45;8 encoded string and an encoding error is enc..." alt="" coords="621,173,789,217"/>
+<area shape="rect" id="node17" href="$classdecaf_1_1net_1_1_http_retry_exception.html" title="decaf::net::HttpRetryException" alt="" coords="608,239,803,267"/>
+<area shape="rect" id="node19" href="$classdecaf_1_1net_1_1_malformed_u_r_l_exception.html" title="decaf::net::MalformedURLException" alt="" coords="592,290,819,318"/>
+<area shape="rect" id="node21" href="$classdecaf_1_1net_1_1_protocol_exception.html" title="decaf::net::ProtocolException" alt="" coords="612,341,799,369"/>
+<area shape="rect" id="node23" href="$classdecaf_1_1net_1_1_socket_exception.html" title="Exception for errors when manipulating sockets." alt="" coords="615,391,796,419"/>
+<area shape="rect" id="node35" href="$classdecaf_1_1net_1_1_unknown_host_exception.html" title="decaf::net::UnknownHostException" alt="" coords="596,442,815,470"/>
+<area shape="rect" id="node37" href="$classdecaf_1_1net_1_1_unknown_service_exception.html" title="decaf::net::UnknownService\lException" alt="" coords="616,493,795,537"/>
+<area shape="rect" id="node39" href="$classdecaf_1_1util_1_1zip_1_1_zip_exception.html" title="decaf::util::zip::ZipException" alt="" coords="616,559,795,587"/>
+<area shape="rect" id="node2" href="$classdecaf_1_1lang_1_1_exception.html" title="decaf::lang::Exception" alt="" coords="203,290,349,318"/>
+<area shape="rect" id="node4" href="$classdecaf_1_1lang_1_1_throwable.html" title="This class represents an error that has occurred." alt="" coords="5,290,155,318"/>
+<area shape="rect" id="node11" href="$classdecaf_1_1net_1_1_socket_timeout_exception.html" title="decaf::net::SocketTimeout\lException" alt="" coords="879,47,1049,91"/>
+<area shape="rect" id="node25" href="$classdecaf_1_1internal_1_1net_1_1ssl_1_1openssl_1_1_open_s_s_l_socket_exception.html" title="Subclass of the standard SocketException that knows how to produce an error message from the OpenSSL ..." alt="" coords="867,258,1061,318"/>
+<area shape="rect" id="node27" href="$classdecaf_1_1net_1_1_bind_exception.html" title="decaf::net::BindException" alt="" coords="881,341,1047,369"/>
+<area shape="rect" id="node29" href="$classdecaf_1_1net_1_1_connect_exception.html" title="decaf::net::ConnectException" alt="" coords="871,391,1057,419"/>
+<area shape="rect" id="node31" href="$classdecaf_1_1net_1_1_no_route_to_host_exception.html" title="decaf::net::NoRouteToHost\lException" alt="" coords="877,442,1051,486"/>
+<area shape="rect" id="node33" href="$classdecaf_1_1net_1_1_port_unreachable_exception.html" title="decaf::net::PortUnreachable\lException" alt="" coords="875,509,1053,553"/>
+</map>

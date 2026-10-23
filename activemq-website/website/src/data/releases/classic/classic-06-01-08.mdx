@@ -1,0 +1,23 @@
+---
+title: ActiveMQ 6.1.8 Release
+version: 6.1.8
+release_date: 2025-10-22
+java_version: 17+
+release_notes: https://issues.apache.org/jira/secure/ReleaseNote.jspa?projectId=12311210&version=12355916
+shortDescription: ActiveMQ 6.1.8 is a maintanance release on the 6.1.x series.
+---
+
+import ClassicRelease from '@site/src/components/ClassicRelease';
+
+<ClassicRelease frontMatter={frontMatter}>
+
+Apache ActiveMQ 6.1.8 was released on Oct 22nd, 2025.
+
+It's a maintenance release especially bringing:
+- fixes on the webconsole (columns sorting, assets resolution in HTTP, ...)
+- fixes on KahaDB (checkpoint runner thread was diying without catching exception, error while recovering topics with no pending acks and TRACE logging enabled, ...)
+- a bunch of dependencies updates (jolokia, jetty, log4j, jackson, ...)
+
+You can find details on the [release notes](https://issues.apache.org/jira/secure/ReleaseNote.jspa?projectId=12311210&version=12355916).
+
+</ClassicRelease>

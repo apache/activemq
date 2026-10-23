@@ -1,0 +1,25 @@
+---
+title: ActiveMQ 6.1.4 Release
+version: 6.1.4
+release_date: 2024-11-12
+java_version: 17+
+release_notes: https://issues.apache.org/jira/secure/ReleaseNote.jspa?projectId=12311210&version=12354974
+shortDescription: Classic 6.1.4 is a maintanance release for ActiveMQ, on the 6.1.x series.
+---
+
+import ClassicRelease from '@site/src/components/ClassicRelease';
+
+<ClassicRelease frontMatter={frontMatter}>
+
+Apache ActiveMQ 6.1.4 was released on Nov 12th, 2024.
+
+It's a maintenance release especially bringing:
+- fix message corruption when using 4-bytes Unicode message from JMS to STOMP
+- prevent ClassCastException in SelectorAwareVirtualTopicInterceptor if there is another interceptor
+- fix KahaDB PageFile can call setLength() on the recovery file which always throws an exception
+- fix Durable Subscriber receives acknowledge messages if they are farther than the maxBatchSize
+- ... a bunch of dependency updates
+
+You can find details on the [release notes](https://issues.apache.org/jira/secure/ReleaseNote.jspa?projectId=12311210&version=12354974).
+
+</ClassicRelease>

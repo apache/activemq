@@ -1,0 +1,28 @@
+---
+title: ActiveMQ 6.3.2 Release
+version: 6.3.2
+release_date: 2026-09-02
+java_version: 17, 21, 25 (25+ recommended for Virtual Threads)
+release_notes: https://github.com/apache/activemq/releases/tag/activemq-6.3.2
+shortDescription: ActiveMQ 6.3.2 is a maintenance release on the 6.3.x series.
+---
+
+import ClassicRelease from '@site/src/components/ClassicRelease';
+
+<ClassicRelease frontMatter={frontMatter}>
+
+Apache ActiveMQ 6.3.2 was released on Sep 2nd, 2026.
+
+This is an important maintenance release on the 6.3.x series.
+
+- Performance: Skip topic sendLock for non-persistent sends
+- Fix: Update TopicRegion removeSubscription to use connection clientId
+- Fix: Harden soTimeout vs InactivityMonitor
+- Fix: Add missing jetty dependency to assembly for websockets
+- Fix: Fix network bridge local-side close
+- Fix: Assembly startup logs harmless WARN about schemas
+- other dependency updates
+
+You can find details on the [release notes](https://github.com/apache/activemq/releases/tag/activemq-6.3.2).
+
+</ClassicRelease>

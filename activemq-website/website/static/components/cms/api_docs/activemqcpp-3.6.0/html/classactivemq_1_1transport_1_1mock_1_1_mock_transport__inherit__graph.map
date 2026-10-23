@@ -1,0 +1,4 @@
+<map id="activemq::transport::mock::MockTransport" name="activemq::transport::mock::MockTransport">
+<area shape="rect" id="node2" href="$classactivemq_1_1transport_1_1_transport.html" title="Interface for a transport layer for command objects." alt="" coords="16,83,147,127"/>
+<area shape="rect" id="node4" href="$classdecaf_1_1io_1_1_closeable.html" title="Interface for a class that implements the close method." alt="" coords="16,6,147,34"/>
+</map>

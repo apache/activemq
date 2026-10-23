@@ -1,0 +1,5 @@
+<map id="activemq::transport::CompositeTransport" name="activemq::transport::CompositeTransport">
+<area shape="rect" id="node7" href="$classactivemq_1_1transport_1_1failover_1_1_failover_transport.html" title="activemq::transport\l::failover::FailoverTransport" alt="" coords="5,270,179,314"/>
+<area shape="rect" id="node2" href="$classactivemq_1_1transport_1_1_transport.html" title="Interface for a transport layer for command objects." alt="" coords="27,83,157,127"/>
+<area shape="rect" id="node4" href="$classdecaf_1_1io_1_1_closeable.html" title="Interface for a class that implements the close method." alt="" coords="27,6,157,34"/>
+</map>

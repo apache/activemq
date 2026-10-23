@@ -1,0 +1,11 @@
+<map id="activemq::commands::ActiveMQBytesMessage" name="activemq::commands::ActiveMQBytesMessage">
+<area shape="rect" id="node2" href="$classactivemq_1_1commands_1_1_active_m_q_message_template.html" title="activemq::commands\l::ActiveMQMessageTemplate\l\&lt; cms::BytesMessage \&gt;" alt="" coords="57,566,247,626"/>
+<area shape="rect" id="node4" href="$classcms_1_1_bytes_message.html" title="A BytesMessage object is used to send a message containing a stream of unsigned bytes." alt="" coords="5,481,139,509"/>
+<area shape="rect" id="node6" href="$classcms_1_1_message.html" title="Root of all messages." alt="" coords="21,387,123,415"/>
+<area shape="rect" id="node8" href="$classactivemq_1_1commands_1_1_message.html" title="activemq::commands\l::Message" alt="" coords="163,473,304,517"/>
+<area shape="rect" id="node10" href="$classactivemq_1_1commands_1_1_base_command.html" title="activemq::commands\l::BaseCommand" alt="" coords="163,379,304,423"/>
+<area shape="rect" id="node12" href="$classactivemq_1_1commands_1_1_command.html" title="activemq::commands\l::Command" alt="" coords="163,286,304,330"/>
+<area shape="rect" id="node14" href="$classactivemq_1_1commands_1_1_base_data_structure.html" title="activemq::commands\l::BaseDataStructure" alt="" coords="163,193,304,237"/>
+<area shape="rect" id="node16" href="$classactivemq_1_1commands_1_1_data_structure.html" title="activemq::commands\l::DataStructure" alt="" coords="163,99,304,143"/>
+<area shape="rect" id="node18" href="$classactivemq_1_1wireformat_1_1_marshal_aware.html" title="activemq::wireformat\l::MarshalAware" alt="" coords="164,6,303,50"/>
+</map>

@@ -1,0 +1,4 @@
+<map id="decaf::util::Iterator&lt; E &gt;" name="decaf::util::Iterator&lt; E &gt;">
+<area shape="rect" id="node13" href="$classdecaf_1_1util_1_1_list_iterator.html" title="An iterator for lists that allows the programmer to traverse the list in either direction, modify the list during iteration, and obtain the iterator&#39;s current position in the list." alt="" coords="211,386,384,414"/>
+<area shape="rect" id="node19" href="$classdecaf_1_1util_1_1concurrent_1_1_copy_on_write_array_list_1_1_array_list_iterator.html" title="decaf::util::concurrent\l::CopyOnWriteArrayList\l\&lt; E \&gt;::ArrayListIterator" alt="" coords="463,262,617,322"/>
+</map>

@@ -1,0 +1,6 @@
+<map id="decaf::io::Writer" name="decaf::io::Writer">
+<area shape="rect" id="node9" href="$classdecaf_1_1io_1_1_output_stream_writer.html" title="A class for turning a character stream into a byte stream." alt="" coords="131,161,320,189"/>
+<area shape="rect" id="node2" href="$classdecaf_1_1io_1_1_closeable.html" title="Interface for a class that implements the close method." alt="" coords="5,6,136,34"/>
+<area shape="rect" id="node4" href="$classdecaf_1_1io_1_1_flushable.html" title="A Flushable is a destination of data that can be flushed." alt="" coords="160,6,291,34"/>
+<area shape="rect" id="node6" href="$classdecaf_1_1lang_1_1_appendable.html" title="An object to which char sequences and values can be appended." alt="" coords="315,6,472,34"/>
+</map>
