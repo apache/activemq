@@ -1,0 +1,5 @@
+<map id="decaf::internal::nio::LongArrayBuffer" name="decaf::internal::nio::LongArrayBuffer">
+<area shape="rect" id="node2" href="$classdecaf_1_1nio_1_1_long_buffer.html" title="This class defines four categories of operations upon long long buffers: " alt="" coords="75,96,225,123"/>
+<area shape="rect" id="node3" href="$classdecaf_1_1nio_1_1_buffer.html" title="A container for data of a specific primitive type. " alt="" coords="5,13,128,40"/>
+<area shape="rect" id="node4" href="$classdecaf_1_1lang_1_1_comparable.html" title="decaf::lang::Comparable\l\&lt; LongBuffer \&gt;" alt="" coords="153,6,316,47"/>
+</map>

@@ -1,0 +1,8 @@
+<map id="G" name="G">
+<area shape="rect" id="node11" href="$classactivemq_1_1commands_1_1_local_transaction_id.html" title="activemq::commands::LocalTransactionId" alt="" coords="19,315,320,344"/>
+<area shape="rect" id="node13" href="$classactivemq_1_1commands_1_1_x_a_transaction_id.html" title="activemq::commands::XATransactionId" alt="" coords="344,315,627,344"/>
+<area shape="rect" id="node2" href="$classactivemq_1_1commands_1_1_base_data_structure.html" title="activemq::commands::BaseDataStructure" alt="" coords="5,160,317,189"/>
+<area shape="rect" id="node4" href="$classactivemq_1_1commands_1_1_data_structure.html" title="activemq::commands::DataStructure" alt="" coords="23,83,300,112"/>
+<area shape="rect" id="node6" href="$classactivemq_1_1wireformat_1_1_marshal_aware.html" title="activemq::wireformat::MarshalAware" alt="" coords="25,5,297,35"/>
+<area shape="rect" id="node8" href="$classdecaf_1_1lang_1_1_comparable.html" title="decaf::lang::Comparable\&lt; TransactionId \&gt;" alt="" coords="341,160,645,189"/>
+</map>

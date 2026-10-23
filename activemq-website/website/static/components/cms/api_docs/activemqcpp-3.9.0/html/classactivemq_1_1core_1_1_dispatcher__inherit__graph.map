@@ -1,0 +1,6 @@
+<map id="activemq::core::Dispatcher" name="activemq::core::Dispatcher">
+<area shape="rect" id="node2" href="$classactivemq_1_1core_1_1_advisory_consumer.html" title="activemq::core::Advisory\lConsumer" alt="" coords="242,5,409,46"/>
+<area shape="rect" id="node3" href="$classactivemq_1_1core_1_1kernels_1_1_active_m_q_consumer_kernel.html" title="activemq::core::kernels\l::ActiveMQConsumerKernel" alt="" coords="233,70,418,111"/>
+<area shape="rect" id="node4" href="$classactivemq_1_1core_1_1kernels_1_1_active_m_q_session_kernel.html" title="activemq::core::kernels\l::ActiveMQSessionKernel" alt="" coords="239,135,411,177"/>
+<area shape="rect" id="node5" href="$classactivemq_1_1core_1_1kernels_1_1_active_m_q_x_a_session_kernel.html" title="activemq::core::kernels\l::ActiveMQXASessionKernel" alt="" coords="467,135,658,177"/>
+</map>

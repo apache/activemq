@@ -1,0 +1,4 @@
+<map id="decaf::util::logging::Formatter" name="decaf::util::logging::Formatter">
+<area shape="rect" id="node2" href="$classdecaf_1_1util_1_1logging_1_1_simple_formatter.html" title="Print a brief summary of the LogRecord in a human readable format. " alt="" coords="5,97,133,138"/>
+<area shape="rect" id="node3" href="$classdecaf_1_1util_1_1logging_1_1_x_m_l_formatter.html" title="Format a LogRecord into a standard XML format. " alt="" coords="157,97,285,138"/>
+</map>

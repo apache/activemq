@@ -1,0 +1,4 @@
+<map id="activemq::wireformat::WireFormat" name="activemq::wireformat::WireFormat">
+<area shape="rect" id="node3" href="$classactivemq_1_1wireformat_1_1openwire_1_1_open_wire_format.html" title="activemq::wireformat\l::openwire::OpenWireFormat" alt="" coords="196,5,377,49"/>
+<area shape="rect" id="node5" href="$classactivemq_1_1wireformat_1_1stomp_1_1_stomp_wire_format.html" title="activemq::wireformat\l::stomp::StompWireFormat" alt="" coords="200,71,373,115"/>
+</map>

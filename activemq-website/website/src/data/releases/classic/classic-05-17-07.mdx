@@ -1,0 +1,26 @@
+---
+title: ActiveMQ 5.17.7 Release
+version: 5.17.7
+release_date: 2025-03-20
+java_version: 11+
+release_notes: https://issues.apache.org/jira/secure/ReleaseNote.jspa?projectId=12311210&version=12353765
+shortDescription: Maintenance release on Classic 5.17.x series
+---
+
+import ClassicRelease from '@site/src/components/ClassicRelease';
+
+<ClassicRelease frontMatter={frontMatter}>
+
+Apache ActiveMQ 5.17.7 was released on Mar 20th, 2025.
+
+It's a maintenance release on the ActiveMQ 5.17.x series, bringing:
+- fix Out Of Memory error reported on ActiveMQ client during openwire unmarshalling
+- fix concurrent modification in ActiveMQServiceFactory
+- fix websocket transport options do not get applied
+- fix Jolokia throws exception during Windows service startup
+- fix queue creation during browse in the WebConsole
+- several dependency updates
+
+You can find details on the [release notes](https://issues.apache.org/jira/secure/ReleaseNote.jspa?projectId=12311210&version=12353765).
+
+</ClassicRelease>

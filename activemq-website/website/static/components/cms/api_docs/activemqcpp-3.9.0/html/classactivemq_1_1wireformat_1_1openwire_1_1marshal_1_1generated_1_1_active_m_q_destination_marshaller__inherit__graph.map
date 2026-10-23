@@ -1,0 +1,9 @@
+<map id="activemq::wireformat::openwire::marshal::generated::ActiveMQDestinationMarshaller" name="activemq::wireformat::openwire::marshal::generated::ActiveMQDestinationMarshaller">
+<area shape="rect" id="node4" href="$classactivemq_1_1wireformat_1_1openwire_1_1marshal_1_1generated_1_1_active_m_q_queue_marshaller.html" title="Marshaling code for Open Wire Format for ActiveMQQueueMarshaller. " alt="" coords="697,4,940,60"/>
+<area shape="rect" id="node5" href="$classactivemq_1_1wireformat_1_1openwire_1_1marshal_1_1generated_1_1_active_m_q_temp_destination_marshaller.html" title="Marshaling code for Open Wire Format for ActiveMQTempDestinationMarshaller. " alt="" coords="697,85,941,155"/>
+<area shape="rect" id="node8" href="$classactivemq_1_1wireformat_1_1openwire_1_1marshal_1_1generated_1_1_active_m_q_topic_marshaller.html" title="Marshaling code for Open Wire Format for ActiveMQTopicMarshaller. " alt="" coords="700,180,937,236"/>
+<area shape="rect" id="node2" href="$classactivemq_1_1wireformat_1_1openwire_1_1marshal_1_1_base_data_stream_marshaller.html" title="Base class for all Marshallers that marshal DataStructures to and from the wire using the OpenWire pr..." alt="" coords="206,92,389,148"/>
+<area shape="rect" id="node3" href="$classactivemq_1_1wireformat_1_1openwire_1_1marshal_1_1_data_stream_marshaller.html" title="Base class for all classes that marshal commands for Openwire. " alt="" coords="5,92,157,148"/>
+<area shape="rect" id="node6" href="$classactivemq_1_1wireformat_1_1openwire_1_1marshal_1_1generated_1_1_active_m_q_temp_queue_marshaller.html" title="Marshaling code for Open Wire Format for ActiveMQTempQueueMarshaller. " alt="" coords="989,37,1205,107"/>
+<area shape="rect" id="node7" href="$classactivemq_1_1wireformat_1_1openwire_1_1marshal_1_1generated_1_1_active_m_q_temp_topic_marshaller.html" title="Marshaling code for Open Wire Format for ActiveMQTempTopicMarshaller. " alt="" coords="992,131,1203,202"/>
+</map>

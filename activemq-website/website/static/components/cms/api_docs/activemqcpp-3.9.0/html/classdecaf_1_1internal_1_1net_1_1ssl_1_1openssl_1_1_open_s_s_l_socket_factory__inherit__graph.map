@@ -1,0 +1,4 @@
+<map id="decaf::internal::net::ssl::openssl::OpenSSLSocketFactory" name="decaf::internal::net::ssl::openssl::OpenSSLSocketFactory">
+<area shape="rect" id="node2" href="$classdecaf_1_1net_1_1ssl_1_1_s_s_l_socket_factory.html" title="Factory class interface for a SocketFactory that can create SSLSocket objects. " alt="" coords="19,81,197,122"/>
+<area shape="rect" id="node3" href="$classdecaf_1_1net_1_1_socket_factory.html" title="The SocketFactory is used to create Socket objects and can be sub&#45;classed to provide other types of S..." alt="" coords="21,5,195,32"/>
+</map>

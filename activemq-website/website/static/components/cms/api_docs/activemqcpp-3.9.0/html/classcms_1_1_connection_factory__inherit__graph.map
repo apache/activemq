@@ -1,0 +1,4 @@
+<map id="cms::ConnectionFactory" name="cms::ConnectionFactory">
+<area shape="rect" id="node2" href="$classactivemq_1_1core_1_1_active_m_q_connection_factory.html" title="activemq::core::ActiveMQConnection\lFactory" alt="" coords="13,81,253,122"/>
+<area shape="rect" id="node3" href="$classactivemq_1_1core_1_1_active_m_q_x_a_connection_factory.html" title="activemq::core::ActiveMQXAConnection\lFactory" alt="" coords="4,171,261,213"/>
+</map>

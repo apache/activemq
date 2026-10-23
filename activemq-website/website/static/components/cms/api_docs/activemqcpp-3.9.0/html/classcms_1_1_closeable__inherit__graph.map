@@ -1,0 +1,27 @@
+<map id="cms::Closeable" name="cms::Closeable">
+<area shape="rect" id="node2" href="$classactivemq_1_1commands_1_1_active_m_q_temp_destination.html" title="activemq::commands\l::ActiveMQTempDestination" alt="" coords="168,70,355,111"/>
+<area shape="rect" id="node5" href="$classcms_1_1_connection.html" title="The client&#39;s connection to its provider. " alt="" coords="201,187,322,213"/>
+<area shape="rect" id="node10" href="$classcms_1_1_message_consumer.html" title="A client uses a MessageConsumer to received messages from a destination. " alt="" coords="177,333,345,360"/>
+<area shape="rect" id="node14" href="$classcms_1_1_message_producer.html" title="A client uses a MessageProducer object to send messages to a Destination. " alt="" coords="181,457,341,484"/>
+<area shape="rect" id="node18" href="$classcms_1_1_queue_browser.html" title="This class implements in interface for browsing the messages in a Queue without removing them..." alt="" coords="191,559,332,585"/>
+<area shape="rect" id="node20" href="$classcms_1_1_session.html" title="A Session object is a single&#45;threaded context for producing and consuming messages. " alt="" coords="210,735,313,761"/>
+<area shape="rect" id="node3" href="$classactivemq_1_1commands_1_1_active_m_q_temp_queue.html" title="activemq::commands\l::ActiveMQTempQueue" alt="" coords="441,5,599,46"/>
+<area shape="rect" id="node4" href="$classactivemq_1_1commands_1_1_active_m_q_temp_topic.html" title="activemq::commands\l::ActiveMQTempTopic" alt="" coords="443,70,597,111"/>
+<area shape="rect" id="node6" href="$classcms_1_1_enhanced_connection.html" title="An enhanced CMS Connection instance that provides additional features above the default required feat..." alt="" coords="431,136,609,163"/>
+<area shape="rect" id="node9" href="$classcms_1_1_x_a_connection.html" title="The XAConnection interface defines an extended Connection type that is used to create XASession objec..." alt="" coords="736,187,875,213"/>
+<area shape="rect" id="node7" href="$classactivemq_1_1core_1_1_active_m_q_connection.html" title="Concrete connection used for all connectors to the ActiveMQ broker. " alt="" coords="685,136,925,163"/>
+<area shape="rect" id="node8" href="$classactivemq_1_1core_1_1_active_m_q_x_a_connection.html" title="activemq::core::ActiveMQXAConnection" alt="" coords="973,161,1232,188"/>
+<area shape="rect" id="node11" href="$classactivemq_1_1cmsutil_1_1_cached_consumer.html" title="A cached message consumer contained within a pooled session. " alt="" coords="453,238,587,279"/>
+<area shape="rect" id="node12" href="$classactivemq_1_1core_1_1_active_m_q_consumer.html" title="activemq::core::ActiveMQConsumer" alt="" coords="403,304,637,331"/>
+<area shape="rect" id="node13" href="$classactivemq_1_1core_1_1kernels_1_1_active_m_q_consumer_kernel.html" title="activemq::core::kernels\l::ActiveMQConsumerKernel" alt="" coords="427,355,613,397"/>
+<area shape="rect" id="node15" href="$classactivemq_1_1cmsutil_1_1_cached_producer.html" title="A cached message producer contained within a pooled session. " alt="" coords="453,421,587,462"/>
+<area shape="rect" id="node16" href="$classactivemq_1_1core_1_1_active_m_q_producer.html" title="activemq::core::ActiveMQProducer" alt="" coords="407,487,633,513"/>
+<area shape="rect" id="node17" href="$classactivemq_1_1core_1_1kernels_1_1_active_m_q_producer_kernel.html" title="activemq::core::kernels\l::ActiveMQProducerKernel" alt="" coords="431,538,609,579"/>
+<area shape="rect" id="node19" href="$classactivemq_1_1core_1_1_active_m_q_queue_browser.html" title="activemq::core::ActiveMQQueue\lBrowser" alt="" coords="414,603,626,645"/>
+<area shape="rect" id="node21" href="$classactivemq_1_1cmsutil_1_1_pooled_session.html" title="A pooled session object that wraps around a delegate session. " alt="" coords="453,669,587,710"/>
+<area shape="rect" id="node22" href="$classactivemq_1_1core_1_1_active_m_q_session.html" title="activemq::core::ActiveMQSession" alt="" coords="409,735,631,761"/>
+<area shape="rect" id="node24" href="$classactivemq_1_1core_1_1kernels_1_1_active_m_q_session_kernel.html" title="activemq::core::kernels\l::ActiveMQSessionKernel" alt="" coords="434,837,606,878"/>
+<area shape="rect" id="node26" href="$classcms_1_1_x_a_session.html" title="The XASession interface extends the capability of Session by adding access to a CMS provider&#39;s suppor..." alt="" coords="460,785,580,812"/>
+<area shape="rect" id="node23" href="$classactivemq_1_1core_1_1_active_m_q_x_a_session.html" title="activemq::core::ActiveMQXASession" alt="" coords="686,760,925,787"/>
+<area shape="rect" id="node25" href="$classactivemq_1_1core_1_1kernels_1_1_active_m_q_x_a_session_kernel.html" title="activemq::core::kernels\l::ActiveMQXASessionKernel" alt="" coords="710,823,901,865"/>
+</map>

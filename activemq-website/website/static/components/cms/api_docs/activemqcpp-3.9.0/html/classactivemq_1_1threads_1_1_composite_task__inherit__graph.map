@@ -1,0 +1,6 @@
+<map id="activemq::threads::CompositeTask" name="activemq::threads::CompositeTask">
+<area shape="rect" id="node3" href="$classactivemq_1_1transport_1_1failover_1_1_backup_transport_pool.html" title="activemq::transport\l::failover::BackupTransportPool" alt="" coords="400,5,605,46"/>
+<area shape="rect" id="node4" href="$classactivemq_1_1transport_1_1failover_1_1_close_transports_task.html" title="activemq::transport\l::failover::CloseTransportsTask" alt="" coords="400,70,605,111"/>
+<area shape="rect" id="node5" href="$classactivemq_1_1transport_1_1failover_1_1_failover_transport.html" title="activemq::transport\l::failover::FailoverTransport" alt="" coords="412,135,593,177"/>
+<area shape="rect" id="node2" href="$classactivemq_1_1threads_1_1_task.html" title="Represents a unit of work that requires one or more iterations to complete. " alt="" coords="5,77,168,104"/>
+</map>

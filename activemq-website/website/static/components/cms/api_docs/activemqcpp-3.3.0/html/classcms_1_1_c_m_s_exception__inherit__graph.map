@@ -1,0 +1,15 @@
+<map id="G" name="G">
+<area shape="rect" id="node3" href="$classcms_1_1_c_m_s_security_exception.html" title="This exception must be thrown when a provider rejects a user name/password submitted by a client..." alt="" coords="247,5,460,35"/>
+<area shape="rect" id="node5" href="$classcms_1_1_illegal_state_exception.html" title="This exception is thrown when a method is invoked at an illegal or inappropriate time or if the provi..." alt="" coords="251,59,456,88"/>
+<area shape="rect" id="node7" href="$classcms_1_1_invalid_client_id_exception.html" title="This exception must be thrown when a client attempts to set a connection&#39;s client ID to a value t..." alt="" coords="243,112,464,141"/>
+<area shape="rect" id="node9" href="$classcms_1_1_invalid_destination_exception.html" title="This exception must be thrown when a destination either is not understood by a provider or is no long..." alt="" coords="229,165,477,195"/>
+<area shape="rect" id="node11" href="$classcms_1_1_invalid_selector_exception.html" title="This exception must be thrown when a CMS client attempts to give a provider a message selector with i..." alt="" coords="240,219,467,248"/>
+<area shape="rect" id="node13" href="$classcms_1_1_message_e_o_f_exception.html" title="This exception must be thrown when an unexpected end of stream has been reached when a StreamMessage ..." alt="" coords="245,272,461,301"/>
+<area shape="rect" id="node15" href="$classcms_1_1_message_format_exception.html" title="This exception must be thrown when a CMS client attempts to use a data type not supported by a messag..." alt="" coords="235,325,472,355"/>
+<area shape="rect" id="node17" href="$classcms_1_1_message_not_readable_exception.html" title="This exception must be thrown when a CMS client attempts to read a write&#45;only message." alt="" coords="216,379,491,408"/>
+<area shape="rect" id="node19" href="$classcms_1_1_message_not_writeable_exception.html" title="This exception must be thrown when a CMS client attempts to write to a read&#45;only message." alt="" coords="215,432,492,461"/>
+<area shape="rect" id="node21" href="$classcms_1_1_transaction_in_progress_exception.html" title="This exception is thrown when an operation is invalid because a transaction is in progress..." alt="" coords="216,485,491,515"/>
+<area shape="rect" id="node23" href="$classcms_1_1_transaction_rolled_back_exception.html" title="This exception must be thrown when a call to Session.commit results in a rollback of the current tran..." alt="" coords="215,539,492,568"/>
+<area shape="rect" id="node25" href="$classcms_1_1_unsupported_operation_exception.html" title="This exception must be thrown when a CMS client attempts use a CMS method that is not implemented or ..." alt="" coords="213,592,493,621"/>
+<area shape="rect" id="node27" href="$classcms_1_1_x_a_exception.html" title="The XAException is thrown by the Resource Manager (RM) to inform the Transaction Manager of an error ..." alt="" coords="280,645,427,675"/>
+</map>

@@ -1,0 +1,4 @@
+<map id="G" name="G">
+<area shape="rect" id="node3" href="$classdecaf_1_1internal_1_1util_1_1concurrent_1_1_transfer_queue.html" title="This extends Scherer&#45;Scott dual queue algorithm, differing, among other ways, by using modes within n..." alt="" coords="407,5,788,35"/>
+<area shape="rect" id="node5" href="$classdecaf_1_1internal_1_1util_1_1concurrent_1_1_transfer_stack.html" title="decaf::internal::util::concurrent::TransferStack\&lt; E \&gt;" alt="" coords="409,59,785,88"/>
+</map>

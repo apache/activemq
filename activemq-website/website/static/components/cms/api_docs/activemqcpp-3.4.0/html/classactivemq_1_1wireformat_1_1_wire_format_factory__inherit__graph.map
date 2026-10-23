@@ -1,0 +1,4 @@
+<map id="G" name="G">
+<area shape="rect" id="node3" href="$classactivemq_1_1wireformat_1_1openwire_1_1_open_wire_format_factory.html" title="activemq::wireformat::openwire::OpenWireFormatFactory" alt="" coords="367,5,783,35"/>
+<area shape="rect" id="node5" href="$classactivemq_1_1wireformat_1_1stomp_1_1_stomp_wire_format_factory.html" title="Factory used to create the Stomp Wire Format instance." alt="" coords="372,59,777,88"/>
+</map>

@@ -1,0 +1,6 @@
+<map id="cms::MessageProducer" name="cms::MessageProducer">
+<area shape="rect" id="node5" href="$classactivemq_1_1cmsutil_1_1_cached_producer.html" title="A cached message producer contained within a pooled session." alt="" coords="415,5,537,49"/>
+<area shape="rect" id="node7" href="$classactivemq_1_1core_1_1_active_m_q_producer.html" title="activemq::core::ActiveMQProducer" alt="" coords="367,71,585,99"/>
+<area shape="rect" id="node9" href="$classactivemq_1_1core_1_1kernels_1_1_active_m_q_producer_kernel.html" title="activemq::core::kernels\l::ActiveMQProducerKernel" alt="" coords="389,122,563,166"/>
+<area shape="rect" id="node2" href="$classcms_1_1_closeable.html" title="Interface for a class that implements the close method." alt="" coords="7,71,113,99"/>
+</map>

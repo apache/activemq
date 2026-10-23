@@ -1,0 +1,5 @@
+<map id="activemq::core::ActiveMQQueueBrowser" name="activemq::core::ActiveMQQueueBrowser">
+<area shape="rect" id="node2" href="$classcms_1_1_queue_browser.html" title="This class implements in interface for browsing the messages in a Queue without removing them..." alt="" coords="5,83,141,111"/>
+<area shape="rect" id="node4" href="$classcms_1_1_closeable.html" title="Interface for a class that implements the close method." alt="" coords="20,6,127,34"/>
+<area shape="rect" id="node6" href="$classcms_1_1_message_enumeration.html" title="Defines an object that enumerates a collection of Messages." alt="" coords="165,83,339,111"/>
+</map>

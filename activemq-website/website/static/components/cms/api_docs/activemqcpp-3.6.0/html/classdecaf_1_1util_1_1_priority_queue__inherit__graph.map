@@ -1,0 +1,9 @@
+<map id="decaf::util::PriorityQueue&lt; E &gt;" name="decaf::util::PriorityQueue&lt; E &gt;">
+<area shape="rect" id="node2" href="$classdecaf_1_1util_1_1_abstract_queue.html" title="This class provides skeletal implementations of some Queue operations." alt="" coords="85,254,283,282"/>
+<area shape="rect" id="node4" href="$classdecaf_1_1util_1_1_queue.html" title="A kind of collection provides advanced operations than other basic collections, such as insertion..." alt="" coords="5,177,155,205"/>
+<area shape="rect" id="node6" href="$classdecaf_1_1util_1_1_collection.html" title="The root interface in the collection hierarchy." alt="" coords="99,99,269,127"/>
+<area shape="rect" id="node12" href="$classdecaf_1_1util_1_1_abstract_collection.html" title="This class provides a skeletal implementation of the Collection interface, to minimize the effort req..." alt="" coords="179,177,397,205"/>
+<area shape="rect" id="node8" href="$classdecaf_1_1lang_1_1_iterable.html" title="Implementing this interface allows an object to be cast to an Iterable type for generic collections A..." alt="" coords="15,14,177,42"/>
+<area shape="rect" id="node10" href="$classdecaf_1_1util_1_1concurrent_1_1_synchronizable.html" title="The interface for all synchronizable objects (that is, objects that can be locked and unlocked)..." alt="" coords="201,6,345,50"/>
+<area shape="rect" id="node15" href="$classdecaf_1_1util_1_1_priority_queue_base.html" title="decaf::util::PriorityQueueBase" alt="" coords="307,254,496,282"/>
+</map>

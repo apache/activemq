@@ -1,0 +1,5 @@
+<map id="cms::TemporaryTopic" name="cms::TemporaryTopic">
+<area shape="rect" id="node7" href="$classactivemq_1_1commands_1_1_active_m_q_temp_topic.html" title="activemq::commands\l::ActiveMQTempTopic" alt="" coords="5,238,155,282"/>
+<area shape="rect" id="node2" href="$classcms_1_1_topic.html" title="An interface encapsulating a provider&#45;specific topic name." alt="" coords="39,83,121,111"/>
+<area shape="rect" id="node4" href="$classcms_1_1_destination.html" title="A Destination object encapsulates a provider&#45;specific address." alt="" coords="23,6,137,34"/>
+</map>

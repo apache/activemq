@@ -1,0 +1,13 @@
+<map id="activemq::commands::ActiveMQTempQueue" name="activemq::commands::ActiveMQTempQueue">
+<area shape="rect" id="node2" href="$classactivemq_1_1commands_1_1_active_m_q_temp_destination.html" title="activemq::commands\l::ActiveMQTempDestination" alt="" coords="861,110,1048,151"/>
+<area shape="rect" id="node3" href="$classactivemq_1_1commands_1_1_active_m_q_destination.html" title="activemq::commands\l::ActiveMQDestination" alt="" coords="635,37,789,78"/>
+<area shape="rect" id="node4" href="$classactivemq_1_1commands_1_1_base_data_structure.html" title="activemq::commands\l::BaseDataStructure" alt="" coords="404,5,551,46"/>
+<area shape="rect" id="node5" href="$classactivemq_1_1commands_1_1_data_structure.html" title="activemq::commands\l::DataStructure" alt="" coords="197,5,344,46"/>
+<area shape="rect" id="node6" href="$classactivemq_1_1wireformat_1_1_marshal_aware.html" title="activemq::wireformat\l::MarshalAware" alt="" coords="5,5,149,46"/>
+<area shape="rect" id="node7" href="$classdecaf_1_1lang_1_1_comparable.html" title="decaf::lang::Comparable\l\&lt; ActiveMQDestination \&gt;" alt="" coords="392,70,563,111"/>
+<area shape="rect" id="node8" href="$classcms_1_1_closeable.html" title="Interface for a class that implements the close method. " alt="" coords="655,103,769,129"/>
+<area shape="rect" id="node9" href="$classdecaf_1_1lang_1_1_comparable.html" title="decaf::lang::Comparable\l\&lt; ActiveMQTempDestination \&gt;" alt="" coords="611,154,813,195"/>
+<area shape="rect" id="node10" href="$classcms_1_1_temporary_queue.html" title="Defines a Temporary Queue based Destination. " alt="" coords="877,205,1032,232"/>
+<area shape="rect" id="node11" href="$classcms_1_1_queue.html" title="An interface encapsulating a provider&#45;specific queue name. " alt="" coords="665,220,759,247"/>
+<area shape="rect" id="node12" href="$classcms_1_1_destination.html" title="A Destination object encapsulates a provider&#45;specific address. " alt="" coords="417,220,538,247"/>
+</map>

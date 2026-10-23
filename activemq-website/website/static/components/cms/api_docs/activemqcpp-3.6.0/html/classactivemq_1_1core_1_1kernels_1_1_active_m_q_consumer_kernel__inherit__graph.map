@@ -1,0 +1,7 @@
+<map id="activemq::core::kernels::ActiveMQConsumerKernel" name="activemq::core::kernels::ActiveMQConsumerKernel">
+<area shape="rect" id="node2" href="$classcms_1_1_message_consumer.html" title="A client uses a MessageConsumer to received messages from a destination." alt="" coords="108,83,268,111"/>
+<area shape="rect" id="node4" href="$classcms_1_1_closeable.html" title="Interface for a class that implements the close method." alt="" coords="5,6,112,34"/>
+<area shape="rect" id="node6" href="$classcms_1_1_startable.html" title="Interface for a class that implements the start method." alt="" coords="136,6,240,34"/>
+<area shape="rect" id="node8" href="$classcms_1_1_stoppable.html" title="Interface for a class that implements the stop method." alt="" coords="264,6,373,34"/>
+<area shape="rect" id="node10" href="$classactivemq_1_1core_1_1_dispatcher.html" title="Interface for an object responsible for dispatching messages to consumers." alt="" coords="292,83,463,111"/>
+</map>

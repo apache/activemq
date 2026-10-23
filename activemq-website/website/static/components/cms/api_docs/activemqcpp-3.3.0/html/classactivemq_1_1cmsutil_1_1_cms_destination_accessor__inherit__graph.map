@@ -1,0 +1,4 @@
+<map id="G" name="G">
+<area shape="rect" id="node5" href="$classactivemq_1_1cmsutil_1_1_cms_template.html" title="CmsTemplate simplifies performing synchronous CMS operations." alt="" coords="44,160,292,189"/>
+<area shape="rect" id="node2" href="$classactivemq_1_1cmsutil_1_1_cms_accessor.html" title="Base class for activemq.cmsutil.CmsTemplate and other CMS&#45;accessing gateway helpers, defining common properties such as the CMS cms.ConnectionFactory to operate on." alt="" coords="45,5,291,35"/>
+</map>

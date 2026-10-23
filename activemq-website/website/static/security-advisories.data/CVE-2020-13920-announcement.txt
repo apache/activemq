@@ -1,0 +1,21 @@
+CVE-2020-13920: Apache ActiveMQ JMX is vulnerable to a MITM attack
+
+Severity: Moderate
+
+Vendor: The Apache Software Foundation
+
+Affected Version: Apache ActiveMQ version prior to 5.15.12
+
+Vulnerability details:
+Apache ActiveMQ uses LocateRegistry.createRegistry() to create the JMX RMI
+registry and binds the server to the "jmxrmi" entry. It is possible
+to connect to the registry without authentication and call the rebind
+method to rebind jmxrmi to something else. If an attacker creates another
+server to proxy the original, and bound that, he effectively becomes a 
+man in the middle and is able to intercept the credentials when an user
+connects.
+
+Mitigation:
+Upgrade to Apache ActiveMQ 5.15.12
+
+Credit: Jonathan Gallimore & Colm O hEigeartaigh

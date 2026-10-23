@@ -1,0 +1,4 @@
+base referer
+rect $classcms_1_1_startable.html 5,5 112,32
+rect $classcms_1_1_stoppable.html 136,5 251,32
+rect $classcms_1_1_closeable.html 275,5 387,32

@@ -1,0 +1,8 @@
+<map id="activemq::core::ActiveMQXASession" name="activemq::core::ActiveMQXASession">
+<area shape="rect" id="node2" href="$classcms_1_1_x_a_session.html" title="The XASession interface extends the capability of Session by adding access to a CMS provider&#39;s suppor..." alt="" coords="39,155,159,181"/>
+<area shape="rect" id="node3" href="$classcms_1_1_session.html" title="A Session object is a single&#45;threaded context for producing and consuming messages. " alt="" coords="145,80,247,107"/>
+<area shape="rect" id="node7" href="$classactivemq_1_1core_1_1_active_m_q_session.html" title="activemq::core::ActiveMQSession" alt="" coords="183,155,404,181"/>
+<area shape="rect" id="node4" href="$classcms_1_1_closeable.html" title="Interface for a class that implements the close method. " alt="" coords="5,5,117,32"/>
+<area shape="rect" id="node5" href="$classcms_1_1_startable.html" title="Interface for a class that implements the start method. " alt="" coords="143,5,249,32"/>
+<area shape="rect" id="node6" href="$classcms_1_1_stoppable.html" title="Interface for a class that implements the stop method. " alt="" coords="274,5,387,32"/>
+</map>

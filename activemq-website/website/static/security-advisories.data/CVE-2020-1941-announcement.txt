@@ -1,0 +1,21 @@
+CVE-2020-1941 - XSS in WebConsole
+
+Severity: Medium
+
+Vendor:
+The Apache Software Foundation
+
+Versions Affected:
+Apache ActiveMQ 5.0.0 - 5.15.11
+
+Description:
+The webconsole admin GUI is open to XSS, in the view that lists the contents of a queue.
+
+Mitigation:
+Upgrade to Apache ActiveMQ 5.15.12. 
+
+Credit:
+This issue was discovered by:
+
+* Przemysław Kowalski <przemyslawk@stmsolutions.pl>
+

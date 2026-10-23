@@ -1,0 +1,4 @@
+<map id="decaf::net::SocketOptions" name="decaf::net::SocketOptions">
+<area shape="rect" id="node3" href="$classdecaf_1_1net_1_1_socket_impl.html" title="Acts as a base class for all physical Socket implementations." alt="" coords="15,83,164,111"/>
+<area shape="rect" id="node5" href="$classdecaf_1_1internal_1_1net_1_1tcp_1_1_tcp_socket.html" title="Platform&#45;independent implementation of the socket interface." alt="" coords="27,161,152,205"/>
+</map>

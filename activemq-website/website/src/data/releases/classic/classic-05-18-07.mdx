@@ -1,0 +1,29 @@
+---
+title: ActiveMQ 5.18.7 Release
+version: 5.18.7
+release_date: 2025-03-19
+java_version: 11+
+release_notes: https://issues.apache.org/jira/secure/ReleaseNote.jspa?projectId=12311210&version=12355706
+shortDescription: Maintenance release on Classic 5.18.x series.
+---
+
+import ClassicRelease from '@site/src/components/ClassicRelease';
+
+<ClassicRelease frontMatter={frontMatter}>
+
+Apache ActiveMQ 5.18.7 was released on Mar 19th, 2025.
+
+It's a maintenance release on the ActiveMQ 5.18.x series, bringing:
+- fix potential OutOfMemory error on client during OpenWire unmarshalling
+- fix ClassCastException in SelectorAwareVirtualTopicInterceptor if
+there is another interceptor
+- fix durable subscriber receives acknowledge messages if they are
+farther than the maxBatchSize
+- fix potential issue with messages can become stuck on Queues
+- fix potential issue in WebConsole where a queue can be created with
+browse page
+- several dependencies updates
+
+You can find details on the [release notes](https://issues.apache.org/jira/secure/ReleaseNote.jspa?projectId=12311210&version=12355706).
+
+</ClassicRelease>

@@ -1,0 +1,19 @@
+CVE-2016-0782: ActiveMQ Web Console - Cross-Site Scripting
+
+Severity: Important
+
+Vendor:
+The Apache Software Foundation
+
+Versions Affected:
+Apache ActiveMQ 5.0.0 - 5.13.0
+
+Description:
+Several instances of cross-site scripting vulnerabilities were identified to be present in the web based administration console as well as the ability to trigger a Java memory dump into an arbitrary folder. The root cause of these issues are improper user data output validation and incorrect permissions configured on Jolokia.
+
+
+Mitigation:
+Upgrade to Apache ActiveMQ 5.11.4, 5.12.3, or 5.13.1
+
+Credit:
+This issue was discovered by Vladimir Ivanov (Positive Technologies)

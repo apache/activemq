@@ -1,0 +1,6 @@
+<map id="decaf::util::concurrent::FutureType" name="decaf::util::concurrent::FutureType">
+<area shape="rect" id="node3" href="$classdecaf_1_1util_1_1concurrent_1_1_future.html" title="A Future represents the result of an asynchronous computation." alt="" coords="5,99,149,143"/>
+<area shape="rect" id="node5" href="$classdecaf_1_1util_1_1concurrent_1_1_future.html" title="decaf::util::concurrent\l::Future\&lt; T \&gt;" alt="" coords="173,99,317,143"/>
+<area shape="rect" id="node7" href="$classdecaf_1_1util_1_1concurrent_1_1_runnable_future.html" title="A Runnable version of the Future type." alt="" coords="171,193,320,237"/>
+<area shape="rect" id="node9" href="$classdecaf_1_1util_1_1concurrent_1_1_future_task.html" title="A cancellable asynchronous computation." alt="" coords="173,286,317,330"/>
+</map>

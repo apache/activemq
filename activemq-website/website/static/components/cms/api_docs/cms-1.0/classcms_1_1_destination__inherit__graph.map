@@ -1,0 +1,5 @@
+base referer
+rect $classcms_1_1_queue.html 5,80 99,107
+rect $classcms_1_1_temporary_queue.html 123,80 280,107
+rect $classcms_1_1_temporary_topic.html 304,80 456,107
+rect $classcms_1_1_topic.html 480,80 565,107

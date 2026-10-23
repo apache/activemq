@@ -1,0 +1,4 @@
+<map id="activemq::threads::DedicatedTaskRunner" name="activemq::threads::DedicatedTaskRunner">
+<area shape="rect" id="node2" href="$classactivemq_1_1threads_1_1_task_runner.html" title="activemq::threads:\l:TaskRunner" alt="" coords="5,6,131,50"/>
+<area shape="rect" id="node4" href="$classdecaf_1_1lang_1_1_runnable.html" title="Interface for a runnable object &#45; defines a task that can be run by a thread." alt="" coords="155,14,299,42"/>
+</map>

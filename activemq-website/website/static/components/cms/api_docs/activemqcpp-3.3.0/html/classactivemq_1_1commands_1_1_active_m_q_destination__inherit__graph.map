@@ -1,0 +1,10 @@
+<map id="G" name="G">
+<area shape="rect" id="node9" href="$classactivemq_1_1commands_1_1_active_m_q_queue.html" title="activemq::commands::ActiveMQQueue" alt="" coords="1423,5,1713,35"/>
+<area shape="rect" id="node11" href="$classactivemq_1_1commands_1_1_active_m_q_temp_destination.html" title="activemq::commands::ActiveMQTempDestination" alt="" coords="1388,59,1748,88"/>
+<area shape="rect" id="node17" href="$classactivemq_1_1commands_1_1_active_m_q_topic.html" title="activemq::commands::ActiveMQTopic" alt="" coords="1429,112,1707,141"/>
+<area shape="rect" id="node2" href="$classactivemq_1_1commands_1_1_base_data_structure.html" title="activemq::commands::BaseDataStructure" alt="" coords="653,59,965,88"/>
+<area shape="rect" id="node4" href="$classactivemq_1_1commands_1_1_data_structure.html" title="activemq::commands::DataStructure" alt="" coords="327,59,604,88"/>
+<area shape="rect" id="node6" href="$classactivemq_1_1wireformat_1_1_marshal_aware.html" title="activemq::wireformat::MarshalAware" alt="" coords="5,59,277,88"/>
+<area shape="rect" id="node13" href="$classactivemq_1_1commands_1_1_active_m_q_temp_queue.html" title="activemq::commands::ActiveMQTempQueue" alt="" coords="1799,32,2124,61"/>
+<area shape="rect" id="node15" href="$classactivemq_1_1commands_1_1_active_m_q_temp_topic.html" title="activemq::commands::ActiveMQTempTopic" alt="" coords="1804,85,2119,115"/>
+</map>

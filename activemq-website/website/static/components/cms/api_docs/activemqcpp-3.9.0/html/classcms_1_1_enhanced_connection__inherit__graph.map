@@ -1,0 +1,8 @@
+<map id="cms::EnhancedConnection" name="cms::EnhancedConnection">
+<area shape="rect" id="node6" href="$classactivemq_1_1core_1_1_active_m_q_connection.html" title="Concrete connection used for all connectors to the ActiveMQ broker. " alt="" coords="73,229,313,256"/>
+<area shape="rect" id="node2" href="$classcms_1_1_connection.html" title="The client&#39;s connection to its provider. " alt="" coords="133,80,253,107"/>
+<area shape="rect" id="node3" href="$classcms_1_1_startable.html" title="Interface for a class that implements the start method. " alt="" coords="5,5,112,32"/>
+<area shape="rect" id="node4" href="$classcms_1_1_stoppable.html" title="Interface for a class that implements the stop method. " alt="" coords="137,5,249,32"/>
+<area shape="rect" id="node5" href="$classcms_1_1_closeable.html" title="Interface for a class that implements the close method. " alt="" coords="274,5,387,32"/>
+<area shape="rect" id="node7" href="$classactivemq_1_1core_1_1_active_m_q_x_a_connection.html" title="activemq::core::ActiveMQXAConnection" alt="" coords="64,304,321,331"/>
+</map>

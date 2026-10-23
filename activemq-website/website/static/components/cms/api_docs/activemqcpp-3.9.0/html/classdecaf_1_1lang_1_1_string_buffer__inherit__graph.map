@@ -1,0 +1,6 @@
+<map id="decaf::lang::StringBuffer" name="decaf::lang::StringBuffer">
+<area shape="rect" id="node2" href="$classdecaf_1_1lang_1_1_abstract_string_builder.html" title="A modifiable sequence of characters for use in creating and modifying Strings. " alt="" coords="23,187,200,229"/>
+<area shape="rect" id="node3" href="$classdecaf_1_1internal_1_1util_1_1concurrent_1_1_synchronizable_impl.html" title="A convenience class used by some Decaf classes to implement the Synchronizable interface when there i..." alt="" coords="5,97,219,138"/>
+<area shape="rect" id="node4" href="$classdecaf_1_1util_1_1concurrent_1_1_synchronizable.html" title="The interface for all synchronizable objects (that is, objects that can be locked and unlocked)..." alt="" coords="38,6,185,47"/>
+<area shape="rect" id="node5" href="$classdecaf_1_1lang_1_1_appendable.html" title="An object to which char sequences and values can be appended. " alt="" coords="225,195,388,221"/>
+</map>

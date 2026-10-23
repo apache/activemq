@@ -1,0 +1,25 @@
+<map id="decaf::util::Collection&lt; E &gt;" name="decaf::util::Collection&lt; E &gt;">
+<area shape="rect" id="node4" href="$classdecaf_1_1util_1_1_abstract_collection.html" title="This class provides a skeletal implementation of the Collection interface, to minimize the effort req..." alt="" coords="451,224,677,251"/>
+<area shape="rect" id="node20" href="$classdecaf_1_1util_1_1_list.html" title="An ordered collection (also known as a sequence). " alt="" coords="493,123,635,149"/>
+<area shape="rect" id="node22" href="$classdecaf_1_1util_1_1_queue.html" title="A kind of collection provides advanced operations than other basic collections, such as insertion..." alt="" coords="485,173,643,200"/>
+<area shape="rect" id="node24" href="$classdecaf_1_1util_1_1_set.html" title="A collection that contains no duplicate elements. " alt="" coords="494,311,634,337"/>
+<area shape="rect" id="node2" href="$classdecaf_1_1lang_1_1_iterable.html" title="Implementing this interface allows an object to be cast to an Iterable type for generic collections A..." alt="" coords="5,169,176,196"/>
+<area shape="rect" id="node3" href="$classdecaf_1_1util_1_1concurrent_1_1_synchronizable.html" title="The interface for all synchronizable objects (that is, objects that can be locked and unlocked)..." alt="" coords="17,221,165,262"/>
+<area shape="rect" id="node5" href="$classdecaf_1_1util_1_1_abstract_list.html" title="This class provides a skeletal implementation of the List interface to minimize the effort required t..." alt="" coords="734,123,925,149"/>
+<area shape="rect" id="node10" href="$classdecaf_1_1util_1_1_abstract_queue.html" title="This class provides skeletal implementations of some Queue operations. " alt="" coords="726,224,933,251"/>
+<area shape="rect" id="node15" href="$classdecaf_1_1util_1_1_abstract_set.html" title="This class provides a skeletal implementation of the Set interface to minimize the effort required to..." alt="" coords="735,348,924,375"/>
+<area shape="rect" id="node6" href="$classdecaf_1_1util_1_1_abstract_sequential_list.html" title="This class provides a skeletal implementation of the List interface to minimize the effort required t..." alt="" coords="983,6,1180,47"/>
+<area shape="rect" id="node8" href="$classdecaf_1_1util_1_1_array_list.html" title="decaf::util::ArrayList\&lt; E \&gt;" alt="" coords="995,72,1167,99"/>
+<area shape="rect" id="node9" href="$classdecaf_1_1util_1_1_stl_list.html" title="List class that wraps the STL list object to provide a simpler interface and additional methods not p..." alt="" coords="1003,123,1160,149"/>
+<area shape="rect" id="node7" href="$classdecaf_1_1util_1_1_linked_list.html" title="A complete implementation of the List interface using a doubly linked list data structure. " alt="" coords="1235,156,1413,183"/>
+<area shape="rect" id="node11" href="$classdecaf_1_1util_1_1concurrent_1_1_blocking_queue.html" title="A decaf::util::Queue that additionally supports operations that wait for the queue to become non&#45;empt..." alt="" coords="1006,275,1157,317"/>
+<area shape="rect" id="node14" href="$classdecaf_1_1util_1_1_priority_queue.html" title="An unbounded priority queue based on a binary heap algorithm. " alt="" coords="982,224,1181,251"/>
+<area shape="rect" id="node12" href="$classdecaf_1_1util_1_1concurrent_1_1_linked_blocking_queue.html" title="A BlockingQueue derivative that allows for a bound to be placed on the number of elements that can be..." alt="" coords="1229,229,1419,270"/>
+<area shape="rect" id="node13" href="$classdecaf_1_1util_1_1concurrent_1_1_synchronous_queue.html" title="A blocking queue in which each insert operation must wait for a corresponding remove operation by ano..." alt="" coords="1235,294,1413,335"/>
+<area shape="rect" id="node16" href="$classdecaf_1_1util_1_1concurrent_1_1_copy_on_write_array_set.html" title="Since the CopyOnWriteArraySet and the CopyOnWriteArrayList share much of the same operational semanti..." alt="" coords="985,341,1178,382"/>
+<area shape="rect" id="node17" href="$classdecaf_1_1util_1_1_hash_set.html" title="This class implements the Set interface, backed by a hash table (actually a HashMap instance)..." alt="" coords="996,407,1167,433"/>
+<area shape="rect" id="node19" href="$classdecaf_1_1util_1_1_stl_set.html" title="Set template that wraps around a std::set to provide a more user&#45;friendly interface and to provide co..." alt="" coords="1003,457,1159,484"/>
+<area shape="rect" id="node18" href="$classdecaf_1_1util_1_1_linked_hash_set.html" title="Hash table and linked list implementation of the Set interface, with predictable iteration order..." alt="" coords="1236,399,1412,441"/>
+<area shape="rect" id="node21" href="$classdecaf_1_1util_1_1concurrent_1_1_copy_on_write_array_list.html" title="decaf::util::concurrent\l::CopyOnWriteArrayList\&lt; E \&gt;" alt="" coords="732,57,927,98"/>
+<area shape="rect" id="node23" href="$classdecaf_1_1util_1_1_deque.html" title="Defines a &#39;Double ended Queue&#39; interface that allows for insertion and removal of elements from both ..." alt="" coords="750,173,909,200"/>
+</map>

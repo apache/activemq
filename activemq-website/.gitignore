@@ -1,0 +1,15 @@
+website/.docusaurus
+website/.docusaurus/*
+website/node
+website/node/*
+website/node_modules
+website/node_modules/*
+website/build
+website/.pagefind
+# The root .gitignore excludes every data/ directory, for the broker data.
+!website/src/data/
+!website/static/components/classic/documentation/maven/apidocs/org/apache/activemq/store/kahadb/data/
+
+# Generated from the release pages by scripts/generate-release-news.ts
+website/blog/releases
+website/src/data/generated

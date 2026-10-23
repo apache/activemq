@@ -1,0 +1,6 @@
+<map id="G" name="G">
+<area shape="rect" id="node3" href="$classcms_1_1_connection.html" title="The client&#39;s connection to its provider." alt="" coords="197,83,333,112"/>
+<area shape="rect" id="node5" href="$classactivemq_1_1core_1_1_active_m_q_connection.html" title="Concrete connection used for all connectors to the ActiveMQ broker." alt="" coords="5,160,285,189"/>
+<area shape="rect" id="node9" href="$classcms_1_1_x_a_connection.html" title="The XAConnection interface defines an extended Connection type that is used to create XASession objec..." alt="" coords="309,160,464,189"/>
+<area shape="rect" id="node7" href="$classactivemq_1_1core_1_1_active_m_q_x_a_connection.html" title="activemq::core::ActiveMQXAConnection" alt="" coords="116,237,415,267"/>
+</map>

@@ -1,0 +1,10 @@
+<map id="cms::Destination" name="cms::Destination">
+<area shape="rect" id="node3" href="$classcms_1_1_queue.html" title="An interface encapsulating a provider&#45;specific queue name." alt="" coords="171,71,261,99"/>
+<area shape="rect" id="node11" href="$classcms_1_1_topic.html" title="An interface encapsulating a provider&#45;specific topic name." alt="" coords="175,130,257,158"/>
+<area shape="rect" id="node5" href="$classactivemq_1_1commands_1_1_active_m_q_queue.html" title="activemq::commands\l::ActiveMQQueue" alt="" coords="315,5,456,49"/>
+<area shape="rect" id="node7" href="$classcms_1_1_temporary_queue.html" title="Defines a Temporary Queue based Destination." alt="" coords="311,71,460,99"/>
+<area shape="rect" id="node9" href="$classactivemq_1_1commands_1_1_active_m_q_temp_queue.html" title="activemq::commands\l::ActiveMQTempQueue" alt="" coords="511,63,665,107"/>
+<area shape="rect" id="node13" href="$classactivemq_1_1commands_1_1_active_m_q_topic.html" title="activemq::commands\l::ActiveMQTopic" alt="" coords="315,122,456,166"/>
+<area shape="rect" id="node15" href="$classcms_1_1_temporary_topic.html" title="Defines a Temporary Topic based Destination." alt="" coords="313,189,457,217"/>
+<area shape="rect" id="node17" href="$classactivemq_1_1commands_1_1_active_m_q_temp_topic.html" title="activemq::commands\l::ActiveMQTempTopic" alt="" coords="513,181,663,225"/>
+</map>

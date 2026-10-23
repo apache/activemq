@@ -1,0 +1,5 @@
+base referer
+rect $classcms_1_1_bytes_message.html 5,80 147,107
+rect $classcms_1_1_map_message.html 171,80 304,107
+rect $classcms_1_1_object_message.html 328,80 475,107
+rect $classcms_1_1_text_message.html 499,80 632,107

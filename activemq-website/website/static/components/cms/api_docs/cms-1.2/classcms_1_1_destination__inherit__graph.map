@@ -1,0 +1,4 @@
+<area shape="rect" href="$classcms_1_1_queue.html" title="An interface encapsulating a provider&#45;specific queue name." alt="" coords="5,84,112,111">
+<area shape="rect" href="$classcms_1_1_temporary_queue.html" title="An interface encapsulating a provider&#45;specific queue name." alt="" coords="136,84,323,111">
+<area shape="rect" href="$classcms_1_1_temporary_topic.html" title="An interface encapsulating a provider&#45;specific topic name." alt="" coords="347,84,523,111">
+<area shape="rect" href="$classcms_1_1_topic.html" title="An interface encapsulating a provider&#45;specific topic name." alt="" coords="547,84,643,111">

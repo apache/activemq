@@ -1,0 +1,10 @@
+<map id="decaf::lang::Number" name="decaf::lang::Number">
+<area shape="rect" id="node3" href="$classdecaf_1_1lang_1_1_byte.html" title="decaf::lang::Byte" alt="" coords="209,5,324,33"/>
+<area shape="rect" id="node5" href="$classdecaf_1_1lang_1_1_character.html" title="decaf::lang::Character" alt="" coords="193,55,340,83"/>
+<area shape="rect" id="node7" href="$classdecaf_1_1lang_1_1_double.html" title="decaf::lang::Double" alt="" coords="201,106,332,134"/>
+<area shape="rect" id="node9" href="$classdecaf_1_1lang_1_1_float.html" title="decaf::lang::Float" alt="" coords="208,157,325,185"/>
+<area shape="rect" id="node11" href="$classdecaf_1_1lang_1_1_integer.html" title="decaf::lang::Integer" alt="" coords="201,207,332,235"/>
+<area shape="rect" id="node13" href="$classdecaf_1_1lang_1_1_long.html" title="decaf::lang::Long" alt="" coords="208,258,325,286"/>
+<area shape="rect" id="node15" href="$classdecaf_1_1lang_1_1_short.html" title="decaf::lang::Short" alt="" coords="207,309,327,337"/>
+<area shape="rect" id="node17" href="$classdecaf_1_1util_1_1concurrent_1_1atomic_1_1_atomic_integer.html" title="An int value that may be updated atomically." alt="" coords="189,359,344,403"/>
+</map>
