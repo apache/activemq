@@ -61,6 +61,11 @@ public class ProxyMessageStore implements MessageStore {
     }
 
     @Override
+    public void recover(MessageRecoveryListener listener, int maxReturned) throws Exception {
+        delegate.recover(listener, maxReturned);
+    }
+
+    @Override
     public void removeAllMessages(ConnectionContext context) throws IOException {
         delegate.removeAllMessages(context);
     }
