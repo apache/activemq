@@ -20,12 +20,14 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.List;
 
@@ -98,6 +100,7 @@ public class ConfigTest {
 
         when(dataSource.getConnection()).thenReturn(connection);
         when(connection.getMetaData()).thenReturn(metadata);
+        when(connection.prepareStatement(anyString())).thenReturn(mock(PreparedStatement.class));
         when(metadata.getDriverName()).thenReturn("Microsoft_SQL_Server_2005_jdbc_driver");
 
         adapter.start();
@@ -105,6 +108,7 @@ public class ConfigTest {
         adapter.stop();
     }
 
+    @Test
     public void testJdbcLockConfigDefault() throws Exception {
 
         JDBCPersistenceAdapter adapter = new JDBCPersistenceAdapter();
@@ -116,6 +120,7 @@ public class ConfigTest {
 
         when(dataSource.getConnection()).thenReturn(connection);
         when(connection.getMetaData()).thenReturn(metadata);
+        when(connection.prepareStatement(anyString())).thenReturn(mock(PreparedStatement.class));
         when(metadata.getDriverName()).thenReturn("Some_Unknown_driver");
 
         adapter.start();
