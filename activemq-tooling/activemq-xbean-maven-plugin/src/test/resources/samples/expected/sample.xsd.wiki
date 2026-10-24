@@ -1,0 +1,91 @@
+h3. Elements By Type
+{anchor:org.apache.activemq.xbean.sample.Widget-types}
+h4. The _[org.apache.activemq.xbean.sample.Widget|#org.apache.activemq.xbean.sample.Widget-types]_ Type Implementations
+    | _[<widget>|#widget-element]_ | {html}A small widget{html} |
+
+
+{anchor:kind-element}
+h3. The _[<kind>|#kind-element]_ Element
+    {html}A tagged enum; the walk stops at java.lang.Enum.{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | unused | _java.lang.String_ | {html}{html} |
+
+{anchor:plainBean-element}
+h3. The _[<plainBean>|#plainBean-element]_ Element
+    {html}A bean with a bit of everything. Links like {@link RootBean} and HTML such
+as <a href="https://activemq.apache.org">this</a> stay in the description.
+
+Paragraphs are separated by blank lines and an indented example keeps its
+indentation minus the one space after the asterisk:
+
+<pre class="code">
+<bean id="plain" class="org.apache.activemq.xbean.sample.PlainBean">
+  <property name="name" value="x" />
+</bean>
+</pre>{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | DLQ | _java.lang.String_ | {html}Introspector keeps the capitals of an acronym{html} |
+    | baseValue | _long_ | {html}Set on the base class{html} |
+    | directory | _java.io.File_ | {html}A File has no editor on the default search path, so it is a nested element{html} |
+    | enabled | _boolean_ | {html}Whether the bean is enabled{html} |
+    | grid | (_int_)\* | {html}{html} |
+    | items | (_[org.apache.activemq.xbean.sample.Widget|#org.apache.activemq.xbean.sample.Widget-types]_)\* | {html}A list whose child type is named by the tag on a continuation line.{html} |
+    | name | _java.lang.String_ | {html}The name of this bean; the getter comment wins over the setter comment.{html} |
+    | names | (_java.lang.String_)\* | {html}An array of strings{html} |
+    | overridden | _int_ | {html}The subclass setter is the one that counts{html} |
+    | plainList | (_java.lang.Object_)\* | {html}A raw list with no nested type falls back to java.lang.Object{html} |
+    | properties | _java.util.Properties_ | {html}every setting, copied; not a property either{html} |
+    | renamed | _java.lang.String_ | {html}An aliased attribute{html} |
+    | rootValue | _java.lang.String_ | {html}The value inherited from the root of the hierarchy.{html} |
+    | secret | _java.lang.String_ | {html}A private setter still counts as a property{html} |
+    | settings | _java.util.Map_ | {html}Maps are unbounded nested elements{html} |
+    | size | _java.lang.String_ | {html}{html} |
+
+{anchor:taggedInterface-element}
+h3. The _[<taggedInterface>|#taggedInterface-element]_ Element
+    {html}An interface without the abstract keyword is still an element.{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | value | _java.lang.String_ | {html}{html} |
+
+{anchor:widget-element}
+h3. The _[<widget>|#widget-element]_ Element
+    {html}A small widget{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | label | _java.lang.String_ | {html}{html} |
+
+{anchor:widgetFactory-element}
+h3. The _[<widgetFactory>|#widgetFactory-element]_ Element
+    {html}A factory bean; the derived element name drops the trailing Bean.{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | prefix | _java.lang.String_ | {html}{html} |
+
+{anchor:wrapped-element}
+h3. The _[<wrapped>|#wrapped-element]_ Element
+    {html}Only the first line of a wrapped value{html}
+h4. Properties
+    || Property Name || Type || Description ||
+    | value | _java.lang.String_ | {html}{html} |
+
+h3. Element Index
+    | _[<kind>|#kind-element]_ | {html}A tagged enum; the walk stops at java.lang.Enum.{html} |
+    | _[<plainBean>|#plainBean-element]_ | {html}A bean with a bit of everything. Links like {@link RootBean} and HTML such
+as <a href="https://activemq.apache.org">this</a> stay in the description.
+
+Paragraphs are separated by blank lines and an indented example keeps its
+indentation minus the one space after the asterisk:
+
+<pre class="code">
+<bean id="plain" class="org.apache.activemq.xbean.sample.PlainBean">
+  <property name="name" value="x" />
+</bean>
+</pre>{html} |
+    | _[<taggedInterface>|#taggedInterface-element]_ | {html}An interface without the abstract keyword is still an element.{html} |
+    | _[<widget>|#widget-element]_ | {html}A small widget{html} |
+    | _[<widgetFactory>|#widgetFactory-element]_ | {html}A factory bean; the derived element name drops the trailing Bean.{html} |
+    | _[<wrapped>|#wrapped-element]_ | {html}Only the first line of a wrapped value{html} |
+
