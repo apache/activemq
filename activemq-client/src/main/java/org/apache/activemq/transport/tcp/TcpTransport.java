@@ -454,12 +454,12 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
         }
 
         try {
-            //only positive values are legal
+            // zero leaves SO_RCVBUF/SO_SNDBUF unset so the OS can auto-tune them
             if (socketBufferSize > 0) {
                 sock.setReceiveBufferSize(socketBufferSize);
                 sock.setSendBufferSize(socketBufferSize);
-            } else {
-                LOG.warn("Socket buffer size was set to {}; Skipping this setting as the size must be a positive number.", socketBufferSize);
+            } else if (socketBufferSize < 0) {
+                LOG.warn("Socket buffer size was set to {}; this is invalid and the setting is ignored. Use a positive number, or 0 for the OS default.", socketBufferSize);
             }
         } catch (SocketException se) {
             LOG.warn("Cannot set socket buffer size = " + socketBufferSize);
