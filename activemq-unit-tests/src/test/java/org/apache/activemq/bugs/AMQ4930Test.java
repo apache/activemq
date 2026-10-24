@@ -86,7 +86,7 @@ public class AMQ4930Test extends TestCase {
         bytesMessage.writeBytes(new byte[messageSize]);
 
         for (int i = 0; i < messageCount; i++) {
-            producer.send(bigQueue, bytesMessage);
+            producer.send(bytesMessage);
         }
 
         final QueueViewMBean queueViewMBean = (QueueViewMBean)
