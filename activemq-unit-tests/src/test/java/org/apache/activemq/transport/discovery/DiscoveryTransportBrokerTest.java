@@ -134,7 +134,19 @@ public class DiscoveryTransportBrokerTest extends NetworkTestSupport {
     	if ( groupName == null ) {
     		groupName = "group-"+System.currentTimeMillis();
     	}
-        return "multicast://default?group="+groupName;
+        String discoveryUri = "multicast://default?group=" + groupName;
+        // On macOS, multicast sends on en0 failed with NoRouteToHostException despite an existing route; using lo0 allowed this test to pass.
+        // Set activemq.test.multicast.networkInterface to override selection for both group membership and outgoing advertisements.
+        // Example (passed locally on macOS): mvn -pl activemq-unit-tests -am test -Dtest=DiscoveryTransportBrokerTest
+        //     -Dsurefire.failIfNoSpecifiedTests=false -Dactivemq.test.multicast.networkInterface=lo0
+        // Interface names vary by platform: macOS typically uses lo0, Linux uses lo, and Windows uses different names. Loopback multicast
+        // support also varies, so leave the property unset to preserve automatic selection rather than assuming a portable loopback interface.
+        String networkInterface = System.getProperty("activemq.test.multicast.networkInterface");
+        if (networkInterface != null && !networkInterface.trim().isEmpty()) {
+            networkInterface = networkInterface.trim();
+            discoveryUri += "&joinNetworkInterface=" + networkInterface + "&networkInterface=" + networkInterface;
+        }
+        return discoveryUri;
     }
 
     protected TransportConnector createRemoteConnector() throws Exception, IOException, URISyntaxException {
