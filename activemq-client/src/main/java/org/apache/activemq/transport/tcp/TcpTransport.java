@@ -65,6 +65,7 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
     protected int connectionTimeout = 30000;
     protected int soTimeout;
     protected int socketBufferSize = 64 * 1024;
+    private boolean socketBufferSizeSet;
     protected int ioBufferSize = 8 * 1024;
     protected boolean closeAsync=true;
     protected Socket socket;
@@ -337,6 +338,7 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
      */
     public void setSocketBufferSize(int socketBufferSize) {
         this.socketBufferSize = socketBufferSize;
+        this.socketBufferSizeSet = true;
     }
 
     public int getSoTimeout() {
@@ -447,24 +449,15 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
             // copy the map as its used values is being removed when calling setProperties
             // and we need to be able to set the options again in case socket is re-initailized
             Map<String, Object> copy = new HashMap<String, Object>(socketOptions);
-            IntrospectionSupport.setProperties(socket, copy);
+            IntrospectionSupport.setProperties(sock, copy);
             if (!copy.isEmpty()) {
                 throw new IllegalArgumentException("Invalid socket parameters: " + copy);
             }
         }
 
-        try {
-            //only positive values are legal
-            if (socketBufferSize > 0) {
-                sock.setReceiveBufferSize(socketBufferSize);
-                sock.setSendBufferSize(socketBufferSize);
-            } else {
-                LOG.warn("Socket buffer size was set to {}; Skipping this setting as the size must be a positive number.", socketBufferSize);
-            }
-        } catch (SocketException se) {
-            LOG.warn("Cannot set socket buffer size = " + socketBufferSize);
-            LOG.debug("Cannot set socket buffer size. Reason: " + se.getMessage() + ". This exception is ignored.", se);
-        }
+        warnOnConflictingBufferSize("receiveBufferSize");
+        warnOnConflictingBufferSize("sendBufferSize");
+        applySocketBufferSize(sock);
         sock.setSoTimeout(soTimeout);
 
         if (keepAlive != null) {
@@ -481,6 +474,57 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
         }
         if (!this.trafficClassSet) {
             this.trafficClassSet = setTrafficClass(sock);
+        }
+    }
+
+    private void applySocketBufferSize(Socket sock) {
+        if (socketBufferSize < 0) {
+            LOG.warn("Socket buffer size was set to {}; this is invalid and the setting is ignored. Use a positive number, or 0 for the OS default.", socketBufferSize);
+            return;
+        }
+        if (socketBufferSize == 0) {
+            return;
+        }
+        try {
+            if (!hasSocketOption("receiveBufferSize")) {
+                sock.setReceiveBufferSize(socketBufferSize);
+            }
+            if (!hasSocketOption("sendBufferSize")) {
+                sock.setSendBufferSize(socketBufferSize);
+            }
+        } catch (SocketException se) {
+            LOG.warn("Cannot set socket buffer size = " + socketBufferSize);
+            LOG.debug("Cannot set socket buffer size. Reason: " + se.getMessage() + ". This exception is ignored.", se);
+        }
+    }
+
+    private void warnOnConflictingBufferSize(String name) {
+        if (!socketBufferSizeSet || !hasSocketOption(name)) {
+            return;
+        }
+        String optionValue = String.valueOf(socketOptions.get(name));
+        if (!optionValue.equals(String.valueOf(socketBufferSize))) {
+            LOG.warn("Both socketBufferSize={} and socket.{}={} are configured; socket.{} takes precedence.",
+                socketBufferSize, name, optionValue, name);
+        }
+    }
+
+    private boolean hasSocketOption(String name) {
+        return socketOptions != null && socketOptions.containsKey(name);
+    }
+
+    private void applyBufferSizesBeforeConnect(Socket sock) throws SocketException {
+        if (socketOptions != null) {
+            for (String name : new String[] {"receiveBufferSize", "sendBufferSize"}) {
+                if (socketOptions.containsKey(name)) {
+                    Map<String, Object> option = new HashMap<String, Object>();
+                    option.put(name, socketOptions.get(name));
+                    IntrospectionSupport.setProperties(sock, option);
+                }
+            }
+        }
+        if (socketBufferSize > 0) {
+            applySocketBufferSize(sock);
         }
     }
 
@@ -514,6 +558,10 @@ public class TcpTransport extends TransportThreadSupport implements Transport, S
         this.trafficClassSet = setTrafficClass(socket);
 
         if (socket != null) {
+
+            if (remoteAddress != null) {
+                applyBufferSizesBeforeConnect(socket);
+            }
 
             if (localAddress != null) {
                 socket.bind(localAddress);
