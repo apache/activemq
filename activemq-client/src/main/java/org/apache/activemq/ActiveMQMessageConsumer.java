@@ -1725,6 +1725,10 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                         } else {
                             LOG.warn("{} suppressing duplicate delivery on connection, poison acking: {}", getConsumerId(), md);
                             poisonAck(md, "Suppressing duplicate delivery on connection, consumer " + getConsumerId());
+
+                            if (info.getCurrentPrefetchSize() == 0) {
+                                unconsumedMessages.enqueue(null);
+                            }
                         }
                     }
                 }
