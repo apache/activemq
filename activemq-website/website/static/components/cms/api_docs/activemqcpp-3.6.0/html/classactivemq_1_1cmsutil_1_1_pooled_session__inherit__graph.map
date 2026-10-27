@@ -1,0 +1,6 @@
+<map id="activemq::cmsutil::PooledSession" name="activemq::cmsutil::PooledSession">
+<area shape="rect" id="node2" href="$classcms_1_1_session.html" title="A Session object is a single&#45;threaded context for producing and consuming messages." alt="" coords="140,83,236,111"/>
+<area shape="rect" id="node4" href="$classcms_1_1_closeable.html" title="Interface for a class that implements the close method." alt="" coords="5,6,112,34"/>
+<area shape="rect" id="node6" href="$classcms_1_1_startable.html" title="Interface for a class that implements the start method." alt="" coords="136,6,240,34"/>
+<area shape="rect" id="node8" href="$classcms_1_1_stoppable.html" title="Interface for a class that implements the stop method." alt="" coords="264,6,373,34"/>
+</map>

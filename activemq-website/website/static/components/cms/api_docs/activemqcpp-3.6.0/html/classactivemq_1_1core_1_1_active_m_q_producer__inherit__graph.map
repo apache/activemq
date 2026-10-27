@@ -1,0 +1,4 @@
+<map id="activemq::core::ActiveMQProducer" name="activemq::core::ActiveMQProducer">
+<area shape="rect" id="node2" href="$classcms_1_1_message_producer.html" title="A client uses a MessageProducer object to send messages to a Destination." alt="" coords="37,83,192,111"/>
+<area shape="rect" id="node4" href="$classcms_1_1_closeable.html" title="Interface for a class that implements the close method." alt="" coords="61,6,168,34"/>
+</map>

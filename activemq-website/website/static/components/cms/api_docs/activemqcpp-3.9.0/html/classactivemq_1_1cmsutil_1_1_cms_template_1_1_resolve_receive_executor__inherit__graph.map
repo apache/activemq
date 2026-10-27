@@ -1,0 +1,4 @@
+<map id="activemq::cmsutil::CmsTemplate::ResolveReceiveExecutor" name="activemq::cmsutil::CmsTemplate::ResolveReceiveExecutor">
+<area shape="rect" id="node2" href="$classactivemq_1_1cmsutil_1_1_cms_template_1_1_receive_executor.html" title="activemq::cmsutil::\lCmsTemplate::ReceiveExecutor" alt="" coords="5,97,216,138"/>
+<area shape="rect" id="node3" href="$classactivemq_1_1cmsutil_1_1_session_callback.html" title="Callback for executing any number of operations on a provided CMS Session. " alt="" coords="44,6,177,47"/>
+</map>

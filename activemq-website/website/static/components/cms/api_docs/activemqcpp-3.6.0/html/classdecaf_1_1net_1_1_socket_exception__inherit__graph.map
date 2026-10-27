@@ -1,0 +1,10 @@
+<map id="decaf::net::SocketException" name="decaf::net::SocketException">
+<area shape="rect" id="node9" href="$classdecaf_1_1internal_1_1net_1_1ssl_1_1openssl_1_1_open_s_s_l_socket_exception.html" title="Subclass of the standard SocketException that knows how to produce an error message from the OpenSSL ..." alt="" coords="821,5,1016,65"/>
+<area shape="rect" id="node11" href="$classdecaf_1_1net_1_1_bind_exception.html" title="decaf::net::BindException" alt="" coords="836,87,1001,115"/>
+<area shape="rect" id="node13" href="$classdecaf_1_1net_1_1_connect_exception.html" title="decaf::net::ConnectException" alt="" coords="825,138,1012,166"/>
+<area shape="rect" id="node15" href="$classdecaf_1_1net_1_1_no_route_to_host_exception.html" title="decaf::net::NoRouteToHost\lException" alt="" coords="832,189,1005,233"/>
+<area shape="rect" id="node17" href="$classdecaf_1_1net_1_1_port_unreachable_exception.html" title="decaf::net::PortUnreachable\lException" alt="" coords="829,255,1008,299"/>
+<area shape="rect" id="node2" href="$classdecaf_1_1io_1_1_i_o_exception.html" title="decaf::io::IOException" alt="" coords="397,138,544,166"/>
+<area shape="rect" id="node4" href="$classdecaf_1_1lang_1_1_exception.html" title="decaf::lang::Exception" alt="" coords="203,138,349,166"/>
+<area shape="rect" id="node6" href="$classdecaf_1_1lang_1_1_throwable.html" title="This class represents an error that has occurred." alt="" coords="5,138,155,166"/>
+</map>

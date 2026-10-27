@@ -1,0 +1,4 @@
+<map id="activemq::state::CommandVisitorAdapter" name="activemq::state::CommandVisitorAdapter">
+<area shape="rect" id="node3" href="$classactivemq_1_1state_1_1_connection_state_tracker.html" title="activemq::state::Connection\lStateTracker" alt="" coords="5,187,192,229"/>
+<area shape="rect" id="node2" href="$classactivemq_1_1state_1_1_command_visitor.html" title="Interface for an Object that can visit the various Command Objects that are sent from and to this cli..." alt="" coords="9,6,188,47"/>
+</map>

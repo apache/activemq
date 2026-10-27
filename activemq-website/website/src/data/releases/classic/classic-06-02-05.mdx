@@ -1,0 +1,30 @@
+---
+title: ActiveMQ 6.2.5 Release
+version: 6.2.5
+release_date: 2026-04-23
+java_version: 17+
+release_notes: https://github.com/apache/activemq/releases/tag/activemq-6.2.5
+shortDescription: ActiveMQ 6.2.5 is a new milestone for the project, starting the 6.2.x series.
+---
+
+import ClassicRelease from '@site/src/components/ClassicRelease';
+
+<ClassicRelease frontMatter={frontMatter}>
+
+Apache ActiveMQ 6.2.5 was released on Apr 23rd, 2026.
+
+This is an important maintenance release on the 6.2.x series.
+It especially includes:
+- SSL handshake write timeout enforcement
+- restrict URL protocol types loaded by XBeanBrokerFactory
+- make brokerName immutable in RegionBroker
+- add Http discovery transport to denied list for JMX
+- update resource cleanup on queueBrowse servlet
+- webconsole handling on backup broker
+- queue browse improvements in webconsole
+- add more transport types to the denied list for JMX
+- add remote file filtering for XBeanBrokerFactory
+
+You can find details on the [release notes](https://github.com/apache/activemq/releases/tag/activemq-6.2.5).
+
+</ClassicRelease>

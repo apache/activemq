@@ -1,0 +1,8 @@
+base referer
+rect $classcms_1_1_closeable.html 7,120 119,147
+rect $classcms_1_1_connection.html 193,31 313,57
+rect $classcms_1_1_message_consumer.html 168,81 339,108
+rect $classcms_1_1_message_producer.html 172,132 335,159
+rect $classcms_1_1_session.html 203,183 304,209
+rect $classcms_1_1_startable.html 9,5 116,32
+rect $classcms_1_1_stoppable.html 5,56 120,83

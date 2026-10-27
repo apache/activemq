@@ -1,0 +1,10 @@
+<html>
+<head>
+   <title>Status page</title>
+</head>
+<body>
+<h3>The server has not found anything matching the request URI</h3><p>You can get technical details <a href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.4.5">here</a>.<br>
+Please continue your visit at our <a href="/">home page</a>.
+</p>
+</body>
+</html>

@@ -1,0 +1,28 @@
+CVE-2015-1830 - Path traversal leading to unauthenticated RCE in ActiveMQ
+
+Severity: Important
+
+Vendor:
+The Apache Software Foundation
+
+Versions Affected:
+Apache ActiveMQ 5.0.0 - 5.11.1
+
+Description:
+
+There is a directory traversal flaw in the fileserver upload/download functionality used for blob messages. 
+The attacker can put a jsp file in the admin console and execute shell command from there. It’s only vulnerable in the Windows OS.
+
+Mitigation:
+
+Upgrade to Apache ActiveMQ 5.12.0 or 5.11.2. The workaround in case fileserver is not used and upgrade is not prefereable is to disable that functionality. It can be done by removing (commenting out) the following lines from conf\jetty.xml file
+
+<bean class="org.eclipse.jetty.webapp.WebAppContext">
+    <property name="contextPath" value="/fileserver" />
+    <property name="resourceBase" value="${activemq.home}/webapps/fileserver" />
+    <property name="logUrlOnStart" value="true" />
+    <property name="parentLoaderPriority" value="true" />
+</bean>
+
+Credit:
+This issue was discovered by separated reports of David Jorm from IIX Product Security and Steven Seeley from Source Incite working with HP's Zero Day Initiative (ZDI)

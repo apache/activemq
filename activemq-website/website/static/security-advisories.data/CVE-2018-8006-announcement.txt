@@ -1,0 +1,20 @@
+
+CVE-2018-8006: ActiveMQ Web Console - Cross-Site Scripting
+
+Severity: Important
+
+Vendor:
+The Apache Software Foundation
+
+Versions Affected:
+Apache ActiveMQ 5.0.0 - 5.15.5
+
+Description:
+An instance of a cross-site scripting vulnerability was identified to be present in the web based administration console on the queue.jsp page. The root cause of this issue is improper data filtering of the QueueFilter parameter.
+
+
+Mitigation:
+Upgrade to Apache ActiveMQ 5.15.6 or disable the Web Console
+
+Credit:
+This issue was discovered by Robert Foggia of SpiderLabs

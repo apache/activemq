@@ -1,0 +1,5 @@
+<map id="cms::StreamMessage" name="cms::StreamMessage">
+<area shape="rect" id="node5" href="$classactivemq_1_1commands_1_1_active_m_q_message_template.html" title="activemq::commands\l::ActiveMQMessageTemplate\l\&lt; cms::StreamMessage \&gt;" alt="" coords="5,161,195,221"/>
+<area shape="rect" id="node2" href="$classcms_1_1_message.html" title="Root of all messages." alt="" coords="49,6,151,34"/>
+<area shape="rect" id="node7" href="$classactivemq_1_1commands_1_1_active_m_q_stream_message.html" title="activemq::commands\l::ActiveMQStreamMessage" alt="" coords="11,270,189,314"/>
+</map>

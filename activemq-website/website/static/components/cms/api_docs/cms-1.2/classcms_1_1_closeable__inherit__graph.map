@@ -1,0 +1,4 @@
+<area shape="rect" href="$classcms_1_1_connection.html" title="The client&#39;s connection to its provider." alt="" coords="5,84,147,111">
+<area shape="rect" href="$classcms_1_1_message_consumer.html" title="A client uses a MessageConsumer to received messages from a destination." alt="" coords="171,84,365,111">
+<area shape="rect" href="$classcms_1_1_message_producer.html" title="A client uses a MessageProducer object to send messages to a destination." alt="" coords="389,84,573,111">
+<area shape="rect" href="$classcms_1_1_session.html" title="A Session object is a single&#45;threaded context for producing and consuming messages..." alt="" coords="597,84,709,111">

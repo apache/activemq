@@ -1,0 +1,12 @@
+<map id="decaf::util::Queue&lt; E &gt;" name="decaf::util::Queue&lt; E &gt;">
+<area shape="rect" id="node9" href="$classdecaf_1_1util_1_1_abstract_queue.html" title="This class provides skeletal implementations of some Queue operations." alt="" coords="636,105,833,133"/>
+<area shape="rect" id="node19" href="$classdecaf_1_1util_1_1_deque.html" title="Defines a &#39;Double ended Queue&#39; interface that allows for insertion and removal of elements from both ..." alt="" coords="660,155,809,183"/>
+<area shape="rect" id="node2" href="$classdecaf_1_1util_1_1_collection.html" title="The root interface in the collection hierarchy." alt="" coords="216,130,387,158"/>
+<area shape="rect" id="node4" href="$classdecaf_1_1lang_1_1_iterable.html" title="Implementing this interface allows an object to be cast to an Iterable type for generic collections A..." alt="" coords="5,101,168,129"/>
+<area shape="rect" id="node6" href="$classdecaf_1_1util_1_1concurrent_1_1_synchronizable.html" title="The interface for all synchronizable objects (that is, objects that can be locked and unlocked)..." alt="" coords="15,151,159,195"/>
+<area shape="rect" id="node11" href="$classdecaf_1_1util_1_1concurrent_1_1_blocking_queue.html" title="A decaf::util::Queue that additionally supports operations that wait for the queue to become non&#45;empt..." alt="" coords="905,38,1052,82"/>
+<area shape="rect" id="node17" href="$classdecaf_1_1util_1_1_priority_queue.html" title="An unbounded priority queue based on a binary heap algorithm." alt="" coords="884,105,1073,133"/>
+<area shape="rect" id="node13" href="$classdecaf_1_1util_1_1concurrent_1_1_linked_blocking_queue.html" title="A BlockingQueue derivative that allows for a bound to be placed on the number of elements that can be..." alt="" coords="1123,5,1307,49"/>
+<area shape="rect" id="node15" href="$classdecaf_1_1util_1_1concurrent_1_1_synchronous_queue.html" title="A blocking queue in which each insert operation must wait for a corresponding remove operation by ano..." alt="" coords="1129,71,1300,115"/>
+<area shape="rect" id="node21" href="$classdecaf_1_1util_1_1_linked_list.html" title="A complete implementation of the List interface using a doubly linked list data structure." alt="" coords="893,155,1064,183"/>
+</map>

@@ -1,0 +1,18 @@
+CVE-2014-3600: Apache ActiveMQ XXE with XPath selectors
+
+Severity: Important
+
+Vendor:
+The Apache Software Foundation
+
+Versions Affected:
+Apache ActiveMQ 5.0.0 - 5.10.0
+
+Description:
+It is possible for a consumer dequeuing XML message(s) to specify an XPath based selector thus causing the broker to evaluate the expression and attempt to match it against the messages in the queue while also performing an XML external entity resolution.
+
+Mitigation:
+Upgrade to Apache ActiveMQ 5.10.1 or 5.11.0
+
+Credit:
+This issue was discovered by ﻿Georgi Geshev from MWR Labs.

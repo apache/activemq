@@ -1,0 +1,21 @@
+<map id="activemq::commands::Message" name="activemq::commands::Message">
+<area shape="rect" id="node7" href="$classactivemq_1_1commands_1_1_active_m_q_message_template.html" title="activemq::commands\l::ActiveMQMessageTemplate\&lt; T \&gt;" alt="" coords="1171,6,1397,47"/>
+<area shape="rect" id="node8" href="$classactivemq_1_1commands_1_1_active_m_q_message_template.html" title="activemq::commands\l::ActiveMQMessageTemplate\l\&lt; cms::BytesMessage \&gt;" alt="" coords="1187,71,1381,127"/>
+<area shape="rect" id="node10" href="$classactivemq_1_1commands_1_1_active_m_q_message_template.html" title="activemq::commands\l::ActiveMQMessageTemplate\l\&lt; cms::MapMessage \&gt;" alt="" coords="1187,151,1381,207"/>
+<area shape="rect" id="node12" href="$classactivemq_1_1commands_1_1_active_m_q_message_template.html" title="activemq::commands\l::ActiveMQMessageTemplate\l\&lt; cms::Message \&gt;" alt="" coords="1187,231,1381,287"/>
+<area shape="rect" id="node15" href="$classactivemq_1_1commands_1_1_active_m_q_message_template.html" title="activemq::commands\l::ActiveMQMessageTemplate\l\&lt; cms::ObjectMessage \&gt;" alt="" coords="1187,311,1381,367"/>
+<area shape="rect" id="node17" href="$classactivemq_1_1commands_1_1_active_m_q_message_template.html" title="activemq::commands\l::ActiveMQMessageTemplate\l\&lt; cms::StreamMessage \&gt;" alt="" coords="1187,391,1381,447"/>
+<area shape="rect" id="node19" href="$classactivemq_1_1commands_1_1_active_m_q_message_template.html" title="activemq::commands\l::ActiveMQMessageTemplate\l\&lt; cms::TextMessage \&gt;" alt="" coords="1187,471,1381,527"/>
+<area shape="rect" id="node2" href="$classactivemq_1_1commands_1_1_base_command.html" title="activemq::commands\l::BaseCommand" alt="" coords="781,238,928,279"/>
+<area shape="rect" id="node3" href="$classactivemq_1_1commands_1_1_command.html" title="activemq::commands\l::Command" alt="" coords="587,238,733,279"/>
+<area shape="rect" id="node4" href="$classactivemq_1_1commands_1_1_base_data_structure.html" title="activemq::commands\l::BaseDataStructure" alt="" coords="392,238,539,279"/>
+<area shape="rect" id="node5" href="$classactivemq_1_1commands_1_1_data_structure.html" title="activemq::commands\l::DataStructure" alt="" coords="197,238,344,279"/>
+<area shape="rect" id="node6" href="$classactivemq_1_1wireformat_1_1_marshal_aware.html" title="activemq::wireformat\l::MarshalAware" alt="" coords="5,238,149,279"/>
+<area shape="rect" id="node9" href="$classactivemq_1_1commands_1_1_active_m_q_bytes_message.html" title="activemq::commands\l::ActiveMQBytesMessage" alt="" coords="1450,75,1625,117"/>
+<area shape="rect" id="node11" href="$classactivemq_1_1commands_1_1_active_m_q_map_message.html" title="activemq::commands\l::ActiveMQMapMessage" alt="" coords="1454,141,1621,182"/>
+<area shape="rect" id="node13" href="$classactivemq_1_1commands_1_1_active_m_q_blob_message.html" title="activemq::commands\l::ActiveMQBlobMessage" alt="" coords="1454,206,1621,247"/>
+<area shape="rect" id="node14" href="$classactivemq_1_1commands_1_1_active_m_q_message.html" title="activemq::commands\l::ActiveMQMessage" alt="" coords="1464,271,1611,313"/>
+<area shape="rect" id="node16" href="$classactivemq_1_1commands_1_1_active_m_q_object_message.html" title="activemq::commands\l::ActiveMQObjectMessage" alt="" coords="1448,337,1627,378"/>
+<area shape="rect" id="node18" href="$classactivemq_1_1commands_1_1_active_m_q_stream_message.html" title="activemq::commands\l::ActiveMQStreamMessage" alt="" coords="1446,402,1629,443"/>
+<area shape="rect" id="node20" href="$classactivemq_1_1commands_1_1_active_m_q_text_message.html" title="activemq::commands\l::ActiveMQTextMessage" alt="" coords="1454,478,1621,519"/>
+</map>

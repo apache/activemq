@@ -1,0 +1,18 @@
+CVE-2014-3579: Apache ActiveMQ Apollo XXE with XPath selectors
+
+Severity: Important
+
+Vendor:
+The Apache Software Foundation
+
+Versions Affected:
+Apache ActiveMQ Apollo 1.0 - 1.7
+
+Description:
+It is possible for a consumer dequeuing XML message(s) to specify an XPath based selector thus causing the broker to evaluate the expression and attempt to match it against the messages in the queue while also performing an XML external entity resolution.
+
+Mitigation:
+Upgrade to Apache ActiveMQ Apollo 1.7.1
+
+Credit:
+This issue was discovered by ﻿Georgi Geshev from MWR Labs.

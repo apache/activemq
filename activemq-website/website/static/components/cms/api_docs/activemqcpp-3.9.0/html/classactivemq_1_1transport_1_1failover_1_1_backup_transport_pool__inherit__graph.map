@@ -1,0 +1,4 @@
+<map id="activemq::transport::failover::BackupTransportPool" name="activemq::transport::failover::BackupTransportPool">
+<area shape="rect" id="node2" href="$classactivemq_1_1threads_1_1_composite_task.html" title="Represents a single task that can be part of a set of Tasks that are contained in a CompositeTaskRunn..." alt="" coords="41,81,175,122"/>
+<area shape="rect" id="node3" href="$classactivemq_1_1threads_1_1_task.html" title="Represents a unit of work that requires one or more iterations to complete. " alt="" coords="27,5,189,32"/>
+</map>

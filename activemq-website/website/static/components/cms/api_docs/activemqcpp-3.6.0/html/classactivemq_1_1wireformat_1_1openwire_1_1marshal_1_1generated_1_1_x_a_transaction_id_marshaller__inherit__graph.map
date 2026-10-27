@@ -1,0 +1,5 @@
+<map id="activemq::wireformat::openwire::marshal::generated::XATransactionIdMarshaller" name="activemq::wireformat::openwire::marshal::generated::XATransactionIdMarshaller">
+<area shape="rect" id="node2" href="$classactivemq_1_1wireformat_1_1openwire_1_1marshal_1_1generated_1_1_transaction_id_marshaller.html" title="Marshaling code for Open Wire Format for TransactionIdMarshaller." alt="" coords="15,225,239,285"/>
+<area shape="rect" id="node4" href="$classactivemq_1_1wireformat_1_1openwire_1_1marshal_1_1_base_data_stream_marshaller.html" title="Base class for all Marshallers that marshal DataStructures to and from the wire using the OpenWire pr..." alt="" coords="36,115,217,175"/>
+<area shape="rect" id="node6" href="$classactivemq_1_1wireformat_1_1openwire_1_1marshal_1_1_data_stream_marshaller.html" title="Base class for all classes that marshal commands for Openwire." alt="" coords="51,6,203,66"/>
+</map>

@@ -1,0 +1,8 @@
+<map id="G" name="G">
+<area shape="rect" id="node3" href="$classactivemq_1_1core_1_1_active_m_q_session_executor.html" title="Delegate dispatcher for a single session." alt="" coords="240,5,555,35"/>
+<area shape="rect" id="node5" href="$classactivemq_1_1threads_1_1_composite_task.html" title="Represents a single task that can be part of a set of Tasks that are contained in a CompositeTaskRunn..." alt="" coords="268,59,527,88"/>
+<area shape="rect" id="node13" href="$classactivemq_1_1threads_1_1_composite_task_runner.html" title="A Task Runner that can contain one or more CompositeTasks that are each checked for pending work and ..." alt="" coords="244,112,551,141"/>
+<area shape="rect" id="node7" href="$classactivemq_1_1transport_1_1failover_1_1_backup_transport_pool.html" title="activemq::transport::failover::BackupTransportPool" alt="" coords="604,5,969,35"/>
+<area shape="rect" id="node9" href="$classactivemq_1_1transport_1_1failover_1_1_close_transports_task.html" title="activemq::transport::failover::CloseTransportsTask" alt="" coords="605,59,968,88"/>
+<area shape="rect" id="node11" href="$classactivemq_1_1transport_1_1failover_1_1_failover_transport.html" title="activemq::transport::failover::FailoverTransport" alt="" coords="616,112,957,141"/>
+</map>

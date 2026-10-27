@@ -1,0 +1,10 @@
+{
+  // This file is not used in compilation. It is here just for a nice editor experience.
+  "extends": "@docusaurus/tsconfig",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "resolveJsonModule": true,
+    // The scripts/ are run by Node with type stripping, which needs explicit .ts imports.
+    "allowImportingTsExtensions": true
+  }
+}

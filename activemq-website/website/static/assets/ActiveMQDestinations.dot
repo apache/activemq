@@ -1,0 +1,54 @@
+digraph "ActiveMQ Destinations" {
+
+node [style = "rounded,filled", fontname="Helvetica-Oblique"];
+
+topic_root [fillcolor = deepskyblue, label = "Topics" ];
+queue_root [fillcolor = deepskyblue, label = "Queues" ];
+
+subgraph queues {
+  node [fillcolor=red];     
+  label = "Queues"
+
+  queue_root -> queue_root_Prices;
+  queue_root_Prices -> queue_root_Prices_Equity;
+  queue_root_Prices_Equity -> queue_root_Prices_Equity_IBM;
+  queue_root_Prices_Equity -> queue_root_Prices_Equity_MSFT;
+}
+
+subgraph topics {
+  node [fillcolor=green];     
+  label = "Topics"
+
+  topic_root -> topic_root_ActiveMQ;
+  topic_root_ActiveMQ -> topic_root_ActiveMQ_Advisory;
+  topic_root_ActiveMQ_Advisory -> topic_root_ActiveMQ_Advisory_Connection;
+  topic_root_ActiveMQ_Advisory -> topic_root_ActiveMQ_Advisory_Topic;
+  topic_root_ActiveMQ_Advisory -> topic_root_ActiveMQ_Advisory_Queue;
+  topic_root_ActiveMQ_Advisory -> topic_root_ActiveMQ_Advisory_Producer;
+  topic_root_ActiveMQ_Advisory_Producer -> topic_root_ActiveMQ_Advisory_Producer_Queue;
+  topic_root_ActiveMQ_Advisory_Producer_Queue -> topic_root_ActiveMQ_Advisory_Producer_Queue_Prices;
+  topic_root_ActiveMQ_Advisory_Producer_Queue_Prices -> topic_root_ActiveMQ_Advisory_Producer_Queue_Prices_Equity;
+  topic_root_ActiveMQ_Advisory_Producer_Queue_Prices_Equity -> topic_root_ActiveMQ_Advisory_Producer_Queue_Prices_Equity_IBM;
+  topic_root_ActiveMQ_Advisory_Producer_Queue_Prices_Equity -> topic_root_ActiveMQ_Advisory_Producer_Queue_Prices_Equity_MSFT;
+}
+
+  queue_root[ label = "Queues" ];
+  queue_root_Prices[ label = "Prices" ];
+  queue_root_Prices_Equity[ label = "Equity" ];
+  queue_root_Prices_Equity_IBM[ label = "IBM" ];
+  queue_root_Prices_Equity_MSFT[ label = "MSFT" ];
+
+  topic_root[ label = "Topics" ];
+  topic_root_ActiveMQ[ label = "ActiveMQ" ];
+  topic_root_ActiveMQ_Advisory[ label = "Advisory" ];
+  topic_root_ActiveMQ_Advisory_Connection[ label = "Connection" ];
+  topic_root_ActiveMQ_Advisory_Topic[ label = "Topic" ];
+  topic_root_ActiveMQ_Advisory_Queue[ label = "Queue" ];
+  topic_root_ActiveMQ_Advisory_Producer[ label = "Producer" ];
+  topic_root_ActiveMQ_Advisory_Producer_Queue[ label = "Queue" ];
+  topic_root_ActiveMQ_Advisory_Producer_Queue_Prices[ label = "Prices" ];
+  topic_root_ActiveMQ_Advisory_Producer_Queue_Prices_Equity[ label = "Equity" ];
+  topic_root_ActiveMQ_Advisory_Producer_Queue_Prices_Equity_IBM[ label = "IBM" ];
+  topic_root_ActiveMQ_Advisory_Producer_Queue_Prices_Equity_MSFT[ label = "MSFT" ];
+
+}

@@ -1,0 +1,11 @@
+<map id="cms::Session" name="cms::Session">
+<area shape="rect" id="node9" href="$classactivemq_1_1cmsutil_1_1_pooled_session.html" title="A pooled session object that wraps around a delegate session." alt="" coords="357,5,480,49"/>
+<area shape="rect" id="node11" href="$classactivemq_1_1core_1_1_active_m_q_session.html" title="activemq::core::ActiveMQSession" alt="" coords="312,71,525,99"/>
+<area shape="rect" id="node15" href="$classactivemq_1_1core_1_1kernels_1_1_active_m_q_session_kernel.html" title="activemq::core::kernels\l::ActiveMQSessionKernel" alt="" coords="336,173,501,217"/>
+<area shape="rect" id="node19" href="$classcms_1_1_x_a_session.html" title="The XASession interface extends the capability of Session by adding access to a CMS provider&#39;s suppor..." alt="" coords="361,122,476,150"/>
+<area shape="rect" id="node2" href="$classcms_1_1_closeable.html" title="Interface for a class that implements the close method." alt="" coords="8,46,115,74"/>
+<area shape="rect" id="node4" href="$classcms_1_1_startable.html" title="Interface for a class that implements the start method." alt="" coords="9,97,113,125"/>
+<area shape="rect" id="node6" href="$classcms_1_1_stoppable.html" title="Interface for a class that implements the stop method." alt="" coords="7,147,116,175"/>
+<area shape="rect" id="node13" href="$classactivemq_1_1core_1_1_active_m_q_x_a_session.html" title="activemq::core::ActiveMQXASession" alt="" coords="575,85,804,113"/>
+<area shape="rect" id="node17" href="$classactivemq_1_1core_1_1kernels_1_1_active_m_q_x_a_session_kernel.html" title="activemq::core::kernels\l::ActiveMQXASessionKernel" alt="" coords="597,161,781,205"/>
+</map>

@@ -1,0 +1,4 @@
+<map id="activemq::state::CommandVisitor" name="activemq::state::CommandVisitor">
+<area shape="rect" id="node3" href="$classactivemq_1_1state_1_1_command_visitor_adapter.html" title="Default Implementation of a CommandVisitor that returns NULL for all calls." alt="" coords="8,99,181,143"/>
+<area shape="rect" id="node5" href="$classactivemq_1_1state_1_1_connection_state_tracker.html" title="activemq::state::Connection\lStateTracker" alt="" coords="5,193,184,237"/>
+</map>

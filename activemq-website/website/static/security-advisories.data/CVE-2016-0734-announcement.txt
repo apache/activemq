@@ -1,0 +1,19 @@
+CVE-2016-0734: ActiveMQ Web Console - Clickjacking
+
+Severity: Important
+
+Vendor:
+The Apache Software Foundation
+
+Versions Affected:
+Apache ActiveMQ 5.0.0 - 5.13.1
+
+Description:
+The web based administration console does not set the X-Frame-Options header in HTTP responses. This allows the console to be embedded in a frame or iframe which could then be used to cause a user to perform an unintended action in the console.
+
+
+Mitigation:
+Upgrade to Apache ActiveMQ 5.13.2
+
+Credit:
+This issue was discovered by Michael Furman

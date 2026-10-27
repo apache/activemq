@@ -1,0 +1,10 @@
+<map id="activemq::core::ActiveMQXAConnection" name="activemq::core::ActiveMQXAConnection">
+<area shape="rect" id="node2" href="$classcms_1_1_x_a_connection.html" title="The XAConnection interface defines an extended Connection type that is used to create XASession objec..." alt="" coords="311,245,449,272"/>
+<area shape="rect" id="node3" href="$classcms_1_1_connection.html" title="The client&#39;s connection to its provider. " alt="" coords="255,80,376,107"/>
+<area shape="rect" id="node8" href="$classcms_1_1_enhanced_connection.html" title="An enhanced CMS Connection instance that provides additional features above the default required feat..." alt="" coords="164,163,343,189"/>
+<area shape="rect" id="node4" href="$classcms_1_1_startable.html" title="Interface for a class that implements the start method. " alt="" coords="128,5,235,32"/>
+<area shape="rect" id="node5" href="$classcms_1_1_stoppable.html" title="Interface for a class that implements the stop method. " alt="" coords="259,5,372,32"/>
+<area shape="rect" id="node6" href="$classcms_1_1_closeable.html" title="Interface for a class that implements the close method. " alt="" coords="397,5,509,32"/>
+<area shape="rect" id="node7" href="$classactivemq_1_1core_1_1_active_m_q_connection.html" title="Concrete connection used for all connectors to the ActiveMQ broker. " alt="" coords="47,245,287,272"/>
+<area shape="rect" id="node9" href="$classactivemq_1_1transport_1_1_transport_listener.html" title="A listener of asynchronous exceptions from a command transport object. " alt="" coords="5,155,139,197"/>
+</map>

@@ -1,0 +1,21 @@
+
+CVE-2018-11775: ActiveMQ Client - Missing TLS Hostname Verification
+
+Severity: Important
+
+Vendor:
+The Apache Software Foundation
+
+Versions Affected:
+Apache ActiveMQ 5.0.0 - 5.15.5
+
+Description:
+
+TLS hostname verification when using the Apache ActiveMQ Client was missing which could make the client vulnerable to a MITM attack between a Java application using the ActiveMQ client and the ActiveMQ server. This is now enabled by default.
+
+Mitigation:
+
+Upgrade to Apache ActiveMQ 5.15.6
+
+Credit:
+This issue was discovered by Peter Stöckli (Alphabot Security)

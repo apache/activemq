@@ -1,0 +1,50 @@
+<map id="decaf::util::concurrent::Synchronizable" name="decaf::util::concurrent::Synchronizable">
+<area shape="rect" id="node2" href="$classactivemq_1_1core_1_1_message_dispatch_channel.html" title="activemq::core::MessageDispatch\lChannel" alt="" coords="249,70,471,111"/>
+<area shape="rect" id="node5" href="$classdecaf_1_1util_1_1_collection.html" title="decaf::util::Collection\l\&lt; activemq::util::PrimitiveValue\lNode \&gt;" alt="" coords="258,135,462,191"/>
+<area shape="rect" id="node7" href="$classdecaf_1_1util_1_1_collection.html" title="decaf::util::Collection\l\&lt; activemq::util::ServiceListener * \&gt;" alt="" coords="245,214,475,255"/>
+<area shape="rect" id="node9" href="$classdecaf_1_1util_1_1_collection.html" title="decaf::util::Collection\l\&lt; cms::Connection * \&gt;" alt="" coords="283,279,437,321"/>
+<area shape="rect" id="node10" href="$classdecaf_1_1util_1_1_collection.html" title="decaf::util::Collection\l\&lt; cms::Destination * \&gt;" alt="" coords="283,345,437,386"/>
+<area shape="rect" id="node11" href="$classdecaf_1_1util_1_1_collection.html" title="decaf::util::Collection\l\&lt; cms::MessageConsumer * \&gt;" alt="" coords="259,410,461,451"/>
+<area shape="rect" id="node12" href="$classdecaf_1_1util_1_1_collection.html" title="decaf::util::Collection\l\&lt; cms::MessageProducer * \&gt;" alt="" coords="263,475,457,517"/>
+<area shape="rect" id="node13" href="$classdecaf_1_1util_1_1_collection.html" title="decaf::util::Collection\l\&lt; cms::Session * \&gt;" alt="" coords="287,541,433,582"/>
+<area shape="rect" id="node14" href="$classdecaf_1_1util_1_1_collection.html" title="decaf::util::Collection\l\&lt; decaf::internal::util\l::Resource * \&gt;" alt="" coords="287,605,433,661"/>
+<area shape="rect" id="node15" href="$classdecaf_1_1util_1_1_collection.html" title="decaf::util::Collection\l\&lt; decaf::lang::Pointer\l\&lt; activemq::commands::ActiveMQDestination \&gt; \&gt;" alt="" coords="203,685,517,741"/>
+<area shape="rect" id="node16" href="$classdecaf_1_1util_1_1_collection.html" title="decaf::util::Collection\l\&lt; decaf::lang::Pointer\l\&lt; activemq::commands::Command \&gt; \&gt;" alt="" coords="235,765,485,821"/>
+<area shape="rect" id="node17" href="$classdecaf_1_1util_1_1_collection.html" title="decaf::util::Collection\l\&lt; decaf::lang::Pointer\l\&lt; activemq::commands::Destination\lInfo \&gt; \&gt;" alt="" coords="243,846,477,917"/>
+<area shape="rect" id="node18" href="$classdecaf_1_1util_1_1_collection.html" title="decaf::util::Collection\l\&lt; decaf::lang::Pointer\l\&lt; activemq::commands::MessageDispatch \&gt; \&gt;" alt="" coords="212,941,508,997"/>
+<area shape="rect" id="node19" href="$classdecaf_1_1util_1_1_collection.html" title="decaf::util::Collection\l\&lt; decaf::lang::Pointer\l\&lt; activemq::core::Synchronization \&gt; \&gt;" alt="" coords="237,1021,483,1077"/>
+<area shape="rect" id="node20" href="$classdecaf_1_1util_1_1_collection.html" title="decaf::util::Collection\l\&lt; decaf::lang::Pointer\l\&lt; activemq::transport::\lTransport \&gt; \&gt;" alt="" coords="283,1102,437,1173"/>
+<area shape="rect" id="node21" href="$classdecaf_1_1util_1_1_collection.html" title="decaf::util::Collection\l\&lt; decaf::net::decaf::net\l::URI \&gt;" alt="" coords="281,1197,439,1253"/>
+<area shape="rect" id="node22" href="$classdecaf_1_1util_1_1_collection.html" title="decaf::util::Collection\l\&lt; decaf::net::URI \&gt;" alt="" coords="287,1277,433,1318"/>
+<area shape="rect" id="node23" href="$classdecaf_1_1util_1_1_collection.html" title="decaf::util::Collection\&lt; K \&gt;" alt="" coords="271,1343,449,1369"/>
+<area shape="rect" id="node24" href="$classdecaf_1_1util_1_1_collection.html" title="decaf::util::Collection\l\&lt; MapEntry\&lt; K, V \&gt; \&gt;" alt="" coords="284,1394,436,1435"/>
+<area shape="rect" id="node25" href="$classdecaf_1_1util_1_1_collection.html" title="decaf::util::Collection\l\&lt; PrimitiveValueNode \&gt;" alt="" coords="279,1459,441,1501"/>
+<area shape="rect" id="node26" href="$classdecaf_1_1util_1_1_collection.html" title="decaf::util::Collection\&lt; V \&gt;" alt="" coords="271,1525,449,1552"/>
+<area shape="rect" id="node27" href="$classdecaf_1_1internal_1_1util_1_1concurrent_1_1_synchronizable_impl.html" title="A convenience class used by some Decaf classes to implement the Synchronizable interface when there i..." alt="" coords="253,1577,467,1618"/>
+<area shape="rect" id="node28" href="$classdecaf_1_1io_1_1_input_stream.html" title="A base class that must be implemented by all classes wishing to provide a class that reads in a strea..." alt="" coords="285,1643,435,1669"/>
+<area shape="rect" id="node29" href="$classdecaf_1_1io_1_1_output_stream.html" title="Base interface for any class that wants to represent an output stream of bytes. " alt="" coords="279,1693,441,1720"/>
+<area shape="rect" id="node30" href="$classdecaf_1_1util_1_1_collection.html" title="The root interface in the collection hierarchy. " alt="" coords="271,1744,449,1771"/>
+<area shape="rect" id="node31" href="$classdecaf_1_1util_1_1concurrent_1_1_mutex.html" title="Mutex object that offers recursive support on all platforms as well as providing the ability to use t..." alt="" coords="286,1795,434,1837"/>
+<area shape="rect" id="node32" href="$classdecaf_1_1util_1_1_map.html" title="An object that maps keys to values. " alt="" coords="279,1861,441,1888"/>
+<area shape="rect" id="node33" href="$classdecaf_1_1util_1_1_stl_queue.html" title="The Queue class accepts messages with an psuh(m) command where m is the message to be queued..." alt="" coords="273,1912,447,1939"/>
+<area shape="rect" id="node34" href="$classdecaf_1_1util_1_1_map.html" title="decaf::util::Map\&lt; cms\l::Session *, SessionResolver * \&gt;" alt="" coords="253,1963,467,2005"/>
+<area shape="rect" id="node35" href="$classdecaf_1_1util_1_1_map.html" title="decaf::util::Map\&lt; decaf\l::lang::Pointer\&lt; activemq\l::commands::ConsumerId \&gt;,\l decaf::lang::Pointer\&lt; activemq\l::commands::ConsumerInfo \&gt; \&gt;" alt="" coords="256,2029,464,2115"/>
+<area shape="rect" id="node36" href="$classdecaf_1_1util_1_1_map.html" title="decaf::util::Map\&lt; decaf\l::lang::Pointer\&lt; activemq\l::commands::ConsumerId \&gt;,\l decaf::lang::Pointer\&lt; activemq\l::state::ConsumerState \&gt; \&gt;" alt="" coords="258,2139,462,2224"/>
+<area shape="rect" id="node37" href="$classdecaf_1_1util_1_1_map.html" title="decaf::util::Map\&lt; decaf\l::lang::Pointer\&lt; activemq\l::commands::LocalTransactionId\l \&gt;, decaf::lang::Pointer\&lt; activemq\l::state::TransactionState \&gt; \&gt;" alt="" coords="250,2248,470,2333"/>
+<area shape="rect" id="node38" href="$classdecaf_1_1util_1_1_map.html" title="decaf::util::Map\&lt; decaf\l::lang::Pointer\&lt; activemq\l::commands::ProducerId \&gt;,\l decaf::lang::Pointer\&lt; activemq\l::state::ProducerState \&gt; \&gt;" alt="" coords="258,2357,462,2443"/>
+<area shape="rect" id="node39" href="$classdecaf_1_1util_1_1_map.html" title="decaf::util::Map\&lt; decaf\l::lang::Pointer\&lt; activemq\l::commands::SessionId \&gt;,\l decaf::lang::Pointer\&lt; activemq\l::state::SessionState \&gt; \&gt;" alt="" coords="258,2467,462,2552"/>
+<area shape="rect" id="node40" href="$classdecaf_1_1util_1_1_map.html" title="decaf::util::Map\&lt; decaf\l::lang::Runnable *, decaf\l::util::TimerTask * \&gt;" alt="" coords="277,2576,443,2632"/>
+<area shape="rect" id="node41" href="$classdecaf_1_1util_1_1_map.html" title="decaf::util::Map\&lt; E,\l decaf::util::Set\&lt; E \&gt; * \&gt;" alt="" coords="277,2655,443,2697"/>
+<area shape="rect" id="node42" href="$classdecaf_1_1util_1_1_map.html" title="decaf::util::Map\&lt; std\l::string, activemq::cmsutil\l::CachedConsumer * \&gt;" alt="" coords="273,2720,447,2776"/>
+<area shape="rect" id="node43" href="$classdecaf_1_1util_1_1_map.html" title="decaf::util::Map\&lt; std\l::string, activemq::cmsutil\l::CachedProducer * \&gt;" alt="" coords="273,2800,447,2856"/>
+<area shape="rect" id="node44" href="$classdecaf_1_1util_1_1_map.html" title="decaf::util::Map\&lt; std\l::string, activemq::transport\l::TransportFactory * \&gt;" alt="" coords="269,2880,451,2936"/>
+<area shape="rect" id="node45" href="$classdecaf_1_1util_1_1_map.html" title="decaf::util::Map\&lt; std\l::string, activemq::util\l::PrimitiveValueNode \&gt;" alt="" coords="281,2960,439,3016"/>
+<area shape="rect" id="node46" href="$classdecaf_1_1util_1_1_map.html" title="decaf::util::Map\&lt; std\l::string, activemq::wireformat\l::WireFormatFactory * \&gt;" alt="" coords="264,3040,456,3096"/>
+<area shape="rect" id="node47" href="$classdecaf_1_1util_1_1_map.html" title="decaf::util::Map\&lt; std\l::string, cms::Queue * \&gt;" alt="" coords="279,3119,441,3161"/>
+<area shape="rect" id="node48" href="$classdecaf_1_1util_1_1_map.html" title="decaf::util::Map\&lt; std\l::string, cms::Topic * \&gt;" alt="" coords="282,3185,438,3226"/>
+<area shape="rect" id="node49" href="$classdecaf_1_1util_1_1_map.html" title="decaf::util::Map\&lt; std\l::string, PrimitiveValueNode \&gt;" alt="" coords="261,3250,459,3291"/>
+<area shape="rect" id="node3" href="$classactivemq_1_1core_1_1_fifo_message_dispatch_channel.html" title="activemq::core::FifoMessage\lDispatchChannel" alt="" coords="586,5,777,46"/>
+<area shape="rect" id="node4" href="$classactivemq_1_1core_1_1_simple_priority_message_dispatch_channel.html" title="activemq::core::SimplePriority\lMessageDispatchChannel" alt="" coords="583,70,780,111"/>
+<area shape="rect" id="node6" href="$classdecaf_1_1util_1_1_list.html" title="decaf::util::List\&lt;\l activemq::util::Primitive\lValueNode \&gt;" alt="" coords="600,135,763,191"/>
+<area shape="rect" id="node8" href="$classdecaf_1_1util_1_1_abstract_collection.html" title="decaf::util::AbstractCollection\l\&lt; activemq::util::ServiceListener * \&gt;" alt="" coords="566,214,797,255"/>
+</map>

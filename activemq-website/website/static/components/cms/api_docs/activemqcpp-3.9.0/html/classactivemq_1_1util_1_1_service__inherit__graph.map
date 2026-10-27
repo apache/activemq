@@ -1,0 +1,17 @@
+<map id="activemq::util::Service" name="activemq::util::Service">
+<area shape="rect" id="node2" href="$classactivemq_1_1transport_1_1_transport.html" title="Interface for a transport layer for command objects. " alt="" coords="237,135,371,177"/>
+<area shape="rect" id="node15" href="$classactivemq_1_1util_1_1_service_support.html" title="Provides a base class for Service implementations. " alt="" coords="205,237,403,264"/>
+<area shape="rect" id="node3" href="$classactivemq_1_1transport_1_1_composite_transport.html" title="A Composite Transport is a Transport implementation that is composed of several Transports. " alt="" coords="455,5,603,46"/>
+<area shape="rect" id="node5" href="$classactivemq_1_1transport_1_1_i_o_transport.html" title="Implementation of the Transport interface that performs marshaling of commands to IO streams..." alt="" coords="462,70,597,111"/>
+<area shape="rect" id="node6" href="$classactivemq_1_1transport_1_1mock_1_1_mock_transport.html" title="The MockTransport defines a base level Transport class that is intended to be used in place of an a r..." alt="" coords="451,135,608,177"/>
+<area shape="rect" id="node7" href="$classactivemq_1_1transport_1_1_transport_filter.html" title="A filter on the transport layer. " alt="" coords="462,201,597,242"/>
+<area shape="rect" id="node4" href="$classactivemq_1_1transport_1_1failover_1_1_failover_transport.html" title="activemq::transport\l::failover::FailoverTransport" alt="" coords="669,5,851,46"/>
+<area shape="rect" id="node8" href="$classactivemq_1_1transport_1_1correlator_1_1_response_correlator.html" title="This type of transport filter is responsible for correlating asynchronous responses with requests..." alt="" coords="656,70,864,111"/>
+<area shape="rect" id="node9" href="$classactivemq_1_1transport_1_1inactivity_1_1_inactivity_monitor.html" title="activemq::transport\l::inactivity::InactivityMonitor" alt="" coords="667,135,853,177"/>
+<area shape="rect" id="node10" href="$classactivemq_1_1transport_1_1logging_1_1_logging_transport.html" title="A transport filter that logs commands as they are sent/received. " alt="" coords="671,201,849,242"/>
+<area shape="rect" id="node11" href="$classactivemq_1_1transport_1_1tcp_1_1_tcp_transport.html" title="Implements a TCP/IP based transport filter, this transport is meant to wrap an instance of an IOTrans..." alt="" coords="693,266,827,307"/>
+<area shape="rect" id="node13" href="$classactivemq_1_1wireformat_1_1_wire_format_negotiator.html" title="Defines a WireFormatNegotiator which allows a WireFormat to. " alt="" coords="681,331,839,373"/>
+<area shape="rect" id="node12" href="$classactivemq_1_1transport_1_1tcp_1_1_ssl_transport.html" title="Transport for connecting to a Broker using an SSL Socket. " alt="" coords="970,266,1105,307"/>
+<area shape="rect" id="node14" href="$classactivemq_1_1wireformat_1_1openwire_1_1_open_wire_format_negotiator.html" title="activemq::wireformat\l::openwire::OpenWireFormatNegotiator" alt="" coords="913,331,1162,373"/>
+<area shape="rect" id="node16" href="$classactivemq_1_1threads_1_1_scheduler.html" title="Scheduler class for use in executing Runnable Tasks either periodically or one time only with optiona..." alt="" coords="462,266,597,307"/>
+</map>

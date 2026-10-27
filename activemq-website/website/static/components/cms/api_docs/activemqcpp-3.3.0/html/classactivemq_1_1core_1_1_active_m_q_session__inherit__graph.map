@@ -1,0 +1,6 @@
+<map id="G" name="G">
+<area shape="rect" id="node9" href="$classactivemq_1_1core_1_1_active_m_q_x_a_session.html" title="activemq::core::ActiveMQXASession" alt="" coords="25,237,295,267"/>
+<area shape="rect" id="node2" href="$classcms_1_1_session.html" title="A Session object is a single&#45;threaded context for producing and consuming messages." alt="" coords="13,83,123,112"/>
+<area shape="rect" id="node4" href="$classcms_1_1_closeable.html" title="Interface for a class that implements the close method." alt="" coords="5,5,131,35"/>
+<area shape="rect" id="node6" href="$classactivemq_1_1core_1_1_dispatcher.html" title="Interface for an object responsible for dispatching messages to consumers." alt="" coords="147,83,357,112"/>
+</map>

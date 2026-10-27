@@ -1,0 +1,28 @@
+var classactivemq_1_1commands_1_1_message_dispatch_notification =
+[
+    [ "MessageDispatchNotification", "classactivemq_1_1commands_1_1_message_dispatch_notification.html#a9e719bbd1d6a28f18747af012fdf6158", null ],
+    [ "~MessageDispatchNotification", "classactivemq_1_1commands_1_1_message_dispatch_notification.html#aa62536d9611321bb5f26d80cd50cb99d", null ],
+    [ "cloneDataStructure", "classactivemq_1_1commands_1_1_message_dispatch_notification.html#ac17a56f182ca56a955651876ea374137", null ],
+    [ "copyDataStructure", "classactivemq_1_1commands_1_1_message_dispatch_notification.html#a107b5b22130099ab1edfea61680283c2", null ],
+    [ "equals", "classactivemq_1_1commands_1_1_message_dispatch_notification.html#aeaca79131f6a72753b0493cdd84e3b54", null ],
+    [ "getConsumerId", "classactivemq_1_1commands_1_1_message_dispatch_notification.html#a4dcab78c922549770ace39a420a5baa7", null ],
+    [ "getConsumerId", "classactivemq_1_1commands_1_1_message_dispatch_notification.html#a455e7be70e8416a5dc69bbbd61cf81d8", null ],
+    [ "getDataStructureType", "classactivemq_1_1commands_1_1_message_dispatch_notification.html#a8b786461cfac6aa83af97eea011b313e", null ],
+    [ "getDeliverySequenceId", "classactivemq_1_1commands_1_1_message_dispatch_notification.html#ade198b7620f7acd0da8ec68833bd1e96", null ],
+    [ "getDestination", "classactivemq_1_1commands_1_1_message_dispatch_notification.html#a27bf5b6bbf775d9831c2d7179d104540", null ],
+    [ "getDestination", "classactivemq_1_1commands_1_1_message_dispatch_notification.html#adbd40e4d11b9e17b2e4e5bef7e88d2f9", null ],
+    [ "getMessageId", "classactivemq_1_1commands_1_1_message_dispatch_notification.html#ad0bed6e9094e2d64c4ff8fc6c8bd0f14", null ],
+    [ "getMessageId", "classactivemq_1_1commands_1_1_message_dispatch_notification.html#a78968906b893743f2a6c8df83546646d", null ],
+    [ "isMessageDispatchNotification", "classactivemq_1_1commands_1_1_message_dispatch_notification.html#ab08e81ad50705649869bb04ab0d57ae7", null ],
+    [ "setConsumerId", "classactivemq_1_1commands_1_1_message_dispatch_notification.html#a65b753bff326769affdcd052b38d018d", null ],
+    [ "setDeliverySequenceId", "classactivemq_1_1commands_1_1_message_dispatch_notification.html#a324dd64abb745b1479768277c9fd83dd", null ],
+    [ "setDestination", "classactivemq_1_1commands_1_1_message_dispatch_notification.html#a22731eaf6b0aa8db4ab7b2432b4c0f34", null ],
+    [ "setMessageId", "classactivemq_1_1commands_1_1_message_dispatch_notification.html#a19884d820fb165f825d7c90d1303755f", null ],
+    [ "toString", "classactivemq_1_1commands_1_1_message_dispatch_notification.html#aef062f3efa344c64f1adf5d5e65258a2", null ],
+    [ "visit", "classactivemq_1_1commands_1_1_message_dispatch_notification.html#a175b04b6e1e741479f25e78d7ac5a3c9", null ],
+    [ "consumerId", "classactivemq_1_1commands_1_1_message_dispatch_notification.html#a836f06da7518a64e6ccc17d1ed4e3e5f", null ],
+    [ "deliverySequenceId", "classactivemq_1_1commands_1_1_message_dispatch_notification.html#aa9fa1b93917fe2a0304da708852dd1d7", null ],
+    [ "destination", "classactivemq_1_1commands_1_1_message_dispatch_notification.html#a16013e08dce56bc6bed5d6c3da1bdc45", null ],
+    [ "ID_MESSAGEDISPATCHNOTIFICATION", "classactivemq_1_1commands_1_1_message_dispatch_notification.html#a61a83e7cd859917e8121dafe1e74ded2", null ],
+    [ "messageId", "classactivemq_1_1commands_1_1_message_dispatch_notification.html#ab7a9776aee12276609d74457a0ad769f", null ]
+];

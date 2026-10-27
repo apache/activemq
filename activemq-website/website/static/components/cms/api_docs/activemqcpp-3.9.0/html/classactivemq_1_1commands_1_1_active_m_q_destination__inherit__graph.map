@@ -1,0 +1,11 @@
+<map id="activemq::commands::ActiveMQDestination" name="activemq::commands::ActiveMQDestination">
+<area shape="rect" id="node6" href="$classactivemq_1_1commands_1_1_active_m_q_queue.html" title="activemq::commands\l::ActiveMQQueue" alt="" coords="833,5,980,46"/>
+<area shape="rect" id="node7" href="$classactivemq_1_1commands_1_1_active_m_q_temp_destination.html" title="activemq::commands\l::ActiveMQTempDestination" alt="" coords="813,70,1000,111"/>
+<area shape="rect" id="node10" href="$classactivemq_1_1commands_1_1_active_m_q_topic.html" title="activemq::commands\l::ActiveMQTopic" alt="" coords="833,135,980,177"/>
+<area shape="rect" id="node2" href="$classactivemq_1_1commands_1_1_base_data_structure.html" title="activemq::commands\l::BaseDataStructure" alt="" coords="404,37,551,78"/>
+<area shape="rect" id="node3" href="$classactivemq_1_1commands_1_1_data_structure.html" title="activemq::commands\l::DataStructure" alt="" coords="197,37,344,78"/>
+<area shape="rect" id="node4" href="$classactivemq_1_1wireformat_1_1_marshal_aware.html" title="activemq::wireformat\l::MarshalAware" alt="" coords="5,37,149,78"/>
+<area shape="rect" id="node5" href="$classdecaf_1_1lang_1_1_comparable.html" title="decaf::lang::Comparable\l\&lt; ActiveMQDestination \&gt;" alt="" coords="392,102,563,143"/>
+<area shape="rect" id="node8" href="$classactivemq_1_1commands_1_1_active_m_q_temp_queue.html" title="activemq::commands\l::ActiveMQTempQueue" alt="" coords="1049,38,1207,79"/>
+<area shape="rect" id="node9" href="$classactivemq_1_1commands_1_1_active_m_q_temp_topic.html" title="activemq::commands\l::ActiveMQTempTopic" alt="" coords="1051,103,1205,145"/>
+</map>

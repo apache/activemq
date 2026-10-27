@@ -1,0 +1,5 @@
+<map id="decaf::util::logging::Handler" name="decaf::util::logging::Handler">
+<area shape="rect" id="node3" href="$classdecaf_1_1util_1_1logging_1_1_stream_handler.html" title="Stream based logging Handler. " alt="" coords="11,171,139,213"/>
+<area shape="rect" id="node2" href="$classdecaf_1_1io_1_1_closeable.html" title="Interface for a class that implements the close method. " alt="" coords="5,5,144,32"/>
+<area shape="rect" id="node4" href="$classdecaf_1_1util_1_1logging_1_1_console_handler.html" title="This Handler publishes log records to System.err. " alt="" coords="11,262,139,303"/>
+</map>

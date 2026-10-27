@@ -1,0 +1,4 @@
+<map id="decaf::internal::security::provider::crypto::MD4MessageDigestSpi" name="decaf::internal::security::provider::crypto::MD4MessageDigestSpi">
+<area shape="rect" id="node2" href="$classdecaf_1_1security_1_1_message_digest_spi.html" title="This class defines the Service Provider Interface (SPI) for the MessageDigest class, which provides the functionality of a message digest algorithm, such as MD5 or SHA. " alt="" coords="25,81,193,122"/>
+<area shape="rect" id="node3" href="$classdecaf_1_1security_1_1_security_spi.html" title="Base class used as a Marker for all Security Provider Interface classes in the Decaf Security API..." alt="" coords="18,5,200,32"/>
+</map>

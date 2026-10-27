@@ -1,0 +1,26 @@
+---
+title: ActiveMQ 6.2.8 Release
+version: 6.2.8
+release_date: 2026-07-27
+java_version: 17+
+release_notes: https://github.com/apache/activemq/releases/tag/activemq-6.2.8
+shortDescription: ActiveMQ 6.2.8 is a maintenance release on the 6.2.x series.
+---
+
+import ClassicRelease from '@site/src/components/ClassicRelease';
+
+<ClassicRelease frontMatter={frontMatter}>
+
+Apache ActiveMQ 6.2.8 was released on Jul 27th, 2026.
+
+This is an important maintenance release on the 6.2.x series.
+It especially includes:
+- Add better frame size validation for AMQP
+- Prevent cursor from using more than 100% temp store
+- Fire message discarded advisory on format errors
+- Add metrics about error and reconnect counts to network connector
+- Expose NetworkConnector URI and local URI in JMX MBean
+
+You can find details on the [release notes](https://github.com/apache/activemq/releases/tag/activemq-6.2.8).
+
+</ClassicRelease>

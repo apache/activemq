@@ -1,0 +1,6 @@
+<map id="G" name="G">
+<area shape="rect" id="node5" href="$classactivemq_1_1transport_1_1failover_1_1_backup_transport_pool.html" title="activemq::transport::failover::BackupTransportPool" alt="" coords="548,5,913,35"/>
+<area shape="rect" id="node7" href="$classactivemq_1_1transport_1_1failover_1_1_close_transports_task.html" title="activemq::transport::failover::CloseTransportsTask" alt="" coords="549,59,912,88"/>
+<area shape="rect" id="node9" href="$classactivemq_1_1transport_1_1failover_1_1_failover_transport.html" title="activemq::transport::failover::FailoverTransport" alt="" coords="560,112,901,141"/>
+<area shape="rect" id="node2" href="$classactivemq_1_1threads_1_1_task.html" title="Represents a unit of work that requires one or more iterations to complete." alt="" coords="5,59,192,88"/>
+</map>

@@ -1,0 +1,5 @@
+<map id="activemq::core::MessageDispatchChannel" name="activemq::core::MessageDispatchChannel">
+<area shape="rect" id="node5" href="$classactivemq_1_1core_1_1_fifo_message_dispatch_channel.html" title="activemq::core::FifoMessage\lDispatchChannel" alt="" coords="463,5,647,49"/>
+<area shape="rect" id="node7" href="$classactivemq_1_1core_1_1_simple_priority_message_dispatch_channel.html" title="activemq::core::SimplePriority\lMessageDispatchChannel" alt="" coords="460,71,649,115"/>
+<area shape="rect" id="node2" href="$classdecaf_1_1util_1_1concurrent_1_1_synchronizable.html" title="The interface for all synchronizable objects (that is, objects that can be locked and unlocked)..." alt="" coords="5,38,149,82"/>
+</map>

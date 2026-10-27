@@ -1,0 +1,26 @@
+---
+title: ActiveMQ 6.1.0 Release
+version: 6.1.0
+release_date: 2024-03-15
+java_version: 17+
+release_notes: https://issues.apache.org/jira/secure/ReleaseNote.jspa?projectId=12311210&version=12353745
+shortDescription: Classic 6.1.0 is a major release for ActiveMQ, starting the 6.x series.
+---
+
+import ClassicRelease from '@site/src/components/ClassicRelease';
+
+<ClassicRelease frontMatter={frontMatter}>
+
+Apache ActiveMQ 6.1.0 was released on Mar 15th, 2024.
+
+It's a major release for the project, especially bringing:
+- New JMS 2/3 operations support
+- Mapping javax / jakarta exception in openwire protocol
+- Add destination field on the job scheduler
+- Add org.apache.activemq.broker.BouncyCastleNotAdded property to control the bouncycastle addition in BrokerService classloader
+- A lot of dependency upgrades (Spring 6.1.4, log4j 2.23.0, Jetty 11.0.20, ...)
+- and much more !
+
+You can find details on the [release notes](https://issues.apache.org/jira/secure/ReleaseNote.jspa?projectId=12311210&version=12353745).
+
+</ClassicRelease>

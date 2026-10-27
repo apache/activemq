@@ -1,0 +1,4 @@
+<map id="activemq::transport::failover::CloseTransportsTask" name="activemq::transport::failover::CloseTransportsTask">
+<area shape="rect" id="node2" href="$classactivemq_1_1threads_1_1_composite_task.html" title="Represents a single task that can be part of a set of Tasks that are contained in a CompositeTaskRunn..." alt="" coords="40,83,165,127"/>
+<area shape="rect" id="node4" href="$classactivemq_1_1threads_1_1_task.html" title="Represents a unit of work that requires one or more iterations to complete." alt="" coords="25,6,180,34"/>
+</map>

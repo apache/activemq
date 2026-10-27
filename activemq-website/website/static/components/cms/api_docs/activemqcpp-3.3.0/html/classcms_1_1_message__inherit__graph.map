@@ -1,0 +1,20 @@
+<map id="G" name="G">
+<area shape="rect" id="node3" href="$classactivemq_1_1commands_1_1_active_m_q_message_template.html" title="activemq::commands::ActiveMQMessageTemplate\&lt; cms::Message \&gt;" alt="" coords="175,59,671,88"/>
+<area shape="rect" id="node9" href="$classcms_1_1_bytes_message.html" title="A BytesMessage object is used to send a message containing a stream of unsigned bytes." alt="" coords="343,112,503,141"/>
+<area shape="rect" id="node15" href="$classcms_1_1_map_message.html" title="A MapMessage object is used to send a set of name&#45;value pairs." alt="" coords="349,165,496,195"/>
+<area shape="rect" id="node21" href="$classcms_1_1_object_message.html" title="Place holder for interaction with JMS systems that support Java, the C++ client is not responsible fo..." alt="" coords="340,219,505,248"/>
+<area shape="rect" id="node27" href="$classcms_1_1_stream_message.html" title="Interface for a StreamMessage." alt="" coords="337,272,508,301"/>
+<area shape="rect" id="node33" href="$classcms_1_1_text_message.html" title="Interface for a text message." alt="" coords="348,325,497,355"/>
+<area shape="rect" id="node5" href="$classactivemq_1_1commands_1_1_active_m_q_blob_message.html" title="activemq::commands::ActiveMQBlobMessage" alt="" coords="827,5,1160,35"/>
+<area shape="rect" id="node7" href="$classactivemq_1_1commands_1_1_active_m_q_message.html" title="activemq::commands::ActiveMQMessage" alt="" coords="840,59,1147,88"/>
+<area shape="rect" id="node11" href="$classactivemq_1_1commands_1_1_active_m_q_message_template.html" title="activemq::commands::ActiveMQMessageTemplate\&lt; cms::BytesMessage \&gt;" alt="" coords="724,112,1263,141"/>
+<area shape="rect" id="node13" href="$classactivemq_1_1commands_1_1_active_m_q_bytes_message.html" title="activemq::commands::ActiveMQBytesMessage" alt="" coords="1320,112,1667,141"/>
+<area shape="rect" id="node17" href="$classactivemq_1_1commands_1_1_active_m_q_message_template.html" title="activemq::commands::ActiveMQMessageTemplate\&lt; cms::MapMessage \&gt;" alt="" coords="731,165,1256,195"/>
+<area shape="rect" id="node19" href="$classactivemq_1_1commands_1_1_active_m_q_map_message.html" title="activemq::commands::ActiveMQMapMessage" alt="" coords="1327,165,1660,195"/>
+<area shape="rect" id="node23" href="$classactivemq_1_1commands_1_1_active_m_q_message_template.html" title="activemq::commands::ActiveMQMessageTemplate\&lt; cms::ObjectMessage \&gt;" alt="" coords="721,219,1265,248"/>
+<area shape="rect" id="node25" href="$classactivemq_1_1commands_1_1_active_m_q_object_message.html" title="activemq::commands::ActiveMQObjectMessage" alt="" coords="1317,219,1669,248"/>
+<area shape="rect" id="node29" href="$classactivemq_1_1commands_1_1_active_m_q_message_template.html" title="activemq::commands::ActiveMQMessageTemplate\&lt; cms::StreamMessage \&gt;" alt="" coords="720,272,1267,301"/>
+<area shape="rect" id="node31" href="$classactivemq_1_1commands_1_1_active_m_q_stream_message.html" title="activemq::commands::ActiveMQStreamMessage" alt="" coords="1316,272,1671,301"/>
+<area shape="rect" id="node35" href="$classactivemq_1_1commands_1_1_active_m_q_message_template.html" title="activemq::commands::ActiveMQMessageTemplate\&lt; cms::TextMessage \&gt;" alt="" coords="731,325,1256,355"/>
+<area shape="rect" id="node37" href="$classactivemq_1_1commands_1_1_active_m_q_text_message.html" title="activemq::commands::ActiveMQTextMessage" alt="" coords="1325,325,1661,355"/>
+</map>

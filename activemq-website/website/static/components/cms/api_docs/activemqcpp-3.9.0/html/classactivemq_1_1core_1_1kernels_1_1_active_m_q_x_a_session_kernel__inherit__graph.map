@@ -1,0 +1,9 @@
+<map id="activemq::core::kernels::ActiveMQXASessionKernel" name="activemq::core::kernels::ActiveMQXASessionKernel">
+<area shape="rect" id="node2" href="$classcms_1_1_x_a_session.html" title="The XASession interface extends the capability of Session by adding access to a CMS provider&#39;s suppor..." alt="" coords="205,163,325,189"/>
+<area shape="rect" id="node3" href="$classcms_1_1_session.html" title="A Session object is a single&#45;threaded context for producing and consuming messages. " alt="" coords="211,80,313,107"/>
+<area shape="rect" id="node7" href="$classactivemq_1_1core_1_1kernels_1_1_active_m_q_session_kernel.html" title="activemq::core::kernels\l::ActiveMQSessionKernel" alt="" coords="9,155,180,197"/>
+<area shape="rect" id="node4" href="$classcms_1_1_closeable.html" title="Interface for a class that implements the close method. " alt="" coords="71,5,184,32"/>
+<area shape="rect" id="node5" href="$classcms_1_1_startable.html" title="Interface for a class that implements the start method. " alt="" coords="209,5,316,32"/>
+<area shape="rect" id="node6" href="$classcms_1_1_stoppable.html" title="Interface for a class that implements the stop method. " alt="" coords="341,5,453,32"/>
+<area shape="rect" id="node8" href="$classactivemq_1_1core_1_1_dispatcher.html" title="Interface for an object responsible for dispatching messages to consumers. " alt="" coords="5,80,184,107"/>
+</map>

@@ -1,0 +1,11 @@
+<map id="decaf::util::AbstractQueue&lt; E &gt;" name="decaf::util::AbstractQueue&lt; E &gt;">
+<area shape="rect" id="node14" href="$classdecaf_1_1util_1_1concurrent_1_1_blocking_queue.html" title="A decaf::util::Queue that additionally supports operations that wait for the queue to become non&#45;empt..." alt="" coords="972,38,1119,82"/>
+<area shape="rect" id="node20" href="$classdecaf_1_1util_1_1_priority_queue.html" title="An unbounded priority queue based on a binary heap algorithm." alt="" coords="951,105,1140,133"/>
+<area shape="rect" id="node2" href="$classdecaf_1_1util_1_1_queue.html" title="A kind of collection provides advanced operations than other basic collections, such as insertion..." alt="" coords="469,50,619,78"/>
+<area shape="rect" id="node4" href="$classdecaf_1_1util_1_1_collection.html" title="The root interface in the collection hierarchy." alt="" coords="216,75,387,103"/>
+<area shape="rect" id="node10" href="$classdecaf_1_1util_1_1_abstract_collection.html" title="This class provides a skeletal implementation of the Collection interface, to minimize the effort req..." alt="" coords="435,101,653,129"/>
+<area shape="rect" id="node6" href="$classdecaf_1_1lang_1_1_iterable.html" title="Implementing this interface allows an object to be cast to an Iterable type for generic collections A..." alt="" coords="5,46,168,74"/>
+<area shape="rect" id="node8" href="$classdecaf_1_1util_1_1concurrent_1_1_synchronizable.html" title="The interface for all synchronizable objects (that is, objects that can be locked and unlocked)..." alt="" coords="15,97,159,141"/>
+<area shape="rect" id="node16" href="$classdecaf_1_1util_1_1concurrent_1_1_linked_blocking_queue.html" title="A BlockingQueue derivative that allows for a bound to be placed on the number of elements that can be..." alt="" coords="1189,5,1373,49"/>
+<area shape="rect" id="node18" href="$classdecaf_1_1util_1_1concurrent_1_1_synchronous_queue.html" title="A blocking queue in which each insert operation must wait for a corresponding remove operation by ano..." alt="" coords="1196,71,1367,115"/>
+</map>

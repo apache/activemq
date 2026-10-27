@@ -1,0 +1,29 @@
+---
+title: Support
+---
+
+# Support
+
+Support is divided into two main categories - **community** and **commercial**.
+
+#### Community Support
+
+This is an open source project so the amount of time community members have available to help resolve your issue is often limited as help is provided on a volunteer basis from [individuals](https://www.apache.org/foundation/how-it-works/#hats). However, it is *free* and you are often able to discuss issues with the developers who actually wrote the code you are running.
+
+If you want community support then please [contact us](contact). If you're fairly certain you're hitting a bug [please report it](issues) via one of our issue trackers. Be sure to review these pages carefully as they contain tips and tricks about working with Apache communities in general and ActiveMQ in particular.
+
+#### Commercial Support {#commercial-support}
+
+If you want to get priority help, need to get up to speed quickly, require some training or mentoring, or need full 24 x 7 production support you should contact a commercial company specializing in ActiveMQ support such as...
+
+* [apifocal](https://apifocal.com) is a Professional Services company. Headquartered near Washington, DC, USA, APIfocal provides consulting and training for leveraging the Apache Integration stack and commercial ESBs at large scale, adding automation and devops capabilities.
+* [Amazon Web Services](https://aws.amazon.com/) provides [Amazon MQ](https://aws.amazon.com/amazon-mq/), a managed message broker service for Apache ActiveMQ "Classic" in the cloud. Amazon MQ manages the work involved in setting up an ActiveMQ message broker, from provisioning the infrastructure capacity you request–including server instances and storage–to installing the broker software itself. Once your broker is up and running, Amazon MQ automates common administrative tasks such as patching the operating system and ActiveMQ software.
+* [Avada Software](https://avadasoftware.com) provides Infrared360, a commercial monitoring and management solution that helps enterprise teams support Apache ActiveMQ and Apache Kafka environments. From a secure, agentless interface, Infrared360 gives middleware, operations, application, and support teams real-time visibility, alerting, delegated administration, dashboards, reporting, auditing, and synthetic transaction testing. It helps teams monitor, manage, troubleshoot, and validate brokers, queues, topics, partitions, consumers, producers, consumer groups, logs, and key performance indicators. Learn more about [Infrared360 support for Apache here](https://avadasoftware.com/apache-support-for-activemq-kafka-infrared360/).
+* [HYTE Technologies](https://hyte.io/) provides [commercial support for Apache ActiveMQ](https://hyte.io/activemq-support) to enterprise customers, including patches, version upgrades, configuration guidance, and architecture reviews under both business-hours and 24x7 plans. HYTE engineers contribute fixes back to the Apache ActiveMQ project and deliver sample code and best-practice guidance for development, operations, and security teams. The [HYTE Console](https://hyte.io/hyte-console) adds web-based management for ActiveMQ brokers, with message search, role-based access control, audit logging, and centralized administration across many brokers from a single installation.
+* [meshIQ](https://www.meshiq.com/) provides expert support for Apache ActiveMQ and Apache Artemis, ensuring optimal performance and reliability. Their services include proactive monitoring, troubleshooting, and rapid issue resolution. With an integration ActiveMQ/Artemis console, meshIQ offers enhanced visibility into your ActiveMQ and Artemis brokers, simplifying management and reducing downtime. Learn more about [meshIQ's comprehensive Apache ActiveMQ and Apache Artemis support here](https://www.meshiq.com/meshiq-activemq-console).
+* [OpenLogic](http://www.openlogic.com/) by Perforce has a team of ActiveMQ experts ready to help you, providing 24/7 support for troubleshooting issues and outages, consulting on architecture and design, instructor-led hands-on training. In addition to supporting many Apache packages OpenLogic's enterprise architects have expertise in over 400 open source packages.
+* [Red Hat](https://developers.redhat.com/products/amq/overview) offers AMQ Broker, a supported distribution of Apache ActiveMQ that includes enterprise developer and production support as well as training and consultancy for enterprise deployments.
+* [Savoir Technologies, Inc](http://www.savoirtech.com) provides enterprise consulting, training and support for ActiveMQ "Classic", ActiveMQ Artemis, and a host of other Apache service containers. Savoir can provide best practice mentoring for developing with ActiveMQ and ActiveMQ Artemis, as well as architectural/design reviews, troubleshooting and SOA infrastructure implementations. Savoir's staff includes some of the contributors of ActiveMQ and ActiveMQ Artemis who are on the ground consulting and are familiar with real world implementations and issues.
+* [Total Transaction Management (TTM)](http://www.ttmsolutions.com/) provides ActiveMQ consulting and support, as well as security and [monitoring](http://www.ttmsolutions.com/Transactional_Software_Solutions/Active_Monitor_AMon.php/) add-on products and [reference guide](http://www.ttmsolutions.com/Apache_Software/ActiveMQ_Reference_Guide.php) for ActiveMQ.
+* [Tomitribe](http://tomitribe.com) are experts in Tomcat and ActiveMQ integration, champions of Open Source and Java EE. Tomitribe offers consulting, training and support for TomEE, Tomcat, ActiveMQ, CXF and more.
+* [Yupiik](https://www.yupiik.com) contributes and commits to the Apache ActiveMQ project. Provides consulting, training and support for Apache ActiveMQ and related projects like Apache Karaf, Apache Camel, Apache Kafka, Apache Unomi.

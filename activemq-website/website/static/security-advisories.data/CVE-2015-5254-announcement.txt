@@ -1,0 +1,28 @@
+CVE-2015-5254 - Unsafe deserialization in ActiveMQ
+
+Severity: Important
+
+Vendor:
+The Apache Software Foundation
+
+Versions Affected:
+Apache ActiveMQ 5.0.0 - 5.12.1
+
+Description:
+
+JMS Object messages depends on Java Serialization for marshaling/unmashaling of the message payload. There are a couple of places inside the broker where deserialization can occur, like web console or stomp object message transformation. As deserialization of untrusted data can leaed to security flaws as demonstrated in various reports, this leaves the broker vunerable to this attack vector. Additionally, applications that consume ObjectMessage type of messages can be vunerable as they deserlize objects on ObjectMessage.getObject() calls.
+
+Mitigation:
+
+Upgrade to Apache ActiveMQ 5.13.0. Additionally if you're using ObjectMessage message type, you need to explicitly list trusted packages. To see how to do that, please take a look at: http://activemq.apache.org/objectmessage.html
+
+
+
+Credit:
+This issue was discovered by:
+
+* Alvaro Muñoz   -   @pwntester
+* Matthias Kaiser   -   @matthias_kaiser
+* Christian Schneider   -   @cschneider4711
+
+Special thanks to Matthias Kaiser for providing the detailed analysis of the vunerability.

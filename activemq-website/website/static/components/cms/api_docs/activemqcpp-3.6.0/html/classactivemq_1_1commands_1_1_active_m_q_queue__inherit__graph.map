@@ -1,0 +1,9 @@
+<map id="activemq::commands::ActiveMQQueue" name="activemq::commands::ActiveMQQueue">
+<area shape="rect" id="node2" href="$classactivemq_1_1commands_1_1_active_m_q_destination.html" title="activemq::commands\l::ActiveMQDestination" alt="" coords="600,71,749,115"/>
+<area shape="rect" id="node4" href="$classactivemq_1_1commands_1_1_base_data_structure.html" title="activemq::commands\l::BaseDataStructure" alt="" coords="399,5,540,49"/>
+<area shape="rect" id="node6" href="$classactivemq_1_1commands_1_1_data_structure.html" title="activemq::commands\l::DataStructure" alt="" coords="196,5,337,49"/>
+<area shape="rect" id="node8" href="$classactivemq_1_1wireformat_1_1_marshal_aware.html" title="activemq::wireformat\l::MarshalAware" alt="" coords="7,5,145,49"/>
+<area shape="rect" id="node10" href="$classdecaf_1_1lang_1_1_comparable.html" title="decaf::lang::Comparable\l\&lt; ActiveMQDestination \&gt;" alt="" coords="387,71,552,115"/>
+<area shape="rect" id="node12" href="$classcms_1_1_queue.html" title="An interface encapsulating a provider&#45;specific queue name." alt="" coords="629,138,720,166"/>
+<area shape="rect" id="node14" href="$classcms_1_1_destination.html" title="A Destination object encapsulates a provider&#45;specific address." alt="" coords="412,138,527,166"/>
+</map>

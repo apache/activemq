@@ -1,0 +1,6 @@
+<map id="decaf::util::concurrent::RejectedExecutionHandler" name="decaf::util::concurrent::RejectedExecutionHandler">
+<area shape="rect" id="node2" href="$classdecaf_1_1util_1_1concurrent_1_1_thread_pool_executor_1_1_abort_policy.html" title="Handler policy for tasks that are rejected upon a call to ThreadPoolExecutor::execute this class alwa..." alt="" coords="241,5,397,61"/>
+<area shape="rect" id="node3" href="$classdecaf_1_1util_1_1concurrent_1_1_thread_pool_executor_1_1_caller_runs_policy.html" title="Handler policy for tasks that are rejected upon a call to ThreadPoolExecutor::execute this class will..." alt="" coords="241,85,397,141"/>
+<area shape="rect" id="node4" href="$classdecaf_1_1util_1_1concurrent_1_1_thread_pool_executor_1_1_discard_oldest_policy.html" title="Handler policy for tasks that are rejected upon a call to ThreadPoolExecutor::execute this class alwa..." alt="" coords="241,165,397,221"/>
+<area shape="rect" id="node5" href="$classdecaf_1_1util_1_1concurrent_1_1_thread_pool_executor_1_1_discard_policy.html" title="Handler policy for tasks that are rejected upon a call to ThreadPoolExecutor::execute this class alwa..." alt="" coords="241,245,397,301"/>
+</map>

@@ -1,0 +1,23 @@
+---
+title: ActiveMQ 6.1.5 Release
+version: 6.1.5
+release_date: 2025-01-13
+java_version: 17+
+release_notes: https://issues.apache.org/jira/secure/ReleaseNote.jspa?projectId=12311210&version=12355276
+shortDescription: Classic 6.1.5 is a maintanance release for ActiveMQ, on the 6.1.x series.
+---
+
+import ClassicRelease from '@site/src/components/ClassicRelease';
+
+<ClassicRelease frontMatter={frontMatter}>
+
+Apache ActiveMQ 6.1.5 was released on Jan 13th, 2025.
+
+It's a maintenance release especially bringing:
+- messages (in specific circumstances) can become stuck in queues
+- remove commons-io use (replaced by JDK methods)
+- several dependency updates, especially Spring 6.1.16, Jackson 2.18.2, Jolokia 2.1.2 (removing json-simple dependency), xstream 1.4.21
+
+You can find details on the [release notes](https://issues.apache.org/jira/secure/ReleaseNote.jspa?projectId=12311210&version=12355276).
+
+</ClassicRelease>

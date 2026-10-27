@@ -1,0 +1,5 @@
+<map id="activemq::exceptions::ConnectionFailedException" name="activemq::exceptions::ConnectionFailedException">
+<area shape="rect" id="node2" href="$classactivemq_1_1exceptions_1_1_active_m_q_exception.html" title="activemq::exceptions\l::ActiveMQException" alt="" coords="27,230,173,271"/>
+<area shape="rect" id="node3" href="$classdecaf_1_1lang_1_1_exception.html" title="decaf::lang::Exception" alt="" coords="24,155,176,181"/>
+<area shape="rect" id="node4" href="$classdecaf_1_1lang_1_1_throwable.html" title="This class represents an error that has occurred. " alt="" coords="23,80,176,107"/>
+</map>

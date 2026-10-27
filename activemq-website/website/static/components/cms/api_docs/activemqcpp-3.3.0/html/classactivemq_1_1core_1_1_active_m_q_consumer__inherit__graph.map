@@ -1,0 +1,5 @@
+<map id="G" name="G">
+<area shape="rect" id="node2" href="$classcms_1_1_message_consumer.html" title="A client uses a MessageConsumer to received messages from a destination." alt="" coords="5,83,192,112"/>
+<area shape="rect" id="node4" href="$classcms_1_1_closeable.html" title="Interface for a class that implements the close method." alt="" coords="36,5,161,35"/>
+<area shape="rect" id="node6" href="$classactivemq_1_1core_1_1_dispatcher.html" title="Interface for an object responsible for dispatching messages to consumers." alt="" coords="216,83,427,112"/>
+</map>

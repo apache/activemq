@@ -1,0 +1,4 @@
+<area shape="rect" href="$classcms_1_1_bytes_message.html" title="cms::BytesMessage" alt="" coords="5,84,165,111">
+<area shape="rect" href="$classcms_1_1_map_message.html" title="A MapMessage object is used to send a set of name&#45;value pairs." alt="" coords="189,84,341,111">
+<area shape="rect" href="$classcms_1_1_object_message.html" title="cms::ObjectMessage" alt="" coords="365,84,533,111">
+<area shape="rect" href="$classcms_1_1_text_message.html" title="Interface for a text message." alt="" coords="557,84,709,111">

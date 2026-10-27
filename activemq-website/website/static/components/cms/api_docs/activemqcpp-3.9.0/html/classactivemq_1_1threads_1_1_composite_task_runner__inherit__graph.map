@@ -1,0 +1,5 @@
+<map id="activemq::threads::CompositeTaskRunner" name="activemq::threads::CompositeTaskRunner">
+<area shape="rect" id="node2" href="$classactivemq_1_1threads_1_1_task_runner.html" title="activemq::threads::\lTaskRunner" alt="" coords="5,6,139,47"/>
+<area shape="rect" id="node3" href="$classactivemq_1_1threads_1_1_task.html" title="Represents a unit of work that requires one or more iterations to complete. " alt="" coords="164,13,327,40"/>
+<area shape="rect" id="node4" href="$classdecaf_1_1lang_1_1_runnable.html" title="Interface for a runnable object &#45; defines a task that can be run by a thread. " alt="" coords="351,13,499,40"/>
+</map>

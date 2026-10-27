@@ -1,0 +1,27 @@
+digraph "ActiveMQ Connections" {
+
+label="ActiveMQ Broker: ID:macstrac.local-59822-1143567869845-0:0"];
+
+node [style = "rounded,filled", fillcolor = yellow, fontname="Helvetica-Oblique"];
+
+ID_macstrac_local_59822_1143567869845_4_0_1_1 -> ID_macstrac_local_59822_1143567869845_4_0;
+queue_Orders_IBM -> ID_macstrac_local_59822_1143567869845_4_0_1_1;
+ID_macstrac_local_59822_1143567869845_4_0_1_1 [label = "Subscription: 1-1"];
+ID_macstrac_local_59822_1143567869845_4_0_2_1 -> ID_macstrac_local_59822_1143567869845_4_0;
+queue_Orders_MSFT -> ID_macstrac_local_59822_1143567869845_4_0_2_1;
+ID_macstrac_local_59822_1143567869845_4_0_2_1 [label = "Subscription: 2-1\nSelector: price > 200"];
+ID_macstrac_local_59822_1143567869845_4_0_1_2 -> ID_macstrac_local_59822_1143567869845_4_0;
+queue_Orders_MSFT -> ID_macstrac_local_59822_1143567869845_4_0_1_2;
+ID_macstrac_local_59822_1143567869845_4_0_1_2 [label = "Subscription: 1-2\nSelector: price > 100"];
+
+
+ID_macstrac_local_59822_1143567869845_3_1 -> ID_macstrac_local_59822_1143567869845_3_1_1_1;
+ID_macstrac_local_59822_1143567869845_3_1_1_1 -> queue_Orders_MSFT;
+ID_macstrac_local_59822_1143567869845_3_1_1_1 [label = "Producer: 1-1"];
+
+ID_macstrac_local_59822_1143567869845_4_0 [ fillcolor = green, label = "Client: ID:macstrac.local-59822-1143567869845-4:0"];
+ID_macstrac_local_59822_1143567869845_3_1 [ fillcolor = green, label = "Client: ID:macstrac.local-59822-1143567869845-3:1"];
+
+queue_Orders_MSFT [ fillcolor = red, label = "Queue: Orders.MSFT"];
+queue_Orders_IBM [ fillcolor = red, label = "Queue: Orders.IBM"];
+}
