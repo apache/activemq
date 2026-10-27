@@ -66,6 +66,12 @@
       <scope>provided</scope>
     </dependency>
 
+    <dependency>
+      <groupId>com.github.ben-manes.caffeine</groupId>
+      <artifactId>caffeine</artifactId>
+      <version>3.2.4</version>
+    </dependency>
+
     <!-- =============================== -->
     <!-- Testing Dependencies -->
     <!-- =============================== -->
@@ -206,6 +212,7 @@
               !org.apache.activemq*,
               !com.google.errorprone.annotations,
               !com.google.errorprone.annotations.concurrent,
+              com.github.benmanes.caffeine.*;resolution:="optional",
               com.thoughtworks.xstream.*;resolution:="optional",
               javax.jmdns.*;resolution:="optional",
               *
