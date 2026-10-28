@@ -180,6 +180,11 @@ public class ActiveMQBlobMessage extends ActiveMQMessage implements BlobMessage 
     }
     
     public void deleteFile() throws IOException, JMSException {
+        // mirror getInputStream(): a message without a downloader (e.g. one
+        // created producer-side) has no remote BLOB to delete
+        if (blobDownloader == null) {
+            return;
+        }
         blobDownloader.deleteFile(this);
     }
 }
