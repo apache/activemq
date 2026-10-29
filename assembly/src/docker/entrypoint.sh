@@ -109,5 +109,14 @@ trap _term TERM INT
 "$@" &
 child_pid=$!
 wait "${child_pid}"
+status=$?
 
-exit $?
+# A trapped signal interrupts the first wait while the broker is still shutting
+# down; wait again so PID 1 stays alive until the broker exits.
+if kill -0 "${child_pid}" 2>/dev/null; then
+  trap - TERM INT
+  wait "${child_pid}"
+  status=$?
+fi
+
+exit "${status}"
