@@ -150,6 +150,7 @@ public class BrokerService implements Service {
     private boolean populateJMSXUserID;
     private boolean useAuthenticatedPrincipalForJMSXUserID;
     private boolean populateUserNameInMBeans;
+    private boolean useAuthenticatedPrincipalForUserNameInMBeans;
     private long mbeanInvocationTimeout = 0;
 
     private boolean useShutdownHook = true;
@@ -3180,6 +3181,29 @@ public class BrokerService implements Service {
      */
     public void setPopulateUserNameInMBeans(boolean value) {
         this.populateUserNameInMBeans = value;
+    }
+
+    /**
+     * Should the user name shown in MBeans fall back to the authenticated
+     * principal from the connection's SecurityContext when the client did
+     * not supply a user name, for example a connection authenticated by
+     * SSL certificate or anonymous access. Only used when
+     * populateUserNameInMBeans is enabled; a user name supplied by the
+     * client is never replaced.
+     *
+     * @return true if the authenticated principal fills in a missing user name
+     */
+    public boolean isUseAuthenticatedPrincipalForUserNameInMBeans() {
+        return this.useAuthenticatedPrincipalForUserNameInMBeans;
+    }
+
+    /**
+     * Sets whether the authenticated principal fills in the user name shown
+     * in MBeans when the client did not supply one.
+     * @param value if the authenticated principal should fill in a missing user name.
+     */
+    public void setUseAuthenticatedPrincipalForUserNameInMBeans(boolean value) {
+        this.useAuthenticatedPrincipalForUserNameInMBeans = value;
     }
 
     /**
