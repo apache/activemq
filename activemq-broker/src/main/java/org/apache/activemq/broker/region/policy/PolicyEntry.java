@@ -57,6 +57,7 @@ public class PolicyEntry extends DestinationMapEntry {
     private PendingMessageLimitStrategy pendingMessageLimitStrategy;
     private MessageEvictionStrategy messageEvictionStrategy;
     private long memoryLimit;
+    private boolean useMessageGroups = true;
     private String messageGroupMapFactoryType = "cached";
     private MessageGroupMapFactory messageGroupMapFactory;
     private PendingQueueMessageStoragePolicy pendingQueuePolicy;
@@ -129,6 +130,7 @@ public class PolicyEntry extends DestinationMapEntry {
         }
         queue.setDeadLetterStrategy(getDeadLetterStrategy());
         queue.setMessageGroupMapFactory(getMessageGroupMapFactory());
+        queue.setUseMessageGroups(isUseMessageGroups());
         if (memoryLimit > 0) {
             queue.getMemoryUsage().setLimit(memoryLimit);
         }
@@ -169,6 +171,9 @@ public class PolicyEntry extends DestinationMapEntry {
         }
         if (isUpdate("useConsumerPriority", includedProperties)) {
             queue.setUseConsumerPriority(isUseConsumerPriority());
+        }
+        if (isUpdate("useMessageGroups", includedProperties)) {
+            queue.setUseMessageGroups(isUseMessageGroups());
         }
         if (isUpdate("strictOrderDispatch", includedProperties)) {
             queue.setStrictOrderDispatch(isStrictOrderDispatch());
@@ -548,6 +553,29 @@ public class PolicyEntry extends DestinationMapEntry {
      */
     public void setMemoryLimit(long memoryLimit) {
         this.memoryLimit = memoryLimit;
+    }
+
+    public boolean isUseMessageGroups() {
+        return useMessageGroups;
+    }
+
+    /**
+     * Whether JMSXGroupID is honoured for dispatch on queues matching this policy (default
+     * true). When false, messages carrying JMSXGroupID are dispatched like any other message -
+     * no consumer is ever assigned a group, no ownership is recorded and JMSXGroupFirstForConsumer
+     * is never set - so per-group in-order delivery to a single consumer is NOT provided.
+     *
+     * Use this when the group header is set by producers unintentionally, or when group
+     * ownership is harmful: a group's owner that can never be dispatched a later member of the
+     * group (its selector, or the network bridge filter on a network subscription, rejects the
+     * message) strands that message for every consumer, since the owner will not take it and no
+     * other consumer may. Enough of those fill dispatchPendingList to maxPageSize and stall the
+     * whole queue until the owning subscription is removed.
+     *
+     * @param useMessageGroups false to ignore JMSXGroupID for dispatch
+     */
+    public void setUseMessageGroups(boolean useMessageGroups) {
+        this.useMessageGroups = useMessageGroups;
     }
 
     public MessageGroupMapFactory getMessageGroupMapFactory() {

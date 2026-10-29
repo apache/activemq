@@ -129,6 +129,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
     private MessageGroupMap messageGroupOwners;
     private DispatchPolicy dispatchPolicy = new RoundRobinDispatchPolicy();
     private MessageGroupMapFactory messageGroupMapFactory = new CachedMessageGroupMapFactory();
+    private volatile boolean useMessageGroups = true;
     final Lock sendLock = new ReentrantLock();
     private ExecutorService executor;
     private final Map<MessageId, Runnable> messagesWaitingForSpace = new LinkedHashMap<MessageId, Runnable>();
@@ -1111,6 +1112,18 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
     @Override
     public ActiveMQDestination getActiveMQDestination() {
         return destination;
+    }
+
+    public boolean isUseMessageGroups() {
+        return useMessageGroups;
+    }
+
+    /**
+     * @param useMessageGroups false to ignore JMSXGroupID for dispatch on this queue
+     * @see PolicyEntry#setUseMessageGroups(boolean)
+     */
+    public void setUseMessageGroups(boolean useMessageGroups) {
+        this.useMessageGroups = useMessageGroups;
     }
 
     public MessageGroupMap getMessageGroupOwners() {
@@ -2366,6 +2379,10 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
 
     protected boolean assignMessageGroup(Subscription subscription, QueueMessageReference node) throws Exception {
         boolean result = true;
+        if (!useMessageGroups) {
+            // JMSXGroupID is ignored for dispatch on this queue: no ownership, no affinity.
+            return result;
+        }
         // Keep message groups together.
         String groupId = node.getGroupID();
         int sequence = node.getGroupSequence();
