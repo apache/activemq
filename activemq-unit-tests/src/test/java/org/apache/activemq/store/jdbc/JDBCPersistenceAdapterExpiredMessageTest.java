@@ -75,7 +75,7 @@ public class JDBCPersistenceAdapterExpiredMessageTest {
                 ProxyTopicMessageStore proxy = new ProxyTopicMessageStore(super.createTopicMessageStore(destination)) {
 
                     @Override
-                    public void recover(final MessageRecoveryListener listener) throws Exception {
+                    public void recover(final MessageRecoveryListener listener, int maxReturned) throws Exception {
                         MessageRecoveryListener delegate = new MessageRecoveryListener() {
 
                             @Override
@@ -99,7 +99,7 @@ public class JDBCPersistenceAdapterExpiredMessageTest {
                                 return listener.hasSpace();
                             }
                         };
-                        super.recover(delegate);
+                        super.recover(delegate, maxReturned);
                     }
 
                 };
