@@ -92,8 +92,11 @@ public class FailoverTransport implements CompositeTransport {
     private URI connectedTransportURI;
     private URI failedConnectTransportURI;
     private final AtomicReference<Transport> connectedTransport = new AtomicReference<Transport>();
-    private final TaskRunnerFactory reconnectTaskFactory;
-    private final TaskRunner reconnectTask;
+    private final Object reconnectTaskMutex = new Object();
+    private TaskRunnerFactory reconnectTaskFactory;
+    private volatile TaskRunner reconnectTask;
+    // null until set by a failover URI option; the connection factory fills it in only then
+    private Boolean useVirtualThreadTaskRunner;
     private volatile boolean started;
     private long initialReconnectDelay = DEFAULT_INITIAL_RECONNECT_DELAY;
     private long maxReconnectDelay = 1000 * 30;
@@ -140,10 +143,23 @@ public class FailoverTransport implements CompositeTransport {
     public FailoverTransport(SslContext sslContext) {
         this.sslContext = sslContext;
         stateTracker.setTrackTransactions(true);
-        // Setup a task that is used to reconnect the a connection async.
-        reconnectTaskFactory = new TaskRunnerFactory();
-        reconnectTaskFactory.init();
-        reconnectTask = reconnectTaskFactory.createTaskRunner(new Task() {
+    }
+
+    /**
+     * The reconnect task is built on first use rather than in the constructor so
+     * that URI options and the owning connection factory can decide whether it
+     * runs on a virtual thread before any thread is created.
+     */
+    private TaskRunner getReconnectTask() {
+        TaskRunner task = reconnectTask;
+        if (task == null) {
+            synchronized (reconnectTaskMutex) {
+                task = reconnectTask;
+                if (task == null) {
+                    reconnectTaskFactory = new TaskRunnerFactory("ActiveMQ Task", Thread.NORM_PRIORITY, true, 1000,
+                            false, isUseVirtualThreadTaskRunner());
+                    reconnectTaskFactory.init();
+                    task = reconnectTaskFactory.createTaskRunner(new Task() {
             @Override
             public boolean iterate() {
                 boolean result = false;
@@ -162,10 +178,7 @@ public class FailoverTransport implements CompositeTransport {
                     if (priorityBackup && !connectedToPriority) {
                         try {
                             doDelay();
-                            if (reconnectTask == null) {
-                                return true;
-                            }
-                            reconnectTask.wakeup();
+                            getReconnectTask().wakeup();
                         } catch (InterruptedException e) {
                             LOG.debug("Reconnect task has been interrupted.", e);
                         }
@@ -174,10 +187,7 @@ public class FailoverTransport implements CompositeTransport {
                     // build backups on the next iteration
                     buildBackup = true;
                     try {
-                        if (reconnectTask == null) {
-                            return true;
-                        }
-                        reconnectTask.wakeup();
+                        getReconnectTask().wakeup();
                     } catch (InterruptedException e) {
                         LOG.debug("Reconnect task has been interrupted.", e);
                     }
@@ -186,6 +196,11 @@ public class FailoverTransport implements CompositeTransport {
             }
 
         }, "ActiveMQ Failover Worker: " + System.identityHashCode(this));
+                    reconnectTask = task;
+                }
+            }
+        }
+        return task;
     }
 
     private void processCommand(Object incoming) {
@@ -298,7 +313,7 @@ public class FailoverTransport implements CompositeTransport {
                         transportListener.transportInterupted();
                     }
 
-                    reconnectTask.wakeup();
+                    getReconnectTask().wakeup();
                 } else if (!isDisposed()) {
                     propagateFailureToExceptionListener(e);
                 }
@@ -408,8 +423,20 @@ public class FailoverTransport implements CompositeTransport {
                 sleepMutex.notifyAll();
             }
         } finally {
-            reconnectTask.shutdown();
-            reconnectTaskFactory.shutdownNow();
+            // Take the references under the mutex but shut down outside it: shutdown()
+            // waits for a running iteration, and that iteration may call getReconnectTask()
+            TaskRunner taskToStop;
+            TaskRunnerFactory factoryToStop;
+            synchronized (reconnectTaskMutex) {
+                taskToStop = reconnectTask;
+                factoryToStop = reconnectTaskFactory;
+            }
+            if (taskToStop != null) {
+                taskToStop.shutdown();
+            }
+            if (factoryToStop != null) {
+                factoryToStop.shutdownNow();
+            }
         }
 
         synchronized(backupMutex) {
@@ -796,7 +823,7 @@ public class FailoverTransport implements CompositeTransport {
                 }
                 LOG.debug("Waking up reconnect task");
                 try {
-                    reconnectTask.wakeup();
+                    getReconnectTask().wakeup();
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                 }
@@ -1447,6 +1474,31 @@ public class FailoverTransport implements CompositeTransport {
             throw new RuntimeException(e);
         }
         return uri;
+    }
+
+    /**
+     * The effective setting: an explicit value from the URI or the connection
+     * factory, otherwise the process wide default from the
+     * {@code org.apache.activemq.UseVirtualThreadTaskRunner} system property.
+     */
+    public boolean isUseVirtualThreadTaskRunner() {
+        return useVirtualThreadTaskRunner != null ? useVirtualThreadTaskRunner : TaskRunnerFactory.isVirtualThreadTaskRunnerDefault();
+    }
+
+    /** the raw setting, null when neither a URI option nor the connection factory has set it */
+    public Boolean getUseVirtualThreadTaskRunner() {
+        return useVirtualThreadTaskRunner;
+    }
+
+    /**
+     * Run the reconnect task on a virtual thread (JDK 21+). A value given as a
+     * failover URI option is final; the owning connection factory turns this on
+     * when its own useVirtualThreadTaskRunner is set and the URI said nothing;
+     * left unset, the system property default applies. Takes effect only before
+     * the transport starts.
+     */
+    public void setUseVirtualThreadTaskRunner(Boolean useVirtualThreadTaskRunner) {
+        this.useVirtualThreadTaskRunner = useVirtualThreadTaskRunner;
     }
 
     public void setNestedExtraQueryOptions(String nestedExtraQueryOptions) {
