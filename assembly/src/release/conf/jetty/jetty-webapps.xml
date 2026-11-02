@@ -180,14 +180,19 @@
   <!-- Static Resource Handler -->
   <Call name="addHandler">
     <Arg>
-      <New class="org.eclipse.jetty.server.handler.ResourceHandler">
-        <!-- Set name="directoriesListed">false</Set -->
-        <Set name="welcomeFiles">
-          <Array type="java.lang.String">
-            <Item>index.html</Item>
-          </Array>
-        </Set>
+      <New class="org.eclipse.jetty.server.handler.ContextHandler">
+        <Set name="contextPath">/</Set>
         <Set name="baseResourceAsString"><Property name="activemq.home" default="."/>/webapps/</Set>
+        <Set name="handler">
+          <New class="org.eclipse.jetty.server.handler.ResourceHandler">
+            <!-- Set name="dirAllowed">false</Set -->
+            <Set name="welcomeFiles">
+              <Array type="java.lang.String">
+                <Item>index.html</Item>
+              </Array>
+            </Set>
+          </New>
+        </Set>
       </New>
     </Arg>
   </Call>
