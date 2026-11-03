@@ -26,7 +26,8 @@ public final class PrometheusConstants {
 
     /** Init parameter: comma separated destination types reported when {@link #PARAM_PER_OBJECT} is set. */
     public static final String INIT_PARAM_DESTINATION_TYPES = "destinationTypes";
-    public static final String DEFAULT_DESTINATION_TYPES = "queue,topic";
+    /** No destination types: per-destination series are reported only after an operator enables them. */
+    public static final String DEFAULT_DESTINATION_TYPES = "";
 
     public static final String BROKER_METRIC_PREFIX = "activemq_broker_";
     public static final String DESTINATION_METRIC_PREFIX = "activemq_destination_";

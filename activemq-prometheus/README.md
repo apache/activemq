@@ -38,27 +38,34 @@ uses each broker's own MBean name, so a custom `jmxDomainName` works.
 
 Two endpoints because brokers with many destinations might produce large responses:
 - `GET /metrics`: broker-level metrics only.
-- `GET /metrics?per_object=true`: broker-level metrics plus one series per destination.
+- `GET /metrics?per_object=true`: broker-level metrics plus one series per destination
+of each enabled destination type (default: none).
 
-`per_object` must be `true` or `false`, given once. Any other value, or a
-repeated parameter, returns `400 Bad Request`.
+The `per_object` query parameter accepts only `true` or `false`. If the
+request sends any other value, or sends `per_object` more than once, the
+endpoint returns `400 Bad Request`.
 
 ### Destination types
 
 The destination types reported by `per_object=true` are configured with the
 `destinationTypes` init parameter: a comma separated list of `queue`, `topic`,
-`temp-queue`, `temp-topic`. The default is `queue,topic`; temporary destinations
-are short lived and usually not worth a time series. Set it on the web
-application in `conf/jetty/jetty-webapp-prometheus.xml`:
+`temp-queue`, `temp-topic`. The default is empty, so `per_object=true` returns
+broker metrics only until a type is enabled. Each enabled type adds one series
+per destination of that type to every `per_object=true` scrape. The cost of a
+scrape grows with the number of destinations, so enable only the types you need. Temporary destinations
+are short lived and usually not worth a time series.
+
+`conf/jetty/jetty-webapp-prometheus.xml` ships with this block commented out.
+Uncomment it and edit the list:
 
 ```xml
 <Call name="setInitParameter">
   <Arg>destinationTypes</Arg>
-  <Arg>queue,topic,temp-queue,temp-topic</Arg>
+  <Arg>queue,topic</Arg>
 </Call>
 ```
 
-An unknown value fails deployment of the web application.
+Unknown values will cause deployment of the web application to fail.
 
 ## Metrics
 
@@ -87,9 +94,15 @@ An unknown value fails deployment of the web application.
 
 ### Destination metrics (`activemq_destination_*`)
 
-Returned only when `?per_object=true` is set. Every series carries the labels
-`broker`, `destination_type` (`queue`, `topic`, `temp-queue` or `temp-topic`)
-and `destination`, so one metric family covers all destination types:
+The endpoint returns these metrics only for `?per_object=true`. Each metric has
+one series per destination. Each series has three labels:
+
+- `broker`: the broker name.
+- `destination_type`: `queue`, `topic`, `temp-queue` or `temp-topic`.
+- `destination`: the destination name.
+
+Queues, topics and temporary destinations share one metric name, and the
+`destination_type` label tells them apart:
 
 ```
 activemq_destination_messages{broker="localhost",destination_type="queue",destination="orders"} 12.0

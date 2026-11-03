@@ -32,10 +32,11 @@
         <Set name="logUrlOnStart">true</Set>
         <!-- Destination types reported by /metrics?per_object=true.
             Comma separated list of: queue, topic, temp-queue, temp-topic.
-            Default: queue,topic
+            Default: none (report broker metrics only)
+            Example below, adding queue and topic metrics to /metrics?per_object=true.
         <Call name="setInitParameter">
           <Arg>destinationTypes</Arg>
-          <Arg>queue,topic,temp-queue,temp-topic</Arg>
+          <Arg>queue,topic</Arg>
         </Call>
         -->
       </New>

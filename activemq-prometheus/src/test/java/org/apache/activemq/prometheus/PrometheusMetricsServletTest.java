@@ -75,6 +75,7 @@ public class PrometheusMetricsServletTest {
 
     private static final String CONTENT_TYPE = "text/plain; version=0.0.4; charset=utf-8";
     private static final String ALL_DESTINATION_TYPES = "queue,topic,temp-queue,temp-topic";
+    private static final String QUEUES_AND_TOPICS = "queue,topic";
     private static final String JMX_DOMAIN = ManagementContext.DEFAULT_DOMAIN;
     private static final ObjectName BROKER_NAME;
     private static final ObjectName QUEUE_NAME;
@@ -185,7 +186,7 @@ public class PrometheusMetricsServletTest {
         try {
             broker.waitUntilStarted();
             noJmx.waitUntilStarted();
-            String output = invokeServlet(perObject(), initServlet(new PrometheusMetricsServlet(), null)).body();
+            String output = invokeServlet(perObject(), initServlet(new PrometheusMetricsServlet(), QUEUES_AND_TOPICS)).body();
 
             assertTrue(output, output.contains("activemq_broker_current_connections{broker=\"RegistryBroker\"} 0.0"));
             assertTrue(output, output.contains("activemq_destination_messages{broker=\"RegistryBroker\",destination=\"registry.queue\",destination_type=\"queue\"} 0.0"));
@@ -205,8 +206,7 @@ public class PrometheusMetricsServletTest {
 
     @Test
     public void testDestinationTypesConfigurationIsValidated() throws Exception {
-        assertEquals(EnumSet.of(DestinationType.QUEUE, DestinationType.TOPIC),
-                PrometheusMetricsServlet.parseDestinationTypes(null));
+        assertEquals(EnumSet.noneOf(DestinationType.class), PrometheusMetricsServlet.parseDestinationTypes(null));
         assertEquals(EnumSet.allOf(DestinationType.class),
                 PrometheusMetricsServlet.parseDestinationTypes(" queue, topic ,temp-queue,temp-topic,"));
         assertEquals(EnumSet.noneOf(DestinationType.class), PrometheusMetricsServlet.parseDestinationTypes(""));
@@ -227,7 +227,7 @@ public class PrometheusMetricsServletTest {
             assertTrue(expected.getMessage(), expected.getMessage().contains(INIT_PARAM_DESTINATION_TYPES));
         }
 
-        assertEquals(EnumSet.of(DestinationType.QUEUE, DestinationType.TOPIC), newServlet(null).getEnabledDestinationTypes());
+        assertEquals(EnumSet.noneOf(DestinationType.class), newServlet(null).getEnabledDestinationTypes());
         assertEquals(EnumSet.allOf(DestinationType.class), newServlet(ALL_DESTINATION_TYPES).getEnabledDestinationTypes());
     }
 
@@ -304,16 +304,22 @@ public class PrometheusMetricsServletTest {
     }
 
     @Test
-    public void testTemporaryDestinationsAreOffByDefaultAndOptIn() throws Exception {
+    public void testDestinationTypesAreOffByDefaultAndOptIn() throws Exception {
         registerDestination(broker.tempQueues, TEMP_QUEUE_NAME, new FakeDestination("test.queue"));
         registerDestination(broker.tempTopics, TEMP_TOPIC_NAME, new FakeDestination("replies.temp"));
 
-        // Default configuration: per_object reports queues and topics only.
-        String defaultOutput = invokeServlet(perObject()).body();
-        assertTrue(defaultOutput.contains("destination_type=\"queue\""));
-        assertTrue(defaultOutput.contains("destination_type=\"topic\""));
-        assertFalse(defaultOutput.contains("destination_type=\"temp-queue\""));
-        assertFalse(defaultOutput.contains("destination_type=\"temp-topic\""));
+        // Default configuration: per_object reports broker metrics only.
+        CapturedResponse defaultResponse = invokeServlet(perObject(), newServlet(null));
+        assertEquals(HttpServletResponse.SC_OK, defaultResponse.status);
+        assertTrue(defaultResponse.body().contains("activemq_broker_current_connections{broker=\"TestBroker\"} 42.0"));
+        assertFalse(defaultResponse.body().contains("activemq_destination_"));
+
+        // Queues and topics enabled: temporary destinations stay out by default.
+        String queuesAndTopics = invokeServlet(perObject()).body();
+        assertTrue(queuesAndTopics.contains("destination_type=\"queue\""));
+        assertTrue(queuesAndTopics.contains("destination_type=\"topic\""));
+        assertFalse(queuesAndTopics.contains("destination_type=\"temp-queue\""));
+        assertFalse(queuesAndTopics.contains("destination_type=\"temp-topic\""));
 
         // Opted in through the init parameter: temporary destinations appear in the same families.
         CapturedResponse response = invokeServlet(perObject(), newServlet(ALL_DESTINATION_TYPES));
@@ -340,7 +346,7 @@ public class PrometheusMetricsServletTest {
     public void testSnapshotsRoundTripThroughPrometheusProtobuf() throws Exception {
         // Renders the snapshots with the Prometheus protobuf writer and reads them back with the Prometheus
         // generated classes.
-        MetricSnapshots snapshots = newServlet(null).collect(true);
+        MetricSnapshots snapshots = newServlet(QUEUES_AND_TOPICS).collect(true);
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
         new PrometheusProtobufWriter().write(bytes, snapshots);
 
@@ -506,8 +512,9 @@ public class PrometheusMetricsServletTest {
         return servlet;
     }
 
+    /** Invokes a servlet configured with queues and topics enabled. */
     private CapturedResponse invokeServlet(Map<String, String[]> params) throws Exception {
-        return invokeServlet(params, newServlet(null));
+        return invokeServlet(params, newServlet(QUEUES_AND_TOPICS));
     }
 
     private CapturedResponse invokeServlet(Map<String, String[]> params, PrometheusMetricsServlet servlet) throws Exception {

@@ -26,7 +26,6 @@ import static org.apache.activemq.prometheus.PrometheusConstants.LABEL_DESTINATI
 import static org.apache.activemq.prometheus.PrometheusConstants.PARAM_PER_OBJECT;
 
 import java.io.IOException;
-import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumSet;
@@ -196,8 +195,8 @@ public class PrometheusMetricsServlet extends HttpServlet {
 
     /**
      * Parses the {@code destinationTypes} init parameter, for example {@code "queue, temp-queue"}.
-     * {@code null} (the parameter is not set) selects the default, {@code "queue,topic"}.
-     * A value with no labels, such as {@code ""} or {@code " "}, reports no destinations.
+     * {@code null} (the parameter is not set) selects the default, which reports no destinations.
+     * A value with no labels, such as {@code ""} or {@code " "}, also reports no destinations.
      * Each label must exactly match a {@link DestinationType} label, otherwise this throws.
      */
     static Set<DestinationType> parseDestinationTypes(final String destinationTypesParam) {
@@ -256,9 +255,9 @@ public class PrometheusMetricsServlet extends HttpServlet {
 
         response.setContentType(writer.getContentType());
         response.setStatus(HttpServletResponse.SC_OK);
-        final OutputStream out = response.getOutputStream();
-        writer.write(out, snapshots);
-        out.flush();
+        // Closing the output stream here (eg: try-with-resources) tells the servlet the response is complete,
+        // even if writing failed partway. The servlet handles synchronous left open streams and errors.
+        writer.write(response.getOutputStream(), snapshots);
     }
 
     /**
