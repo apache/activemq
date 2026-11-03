@@ -3,24 +3,17 @@
 
 # Apache ActiveMQ — Threat Model
 
-> **STATUS: v0 DRAFT — for ActiveMQ PMC review.** This document was drafted
-> *for* the ActiveMQ maintainers as a starting point they will review, correct,
-> and (if they choose) adopt. It is written in the project's own voice on the
-> assumption that the PMC ratifies it; until then, every claim tagged
-> *(inferred)* is a proposed answer awaiting maintainer confirmation, not an
-> established project position.
-
 ## §1 Header
 
-- **Project:** Apache ActiveMQ — the 5.x and 6.x message broker and
+- **Project:** Apache ActiveMQ — the 6.x and 5.x message broker and
   its Java client.
 - **Version binding:** Written against the currently security-supported
-  lines — **6.2.x** and **5.19.x**. *(documented — `SECURITY.md`:
-  "Only versions 6.2.x and 5.19.x receive security support"; 5.19.x carries the
+  lines — **6.4.x** and **5.19.x**. *(documented — `SECURITY.md`:
+  "Only versions 6.4.x and 5.19.x receive security support"; 5.19.x carries the
   caveat "Except for EOL dependencies: Spring and Jetty".)* A report against an
   older, unsupported line (5.18.x and earlier, 5.16/5.17) is triaged against
   that line's behavior but is not eligible for a fix on that line.
-- **Date:** 2026-07-04
+- **Date:** 2026-11-03
 - **Author:** ASF Security team, drafted via the threat-model-producer
   (Scovetta) rubric at the ActiveMQ PMC's request (path 3).
 - **Reporting cross-reference:** Findings that violate a §8 property should be
@@ -101,12 +94,13 @@ matter, each with its own trust level:
 
 ## §3 Out of scope (explicit non-goals)
 
-- **Deployments that did not configure authentication or authorization.** The
-  default distribution ships auth/authz **disabled** so the sample broker
-  starts out of the box; an unauthenticated-access "exploit" against such a
-  deployment is a configuration gap, not a broker vulnerability. *(documented —
-  `SECURITY.md`: "Exploits that are only possible because users did not
-  configure authentication or authorization" are excluded)*
+- **Deployments that did not configure user and connection authentication or
+  authorization.** The default distribution ships auth/authz **disabled** so
+  the sample broker starts out of the box; an unauthenticated-access "exploit"
+  against such a deployment is a configuration gap, not a broker vulnerability.
+  *(documented — `SECURITY.md`: "Exploits that are only possible because users
+  did not configure user and connection authentication or authorization" are
+  excluded)*
 - **Anything requiring administrator access.** Admins can perform any action by
   design; a finding that presupposes admin/operator control (edit
   `activemq.xml`, write JAAS files, reach JMX, log into the web console with
@@ -235,6 +229,8 @@ maintainer stance below is what licenses that call.
 | Web-console `authenticate` (jetty.xml) + `jetty-realm.properties` | console present, `admin/admin` sample creds | Unauthenticated or default-cred console = full operator access | Operator must change creds / enable auth / restrict — *(documented, web-console docs)* |
 | Anonymous access (`anonymousAccessAllowed`) | off unless set (5.4.0+) | Permits unauthenticated connections as `anonymous` | Explicit operator opt-in — *(documented)* |
 | SSL/TLS vs. plain connectors | plain TCP OpenWire in default config | Plain connectors carry traffic unencrypted | Operator chooses `ssl://`/`nio+ssl://` for production — *(documented)* |
+| IP allow/deny | allow all | network reachable | Operator chooses to enable IP-allow/deny protection for production — *(documented)* |
+| Connection authorization | allow network connections and clientIds from any user | With it off, clients may spoof as a network connection or clientId | Operator chooses to enable connection authorization for production — *(documented)* |
 
 **Insecure-default ruling.** Per `SECURITY.md`, the disabled-auth/authz and
 unset-resource-bound defaults are **dev-conveniences the operator is expected
@@ -298,8 +294,10 @@ broker** on a network-of-brokers link. *(confirmed — see §14 Q3, Q9)*
 - **The operator/administrator.** Anyone who can edit `activemq.xml`, write JAAS
   files, reach JMX, or log into the web console as operator has already won —
   admin actions are by design. *(documented — `SECURITY.md`)*
-- **A client attacking a broker with auth/authz turned off.** That is a
-  configuration gap, not an adversary the model defends against. *(documented)*
+- **A client attacking a broker with user or connection auth/authz turned off.**
+  That is a configuration gap, not an adversary the model defends against. *(documented)*
+- **A client attacking a broker with IP allow/deny turned off.**
+  That is a configuration gap, not an adversary the model defends against. *(documented)*
 - **A local attacker with filesystem access to the KahaDB directory, keystores,
   or credential files.** Storage is trusted. *(confirmed — see §14 Q5)*
 - **Attackers exploiting the operator's failure to set documented resource
@@ -369,6 +367,12 @@ kept narrow.
    per their QoS. *Violation symptom:* acknowledged persistent messages lost or
    corrupted absent hardware/OS fault. *Severity:* correctness-critical (data
    loss); not a confidentiality/authz property. *(confirmed — see §14 Q5)*
+8. **Connection authorization** Restricts ability for clients to spoof as a
+   network connection, or the clientId of another tenent.
+   *Violation symptom:* client connections appear as broker cluster connection,
+   or client able to impersonate another tenant to gain access to resources.
+   *Severity:* correctness-critical (data loss); not a confidentiality/authz
+   property. *(confirmed)*
 
 ---
 
@@ -468,7 +472,10 @@ following. This is a contract, not a how-to.
    live credential revocation. *(documented for reload; §14 Q5 for storage)*
 10. **Authenticate and scope network-of-brokers links**; treat a peer broker as
     adversarial. *(confirmed — see §14 Q9)*
-
+11. **Enable IP allow/deny**; only allow traffic from trusted hosts and networks
+12. **Authorize connections**; configure connection authorization to lock down
+    users that may establish network connections and authorize user-to-clientId
+    value.
 ---
 
 ## §11 Known misuse patterns
