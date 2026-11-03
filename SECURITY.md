@@ -67,6 +67,10 @@ Users are expected to secure their environments
 
 13. Administrators are expected to change the default password (and optionally the default 'admin' user id)
 
+14. Recommend enabling connection authorization for network connections and allowed userName-to-clientId mapping. (v6.4.0 and higher)
+
+15. Recommend enabling IP allow/deny lists on all transport connectors. (v6.4.0 and higher)
+
 =======
 
 ## ActiveMQ Security Improvement Project
