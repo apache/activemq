@@ -297,6 +297,11 @@ public class DefaultAuthenticationPolicyTest {
             }
 
             @Override
+            public String getClientId() {
+                return null;
+            }
+
+            @Override
             public boolean isNetworkConnection() {
                 return false;  //To change body of implemented methods use File | Settings | File Templates.
             }

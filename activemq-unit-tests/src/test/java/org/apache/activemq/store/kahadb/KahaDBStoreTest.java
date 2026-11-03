@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.store.kahadb;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Vector;
 import java.util.concurrent.ExecutorService;
@@ -24,16 +25,20 @@ import java.util.concurrent.TimeUnit;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.command.ActiveMQQueue;
+import org.apache.activemq.command.ActiveMQTopic;
 import org.apache.activemq.command.Message;
 import org.apache.activemq.command.MessageAck;
 import org.apache.activemq.command.MessageId;
 import org.apache.activemq.command.ProducerId;
+import org.apache.activemq.command.SubscriptionInfo;
+import org.apache.activemq.store.TopicMessageStore;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 public class KahaDBStoreTest {
@@ -138,5 +143,32 @@ public class KahaDBStoreTest {
         // in the map leading to a possible small memory leak
         underTest.forgetRecoveredAcks(new ArrayList<>(acks.subList(5, 10)), false);
         assertTrue(underTest.ackedAndPreparedMap.isEmpty());
+    }
+
+    @Test
+    public void testSubscriptionKeyValidation() {
+        assertEquals("client1:sub1", store.subscriptionKey("client1", "sub1"));
+        Throwable error = assertThrows(IllegalArgumentException.class,
+                () -> store.subscriptionKey("client1", "a".repeat(KahaDBStore.MAX_SUBSCRIPTION_KEY_LENGTH)));
+        assertTrue(error.getMessage().contains("Subscription key exceeds max length"));
+        error = assertThrows(IllegalArgumentException.class,
+                () -> store.subscriptionKey("a".repeat(KahaDBStore.MAX_SUBSCRIPTION_KEY_LENGTH), "subname"));
+        assertTrue(error.getMessage().contains("Subscription key exceeds max length"));
+    }
+
+    @Test
+    public void testSubscriptionCommandValidation() throws IOException {
+        TopicMessageStore topicStore = store.createTopicMessageStore(new ActiveMQTopic("test"));
+
+        // check addSubscription, which creates KahaSubscriptionCommand, validates
+        Throwable error = assertThrows(IllegalArgumentException.class,
+                () -> topicStore.addSubscription(new SubscriptionInfo("client1",
+                        "a".repeat(KahaDBStore.MAX_SUBSCRIPTION_KEY_LENGTH)), false));
+        assertTrue(error.getMessage().contains("Subscription key exceeds max length"));
+
+        // check deleteSubscription, which also creates KahaSubscriptionCommand, validates
+        error = assertThrows(IllegalArgumentException.class, () -> topicStore.deleteSubscription(
+                "client1", "a".repeat(KahaDBStore.MAX_SUBSCRIPTION_KEY_LENGTH)));
+        assertTrue(error.getMessage().contains("Subscription key exceeds max length"));
     }
 }

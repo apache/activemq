@@ -25,7 +25,7 @@
 
   <groupId>org.apache.activemq</groupId>
   <artifactId>activemq-parent</artifactId>
-  <version>6.4.0-SNAPSHOT</version>
+  <version>6.5.0-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>ActiveMQ</name>
   <inceptionYear>2005</inceptionYear>
@@ -54,7 +54,7 @@
     <annogen-version>0.1.0</annogen-version>
     <ant-version>1.10.18</ant-version>
     <aries-version>1.1.0</aries-version>
-    <camel-version>4.22.1</camel-version>
+    <camel-version>4.23.0</camel-version>
     <commons-beanutils-version>1.11.0</commons-beanutils-version>
     <commons-collections-version>3.2.2</commons-collections-version>
     <commons-dbcp2-version>2.14.0</commons-dbcp2-version>
@@ -68,22 +68,23 @@
     <hawtdispatch-version>1.22</hawtdispatch-version>
     <httpclient-version>4.5.14</httpclient-version>
     <httpcore-version>4.4.16</httpcore-version>
-    <jackson-version>2.22.3</jackson-version>
+    <jackson-version>2.22.4</jackson-version>
     <jackson-annotations-version>2.22</jackson-annotations-version>
+    <nimbus-jose-jwt-version>10.10</nimbus-jose-jwt-version>
     <jakarta-jms-api-version>3.1.0</jakarta-jms-api-version>
     <jakarta-annotation-api-version>3.0.0</jakarta-annotation-api-version>
     <jakarta-servlet-api-version>6.1.0</jakarta-servlet-api-version>
     <jakarta-servlet-jsp-api-version>4.0.0</jakarta-servlet-jsp-api-version>
     <jakarta-el-api-version>6.0.1</jakarta-el-api-version>
-    <asm-version>9.11</asm-version>
+    <asm-version>9.11.1</asm-version>
     <jasypt-version>1.9.3</jasypt-version>
     <jaxb-version>4.0.9</jaxb-version>
     <jetty-version>12.1.12</jetty-version>
     <jetty-version-range>[12,13)</jetty-version-range>
-    <jmdns-version>3.6.3</jmdns-version>
+    <jmdns-version>3.6.4</jmdns-version>
     <javassist-version>3.33.0-GA</javassist-version>
     <jettison-version>1.5.7</jettison-version>
-    <jolokia-version>2.6.3</jolokia-version>
+    <jolokia-version>2.6.4</jolokia-version>
     <jmh-version>1.37</jmh-version>
     <junit-version>4.13.2</junit-version>
     <h2-version>2.5.252</h2-version>
@@ -101,8 +102,9 @@
     <prometheus-metrics-version>1.8.0</prometheus-metrics-version>
     <rome-version>2.1.0</rome-version>
     <shiro-version>2.2.1</shiro-version>
+    <opentelemetry-version>1.67.0</opentelemetry-version>
     <slf4j-version>2.0.20</slf4j-version>
-    <spring-version>7.0.9</spring-version>
+    <spring-version>7.0.10</spring-version>
     <spring-version-range>[7,8)</spring-version-range>
     <taglibs-version>1.2.5</taglibs-version>
     <xpp3-version>1.1.4c</xpp3-version>
@@ -138,11 +140,11 @@
     <tools-maven-plugin-version>1.4</tools-maven-plugin-version>
     <depends-maven-plugin-version>1.5.0</depends-maven-plugin-version>
     <docker-maven-plugin-version>0.49.0</docker-maven-plugin-version>
-    <docker-java-version>17</docker-java-version>
+    <docker-java-version>25</docker-java-version>
     <maven-project-info-reports-plugin-version>3.9.0</maven-project-info-reports-plugin-version>
     <maven-core-version>3.10.0</maven-core-version>
     <maven-surefire-plugin-version>3.5.6</maven-surefire-plugin-version>
-    <maven-surefire-junit5-tree-reporter-version>1.5.1</maven-surefire-junit5-tree-reporter-version>
+    <maven-surefire-junit5-tree-reporter-version>2.1.0</maven-surefire-junit5-tree-reporter-version>
     <!-- OSGi bundles properties -->
     <activemq.osgi.import.pkg>*</activemq.osgi.import.pkg>
     <activemq.osgi.export.pkg>org.apache.activemq*</activemq.osgi.export.pkg>
@@ -219,6 +221,8 @@
     <module>activemq-run</module>
     <module>activemq-shiro</module>
     <module>activemq-prometheus</module>
+    <module>activemq-opentelemetry</module>
+    <module>activemq-jaas-oauth2</module>
     <module>activemq-spring</module>
     <module>activemq-runtime-config</module>
     <module>activemq-tooling</module>
@@ -356,6 +360,16 @@
         <artifactId>activemq-prometheus</artifactId>
         <version>${project.version}</version>
         <type>war</type>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.activemq</groupId>
+        <artifactId>activemq-opentelemetry</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.activemq</groupId>
+        <artifactId>activemq-jaas-oauth2</artifactId>
+        <version>${project.version}</version>
       </dependency>
       <dependency>
         <groupId>org.apache.activemq</groupId>
@@ -622,6 +636,11 @@
         <artifactId>jackson-dataformat-xml</artifactId>
         <version>${jackson-version}</version>
       </dependency>
+      <dependency>
+        <groupId>com.nimbusds</groupId>
+        <artifactId>nimbus-jose-jwt</artifactId>
+        <version>${nimbus-jose-jwt-version}</version>
+      </dependency>
 
       <!-- Used to configure the activemq logs -->
       <dependency>
@@ -681,6 +700,15 @@
         <artifactId>shiro-spring</artifactId>
         <version>${shiro-version}</version>
         <optional>true</optional>
+      </dependency>
+
+      <!-- Optional OpenTelemetry Support -->
+      <dependency>
+        <groupId>io.opentelemetry</groupId>
+        <artifactId>opentelemetry-bom</artifactId>
+        <version>${opentelemetry-version}</version>
+        <type>pom</type>
+        <scope>import</scope>
       </dependency>
 
       <!-- Optional Spring Support -->
@@ -1341,8 +1369,8 @@
                 <configuration>
                   <rules>
                     <requireJavaVersion>
-                      <version>[24,)</version>
-                      <message>You must use Java 24+ to build (we leverage MRJAR).</message>
+                      <version>[25,)</version>
+                      <message>You must use Java 25+ to build a release; the multi-release jars carry Java 21, 24 and 25 classes.</message>
                     </requireJavaVersion>
                   </rules>
                 </configuration>

@@ -28,6 +28,9 @@ import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConnectionInfo;
+import org.apache.activemq.security.AbstractAuthenticationBroker;
+import org.apache.activemq.security.AuthorizationBroker;
+import org.apache.activemq.security.AuthorizationMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -169,4 +172,24 @@ public class AbstractRuntimeConfigurationBroker extends BrokerFilter {
         return matchPassword.matcher(toEscape.toString()).replaceAll("password=???,");
     }
 
+    protected void updateAuthorizationMap(final AuthorizationMap authorizationMap) {
+        try {
+            // replace authorization map - need exclusive write lock to total broker
+            AuthorizationBroker authorizationBroker =
+                    (AuthorizationBroker) getBrokerService().getBroker().getAdaptor(AuthorizationBroker.class);
+
+            authorizationBroker.setAuthorizationMap(authorizationMap);
+
+            AbstractAuthenticationBroker authenticationBroker =
+                    (AbstractAuthenticationBroker) getBrokerService().getBroker().getAdaptor(
+                            AbstractAuthenticationBroker.class);
+
+            // clear producer authorizedWriteDests cache for each SecurityContext
+            if (authenticationBroker != null) {
+                authenticationBroker.refresh();
+            }
+        } catch (Exception e) {
+            info("failed to apply modified AuthorizationMap to AuthorizationBroker", e);
+        }
+    }
 }

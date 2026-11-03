@@ -28,6 +28,7 @@ import org.apache.activemq.network.DiscoveryNetworkConnector;
 import org.apache.activemq.plugin.AbstractRuntimeConfigurationBroker;
 import org.apache.activemq.plugin.UpdateVirtualDestinationsTask;
 import org.apache.activemq.plugin.util.PolicyEntryUtil;
+import org.apache.activemq.security.AbstractAuthenticationBroker;
 import org.apache.activemq.security.AuthorizationBroker;
 import org.apache.activemq.security.AuthorizationMap;
 import org.apache.activemq.security.SimpleAuthenticationBroker;
@@ -235,16 +236,8 @@ public class JavaRuntimeConfigurationBroker extends AbstractRuntimeConfiguration
         }
     }
 
-    //authorization map
+    @Override
     public void updateAuthorizationMap(final AuthorizationMap authorizationMap) {
-        try {
-            // replace authorization map - need exclusive write lock to total broker
-            AuthorizationBroker authorizationBroker =
-                    (AuthorizationBroker) getBrokerService().getBroker().getAdaptor(AuthorizationBroker.class);
-
-            authorizationBroker.setAuthorizationMap(authorizationMap);
-        } catch (Exception e) {
-            info("failed to apply modified AuthorizationMap to AuthorizationBroker", e);
-        }
+        super.updateAuthorizationMap(authorizationMap);
     }
 }

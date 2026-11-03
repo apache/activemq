@@ -536,7 +536,7 @@ public class ActiveMQXAConnectionFactoryTest extends CombinationTestSupport {
         BrokerService broker = BrokerRegistry.getInstance().lookup(brokerName);
         CopyOnWriteArrayList<TransportConnection> connections = broker.getTransportConnectors().get(0).getConnections();
         for (TransportConnection connection: connections) {
-            if (connection.getConnectionId().equals(clientId)) {
+            if (connection.getClientId().equals(clientId)) {
                 try {
                     connection.processPrepareTransaction(new TransactionInfo(connectionId, new XATransactionId(tid), TransactionInfo.PREPARE));
                     fail("did not get expected excepton on missing transaction, it must be still there in error!");

@@ -20,6 +20,7 @@ import java.net.URI;
 import java.util.Hashtable;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Pattern;
 
 import javax.naming.CommunicationException;
 import javax.naming.Context;
@@ -58,6 +59,11 @@ public class LdapNetworkConnector extends NetworkConnector implements NamespaceC
     // force returned entries to implement the ipHost and ipService object classes (RFC 2307)
     private static final String REQUIRED_OBJECT_CLASS_FILTER =
             "(&(objectClass=ipHost)(objectClass=ipService))";
+
+    // allowed shapes for the directory attributes used to build the connector URI
+    private static final Pattern PROTOCOL_PATTERN = Pattern.compile("[A-Za-z][A-Za-z0-9+.-]*");
+    private static final Pattern ADDRESS_PATTERN = Pattern.compile("[A-Za-z0-9._\\-\\[\\]:%]+");
+    private static final Pattern PORT_PATTERN = Pattern.compile("\\d{1,5}");
 
     // connection
     private URI[] availableURIs = null;
@@ -384,9 +390,23 @@ public class LdapNetworkConnector extends NetworkConnector implements NamespaceC
         String address = (String) attributes.get("iphostnumber").get();
         String port = (String) attributes.get("ipserviceport").get();
         String protocol = (String) attributes.get("ipserviceprotocol").get();
+
+        // Reject attribute values that would not form a valid protocol, host, or port so
+        // the assembled connector URI is well formed.
+        validateComponent("ipserviceprotocol", protocol, PROTOCOL_PATTERN);
+        validateComponent("iphostnumber", address, ADDRESS_PATTERN);
+        validateComponent("ipserviceport", port, PORT_PATTERN);
+
         URI connectorURI = new URI("static:(" + protocol + "://" + address + ":" + port + ")");
         LOG.debug("retrieved URI from SearchResult [{}]", connectorURI);
         return connectorURI;
+    }
+
+    private static void validateComponent(String name, String value, Pattern allowed) {
+        if (value == null || !allowed.matcher(value).matches()) {
+            throw new IllegalArgumentException(
+                    "Illegal value for LDAP attribute '" + name + "': [" + value + "]");
+        }
     }
 
     /**

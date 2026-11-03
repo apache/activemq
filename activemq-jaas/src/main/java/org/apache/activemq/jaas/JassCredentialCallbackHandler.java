@@ -31,10 +31,17 @@ public class JassCredentialCallbackHandler implements CallbackHandler {
 
     private final String username;
     private final String password;
+    // describes the connection being authenticated; null when the caller has no connection details
+    private final ConnectionCallback connection;
 
     public JassCredentialCallbackHandler(String username, String password) {
+        this(username, password, null);
+    }
+
+    public JassCredentialCallbackHandler(String username, String password, ConnectionCallback connection) {
         this.username = username;
         this.password = password;
+        this.connection = connection;
     }
 
     @Override
@@ -55,6 +62,16 @@ public class JassCredentialCallbackHandler implements CallbackHandler {
                 } else {
                     nameCallback.setName(username);
                 }
+            } else if (callback instanceof ConnectionCallback && connection != null) {
+                ConnectionCallback connectionCallback = (ConnectionCallback)callback;
+                connectionCallback.setConnectionId(connection.getConnectionId());
+                connectionCallback.setClientId(connection.getClientId());
+                connectionCallback.setBrokerName(connection.getBrokerName());
+                connectionCallback.setNetworkConnection(connection.isNetworkConnection());
+                connectionCallback.setSsl(connection.isSsl());
+                connectionCallback.setRemoteAddress(connection.getRemoteAddress());
+                connectionCallback.setTransportConnectorName(connection.getTransportConnectorName());
+                connectionCallback.setCertificates(connection.getCertificates());
             }
         }
     }

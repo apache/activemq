@@ -530,6 +530,11 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                         X509Certificate[] peerCerts = originalTransport.getPeerCertificates();
                         localConnectionInfo.setTransportContext(peerCerts);
                     }
+                    // Let the local broker know the remote broker's ID before the connection
+                    // authenticates, so the local side declares itself a network connection the
+                    // same way the remote and duplex inbound sides already do. This is an in-VM
+                    // transport; nothing on the wire changes.
+                    localBroker.oneway(remoteBrokerInfo);
                     // sync requests that may fail
                     Object resp = localBroker.request(localConnectionInfo);
                     if (resp instanceof ExceptionResponse) {
@@ -571,8 +576,6 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                         l.onStart(this);
                     }
 
-                    // Let the local broker know the remote broker's ID.
-                    localBroker.oneway(remoteBrokerInfo);
                     // new peer broker (a consumer can work with remote broker also)
                     brokerService.getBroker().addBroker(null, remoteBrokerInfo);
 

@@ -22,7 +22,7 @@
   <parent>
     <groupId>org.apache.activemq</groupId>
     <artifactId>activemq-parent</artifactId>
-    <version>6.4.0-SNAPSHOT</version>
+    <version>6.5.0-SNAPSHOT</version>
   </parent>
 
   <artifactId>apache-activemq</artifactId>
@@ -135,6 +135,10 @@
     <dependency>
       <groupId>${project.groupId}</groupId>
       <artifactId>activemq-shiro</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>activemq-opentelemetry</artifactId>
     </dependency>
     <dependency>
       <groupId>${project.groupId}</groupId>
@@ -277,7 +281,7 @@
     <dependency>
       <groupId>commons-codec</groupId>
       <artifactId>commons-codec</artifactId>
-      <version>1.22.1</version>
+      <version>1.23.0</version>
     </dependency>
     <dependency>
       <groupId>org.apache.commons</groupId>
@@ -608,6 +612,14 @@ o  'org.eclipse.jetty:apache-jsp'
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-databind</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>activemq-jaas-oauth2</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.nimbusds</groupId>
+      <artifactId>nimbus-jose-jwt</artifactId>
     </dependency>
 
     <!-- JAXB/Activation/iStack -->

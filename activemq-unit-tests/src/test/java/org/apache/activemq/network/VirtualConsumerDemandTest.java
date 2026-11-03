@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
@@ -39,8 +40,10 @@ import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.BrokerPlugin;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.TransportConnector;
+import org.apache.activemq.broker.region.Destination;
 import org.apache.activemq.broker.region.DestinationInterceptor;
 import org.apache.activemq.broker.region.DestinationStatistics;
+import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.broker.region.virtual.CompositeQueue;
 import org.apache.activemq.broker.region.virtual.CompositeTopic;
 import org.apache.activemq.broker.region.virtual.VirtualDestination;
@@ -185,7 +188,7 @@ public class VirtualConsumerDemandTest extends DynamicNetworkTestSupport {
         waitForConsumerCount(destinationStatistics, 1);
 
         includedProducer.send(test);
-        assertNotNull(bridgeConsumer.receive(5000));
+        receiveOrDumpState(bridgeConsumer, 5000);
 
         waitForDispatchFromLocalBroker(destinationStatistics, 1);
         assertLocalBrokerStatistics(destinationStatistics, 1);
@@ -222,7 +225,7 @@ public class VirtualConsumerDemandTest extends DynamicNetworkTestSupport {
         waitForConsumerCount(destinationStatistics, 1);
 
         includedProducer.send(test);
-        assertNotNull(bridgeConsumer.receive(5000));
+        receiveOrDumpState(bridgeConsumer, 5000);
 
         //assert a message was forwarded
         waitForDispatchFromLocalBroker(destinationStatistics, 1);
@@ -825,7 +828,7 @@ public class VirtualConsumerDemandTest extends DynamicNetworkTestSupport {
         waitForConsumerCount(destinationStatistics, 1);
 
         includedProducer.send(test);
-        assertNotNull(bridgeConsumer.receive(5000));
+        receiveOrDumpState(bridgeConsumer, 5000);
 
         waitForDispatchFromLocalBroker(destinationStatistics, 1);
 
@@ -887,7 +890,7 @@ public class VirtualConsumerDemandTest extends DynamicNetworkTestSupport {
         //make sure the message is still forwarded
         waitForDispatchFromLocalBroker(destinationStatistics, 2);
         assertLocalBrokerStatistics(destinationStatistics, 2);
-        assertNotNull(bridgeConsumer.receive(5000));
+        receiveOrDumpState(bridgeConsumer, 5000);
 
         assertRemoteAdvisoryCount(advisoryConsumer, 4, 3);
         if (isUseVirtualDestSubsOnCreation) {
@@ -1027,7 +1030,7 @@ public class VirtualConsumerDemandTest extends DynamicNetworkTestSupport {
         waitForConsumerCount(destinationStatistics, 1);
 
         includedProducer.send(test);
-        assertNotNull(bridgeConsumer.receive(5000));
+        receiveOrDumpState(bridgeConsumer, 5000);
 
         final DestinationStatistics remoteStats = remoteBroker.getDestination(new ActiveMQQueue(testQueueName)).getDestinationStatistics();
 
@@ -1179,7 +1182,7 @@ public class VirtualConsumerDemandTest extends DynamicNetworkTestSupport {
         DestinationStatistics localDestinationStats = localBroker.getDestination(included).getDestinationStatistics();
         waitForConsumerCount(localDestinationStats, 1);
         includedProducer.send(test);
-        assertNotNull(bridgeConsumer.receive(5000));
+        receiveOrDumpState(bridgeConsumer, 5000);
 
         //with isUseVirtualDestSubsOnCreation is true, there should be 2 advisories
         //with !isUseVirtualDestSubsOnCreation, there should be 1 advisory
@@ -1278,7 +1281,7 @@ public class VirtualConsumerDemandTest extends DynamicNetworkTestSupport {
         waitForConsumerCount(destinationStatistics, 1);
 
         includedProducer.send(test);
-        assertNotNull(bridgeConsumer.receive(5000));
+        receiveOrDumpState(bridgeConsumer, 5000);
 
         assertRemoteAdvisoryCount(advisoryConsumer, 1);
         assertAdvisoryBrokerCounts(1,1,0);
@@ -1355,7 +1358,7 @@ public class VirtualConsumerDemandTest extends DynamicNetworkTestSupport {
         waitForConsumerCount(destinationStatistics, 1);
 
         includedProducer.send(test);
-        assertNotNull(bridgeConsumer.receive(5000));
+        receiveOrDumpState(bridgeConsumer, 5000);
 
         waitForDispatchFromLocalBroker(destinationStatistics, 1);
         assertLocalBrokerStatistics(destinationStatistics, 1);
@@ -1564,6 +1567,75 @@ public class VirtualConsumerDemandTest extends DynamicNetworkTestSupport {
     protected MessageConsumer getQueueVirtualDestinationAdvisoryConsumer(String queue) throws JMSException {
         return remoteSession.createConsumer(AdvisorySupport.getVirtualDestinationConsumerAdvisoryTopic(
                 new ActiveMQQueue(queue)));
+    }
+
+    /**
+     * Receive a message that is expected to have been forwarded across the network bridge.
+     * This test is occasionally flaky on CI (the message never reaches the remote consumer),
+     * so on failure dump the state of both brokers and of the bridge to find where the
+     * message got lost.
+     */
+    protected void receiveOrDumpState(final MessageConsumer consumer, final long timeout) throws JMSException {
+        if (consumer.receive(timeout) == null) {
+            final String state = dumpNetworkState();
+            LOG.error("No message received within {} ms, network state:\n{}", timeout, state);
+            fail("No message received within " + timeout + " ms, network state:\n" + state);
+        }
+    }
+
+    private String dumpNetworkState() {
+        final StringBuilder sb = new StringBuilder();
+        dumpBrokerState(sb, localBroker);
+        dumpBrokerState(sb, remoteBroker);
+        try {
+            for (NetworkBridge bridge : connector.activeBridges()) {
+                sb.append("bridge ").append(bridge.getRemoteBrokerName())
+                    .append(" enqueues=").append(bridge.getNetworkBridgeStatistics().getEnqueues().getCount())
+                    .append(" dequeues=").append(bridge.getNetworkBridgeStatistics().getDequeues().getCount());
+                if (bridge instanceof DemandForwardingBridgeSupport) {
+                    sb.append(" demandSubscriptions=");
+                    ((DemandForwardingBridgeSupport) bridge).getLocalSubscriptionMap().values().forEach(sub ->
+                        sb.append("\n    [local=").append(sub.getLocalInfo().getDestination())
+                            .append(" remote=").append(sub.getRemoteInfo().getDestination())
+                            .append(" durable=").append(sub.getRemoteInfo().isDurable()).append("]"));
+                }
+                sb.append('\n');
+            }
+        } catch (Exception e) {
+            sb.append("failed to dump bridges: ").append(e).append('\n');
+        }
+        return sb.toString();
+    }
+
+    private void dumpBrokerState(final StringBuilder sb, final BrokerService broker) {
+        try {
+            sb.append("broker ").append(broker.getBrokerName()).append(":\n");
+            // only look at destinations that already exist, do not create any
+            for (Destination dest : broker.getBroker().getDestinationMap().values()) {
+                final String name = dest.getName();
+                if (name.startsWith("ActiveMQ.Advisory") || !name.startsWith("include.")) {
+                    continue;
+                }
+                final DestinationStatistics stats = dest.getDestinationStatistics();
+                sb.append("  ").append(dest.getActiveMQDestination())
+                    .append(" consumers=").append(stats.getConsumers().getCount())
+                    .append(" enqueues=").append(stats.getEnqueues().getCount())
+                    .append(" dispatched=").append(stats.getDispatched().getCount())
+                    .append(" dequeues=").append(stats.getDequeues().getCount())
+                    .append(" forwards=").append(stats.getForwards().getCount())
+                    .append(" messages=").append(stats.getMessages().getCount()).append('\n');
+                for (Subscription sub : dest.getConsumers()) {
+                    sb.append("    sub ").append(sub.getConsumerInfo().getConsumerId())
+                        .append(" ").append(sub.getConsumerInfo().getSubscriptionName())
+                        .append(" network=").append(sub.getConsumerInfo().isNetworkSubscription())
+                        .append(" active=").append(sub.isSlowConsumer() ? "slow" : "ok")
+                        .append(" dispatched=").append(sub.getDispatchedCounter())
+                        .append(" pending=").append(sub.getPendingQueueSize()).append('\n');
+                }
+            }
+        } catch (Exception e) {
+            sb.append("failed to dump broker: ").append(e).append('\n');
+        }
     }
 
     protected void assertRemoteAdvisoryCount(final MessageConsumer advisoryConsumer, final int count) throws JMSException {
