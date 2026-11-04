@@ -34,7 +34,7 @@ public class DefaultTransportListener implements TransportListener {
     }
 
     /**
-     * An unrecoverable exception has occured on the transport
+     * An unrecoverable exception has occurred on the transport
      * 
      * @param error
      */
