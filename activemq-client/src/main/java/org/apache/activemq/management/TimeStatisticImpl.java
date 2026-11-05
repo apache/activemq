@@ -16,6 +16,9 @@
  */
 package org.apache.activemq.management;
 
+import java.util.concurrent.atomic.LongAccumulator;
+import java.util.concurrent.atomic.LongAdder;
+
 
 /**
  * A time statistic implementation
@@ -23,11 +26,11 @@ package org.apache.activemq.management;
  * 
  */
 public class TimeStatisticImpl extends StatisticImpl {
-    private long count;
-    private long maxTime;
-    private long minTime;
-    private long totalTime;
-    private TimeStatisticImpl parent;
+    private final LongAdder count = new LongAdder();
+    private final LongAccumulator maxTime = new LongAccumulator(Math::max, 0L);
+    private final LongAccumulator minTime = new LongAccumulator(Math::min, Long.MAX_VALUE);
+    private final LongAdder totalTime = new LongAdder();
+    private volatile TimeStatisticImpl parent;
 
     public TimeStatisticImpl(String name, String description) {
         this(name, "millis", description);
@@ -42,28 +45,26 @@ public class TimeStatisticImpl extends StatisticImpl {
         super(name, unit, description);
     }
 
-    public synchronized void reset() {
+    public void reset() {
         if(isDoReset()) {
             super.reset();
-            count = 0;
-            maxTime = 0;
-            minTime = 0;
-            totalTime = 0;
+            count.reset();
+            maxTime.reset();
+            minTime.reset();
+            totalTime.reset();
         }
     }
 
-    public synchronized long getCount() {
-        return count;
+    public long getCount() {
+        return count.sum();
     }
 
-    public synchronized void addTime(long time) {
-        count++;
-        totalTime += time;
-        if (time > maxTime) {
-            maxTime = time;
-        }
-        if (time < minTime || minTime == 0) {
-            minTime = time;
+    public void addTime(long time) {
+        count.increment();
+        totalTime.add(time);
+        maxTime.accumulate(time);
+        if (time != 0) {
+            minTime.accumulate(time);
         }
         updateSampleTime();
         if (parent != null) {
@@ -75,33 +76,35 @@ public class TimeStatisticImpl extends StatisticImpl {
      * @return the maximum time of any step
      */
     public long getMaxTime() {
-        return maxTime;
+        return maxTime.get();
     }
 
     /**
      * @return the minimum time of any step
      */
-    public synchronized long getMinTime() {
-        return minTime;
+    public long getMinTime() {
+        long min = minTime.get();
+        return min == Long.MAX_VALUE ? 0 : min;
     }
 
     /**
      * @return the total time of all the steps added together
      */
-    public synchronized long getTotalTime() {
-        return totalTime;
+    public long getTotalTime() {
+        return totalTime.sum();
     }
 
     /**
      * @return the average time calculated by dividing the
      *         total time by the number of counts
      */
-    public synchronized double getAverageTime() {
-        if (count == 0) {
+    public double getAverageTime() {
+        long c = getCount();
+        if (c == 0) {
             return 0;
         }
-        double d = totalTime;
-        return d / count;
+        double d = getTotalTime();
+        return d / c;
     }
 
 
@@ -110,12 +113,13 @@ public class TimeStatisticImpl extends StatisticImpl {
      *         total time by the number of counts but excluding the
      *         minimum and maximum times.
      */
-    public synchronized double getAverageTimeExcludingMinMax() {
-        if (count <= 2) {
+    public double getAverageTimeExcludingMinMax() {
+        long c = getCount();
+        if (c <= 2) {
             return 0;
         }
-        double d = totalTime - minTime - maxTime;
-        return d / (count - 2);
+        double d = getTotalTime() - getMinTime() - getMaxTime();
+        return d / (c - 2);
     }
 
 
@@ -151,15 +155,15 @@ public class TimeStatisticImpl extends StatisticImpl {
         this.parent = parent;
     }
 
-    protected synchronized void appendFieldDescription(StringBuffer buffer) {
+    protected void appendFieldDescription(StringBuffer buffer) {
         buffer.append(" count: ");
-        buffer.append(Long.toString(count));
+        buffer.append(Long.toString(getCount()));
         buffer.append(" maxTime: ");
-        buffer.append(Long.toString(maxTime));
+        buffer.append(Long.toString(getMaxTime()));
         buffer.append(" minTime: ");
-        buffer.append(Long.toString(minTime));
+        buffer.append(Long.toString(getMinTime()));
         buffer.append(" totalTime: ");
-        buffer.append(Long.toString(totalTime));
+        buffer.append(Long.toString(getTotalTime()));
         buffer.append(" averageTime: ");
         buffer.append(Double.toString(getAverageTime()));
         buffer.append(" averageTimeExMinMax: ");

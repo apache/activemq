@@ -16,13 +16,16 @@
  */
 package org.apache.activemq.management;
 
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.LongAdder;
+
 public class SizeStatisticImpl extends StatisticImpl {
 
-    private long count;
-    private volatile long maxSize;
-    private volatile long minSize;
-    private long totalSize;
-    private SizeStatisticImpl parent;
+    private final LongAdder count = new LongAdder();
+    private final AtomicLong maxSize = new AtomicLong();
+    private final AtomicLong minSize = new AtomicLong();
+    private final LongAdder totalSize = new LongAdder();
+    private volatile SizeStatisticImpl parent;
 
     public SizeStatisticImpl(String name, String description) {
         this(name, "bytes", description);
@@ -38,41 +41,37 @@ public class SizeStatisticImpl extends StatisticImpl {
     }
 
     @Override
-    public synchronized void reset() {
+    public void reset() {
         if (isDoReset()) {
             super.reset();
-            count = 0;
-            maxSize = 0;
-            minSize = 0;
-            totalSize = 0;
+            count.reset();
+            maxSize.set(0);
+            minSize.set(0);
+            totalSize.reset();
         }
     }
 
-    public synchronized long getCount() {
-        return count;
+    public long getCount() {
+        return count.sum();
     }
 
     public void addSize(long size) {
-        // Same enabled gate as CountStatisticImpl.increment(): skip the monitor
-        // (and parent propagation) entirely when statistics are disabled —
-        // enabled is a volatile read, so the disabled fast path is contention-free.
         if (!isEnabled()) {
             return;
         }
-        synchronized (this) {
-            count++;
-            totalSize += size;
-            if (size > maxSize) {
-                maxSize = size;
-            }
-            if (size < minSize || minSize == 0) {
-                minSize = size;
-            }
-            updateSampleTime();
-            if (parent != null) {
-                parent.addSize(size);
-            }
+        count.increment();
+        totalSize.add(size);
+        updateMinMax(size);
+        updateSampleTime();
+        SizeStatisticImpl p = parent;
+        if (p != null) {
+            p.addSize(size);
         }
+    }
+
+    private void updateMinMax(long size) {
+        maxSize.accumulateAndGet(size, Math::max);
+        minSize.updateAndGet(min -> size < min || min == 0 ? size : min);
     }
 
     /**
@@ -80,15 +79,11 @@ public class SizeStatisticImpl extends StatisticImpl {
      *
      * @param size
      */
-    public synchronized void setTotalSize(long size) {
-        count++;
-        totalSize = size;
-        if (size > maxSize) {
-            maxSize = size;
-        }
-        if (size < minSize || minSize == 0) {
-            minSize = size;
-        }
+    public void setTotalSize(long size) {
+        count.increment();
+        totalSize.reset();
+        totalSize.add(size);
+        updateMinMax(size);
         updateSampleTime();
     }
 
@@ -96,63 +91,66 @@ public class SizeStatisticImpl extends StatisticImpl {
      * @return the maximum size of any step
      */
     public long getMaxSize() {
-        return maxSize;
+        return maxSize.get();
     }
 
     /**
      * @return the maximum size of any step
      */
     public void setMaxSize(long size) {
-        maxSize = size;
+        maxSize.set(size);
     }
 
     /**
      * @return the minimum size of any step
      */
     public long getMinSize() {
-        return minSize;
+        return minSize.get();
     }
 
     /**
      * @return the maximum size of any step
      */
     public void setMinSize(long size) {
-        minSize = size;
+        minSize.set(size);
     }
 
     /**
      * @return the total size of all the steps added together
      */
-    public synchronized long getTotalSize() {
-        return totalSize;
+    public long getTotalSize() {
+        return totalSize.sum();
     }
 
-    public synchronized void setCount(long count) {
-        this.count = count;
+    public void setCount(long count) {
+        this.count.reset();
+        this.count.add(count);
     }
 
     /**
      * @return the average size calculated by dividing the total size by the
      *         number of counts
      */
-    public synchronized double getAverageSize() {
-        if (count == 0) {
+    public double getAverageSize() {
+        long c = count.sum();
+        if (c == 0) {
             return 0;
         }
-        double d = totalSize;
-        return d / count;
+        double d = totalSize.sum();
+        return d / c;
     }
 
     /**
      * @return the average size calculated by dividing the total size by the
      *         number of counts but excluding the minimum and maximum sizes.
      */
-    public synchronized double getAverageSizeExcludingMinMax() {
-        if (count <= 2) {
+    public double getAverageSizeExcludingMinMax() {
+        long c = count.sum();
+        if (c <= 2) {
             return 0;
         }
-        double d = totalSize - minSize - maxSize;
-        return d / (count - 2);
+        double d = totalSize.sum() - minSize.get() - maxSize.get();
+        return d / (c - 2);
     }
 
     /**
@@ -189,15 +187,15 @@ public class SizeStatisticImpl extends StatisticImpl {
     }
 
     @Override
-    protected synchronized void appendFieldDescription(StringBuffer buffer) {
+    protected void appendFieldDescription(StringBuffer buffer) {
         buffer.append(" count: ");
-        buffer.append(Long.toString(count));
+        buffer.append(Long.toString(count.sum()));
         buffer.append(" maxSize: ");
-        buffer.append(Long.toString(maxSize));
+        buffer.append(Long.toString(maxSize.get()));
         buffer.append(" minSize: ");
-        buffer.append(Long.toString(minSize));
+        buffer.append(Long.toString(minSize.get()));
         buffer.append(" totalSize: ");
-        buffer.append(Long.toString(totalSize));
+        buffer.append(Long.toString(totalSize.sum()));
         buffer.append(" averageSize: ");
         buffer.append(Double.toString(getAverageSize()));
         buffer.append(" averageTimeExMinMax: ");
