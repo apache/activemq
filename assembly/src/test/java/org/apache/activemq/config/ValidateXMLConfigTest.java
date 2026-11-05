@@ -28,6 +28,7 @@ import java.util.Objects;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
+import org.apache.commons.xml.secure.SecureDocumentBuilderFactory;
 import org.junit.Test;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.ErrorHandler;
@@ -68,9 +69,8 @@ public class ValidateXMLConfigTest {
     }
     
     private DocumentBuilder getDocumentBuilder(final String fileName) throws Exception {
-        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        DocumentBuilderFactory factory = SecureDocumentBuilderFactory.newNSInstance();
         factory.setValidating(true);
-        factory.setNamespaceAware(true);       
         factory.setAttribute(SCHEMA_LANGUAGE_ATTRIBUTE, XSD_SCHEMA_LANGUAGE);
         
         DocumentBuilder builder = factory.newDocumentBuilder();
