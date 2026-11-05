@@ -17,14 +17,20 @@
 package org.apache.activemq.broker.jmx;
 
 import java.io.IOException;
+import java.security.Principal;
+import java.util.Set;
 
 import javax.management.ObjectName;
 
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.TransportConnection;
+import org.apache.activemq.broker.TransportConnectionState;
 import org.apache.activemq.broker.TransportConnector;
+import org.apache.activemq.command.ConnectionId;
 import org.apache.activemq.command.ConnectionInfo;
 import org.apache.activemq.command.Response;
+import org.apache.activemq.jaas.UserPrincipal;
+import org.apache.activemq.security.SecurityContext;
 import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.util.IOExceptionSupport;
@@ -45,6 +51,7 @@ public class ManagedTransportConnection extends TransportConnection {
     private ObjectName byAddressName;
 
     private final boolean populateUserName;
+    private final boolean useAuthenticatedPrincipalForUserName;
 
     public ManagedTransportConnection(TransportConnector connector, Transport transport, Broker broker,
                                       TaskRunnerFactory factory, TaskRunnerFactory stopFactory,
@@ -55,6 +62,7 @@ public class ManagedTransportConnection extends TransportConnection {
         this.connectorName = connectorName;
         this.mbean = new ConnectionView(this, managementContext);
         this.populateUserName = broker.getBrokerService().isPopulateUserNameInMBeans();
+        this.useAuthenticatedPrincipalForUserName = broker.getBrokerService().isUseAuthenticatedPrincipalForUserNameInMBeans();
         if (managementContext.isAllowRemoteAddressInMBeanNames()) {
             byAddressName = createObjectName("remoteAddress", transport.getRemoteAddress());
             registerMBean(byAddressName);
@@ -77,7 +85,14 @@ public class ManagedTransportConnection extends TransportConnection {
         Response answer = super.processAddConnection(info);
         String clientId = info.getClientId();
         if (populateUserName) {
-            ((ConnectionView) mbean).setUserName(info.getUserName());
+            String userName = info.getUserName();
+            if (useAuthenticatedPrincipalForUserName && (userName == null || userName.isEmpty())) {
+                String principalUserName = getAuthenticatedUserName(info.getConnectionId());
+                if (principalUserName != null) {
+                    userName = principalUserName;
+                }
+            }
+            ((ConnectionView) mbean).setUserName(userName);
         }
         if (clientId != null) {
             if (byClientIdName == null) {
@@ -90,6 +105,40 @@ public class ManagedTransportConnection extends TransportConnection {
 
     // Implementation methods
     // -------------------------------------------------------------------------
+
+    /**
+     * User name for a connection that did not supply one, for example a
+     * connection authenticated by SSL certificate or anonymous access.
+     * Mirrors the JMSXUserID handling in UserIDBroker: prefer the
+     * UserPrincipal name from the SecurityContext (for certificate logins
+     * this is the mapped user rather than the certificate DN), then fall
+     * back to the security context user name.
+     */
+    private String getAuthenticatedUserName(ConnectionId connectionId) {
+        TransportConnectionState connectionState;
+        try {
+            connectionState = lookupConnectionState(connectionId);
+        } catch (IllegalStateException e) {
+            return null;
+        }
+        if (connectionState == null || connectionState.getContext() == null) {
+            return null;
+        }
+        SecurityContext securityContext = connectionState.getContext().getSecurityContext();
+        if (securityContext == null) {
+            return null;
+        }
+        Set<Principal> principals = securityContext.getPrincipals();
+        if (principals != null) {
+            for (Principal principal : principals) {
+                if (principal instanceof UserPrincipal) {
+                    return principal.getName();
+                }
+            }
+        }
+        return securityContext.getUserName();
+    }
+
     protected void registerMBean(ObjectName name) {
         if (name != null) {
             try {
