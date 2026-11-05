@@ -1,0 +1,137 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+# KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+# This build only runs on demand (Actions tab, "Run workflow"). It tests one configuration picked
+# from the inputs: the OS, the JDK vendor, the JDK version and the test profile. The quick profile
+# runs the same tests as ci-quick.yml, the full profile runs all the possible tests and takes a very
+# long time. Not every JDK vendor publishes every JDK version, the "Set up JDK" step fails when the
+# selected combination does not exist.
+# Unlike the other workflows, this one is not disabled on forks, so contributors can run it on their fork.
+#
+name: CI Manual
+
+run-name: CI Manual (${{ inputs.os }}, ${{ inputs.java-distribution }} ${{ inputs.java-version }}, ${{ inputs.test-profile }})
+
+on:
+  workflow_dispatch:
+    inputs:
+      os:
+        description: OS platform
+        type: choice
+        default: ubuntu-24.04
+        options:
+          - ubuntu-26.04
+          - ubuntu-24.04
+          - ubuntu-22.04
+          - macos-26
+          - macos-15
+          - windows-2025
+          - windows-2022
+      java-distribution:
+        description: JDK vendor
+        type: choice
+        default: temurin
+        options:
+          - temurin
+          - zulu
+          - corretto
+          - liberica
+          - microsoft
+          - oracle
+          - semeru
+          - sapmachine
+      java-version:
+        description: JDK version
+        type: choice
+        default: '25'
+        options:
+          - '17'
+          - '21'
+          - '25'
+          - '27'
+      test-profile:
+        description: Test profile (quick, or the long full test suite)
+        type: choice
+        default: quick
+        options:
+          - quick
+          - full
+
+jobs:
+  build:
+    name: build
+
+    permissions:
+      contents: read
+
+    timeout-minutes: 60
+
+    runs-on: ${{ inputs.os }}
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Set up JDK
+        uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          java-version: ${{ inputs.java-version }}
+          distribution: ${{ inputs.java-distribution }}
+          cache: 'maven'
+      - name: Build
+        run: mvn -U -B -e clean install -DskipTests
+      - name: Verify
+        run: mvn apache-rat:check
+
+  test:
+    name: test
+    needs: build
+
+    permissions:
+      contents: read
+      checks: write
+      pull-requests: write
+
+    runs-on: ${{ inputs.os }}
+    timeout-minutes: ${{ inputs.test-profile == 'full' && 480 || 180 }}
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Set up JDK
+        uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          java-version: ${{ inputs.java-version }}
+          distribution: ${{ inputs.java-distribution }}
+          cache: 'maven'
+      - name: Test
+        shell: bash
+        env:
+          TEST_PROFILE_ARGS: ${{ inputs.test-profile == 'quick' && '-Pactivemq.tests-quick' || '' }}
+        run: mvn -B -e -fae verify $TEST_PROFILE_ARGS -Dsurefire.rerunFailingTestsCount=3
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: test-results-${{ inputs.os }}-${{ inputs.java-distribution }}-java${{ inputs.java-version }}-${{ inputs.test-profile }}
+          path: '**/target/surefire-reports/*.xml'
+      - name: Publish Test Results
+        if: always() && runner.os == 'Linux'
+        uses: EnricoMi/publish-unit-test-result-action@7622c5bf3d112a72ab4fa3951c2aa5723d8ab92d # v2.25.0
+        with:
+          large_files: true
+          report_individual_runs: true
+          report_suite_logs: error
+          check_name: Test Results (${{ inputs.os }}, ${{ inputs.java-distribution }} ${{ inputs.java-version }}, ${{ inputs.test-profile }})
+          files: '**/target/surefire-reports/*.xml'

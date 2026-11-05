@@ -16,17 +16,17 @@
 # under the License.
 
 #
-# This build runs every 6 hours. It runs the same tests as ci-quick.yaml but on a schedule (4 times a day).
-# The goal here is to run the same as ci-quick.yaml but on a schedule to make sure we catch any issue that may be
-# introduced in the main branch as soon as possible.
-# This build is also used to validate the build on various os (Ubuntu, Windows, MacOS) and various Java versions (17, 21, 25)
-# on a regular basis to make sure we catch any issue that may be introduced by a change in the build or in the dependencies.
+# This build runs once a day. It runs the same tests as ci-quick.yml (the quick profile) but on a schedule.
+# The goal is to catch any issue introduced in the main branch within a day, and to validate the build on
+# various os (Ubuntu, Windows, MacOS) and various Java versions (17, 21, 25, 27) on a regular basis, so we
+# also catch issues introduced by a change in the build, the runner images or the dependencies.
+# The full test suite runs weekly from ci-periodic-full.yml.
 #
-name: CI Periodic
+name: CI Periodic Quick
 
 on:
   schedule:
-    - cron: '0 */6 * * *'
+    - cron: '0 0 * * *'
 
 jobs:
   build:
