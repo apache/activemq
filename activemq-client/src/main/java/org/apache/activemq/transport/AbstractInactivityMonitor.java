@@ -188,8 +188,8 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
             return;
         }
 
-        if (!commandSent.get() && useKeepAlive && monitorStarted.get() && !ASYNC_TASKS.isShutdown()) {
-            LOG.trace("{} no message sent since last write check, sending a KeepAliveInfo", this);
+        if ((!commandSent.get() || isKeepAliveOnEveryWriteCheck()) && useKeepAlive && monitorStarted.get() && !ASYNC_TASKS.isShutdown()) {
+            LOG.trace("{} sending a KeepAliveInfo", this);
 
             try {
                 ASYNC_TASKS.execute(new Runnable() {
@@ -352,6 +352,15 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
 
     public void setUseKeepAlive(boolean val) {
         useKeepAlive = val;
+    }
+
+    /**
+     * Send a keep-alive on every write check, even if a command was sent since the last one.
+     *
+     * @return true to send a keep-alive on every write check, false to skip it after a command
+     */
+    protected boolean isKeepAliveOnEveryWriteCheck() {
+        return false;
     }
 
     public long getConnectAttemptTimeout() {
