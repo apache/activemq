@@ -21,6 +21,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
+import java.io.Serializable;
 
 import jakarta.jms.JMSException;
 import jakarta.jms.MessageNotReadableException;
@@ -172,6 +173,20 @@ public class ActiveMQObjectMessageTest extends TestCase {
                 assertTrue(ExceptionUtils.getRootCause(e) instanceof ActiveMQUnmarshalEOFException);
             }
         }
+    }
+
+    // JMS 2.0 getBody() calls isBodyAssignableTo() (which populates the cached
+    // object via getObject()) and then doGetBody(). doGetBody() must reuse that
+    // cache instead of deserializing the content a second time.
+    public void testGetBodyDoesNotDeserializeTwice() throws Exception {
+        ActiveMQObjectMessage msg = new ActiveMQObjectMessage();
+        msg.setObject("value");
+        msg.storeContentAndClear();
+
+        Serializable body = msg.getBody(Serializable.class);
+        Serializable object = msg.getObject();
+
+        assertSame("doGetBody() should reuse the cached object instead of deserializing again", object, body);
     }
 
 }
