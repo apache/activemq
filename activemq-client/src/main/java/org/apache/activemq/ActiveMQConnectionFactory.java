@@ -131,6 +131,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
      * This strictly rejects non-standard property types such as Character, Map, and List.
      */
     private boolean strictCompliance = false;
+    private boolean deferPrefetchUntilStarted = false;
 
     private boolean disableTimeStampsByDefault;
     private boolean optimizedMessageDispatch = true;
@@ -444,6 +445,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
 
     protected void configureConnection(ActiveMQConnection connection) throws JMSException {
         connection.setPrefetchPolicy(getPrefetchPolicy());
+        connection.setDeferPrefetchUntilStarted(isDeferPrefetchUntilStarted());
         connection.setDisableTimeStampsByDefault(isDisableTimeStampsByDefault());
         connection.setOptimizedMessageDispatch(isOptimizedMessageDispatch());
         connection.setCopyMessageOnSend(isCopyMessageOnSend());
@@ -1073,6 +1075,22 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
      */
     public void setStrictCompliance(boolean strictCompliance) {
         this.strictCompliance = strictCompliance;
+    }
+
+    public boolean isDeferPrefetchUntilStarted() {
+        return deferPrefetchUntilStarted;
+    }
+
+    /**
+     * When enabled, queue consumers created before their connection is first
+     * started register with a prefetch of zero so the broker does not dispatch
+     * messages into a consumer that cannot deliver them. The configured
+     * prefetch is restored when the connection starts. Default is false to
+     * preserve the historical behavior of buffering pre-start dispatches in
+     * the client.
+     */
+    public void setDeferPrefetchUntilStarted(boolean deferPrefetchUntilStarted) {
+        this.deferPrefetchUntilStarted = deferPrefetchUntilStarted;
     }
 
     public String getClientIDPrefix() {
