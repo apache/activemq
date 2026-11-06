@@ -463,12 +463,12 @@ public class AMQ4083Test {
         String msgBody = new String(new byte[20*1024]);
         for (int i = 0; i < data.length; i++) {
             Message message = session.createTextMessage(msgBody);
-            producerExpire.send(queue, message);
+            producerExpire.send(message);
         }
 
         for (int i = 0; i < data.length; i++) {
             Message message = session.createTextMessage(msgBody);
-            producerNormal.send(queue, message);
+            producerNormal.send(message);
         }
 
         ArrayList<Message> messages = new ArrayList<Message>();
