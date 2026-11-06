@@ -68,18 +68,6 @@ public class StoreUsage extends PercentLimitUsage<StoreUsage> {
     }
 
     @Override
-    public int getPercentUsage() {
-        usageLock.writeLock().lock();
-        try {
-            percentUsage = caclPercentUsage();
-            return super.getPercentUsage();
-        } finally {
-            usageLock.writeLock().unlock();
-        }
-    }
-
-
-    @Override
     protected void updateLimitBasedOnPercent() {
         usageLock.writeLock().lock();
         try {
