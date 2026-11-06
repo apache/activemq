@@ -2004,16 +2004,24 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
             message.setJMSDeliveryMode(deliveryMode);
             long expiration = 0L;
             long timeStamp = System.currentTimeMillis();
+
+            // JMS 2.0: JMSDeliveryTime is the earliest time the message may be
+            // delivered -- the send time plus the producer's delivery delay. With no
+            // delay configured this is simply the send time, as before.
+            var deliveryDelay = producer.getDeliveryDelay();
+            var deliveryTime = deliveryDelay > 0 ? timeStamp + deliveryDelay : timeStamp;
+
             if (timeToLive > 0) {
-                expiration = timeToLive + timeStamp;
+                // JMS 2.0: time-to-live runs from the delivery time, not the send time,
+                // so a delayed message still gets its full lifetime once it is delivered.
+                expiration = timeToLive + deliveryTime;
             }
 
-            // TODO: AMQ-8500 - update this when openwire supports JMSDeliveryTime
             // ref: ActiveMQMessageTransformation#copyProperties
             if(!(message instanceof ActiveMQMessage)) {
-                setForeignMessageDeliveryTime(message, timeStamp);
+                setForeignMessageDeliveryTime(message, deliveryTime);
             } else {
-                message.setJMSDeliveryTime(timeStamp);
+                message.setJMSDeliveryTime(deliveryTime);
             }
             if (!disableMessageTimestamp && !producer.getDisableMessageTimestamp()) {
                 message.setJMSTimestamp(timeStamp);
