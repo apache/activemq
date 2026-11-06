@@ -295,14 +295,16 @@ public class ActiveMQJMS2ContextTest extends ActiveMQJMS2TestBase {
         assertEquals(0L, messageProducer.getDeliveryDelay());
     }
 
-    @Test(expected = UnsupportedOperationException.class)
+    @Test
     public void testProducerDeliveryDelaySetZero() throws JMSException {
         messageProducer.setDeliveryDelay(0L);
+        assertEquals(0L, messageProducer.getDeliveryDelay());
     }
 
-    @Test(expected = UnsupportedOperationException.class)
+    @Test
     public void testProducerDeliveryDelaySet() throws JMSException {
         messageProducer.setDeliveryDelay(1000l);
+        assertEquals(1000L, messageProducer.getDeliveryDelay());
     }
 
     @Test(expected = IllegalArgumentException.class)
