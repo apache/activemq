@@ -63,8 +63,14 @@ import org.slf4j.LoggerFactory;
  * <p>With {@code conduitSubscriptions=true}, multiple remote consumers
  * are condensed into a single network subscription on the local broker.
  * With {@code conduitSubscriptions=false}, each remote consumer gets its
- * own demand subscription regardless of shared type — each consumer has
- * its own prefetch and should be treated individually.
+ * own demand subscription, with one exception: the consumers of a shared
+ * durable subscription attach to a single demand subscription, because the
+ * remote subscription is one subscriber and its local durable subscription
+ * has to keep the same name when those consumers reconnect.
+ *
+ * <p>The shared and durable flags of a consumer only travel in OpenWire v13.
+ * In the shared cases the consumers connect in-VM and the bridge link
+ * negotiates v13, so both brokers see them as shared.
  */
 @RunWith(Parameterized.class)
 @Category(ParallelTest.class)
@@ -75,6 +81,7 @@ public class TopicBridgeDemandForwardingTest {
     private static final AtomicInteger BROKER_SEQ = new AtomicInteger();
     private static final String TOPIC_NAME = "test.bridge.demand";
     private static final int MESSAGE_COUNT = 10;
+    private static final String V13 = "?wireFormat.version=13";
 
     @Parameters(name = "durable={0}, shared={1}, consumers={2}, conduit={3}, expectedDemand={4}")
     public static Collection<Object[]> data() {
@@ -84,9 +91,10 @@ public class TopicBridgeDemandForwardingTest {
                 for (int consumers : new int[]{1, 2}) {
                     for (boolean conduit : new boolean[]{true, false}) {
                         // Conduit merges all remote consumers into one demand sub.
-                        // Without conduit, each consumer should get its own demand
-                        // regardless of shared type — each has its own prefetch.
-                        int expected = conduit ? 1 : consumers;
+                        // Without conduit, each consumer gets its own demand, except
+                        // that a shared durable subscription has one for all of its
+                        // consumers.
+                        int expected = conduit || (durable && shared) ? 1 : consumers;
                         params.add(new Object[]{durable, shared, consumers, conduit, expected});
                     }
                 }
@@ -203,7 +211,8 @@ public class TopicBridgeDemandForwardingTest {
         List<MessageConsumer> consumers = new ArrayList<>();
 
         if (shared) {
-            SharedTopicConnectionFactory sharedFactory = new SharedTopicConnectionFactory(brokerBUrl);
+            SharedTopicConnectionFactory sharedFactory = new SharedTopicConnectionFactory(
+                    "vm://" + brokerB.getBrokerName() + "?create=false&jms.watchTopicAdvisories=false");
             for (int i = 0; i < remoteConsumerCount; i++) {
                 Connection conn = sharedFactory.createConnection();
                 connections.add(conn);
@@ -243,14 +252,14 @@ public class TopicBridgeDemandForwardingTest {
         broker.setPersistent(false);
         broker.setUseJmx(false);
         broker.setBrokerName(name);
-        broker.addConnector("tcp://0.0.0.0:0");
+        broker.addConnector("tcp://0.0.0.0:0" + (shared ? V13 : ""));
         return broker;
     }
 
     private NetworkConnector bridgeBrokers(SharedTopicBrokerService local,
             SharedTopicBrokerService remote) throws Exception {
-        String uri = "static:(" + remote.getTransportConnectorByScheme("tcp")
-                .getPublishableConnectString() + ")";
+        String uri = "static:(tcp://localhost:" + remote.getTransportConnectorByScheme("tcp")
+                .getConnectUri().getPort() + (shared ? V13 : "") + ")";
         DiscoveryNetworkConnector connector = new DiscoveryNetworkConnector(new URI(uri));
         connector.setName(local.getBrokerName() + "-to-" + remote.getBrokerName());
         connector.setConduitSubscriptions(conduit);
