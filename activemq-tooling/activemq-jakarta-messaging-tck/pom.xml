@@ -44,6 +44,11 @@
       <artifactId>activemq-kahadb-store</artifactId>
     </dependency>
     <dependency>
+      <!-- SimpleAuthenticationPlugin principals, used to reject bad credentials -->
+      <groupId>org.apache.activemq</groupId>
+      <artifactId>activemq-jaas</artifactId>
+    </dependency>
+    <dependency>
       <groupId>org.apache.logging.log4j</groupId>
       <artifactId>log4j-slf4j2-impl</artifactId>
     </dependency>

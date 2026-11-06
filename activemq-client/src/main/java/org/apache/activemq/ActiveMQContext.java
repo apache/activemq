@@ -99,6 +99,7 @@ public class ActiveMQContext implements JMSContext {
         if(connectionCounter.get() == 0l) {
             throw new JMSRuntimeException("Context already closed");
         }
+        ActiveMQSession.validateSessionMode(sessionMode);
 
         connectionCounter.incrementAndGet();
         return newChildContext(sessionMode);
