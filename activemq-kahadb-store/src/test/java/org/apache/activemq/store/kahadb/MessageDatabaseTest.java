@@ -27,6 +27,7 @@ import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Locale;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -39,6 +40,29 @@ public class MessageDatabaseTest {
 
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
+
+    @Test
+    public void testStringSettingsAreParsedRegardlessOfDefaultLocale() throws Exception {
+        Locale defaultLocale = Locale.getDefault();
+        Locale.setDefault(Locale.forLanguageTag("tr-TR"));
+        try {
+            KahaDBStore store = new KahaDBStore();
+            store.setDirectory(temporaryFolder.newFolder());
+            store.setJournalDiskSyncStrategy("periodic");
+            store.setPurgeRecoveredXATransactionStrategy("commit");
+            store.setPreallocationScope("entire_journal_async");
+            store.setPreallocationStrategy("sparse_file");
+
+            Journal journal = store.createJournal();
+
+            assertEquals("PERIODIC", store.getJournalDiskSyncStrategy());
+            assertEquals("COMMIT", store.getPurgeRecoveredXATransactionStrategy());
+            assertEquals(Journal.PreallocationScope.ENTIRE_JOURNAL_ASYNC, journal.getPreallocationScope());
+            assertEquals(Journal.PreallocationStrategy.SPARSE_FILE, journal.getPreallocationStrategy());
+        } finally {
+            Locale.setDefault(defaultLocale);
+        }
+    }
 
     @Test
     public void testCheckPointCleanupErrorBubblesUp() throws Exception {
