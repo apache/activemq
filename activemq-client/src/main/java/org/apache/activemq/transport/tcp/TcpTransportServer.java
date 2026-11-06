@@ -94,6 +94,7 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
 
     protected int soTimeout = 0;
     protected int socketBufferSize = 64 * 1024;
+    private boolean socketBufferSizeSet;
     protected int connectionTimeout = 30000;
 
     /**
@@ -626,7 +627,9 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
             options.put("minmumWireFormatVersion", minmumWireFormatVersion);
             options.put("trace", trace);
             options.put("soTimeout", soTimeout);
-            options.put("socketBufferSize", socketBufferSize);
+            if (socketBufferSizeSet) {
+                options.put("socketBufferSize", socketBufferSize);
+            }
             options.put("connectionTimeout", connectionTimeout);
             options.put("logWriterName", logWriterName);
             options.put("dynamicManagement", dynamicManagement);
@@ -702,6 +705,7 @@ public class TcpTransportServer extends TransportServerThreadSupport implements 
 
     public void setSocketBufferSize(int socketBufferSize) {
         this.socketBufferSize = socketBufferSize;
+        this.socketBufferSizeSet = true;
     }
 
     public int getConnectionTimeout() {
