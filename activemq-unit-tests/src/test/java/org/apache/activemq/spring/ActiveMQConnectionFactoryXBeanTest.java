@@ -26,8 +26,10 @@ import static org.junit.Assert.fail;
 import jakarta.jms.Connection;
 import jakarta.jms.JMSException;
 import java.io.FileNotFoundException;
+import java.net.MalformedURLException;
 import java.net.UnknownHostException;
 import java.nio.file.NoSuchFileException;
+import java.util.Arrays;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.test.annotations.ParallelTest;
 import org.apache.activemq.transport.vm.VMTransportFactory;
@@ -173,9 +175,11 @@ public class ActiveMQConnectionFactoryXBeanTest {
         assertBrokerStartError("vm://localhost?brokerConfig=xbean:jar:file:invalid.jar!/", NoSuchFileException.class);
 
         System.setProperty(XBeanBrokerFactory.XBEAN_BROKER_FACTORY_PROTOCOLS_PROP, "remote-file,jar,ftp");
-        // remote file is now allowed, but can't be found with bad host
+        // remote file is now allowed, but can't be loaded. Before Java 25 a remote file URL falls
+        // back to FTP and fails on the unknown host, since Java 25 the JDK rejects a non-local
+        // file URL up front
         assertBrokerStartError("vm://localhost?brokerConfig=xbean:file://invalid",
-                UnknownHostException.class);
+                UnknownHostException.class, MalformedURLException.class);
     }
 
     private void assertBrokerCreated(String url) throws JMSException {
@@ -199,15 +203,17 @@ public class ActiveMQConnectionFactoryXBeanTest {
         }
     }
 
-    private void assertBrokerStartError(String url, Class<? extends Exception> expected) {
+    @SafeVarargs
+    private void assertBrokerStartError(String url, Class<? extends Exception>... expected) {
         final ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(url);
         try (Connection ignored = factory.createConnection()) {
             fail("Should have failed with an exception");
         } catch (JMSException e) {
             Throwable cause = e.getCause() != null ? e.getCause() : e;
             assertTrue(cause instanceof FatalBeanException);
-            cause = cause.getCause() != null ? cause.getCause() : cause;
-            assertTrue(expected.isAssignableFrom(cause.getClass()));
+            final Throwable rootCause = cause.getCause() != null ? cause.getCause() : cause;
+            assertTrue("Unexpected cause: " + rootCause,
+                    Arrays.stream(expected).anyMatch(type -> type.isInstance(rootCause)));
         }
     }
 }
