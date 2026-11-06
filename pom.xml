@@ -1353,8 +1353,8 @@
                 <configuration>
                   <rules>
                     <requireJavaVersion>
-                      <version>[25,)</version>
-                      <message>You must use Java 25+ to build a release; the multi-release jars carry Java 21, 24 and 25 classes.</message>
+                      <version>[25.0.5,)</version>
+                      <message>You must use Java 25.0.5+ to build a release; the multi-release jars carry Java 21, 24 and 25 classes, and the TLS hybrid key exchange reached Java 25 in the 25.0.5 update.</message>
                     </requireJavaVersion>
                   </rules>
                 </configuration>
