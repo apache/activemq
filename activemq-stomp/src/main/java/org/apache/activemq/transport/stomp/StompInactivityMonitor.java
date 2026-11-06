@@ -54,6 +54,12 @@ public class StompInactivityMonitor extends AbstractInactivityMonitor {
     protected void processOutboundWireFormatInfo(WireFormatInfo info) throws IOException {
     }
 
+    // STOMP requires a heartbeat even when a frame was sent just after a previous check (AMQ-4710)
+    @Override
+    protected boolean isKeepAliveOnEveryWriteCheck() {
+        return true;
+    }
+
     @Override
     protected boolean configuredOk() throws IOException {
 
