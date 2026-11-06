@@ -128,20 +128,78 @@ public class MarshallerRoundTripTest {
     }
 
     @Test
-    public void testPlainConsumerInfoMarshalledAsNonShared() throws Exception {
-        ConsumerInfo original = new ConsumerInfo();
-        original.setConsumerId(new ConsumerId(new SessionId(new ConnectionId("conn1"), 1), 3));
-        original.setDestination(new ActiveMQTopic("test.topic"));
-        original.setSubscriptionName("durableSub");
+    public void testPlainDurableConsumerInfoStaysDurable() throws Exception {
+        for (boolean tight : new boolean[] {false, true}) {
+            wireFormat.setTightEncodingEnabled(tight);
 
-        byte[] bytes = marshal(original);
-        Object result = unmarshal(bytes);
+            ConsumerInfo original = new ConsumerInfo();
+            original.setConsumerId(new ConsumerId(new SessionId(new ConnectionId("conn1"), 1), 3));
+            original.setDestination(new ActiveMQTopic("test.topic"));
+            original.setSubscriptionName("durableSub");
+            assertTrue(original.isDurable());
 
-        assertTrue(result instanceof SharedConsumerInfo);
-        SharedConsumerInfo restored = (SharedConsumerInfo) result;
-        assertFalse(restored.isShared());
-        assertFalse(restored.isDurable());
-        assertEquals("durableSub", restored.getSubscriptionName());
+            Object result = unmarshal(marshal(original));
+
+            assertTrue(result instanceof SharedConsumerInfo);
+            SharedConsumerInfo restored = (SharedConsumerInfo) result;
+            assertFalse("tight=" + tight, restored.isShared());
+            assertTrue("an ordinary durable subscriber must stay durable, tight=" + tight,
+                    restored.isDurable());
+            assertFalse("tight=" + tight, restored.isUserSpecifiedClientId());
+            assertEquals("durableSub", restored.getSubscriptionName());
+        }
+    }
+
+    @Test
+    public void testPlainNonDurableConsumerInfoStaysNonDurable() throws Exception {
+        for (boolean tight : new boolean[] {false, true}) {
+            wireFormat.setTightEncodingEnabled(tight);
+
+            ConsumerInfo original = new ConsumerInfo();
+            original.setConsumerId(new ConsumerId(new SessionId(new ConnectionId("conn1"), 1), 4));
+            original.setDestination(new ActiveMQTopic("test.topic"));
+
+            Object result = unmarshal(marshal(original));
+
+            assertTrue(result instanceof SharedConsumerInfo);
+            SharedConsumerInfo restored = (SharedConsumerInfo) result;
+            assertFalse("tight=" + tight, restored.isShared());
+            assertFalse("tight=" + tight, restored.isDurable());
+        }
+    }
+
+    @Test
+    public void testSharedFieldsRoundTripInBothEncodings() throws Exception {
+        for (boolean tight : new boolean[] {false, true}) {
+            for (boolean durable : new boolean[] {false, true}) {
+                for (boolean userSpecifiedClientId : new boolean[] {false, true}) {
+                    wireFormat.setTightEncodingEnabled(tight);
+                    String label = "tight=" + tight + ", durable=" + durable
+                            + ", userSpecifiedClientId=" + userSpecifiedClientId;
+
+                    SharedConsumerInfo original = new SharedConsumerInfo();
+                    original.setConsumerId(new ConsumerId(new SessionId(new ConnectionId("conn1"), 1), 5));
+                    original.setDestination(new ActiveMQTopic("test.topic"));
+                    original.setSubscriptionName("mySub");
+                    original.setClientId("client-1");
+                    original.setShared(true);
+                    original.setDurable(durable);
+                    original.setUserSpecifiedClientId(userSpecifiedClientId);
+                    original.setPrefetchSize(100);
+
+                    Object result = unmarshal(marshal(original));
+
+                    assertTrue(label, result instanceof SharedConsumerInfo);
+                    SharedConsumerInfo restored = (SharedConsumerInfo) result;
+                    assertTrue(label, restored.isShared());
+                    assertEquals(label, durable, restored.isDurable());
+                    assertEquals(label, userSpecifiedClientId, restored.isUserSpecifiedClientId());
+                    assertEquals(label, "mySub", restored.getSubscriptionName());
+                    assertEquals(label, "client-1", restored.getClientId());
+                    assertEquals(label, 100, restored.getPrefetchSize());
+                }
+            }
+        }
     }
 
     @Test
