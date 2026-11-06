@@ -43,6 +43,7 @@ import org.apache.activemq.thread.TaskRunnerFactory;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFactory;
 import org.apache.activemq.transport.TransportListener;
+import org.apache.activemq.transport.failover.FailoverTransport;
 import org.apache.activemq.util.*;
 import org.apache.activemq.util.URISupport.CompositeData;
 import org.slf4j.Logger;
@@ -391,6 +392,17 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
             connection.setPassword(password);
 
             configureConnection(connection);
+
+            // The failover reconnect task is created on first use, so the connection level
+            // virtual thread preference has to reach the transport before it starts. A value
+            // set on the failover URI itself takes precedence and is left alone, and a factory
+            // left at false says nothing, so the system property default still applies.
+            if (isUseVirtualThreadTaskRunner()) {
+                FailoverTransport failover = transport.narrow(FailoverTransport.class);
+                if (failover != null && failover.getUseVirtualThreadTaskRunner() == null) {
+                    failover.setUseVirtualThreadTaskRunner(true);
+                }
+            }
 
             transport.start();
 
@@ -906,6 +918,8 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         props.setProperty("transactedIndividualAck", Boolean.toString(isTransactedIndividualAck()));
         props.setProperty("nonBlockingRedelivery", Boolean.toString(isNonBlockingRedelivery()));
         props.setProperty("maxThreadPoolSize", Integer.toString(getMaxThreadPoolSize()));
+        props.setProperty("useDedicatedTaskRunner", Boolean.toString(isUseDedicatedTaskRunner()));
+        props.setProperty("useVirtualThreadTaskRunner", Boolean.toString(isUseVirtualThreadTaskRunner()));
         props.setProperty("nestedMapAndListEnabled", Boolean.toString(isNestedMapAndListEnabled()));
         props.setProperty("consumerFailoverRedeliveryWaitPeriod", Long.toString(getConsumerFailoverRedeliveryWaitPeriod()));
         props.setProperty("rmIdFromConnectionId", Boolean.toString(isRmIdFromConnectionId()));
