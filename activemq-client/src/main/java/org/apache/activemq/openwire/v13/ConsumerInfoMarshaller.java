@@ -29,10 +29,14 @@ import org.apache.activemq.openwire.OpenWireFormat;
 /**
  * OpenWire v13 marshaller for {@link ConsumerInfo}.
  *
- * <p>Extends the v12 marshaller with two additional boolean fields:
- * {@code shared} and {@code durable}. Creates {@link SharedConsumerInfo}
- * instances on unmarshal so the broker can detect shared consumers via
- * {@code instanceof}.
+ * <p>Extends the v12 marshaller with three additional boolean fields:
+ * {@code shared}, {@code durable} and {@code userSpecifiedClientId}.
+ * Creates {@link SharedConsumerInfo} instances on unmarshal so the broker
+ * can detect shared consumers via {@code instanceof}.
+ *
+ * <p>An ordinary {@link ConsumerInfo} is written as not shared, with the
+ * durable flag taken from {@link ConsumerInfo#isDurable()}, so an ordinary
+ * durable subscriber is still durable on the receiving side.
  */
 public class ConsumerInfoMarshaller extends org.apache.activemq.openwire.v12.ConsumerInfoMarshaller {
 
@@ -48,6 +52,7 @@ public class ConsumerInfoMarshaller extends org.apache.activemq.openwire.v12.Con
         SharedConsumerInfo info = (SharedConsumerInfo) o;
         info.setShared(bs.readBoolean());
         info.setDurable(bs.readBoolean());
+        info.setUserSpecifiedClientId(bs.readBoolean());
     }
 
     @Override
@@ -58,8 +63,10 @@ public class ConsumerInfoMarshaller extends org.apache.activemq.openwire.v12.Con
             SharedConsumerInfo info = (SharedConsumerInfo) o;
             bs.writeBoolean(info.isShared());
             bs.writeBoolean(info.isDurable());
+            bs.writeBoolean(info.isUserSpecifiedClientId());
         } else {
             bs.writeBoolean(false);
+            bs.writeBoolean(((ConsumerInfo) o).isDurable());
             bs.writeBoolean(false);
         }
 
@@ -72,6 +79,7 @@ public class ConsumerInfoMarshaller extends org.apache.activemq.openwire.v12.Con
 
         bs.readBoolean();
         bs.readBoolean();
+        bs.readBoolean();
     }
 
     @Override
@@ -81,6 +89,7 @@ public class ConsumerInfoMarshaller extends org.apache.activemq.openwire.v12.Con
         SharedConsumerInfo info = (SharedConsumerInfo) o;
         info.setShared(dataIn.readBoolean());
         info.setDurable(dataIn.readBoolean());
+        info.setUserSpecifiedClientId(dataIn.readBoolean());
     }
 
     @Override
@@ -91,8 +100,10 @@ public class ConsumerInfoMarshaller extends org.apache.activemq.openwire.v12.Con
             SharedConsumerInfo info = (SharedConsumerInfo) o;
             dataOut.writeBoolean(info.isShared());
             dataOut.writeBoolean(info.isDurable());
+            dataOut.writeBoolean(info.isUserSpecifiedClientId());
         } else {
             dataOut.writeBoolean(false);
+            dataOut.writeBoolean(((ConsumerInfo) o).isDurable());
             dataOut.writeBoolean(false);
         }
     }

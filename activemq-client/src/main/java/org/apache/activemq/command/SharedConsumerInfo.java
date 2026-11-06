@@ -47,9 +47,18 @@ public class SharedConsumerInfo extends ConsumerInfo {
         this.shared = shared;
     }
 
+    /**
+     * A shared consumer is durable only when the durable flag is set: a
+     * shared non-durable subscription also has a name. A consumer that is
+     * not shared follows the {@link ConsumerInfo} rule and is durable when
+     * it has a subscription name.
+     */
     @Override
     public boolean isDurable() {
-        return durable;
+        if (shared) {
+            return durable;
+        }
+        return durable || super.isDurable();
     }
 
     public void setDurable(boolean durable) {

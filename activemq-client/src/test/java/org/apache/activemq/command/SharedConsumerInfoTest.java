@@ -45,11 +45,25 @@ public class SharedConsumerInfoTest {
 
     @Test
     public void testDurableOverridesParentInference() {
+        // a shared non-durable subscription has a name too, so for a shared
+        // consumer only the flag decides
         SharedConsumerInfo info = new SharedConsumerInfo();
+        info.setShared(true);
         info.setSubscriptionName("mySub");
         assertFalse(info.isDurable());
 
         info.setDurable(true);
+        assertTrue(info.isDurable());
+    }
+
+    @Test
+    public void testNonSharedWithSubscriptionNameIsDurable() {
+        // an ordinary durable subscriber arrives over v13 as a
+        // SharedConsumerInfo that is not shared
+        SharedConsumerInfo info = new SharedConsumerInfo();
+        assertFalse(info.isDurable());
+
+        info.setSubscriptionName("mySub");
         assertTrue(info.isDurable());
     }
 
