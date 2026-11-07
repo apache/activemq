@@ -54,7 +54,7 @@
           <configuration>
               <instructions>
                   <Import-Package>
-                      org.apache.xbean*;version="[3.13,5)",
+                      org.apache.xbean*;version="[3.13,6)",
                       org.apache.aries.blueprint.*;version="[1.0,2)",
                       *
                   </Import-Package>
