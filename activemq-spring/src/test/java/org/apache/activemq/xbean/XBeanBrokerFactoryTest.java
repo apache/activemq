@@ -25,8 +25,10 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.FileNotFoundException;
+import java.net.MalformedURLException;
 import java.net.UnknownHostException;
 import java.nio.file.NoSuchFileException;
+import java.util.Arrays;
 import java.util.Set;
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
@@ -147,8 +149,9 @@ public class XBeanBrokerFactoryTest {
         startBrokerBeanError("xbean:jar:file:invalid.jar!/", NoSuchFileException.class);
         startBrokerBeanError("xbean:ftp://invalid", UnknownHostException.class);
         startBrokerBeanError("xbean:http://invalid", UnknownHostException.class);
-        // check remote file too
-        startBrokerBeanError("xbean:file://invalid", UnknownHostException.class);
+        // check remote file too. Before Java 25 a remote file URL falls back to FTP and fails
+        // on the unknown host, since Java 25 the JDK rejects a non-local file URL up front
+        startBrokerBeanError("xbean:file://invalid", UnknownHostException.class, MalformedURLException.class);
     }
 
     @Test
@@ -207,13 +210,15 @@ public class XBeanBrokerFactoryTest {
         startBroker("xbean:classpath:spring/xbean-test.xml");
     }
 
-    private void startBrokerBeanError(String url, Class<? extends Exception> expected) throws Exception {
+    @SafeVarargs
+    private void startBrokerBeanError(String url, Class<? extends Exception>... expected) throws Exception {
         try {
             startBroker(url);
             fail("Should have failed with an exception");
         } catch (FatalBeanException e) {
-            Throwable cause = e.getCause() != null ? e.getCause() : e;
-            assertTrue(expected.isAssignableFrom(cause.getClass()));
+            final Throwable cause = e.getCause() != null ? e.getCause() : e;
+            assertTrue("Unexpected cause: " + cause,
+                    Arrays.stream(expected).anyMatch(type -> type.isInstance(cause)));
         }
     }
 

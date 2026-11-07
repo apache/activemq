@@ -14,17 +14,16 @@
 # KIND, either express or implied.  See the License for the
 # specific language governing permissions and limitations
 # under the License.
-
 #
-# This build runs manually for now. It takes a very long time to run, so until we can
-# work on the stability to make it scheduled weekly, we'd better run it manually.
-# The build does the same as ci-quickly.yaml but runs all the possible tests
-# (as opposed to quick profile only for the other one running on PR/Merge)
+# This build runs once a week. It does the same as ci-periodic-quick.yml but runs all the possible tests
+# (as opposed to the quick profile only), on the latest Ubuntu, Windows and MacOS images with Java 17 and 25.
+# It takes a very long time to run. Use ci-manual.yaml to run the full test suite on demand.
 #
-name: CI Weekly (on-demand)
+name: CI Periodic Full
 
 on:
-  workflow_dispatch:
+  schedule:
+    - cron: '0 2 * * 6'
 
 jobs:
   build:
@@ -40,8 +39,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-24.04, macos-26, windows-2025 ]
-        java-version: [ 17, 21, 25, 27 ]
+        os: [ ubuntu-26.04, windows-2025, macos-26 ]
+        java-version: [ 17, 25 ]
 
     runs-on: ${{ matrix.os }}
 
@@ -67,30 +66,39 @@ jobs:
       checks: write
       pull-requests: write
 
-    runs-on: ubuntu-24.04
     timeout-minutes: 480
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-26.04, windows-2025, macos-26 ]
+        java-version: [ 17, 25 ]
+
+    runs-on: ${{ matrix.os }}
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Set up JDK
         uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
         with:
-          java-version: 17
+          java-version: ${{ matrix.java-version }}
           distribution: temurin
           cache: 'maven'
       - name: Test
+        shell: bash
         run: mvn -B -e -fae verify -Dsurefire.rerunFailingTestsCount=3
       - name: Upload Test Results
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: test-results
+          name: test-results-${{ matrix.os }}-java${{ matrix.java-version }}
           path: '**/target/surefire-reports/*.xml'
       - name: Publish Test Results
-        if: always()
+        if: always() && runner.os == 'Linux'
         uses: EnricoMi/publish-unit-test-result-action@7622c5bf3d112a72ab4fa3951c2aa5723d8ab92d # v2.25.0
         with:
           large_files: true
           report_individual_runs: true
           report_suite_logs: error
+          check_name: Test Results (${{ matrix.os }}, Java ${{ matrix.java-version }})
           files: '**/target/surefire-reports/*.xml'
