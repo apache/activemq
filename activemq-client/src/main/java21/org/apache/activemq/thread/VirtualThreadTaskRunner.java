@@ -109,7 +109,13 @@ class VirtualThreadTaskRunner implements TaskRunner {
             // waiting for iterating to finish
             if (runningThread != Thread.currentThread()) {
                 if (iterating) {
-                    runnableCondition.await(timeout, TimeUnit.MILLISECONDS);
+                    // Same contract as Object.wait(timeout) in the other runners:
+                    // zero means wait until the running iteration signals, not return at once
+                    if (timeout > 0) {
+                        runnableCondition.await(timeout, TimeUnit.MILLISECONDS);
+                    } else {
+                        runnableCondition.await();
+                    }
                 }
             }
         } finally {
