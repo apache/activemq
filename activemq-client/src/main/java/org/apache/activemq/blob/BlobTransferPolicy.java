@@ -111,6 +111,13 @@ public class BlobTransferPolicy {
         this.uploadStrategy = uploadStrategy;
     }
 
+    /**
+     * Sets the download strategy to use for downloading BLOBs from some URL
+     */
+    public void setDownloadStrategy(BlobDownloadStrategy downloadStrategy) {
+        this.downloadStrategy = downloadStrategy;
+    }
+
     public int getBufferSize() {
         return bufferSize;
     }
