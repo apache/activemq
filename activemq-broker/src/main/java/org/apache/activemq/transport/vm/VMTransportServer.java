@@ -76,14 +76,22 @@ public class VMTransportServer implements TransportServer {
 
         connectionCount.incrementAndGet();
         VMTransport client = new VMTransport(location) {
-            public void stop() throws Exception {
-                if (!disposed.get()) {
-                    super.stop();
-                    if (connectionCount.decrementAndGet() == 0 && disposeOnDisconnect) {
+            // Each connection is counted once on connect, so it may only be released once
+            // no matter how many times, or through which stop variant, it is stopped.
+            // stop() delegates to stop(Throwable), so overriding here covers both.
+            private final AtomicBoolean counted = new AtomicBoolean(true);
+
+            @Override
+            public void stop(Throwable exception) throws Exception {
+                try {
+                    super.stop(exception);
+                } finally {
+                    if (counted.compareAndSet(true, false)
+                            && connectionCount.decrementAndGet() == 0 && disposeOnDisconnect) {
                         VMTransportServer.this.stop();
                     }
                 }
-            };
+            }
         };
 
         VMTransport server = new VMTransport(location);
