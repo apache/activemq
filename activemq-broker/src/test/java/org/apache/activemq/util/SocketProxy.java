@@ -319,6 +319,11 @@ public class SocketProxy {
                         pause.get().await();
                         out.write(buf, 0, len);
                     }
+                    // one side closed, pass that on to the other side the way a tunnel would,
+                    // unless the receive side was half closed on purpose
+                    if (!receiveSocket.isClosed()) {
+                        close();
+                    }
                 } catch (Exception e) {
                     LOG.debug("read/write failed, reason: " + e.getLocalizedMessage());
                     try {
@@ -364,8 +369,9 @@ public class SocketProxy {
             try {
                 while(!socket.isClosed()) {
                     pause.get().await();
+                    Socket source = null;
                     try {
-                        Socket source = socket.accept();
+                        source = socket.accept();
                         pause.get().await();
                         if (receiveBufferSize > 0) {
                             source.setReceiveBufferSize(receiveBufferSize);
@@ -375,6 +381,17 @@ public class SocketProxy {
                             connections.add(new Bridge(source, target));
                         }
                     } catch (SocketTimeoutException expected) {
+                    } catch (Exception e) {
+                        if (source == null) {
+                            throw e;
+                        }
+                        // the target is not reachable, drop the accepted connection the way a
+                        // tunnel would and keep accepting so the proxy outlives a target restart
+                        LOG.info("closing accepted " + source + ", could not connect to " + target + ": " + e);
+                        try {
+                            source.close();
+                        } catch (IOException ignore) {
+                        }
                     }
                 }
             } catch (Exception e) {
