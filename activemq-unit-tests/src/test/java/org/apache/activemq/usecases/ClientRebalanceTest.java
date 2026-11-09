@@ -147,6 +147,7 @@ public class ClientRebalanceTest extends JmsMultipleBrokersTestSupport {
                     return false;
                 }
             }, TimeUnit.SECONDS.toMillis(15), TimeUnit.MILLISECONDS.toMillis(500)));
+        conn.close();
     }
 
     public void testReconnect() throws Exception {
@@ -154,8 +155,11 @@ public class ClientRebalanceTest extends JmsMultipleBrokersTestSupport {
         final String b1Name = "rc1-" + BROKER_SEQUENCE.incrementAndGet();
         final String b2Name = "rc2-" + BROKER_SEQUENCE.incrementAndGet();
 
-        final BrokerService b1 = createBrokerProgrammatically(b1Name);
-        final BrokerService b2 = createBrokerProgrammatically(b2Name);
+        // This test issues the rebalance itself through a ConnectionControl. With
+        // rebalanceClusterClients on, b1 would also tell the client to reconnect as soon as the
+        // bridge from b2 forms, and the client could land on b2 before the test looks for it on b1.
+        final BrokerService b1 = createBrokerProgrammatically(b1Name, false);
+        final BrokerService b2 = createBrokerProgrammatically(b2Name, false);
 
         b1.start();
         b1.waitUntilStarted();
@@ -167,10 +171,11 @@ public class ClientRebalanceTest extends JmsMultipleBrokersTestSupport {
 
         // Wire network connectors between b1 and b2
         final NetworkConnector nc_b1_b2 = addAndStartNetworkConnector(b1, b1Name + "_" + b2Name, b2Uri);
-        addAndStartNetworkConnector(b2, b2Name + "_" + b1Name, b1Uri);
+        final NetworkConnector nc_b2_b1 = addAndStartNetworkConnector(b2, b2Name + "_" + b1Name, b1Uri);
 
-        // Wait for bridge to form
+        // Wait for both bridges to form so the cluster is settled before the client connects
         waitForBridgeOnConnector(nc_b1_b2, b1Name + "->" + b2Name);
+        waitForBridgeOnConnector(nc_b2_b1, b2Name + "->" + b1Name);
 
         LOG.info("Starting connection");
 
@@ -221,6 +226,10 @@ public class ClientRebalanceTest extends JmsMultipleBrokersTestSupport {
     }
 
     private BrokerService createBrokerProgrammatically(final String brokerName) throws Exception {
+        return createBrokerProgrammatically(brokerName, true);
+    }
+
+    private BrokerService createBrokerProgrammatically(final String brokerName, final boolean rebalanceClusterClients) throws Exception {
         final BrokerService broker = new BrokerService();
         broker.setBrokerName(brokerName);
         broker.setPersistent(false);
@@ -228,7 +237,7 @@ public class ClientRebalanceTest extends JmsMultipleBrokersTestSupport {
 
         final TransportConnector tc = broker.addConnector("tcp://localhost:0");
         tc.setName("openwire");
-        tc.setRebalanceClusterClients(true);
+        tc.setRebalanceClusterClients(rebalanceClusterClients);
         tc.setUpdateClusterClients(true);
 
         brokers.put(brokerName, new BrokerItem(broker));
