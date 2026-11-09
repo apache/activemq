@@ -172,6 +172,12 @@ public final class IntrospectionSupport {
             } else if (target instanceof javax.net.ssl.SSLSocket) {
                 // overcome illegal access issues with internal implementation class
                 clazz = javax.net.ssl.SSLSocket.class;
+            } else if (target instanceof java.net.ServerSocket) {
+                // nio channels hand out sun.nio.ch.ServerSocketAdaptor, which is not accessible
+                clazz = java.net.ServerSocket.class;
+            } else if (target instanceof java.net.Socket) {
+                // nio channels hand out sun.nio.ch.SocketAdaptor, which is not accessible
+                clazz = java.net.Socket.class;
             }
             Method setter = findSetterMethod(clazz, name);
             if (setter == null) {
