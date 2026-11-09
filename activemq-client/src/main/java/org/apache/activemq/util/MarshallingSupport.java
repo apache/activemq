@@ -453,18 +453,23 @@ public final class MarshallingSupport {
             } else if ((a & 0xf8) == 0xf0) {
                 // A standard UTF-8 four-byte sequence, U+10000 to U+10FFFF. Modified UTF-8 never
                 // contains one, since it writes such a character as a surrogate pair of three-byte
-                // sequences, but OpenWire clients that are not Java, such as ActiveMQ-CPP, send it as
-                // is. It decodes to the same surrogate pair, so nothing that decoded before changes.
-                if (count + 2 >= utfSize)
+                // sequences. A non-Java OpenWire client can still deliver one: ActiveMQ-CPP sends the
+                // bytes of the string it is given, and an application that put standard UTF-8 there
+                // sends this form. It decodes to the same surrogate pair, so nothing that decoded
+                // before changes.
+                if (count + 2 >= utfSize) {
                     throw new UTFDataFormatException();
+                }
                 int b = buf[offset + count++];
                 int c = buf[offset + count++];
                 int d = buf[offset + count++];
-                if (((b & 0xC0) != 0x80) || ((c & 0xC0) != 0x80) || ((d & 0xC0) != 0x80))
+                if (((b & 0xC0) != 0x80) || ((c & 0xC0) != 0x80) || ((d & 0xC0) != 0x80)) {
                     throw new UTFDataFormatException();
+                }
                 int codePoint = ((a & 0x07) << 18) | ((b & 0x3F) << 12) | ((c & 0x3F) << 6) | (d & 0x3F);
-                if (codePoint < Character.MIN_SUPPLEMENTARY_CODE_POINT || codePoint > Character.MAX_CODE_POINT)
+                if (codePoint < Character.MIN_SUPPLEMENTARY_CODE_POINT || codePoint > Character.MAX_CODE_POINT) {
                     throw new UTFDataFormatException();
+                }
                 out[s++] = Character.highSurrogate(codePoint);
                 out[s++] = Character.lowSurrogate(codePoint);
             } else {

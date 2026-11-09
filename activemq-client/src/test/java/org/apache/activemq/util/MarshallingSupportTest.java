@@ -269,8 +269,9 @@ public class MarshallingSupportTest {
 
     @Test
     public void testConvertUTF8WithBufDecodesStandardFourByteSequences() throws Exception {
-        // What a non-Java OpenWire client such as ActiveMQ-CPP sends for a supplementary character:
-        // standard UTF-8, one four-byte sequence where modified UTF-8 has a surrogate pair.
+        // What arrives when an application puts standard UTF-8 into a string that a non-Java
+        // OpenWire client such as ActiveMQ-CPP sends as it is: for a supplementary character, one
+        // four-byte sequence where modified UTF-8 has a surrogate pair.
         String[] values = {"😃", "A😃B", "𐀀", "􏿿", "𠮷ࠀ"};
         for (String value : values) {
             byte[] standard = value.getBytes(StandardCharsets.UTF_8);
