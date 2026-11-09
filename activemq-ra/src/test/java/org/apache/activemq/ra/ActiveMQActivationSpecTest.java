@@ -328,10 +328,12 @@ public class ActiveMQActivationSpecTest {
         assertTrue("Incorrect PropertyDescriptors returned", expectedList.containsAll(actualList));
     }
 
+    @Test(timeout = 60000)
     public void testSelfEquality() {
         assertEquality(activationSpec, activationSpec);
     }
 
+    @Test(timeout = 60000)
     public void testSamePropertiesButNotEqual() {
         assertNonEquality(new ActiveMQActivationSpec(), new ActiveMQActivationSpec());
     }
