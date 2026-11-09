@@ -16,23 +16,24 @@
  */
 package org.apache.activemq.network;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.net.URI;
-import java.util.ArrayList;
 
 import org.apache.activemq.broker.BrokerFactory;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.util.SocketProxy;
 
 /**
- * Test network reconnects over SSH tunnels. This case can be especially tricky
- * since the SSH tunnels fool the TCP transport into thinking that they are
- * initially connected.
- *
+ * Test network reconnects over tunnels. This case can be especially tricky since a tunnel
+ * accepts the connection before the far end is reachable, which fools the TCP transport into
+ * thinking that it is connected. The tunnels used to be ssh port forwards to localhost, they
+ * are now in-JVM TCP proxies that behave the same way without needing ssh access.
  */
 public class SSHTunnelNetworkReconnectTest extends NetworkReconnectTest {
 
-    ArrayList<Process> processes = new ArrayList<Process>();
+    // the equivalent of ssh -L60006:localhost:61616 and ssh -L60007:localhost:61617,
+    // the ports the broker configs point their network connectors at
+    private SocketProxy tunnelToBroker1;
+    private SocketProxy tunnelToBroker2;
 
     @Override
     protected BrokerService createFirstBroker() throws Exception {
@@ -48,47 +49,19 @@ public class SSHTunnelNetworkReconnectTest extends NetworkReconnectTest {
 
     @Override
     protected void setUp() throws Exception {
-        startProcess("ssh -Nn -L60006:localhost:61616 localhost");
-        startProcess("ssh -Nn -L60007:localhost:61617 localhost");
+        tunnelToBroker1 = new SocketProxy(60006, new URI("tcp://localhost:61616"));
+        tunnelToBroker2 = new SocketProxy(60007, new URI("tcp://localhost:61617"));
         super.setUp();
     }
 
     @Override
     protected void tearDown() throws Exception {
         super.tearDown();
-        for (Process p : processes) {
-            p.destroy();
+        if (tunnelToBroker1 != null) {
+            tunnelToBroker1.close();
         }
-    }
-
-    private void startProcess(String command) throws IOException {
-        final Process process = Runtime.getRuntime().exec(command);
-        processes.add(process);
-        new Thread("stdout: " + command) {
-            @Override
-            public void run() {
-                try {
-                    InputStream is = process.getInputStream();
-                    int c;
-                    while ((c = is.read()) >= 0) {
-                        System.out.write(c);
-                    }
-                } catch (IOException e) {
-                }
-            }
-        }.start();
-        new Thread("stderr: " + command) {
-            @Override
-            public void run() {
-                try {
-                    InputStream is = process.getErrorStream();
-                    int c;
-                    while ((c = is.read()) >= 0) {
-                        System.err.write(c);
-                    }
-                } catch (IOException e) {
-                }
-            }
-        }.start();
+        if (tunnelToBroker2 != null) {
+            tunnelToBroker2.close();
+        }
     }
 }
