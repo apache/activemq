@@ -40,8 +40,12 @@ public class DuplexNetworkTest extends SimpleNetworkTest {
     private static final Logger LOG = LoggerFactory.getLogger(DuplexNetworkTest.class);
 
     @Override
-    protected String getLocalBrokerURI() {
-        return "org/apache/activemq/network/duplexLocalBroker-ephemeral.xml";
+    protected BrokerService createLocalBroker() throws Exception {
+        final BrokerService broker = new BrokerService();
+        broker.setBrokerName("localBroker");
+        broker.setUseShutdownHook(false);
+        broker.addConnector("tcp://localhost:0");
+        return broker;
     }
 
     @Override
@@ -55,8 +59,7 @@ public class DuplexNetworkTest extends SimpleNetworkTest {
     @Override
     protected void addNetworkConnectors() throws Exception {
         // Add a duplex network connector from localBroker to remoteBroker using the actual
-        // assigned ephemeral port (matching the original duplexLocalBroker.xml config but
-        // without hardcoded ports).
+        // assigned ephemeral port.
         final URI remoteConnectURI = remoteBroker.getTransportConnectors().get(0).getConnectUri();
 
         final DiscoveryNetworkConnector duplexConnector = new DiscoveryNetworkConnector(
