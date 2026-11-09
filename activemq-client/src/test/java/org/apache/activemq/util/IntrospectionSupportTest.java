@@ -16,7 +16,11 @@
  */
 package org.apache.activemq.util;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+
+import java.nio.channels.ServerSocketChannel;
+import java.nio.channels.SocketChannel;
 
 import org.junit.Test;
 
@@ -51,5 +55,27 @@ public class IntrospectionSupportTest {
         IntrospectionSupport.setProperty(dummyClass, "trace", value);
 
         assertTrue(dummyClass.isTrace());
+    }
+
+    // nio channels return JDK internal socket classes that reflection cannot access,
+    // so the setter has to be resolved against the public java.net API instead
+    @Test
+    public void testSetPropertyOnNioSocket() throws Exception {
+        try (var channel = SocketChannel.open()) {
+            var socket = channel.socket();
+            assertTrue(IntrospectionSupport.setProperty(socket, "tcpNoDelay", "true"));
+            assertTrue(socket.getTcpNoDelay());
+            assertTrue(IntrospectionSupport.setProperty(socket, "soTimeout", "1234"));
+            assertEquals(1234, socket.getSoTimeout());
+        }
+    }
+
+    @Test
+    public void testSetPropertyOnNioServerSocket() throws Exception {
+        try (var channel = ServerSocketChannel.open()) {
+            var socket = channel.socket();
+            assertTrue(IntrospectionSupport.setProperty(socket, "soTimeout", "1234"));
+            assertEquals(1234, socket.getSoTimeout());
+        }
     }
 }
