@@ -194,6 +194,9 @@ public abstract class UnifiedTestCase extends JMSTestCase
       }
       catch (Exception e)
       {
+         // tearDown is not called when setUp fails, so release the administrated objects
+         // here or every following test fails binding them again
+         cleanUp();
          throw new RuntimeException(e);
       }
    }
@@ -204,20 +207,27 @@ public abstract class UnifiedTestCase extends JMSTestCase
    @Override
    protected void tearDown() throws Exception
    {
+      cleanUp();
+      super.tearDown();
+   }
+
+   /**
+    * Close what was opened and unbind what was bound, each step on its own so that a
+    * failure in one does not leave the rest behind for the next test.
+    */
+   private void cleanUp()
+   {
       try
       {
-         consumerConnection.close();
-         producerConnection.close();
+         closeQuietly(consumerConnection);
+         closeQuietly(producerConnection);
 
-         admin.deleteConnectionFactory(UnifiedTestCase.CF_NAME);
-         admin.deleteQueueConnectionFactory(UnifiedTestCase.QCF_NAME);
-         admin.deleteTopicConnectionFactory(UnifiedTestCase.TCF_NAME);
-         admin.deleteQueue(UnifiedTestCase.DESTINATION_NAME);
-         admin.deleteQueue(UnifiedTestCase.QUEUE_NAME);
-         admin.deleteTopic(UnifiedTestCase.TOPIC_NAME);
-      }
-      catch (Exception ignored)
-      {
+         runQuietly(() -> admin.deleteConnectionFactory(UnifiedTestCase.CF_NAME));
+         runQuietly(() -> admin.deleteQueueConnectionFactory(UnifiedTestCase.QCF_NAME));
+         runQuietly(() -> admin.deleteTopicConnectionFactory(UnifiedTestCase.TCF_NAME));
+         runQuietly(() -> admin.deleteQueue(UnifiedTestCase.DESTINATION_NAME));
+         runQuietly(() -> admin.deleteQueue(UnifiedTestCase.QUEUE_NAME));
+         runQuietly(() -> admin.deleteTopic(UnifiedTestCase.TOPIC_NAME));
       }
       finally
       {
@@ -239,8 +249,6 @@ public abstract class UnifiedTestCase extends JMSTestCase
          topicConnectionFactory = null;
          topic = null;
       }
-
-      super.tearDown();
    }
 
    public UnifiedTestCase(final String name)
