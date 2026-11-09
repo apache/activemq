@@ -61,11 +61,9 @@ public class TwoBrokerNetworkLoadBalanceTest extends JmsMultipleBrokersTestSuppo
         final MessageIdList msgsA = getConsumerMessages("BrokerA", clientA);
         final MessageIdList msgsB = getConsumerMessages("BrokerB", clientB);
 
-        Wait.waitFor(new Wait.Condition() {
-            public boolean isSatisified() throws Exception {
-                return msgsA.getMessageCount() + msgsB.getMessageCount() == 6000;
-            }});
-        
+        assertTrue("all messages should be consumed", Wait.waitFor(
+                () -> msgsA.getMessageCount() + msgsB.getMessageCount() == 6000, Wait.MAX_WAIT_MILLIS, 10));
+
         LOG.info("A got: " +  msgsA.getMessageCount());
         LOG.info("B got: " +  msgsB.getMessageCount());
          

@@ -128,7 +128,7 @@ public class ClientRebalanceTest extends JmsMultipleBrokersTestSupport {
                 } catch (final Exception e) {
                     return false;
                 }
-            }, TimeUnit.SECONDS.toMillis(15), TimeUnit.MILLISECONDS.toMillis(500)));
+            }, TimeUnit.SECONDS.toMillis(15), 10));
 
         LOG.info("Stopping broker 2");
 
@@ -146,7 +146,7 @@ public class ClientRebalanceTest extends JmsMultipleBrokersTestSupport {
                 } catch (final Exception e) {
                     return false;
                 }
-            }, TimeUnit.SECONDS.toMillis(15), TimeUnit.MILLISECONDS.toMillis(500)));
+            }, TimeUnit.SECONDS.toMillis(15), 10));
         conn.close();
     }
 
@@ -211,7 +211,7 @@ public class ClientRebalanceTest extends JmsMultipleBrokersTestSupport {
                 return afterConnection != null
                     && startConnectionId.equals(afterConnection.getConnectionId())
                     && !startRemoteAddress.equals(afterConnection.getRemoteAddress());
-            }, TimeUnit.SECONDS.toMillis(10), TimeUnit.MILLISECONDS.toMillis(200)));
+            }, TimeUnit.SECONDS.toMillis(10), 10));
 
         final TransportConnection afterFailoverConnection = findClientFailoverTransportConnection(transportConnector);
         assertNotNull(afterFailoverConnection);
@@ -271,7 +271,7 @@ public class ClientRebalanceTest extends JmsMultipleBrokersTestSupport {
                     }
                 }
                 return false;
-            }, TimeUnit.SECONDS.toMillis(30), TimeUnit.MILLISECONDS.toMillis(200)));
+            }, TimeUnit.SECONDS.toMillis(30), 10));
     }
 
     protected TransportConnection findClientFailoverTransportConnection(final TransportConnector transportConnector) {
