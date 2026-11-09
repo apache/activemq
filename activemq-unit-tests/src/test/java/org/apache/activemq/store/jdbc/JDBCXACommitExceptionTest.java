@@ -33,6 +33,9 @@ import javax.transaction.xa.Xid;
 import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.Reader;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.math.BigDecimal;
 import java.net.URL;
 import java.sql.Array;
@@ -518,6 +521,216 @@ public class JDBCXACommitExceptionTest extends JDBCCommitExceptionTest {
         other.stop();
     }
 
+    private static final String INJECTED_FAILURE = "Injected store failure";
+
+    // one-off faults, each cleared when it fires
+    final AtomicBoolean failNextConnectionCommit = new AtomicBoolean();
+    final AtomicBoolean clearXidNextUpdatesNoRows = new AtomicBoolean();
+    final AtomicBoolean clearXidNextUpdateThrows = new AtomicBoolean();
+
+    public void testPrepareStoreCommitFailureReportsCause() throws Exception {
+        startBrokerWithFaultInjection();
+
+        XAConnection connection = factory.createXAConnection();
+        connection.start();
+        XASession session = connection.createXASession();
+        XAResource resource = session.getXAResource();
+
+        Xid tid = createXid();
+        sendInXaTransaction(session, resource, tid);
+
+        failNextConnectionCommit.set(true);
+        try {
+            resource.prepare(tid);
+            fail("prepare should fail when the store commit fails");
+        } catch (XAException expected) {
+            LOG.info("prepare failed with xaErrorCode: " + expected.errorCode, expected);
+            String messages = exceptionMessages(expected);
+            assertTrue("client sees the store failure, got: " + messages, messages.contains(INJECTED_FAILURE));
+            assertFalse("store failure is not masked, got: " + messages, messages.contains("Not started."));
+        }
+        assertFalse("fault fired", failNextConnectionCommit.get());
+
+        resource.rollback(tid);
+        assertEquals("nothing left in the store", 0, dumpMessages());
+        connection.close();
+    }
+
+    public void testCommitStoreCommitFailureReportsCause() throws Exception {
+        startBrokerWithFaultInjection();
+
+        XAConnection connection = factory.createXAConnection();
+        connection.start();
+        XASession session = connection.createXASession();
+        XAResource resource = session.getXAResource();
+
+        Xid tid = createXid();
+        sendInXaTransaction(session, resource, tid);
+        resource.prepare(tid);
+
+        failNextConnectionCommit.set(true);
+        try {
+            resource.commit(tid, false);
+            fail("commit should fail when the store commit fails");
+        } catch (XAException expected) {
+            LOG.info("commit failed with xaErrorCode: " + expected.errorCode, expected);
+            String messages = exceptionMessages(expected);
+            assertTrue("client sees the store failure, got: " + messages, messages.contains(INJECTED_FAILURE));
+            assertFalse("store failure is not masked, got: " + messages, messages.contains("Not started."));
+            assertEquals("prepared commit can be retried", XAException.XA_RETRY, expected.errorCode);
+        }
+        assertFalse("fault fired", failNextConnectionCommit.get());
+
+        resource.commit(tid, false);
+        assertEquals("one message in the store", 1, dumpMessages());
+        connection.close();
+    }
+
+    public void testCommitOfPreparedAddSucceedsOnRetryAfterClearXidMatchesNoRows() throws Exception {
+        doTestCommitOfPreparedAddSucceedsOnRetry(clearXidNextUpdatesNoRows);
+    }
+
+    public void testCommitOfPreparedAddSucceedsOnRetryAfterClearXidSqlException() throws Exception {
+        doTestCommitOfPreparedAddSucceedsOnRetry(clearXidNextUpdateThrows);
+    }
+
+    public void testCommitOfPreparedAddSucceedsOnRetryAfterConnectionCommitFailure() throws Exception {
+        doTestCommitOfPreparedAddSucceedsOnRetry(failNextConnectionCommit);
+    }
+
+    private void doTestCommitOfPreparedAddSucceedsOnRetry(AtomicBoolean fault) throws Exception {
+        startBrokerWithFaultInjection();
+
+        XAConnection connection = factory.createXAConnection();
+        connection.start();
+        XASession session = connection.createXASession();
+        XAResource resource = session.getXAResource();
+
+        Xid tid = createXid();
+        sendInXaTransaction(session, resource, tid);
+        resource.prepare(tid);
+
+        fault.set(true);
+        try {
+            resource.commit(tid, false);
+            fail("commit should fail once");
+        } catch (XAException expected) {
+            LOG.info("first commit failed with xaErrorCode: " + expected.errorCode, expected);
+        }
+        assertFalse("fault fired", fault.get());
+
+        // the transaction manager retries the commit
+        resource.commit(tid, false);
+
+        assertEquals("one message in the store", 1, dumpMessages());
+        assertEquals("one enqueue", 1, ((RegionBroker) broker.getRegionBroker()).getDestinationStatistics().getEnqueues().getCount());
+
+        connection.close();
+
+        jakarta.jms.Connection consumerConnection = new ActiveMQConnectionFactory(connectionUri).createConnection();
+        consumerConnection.start();
+        Session consumerSession = consumerConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+        MessageConsumer consumer = consumerSession.createConsumer(consumerSession.createQueue("TEST"));
+        assertNotNull("message delivered", consumer.receive(5000));
+        assertNull("message delivered once", consumer.receive(500));
+        consumerConnection.close();
+    }
+
+    private void startBrokerWithFaultInjection() throws Exception {
+        failNextConnectionCommit.set(false);
+        clearXidNextUpdatesNoRows.set(false);
+        clearXidNextUpdateThrows.set(false);
+
+        broker.stop();
+        broker = new BrokerService();
+        broker.setAdvisorySupport(false);
+        PolicyMap policyMap = new PolicyMap();
+        PolicyEntry policyEntry = new PolicyEntry();
+        policyEntry.setExpireMessagesPeriod(0);
+        policyMap.setDefaultEntry(policyEntry);
+        broker.setDestinationPolicy(policyMap);
+
+        final JDBCPersistenceAdapter jdbcPersistenceAdapter = new JDBCPersistenceAdapter();
+        jdbcPersistenceAdapter.setDataSource(faultInjectingDataSource(jdbc.getDataSource(), jdbcPersistenceAdapter));
+        jdbcPersistenceAdapter.setUseLock(false);
+        jdbcPersistenceAdapter.setCleanupPeriod(0);
+        broker.setPersistenceAdapter(jdbcPersistenceAdapter);
+        connectionUri = broker.addConnector("tcp://localhost:0").getPublishableConnectString();
+        broker.start();
+
+        factory = new ActiveMQXAConnectionFactory(connectionUri + "?jms.prefetchPolicy.all=0");
+    }
+
+    private void sendInXaTransaction(XASession session, XAResource resource, Xid tid) throws Exception {
+        MessageProducer producer = session.createProducer(session.createQueue("TEST"));
+        resource.start(tid, XAResource.TMNOFLAGS);
+        ActiveMQMessage message = (ActiveMQMessage) session.createMessage();
+        message.setTransactionId(new XATransactionId(tid));
+        producer.send(message);
+        resource.end(tid, XAResource.TMSUCCESS);
+        producer.close();
+    }
+
+    private static String exceptionMessages(Throwable throwable) {
+        StringBuilder messages = new StringBuilder();
+        for (Throwable t = throwable; t != null; t = t.getCause()) {
+            messages.append('[').append(t).append(']');
+        }
+        return messages.toString();
+    }
+
+    private DataSource faultInjectingDataSource(final DataSource realDataSource, final JDBCPersistenceAdapter adapter) {
+        return (DataSource) Proxy.newProxyInstance(getClass().getClassLoader(), new Class<?>[]{DataSource.class},
+            (proxy, method, args) -> {
+                Object result = invoke(realDataSource, method, args);
+                if (result instanceof Connection) {
+                    return faultInjectingConnection((Connection) result, adapter);
+                }
+                return result;
+            });
+    }
+
+    private Connection faultInjectingConnection(final Connection realConnection, final JDBCPersistenceAdapter adapter) {
+        return (Connection) Proxy.newProxyInstance(getClass().getClassLoader(), new Class<?>[]{Connection.class},
+            (proxy, method, args) -> {
+                if ("commit".equals(method.getName()) && failNextConnectionCommit.compareAndSet(true, false)) {
+                    LOG.info("injecting connection commit failure");
+                    realConnection.rollback();
+                    throw new SQLException(INJECTED_FAILURE + ": connection commit");
+                }
+                Object result = invoke(realConnection, method, args);
+                if ("prepareStatement".equals(method.getName())
+                        && adapter.getStatements().getClearXidFlagStatement().equals(args[0])) {
+                    return clearXidStatement((PreparedStatement) result);
+                }
+                return result;
+            });
+    }
+
+    private PreparedStatement clearXidStatement(final PreparedStatement realStatement) {
+        return (PreparedStatement) Proxy.newProxyInstance(getClass().getClassLoader(), new Class<?>[]{PreparedStatement.class},
+            (proxy, method, args) -> {
+                if ("executeUpdate".equals(method.getName())) {
+                    if (clearXidNextUpdatesNoRows.compareAndSet(true, false)) {
+                        LOG.info("injecting clear xid update matching no rows");
+                        return 0;
+                    }
+                    if (clearXidNextUpdateThrows.compareAndSet(true, false)) {
+                        LOG.info("injecting clear xid update failure");
+                        throw new SQLException(INJECTED_FAILURE + ": clear xid update");
+                    }
+                }
+                return invoke(realStatement, method, args);
+            });
+    }
+
+    private static Object invoke(Object target, Method method, Object[] args) throws Throwable {
+        try {
+            return method.invoke(target, args);
+        } catch (InvocationTargetException e) {
+            throw e.getCause();
+        }
+    }
 
     private class TestDataSource implements javax.sql.DataSource {
 
