@@ -23,6 +23,8 @@ import jakarta.jms.JMSException;
 
 import junit.framework.TestCase;
 
+import jakarta.jms.Connection;
+
 import org.objectweb.jtests.jms.admin.Admin;
 import org.objectweb.jtests.jms.admin.AdminFactory;
 
@@ -101,6 +103,40 @@ public abstract class JMSTestCase extends TestCase
          admin.startServer();
       }
       admin.start();
+   }
+
+   /**
+    * A clean up step. Each step runs on its own so one failure does not skip the rest.
+    */
+   protected interface CleanUpStep
+   {
+      void run() throws Exception;
+   }
+
+   /**
+    * Runs a clean up step and reports a failure without letting it stop the other steps.
+    */
+   protected void runQuietly(final CleanUpStep step)
+   {
+      try
+      {
+         step.run();
+      }
+      catch (Exception e)
+      {
+         System.err.println(getName() + " clean up step failed: " + e);
+      }
+   }
+
+   /**
+    * Closes a connection if it was created, reporting but not propagating a failure.
+    */
+   protected void closeQuietly(final Connection connection)
+   {
+      if (connection != null)
+      {
+         runQuietly(connection::close);
+      }
    }
 
    @Override
