@@ -530,6 +530,16 @@
         <scope>import</scope>
       </dependency>
 
+      <!-- Manages every netty artifact, including the native epoll and kqueue transports that
+           qpid-jms pulls in, at netty-version. Modules declare netty jars without a version. -->
+      <dependency>
+        <groupId>io.netty</groupId>
+        <artifactId>netty-bom</artifactId>
+        <version>${netty-version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+
       <dependency>
         <groupId>org.osgi</groupId>
         <artifactId>osgi.core</artifactId>

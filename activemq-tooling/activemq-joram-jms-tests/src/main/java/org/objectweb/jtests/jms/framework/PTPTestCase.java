@@ -134,6 +134,9 @@ public abstract class PTPTestCase extends JMSTestCase
       }
       catch (Exception e)
       {
+         // tearDown is not called when setUp fails, so release the administrated objects
+         // here or every following test fails binding them again
+         cleanUp();
          throw new RuntimeException(e);
       }
    }
@@ -144,17 +147,23 @@ public abstract class PTPTestCase extends JMSTestCase
    @Override
    protected void tearDown() throws Exception
    {
+      cleanUp();
+      super.tearDown();
+   }
+
+   /**
+    * Close what was opened and unbind what was bound, each step on its own so that a
+    * failure in one does not leave the rest behind for the next test.
+    */
+   private void cleanUp()
+   {
       try
       {
-         senderConnection.close();
-         receiverConnection.close();
+         closeQuietly(senderConnection);
+         closeQuietly(receiverConnection);
 
-         admin.deleteQueueConnectionFactory(PTPTestCase.QCF_NAME);
-         admin.deleteQueue(PTPTestCase.QUEUE_NAME);
-      }
-      catch (Exception ignored)
-      {
-         ignored.printStackTrace();
+         runQuietly(() -> admin.deleteQueueConnectionFactory(PTPTestCase.QCF_NAME));
+         runQuietly(() -> admin.deleteQueue(PTPTestCase.QUEUE_NAME));
       }
       finally
       {
@@ -170,8 +179,6 @@ public abstract class PTPTestCase extends JMSTestCase
          receiverSession = null;
          receiverConnection = null;
       }
-
-      super.tearDown();
    }
 
    public PTPTestCase(final String name)
