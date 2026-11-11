@@ -38,29 +38,23 @@ public class DefaultBlobDownloadStrategy extends DefaultStrategy implements Blob
         if (value == null) {
             return null;
         }
-
-        // Do some checks on the received URL against the transfer policy
-        URL uploadURL = new URL(super.transferPolicy.getUploadUrl());
-        String protocol = message.getURL().getProtocol();
-        if (!protocol.equals(uploadURL.getProtocol())) {
-            throw new IOException("The message URL protocol is incorrect");
-        }
-
-        String host = message.getURL().getHost();
-        if (!host.equals(uploadURL.getHost())) {
-            throw new IOException("The message URL host is incorrect");
-        }
-
-        int port = message.getURL().getPort();
-        if (uploadURL.getPort() != 0 && port != uploadURL.getPort()) {
-            throw new IOException("The message URL port is incorrect");
-        }
-
+        validateMessageURL(value);
         return value.openStream();
     }
 
     public void deleteFile(ActiveMQBlobMessage message) throws IOException, JMSException {
-        URL url = createMessageURL(message);
+        // Delete the BLOB at the URL the message actually carries, not a URL
+        // reconstructed from the upload URL + message id: the stored location
+        // may differ (for example when the consumer's configured upload URL
+        // differs from the producer's, or when the server assigned a richer
+        // path), in which case a reconstructed URL would target the wrong
+        // object. getInputStream() already follows the stored URL; deleting
+        // must follow the same one.
+        URL url = message.getURL();
+        if (url == null) {
+            return;
+        }
+        validateMessageURL(url);
 
         HttpURLConnection connection = (HttpURLConnection)url.openConnection();
         connection.setRequestMethod("DELETE");
@@ -74,6 +68,26 @@ public class DefaultBlobDownloadStrategy extends DefaultStrategy implements Blob
         if (!isSuccessfulCode(connection.getResponseCode())) {
             throw new IOException("DELETE was not successful: " + connection.getResponseCode() + " "
                                   + connection.getResponseMessage());
+        }
+    }
+
+    /**
+     * Validates a URL carried by a received message against the configured
+     * upload URL (matching protocol, host and port) before any network access.
+     * Shared by {@link #getInputStream} and {@link #deleteFile} so both honour
+     * the same guard against being pointed at an arbitrary host.
+     */
+    protected void validateMessageURL(URL messageURL) throws IOException {
+        URL uploadURL = new URL(super.transferPolicy.getUploadUrl());
+
+        if (!messageURL.getProtocol().equals(uploadURL.getProtocol())) {
+            throw new IOException("The message URL protocol is incorrect");
+        }
+        if (!messageURL.getHost().equals(uploadURL.getHost())) {
+            throw new IOException("The message URL host is incorrect");
+        }
+        if (uploadURL.getPort() != 0 && messageURL.getPort() != uploadURL.getPort()) {
+            throw new IOException("The message URL port is incorrect");
         }
     }
 
