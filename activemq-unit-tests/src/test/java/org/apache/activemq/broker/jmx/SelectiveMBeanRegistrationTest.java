@@ -22,6 +22,7 @@ import jakarta.jms.ConnectionFactory;
 import jakarta.jms.Destination;
 import jakarta.jms.Session;
 import javax.management.MBeanServer;
+import javax.management.MBeanServerInvocationHandler;
 import javax.management.ObjectInstance;
 import javax.management.ObjectName;
 import org.apache.activemq.ActiveMQConnectionFactory;
@@ -118,6 +119,12 @@ public class SelectiveMBeanRegistrationTest  {
         assertEquals(0, mbeans.size());
 
         assertFalse("producer not tracked as registered", managedRegionBroker.getRegisteredMbeans().contains(managedRegionBroker.getDynamicDestinationProducers()[0]));
+
+        // suppressed from the broker view attribute array but still counted
+        var brokerView = MBeanServerInvocationHandler.newProxyInstance(mbeanServer,
+                new ObjectName(domain + ":type=Broker,brokerName=localhost"), BrokerViewMBean.class, true);
+        assertEquals(0, brokerView.getDynamicDestinationProducers().length);
+        assertEquals(1, brokerView.getTotalDynamicProducerCount());
 
 
         query = new ObjectName(domain + ":type=Broker,brokerName=localhost,destinationName=ActiveMQ.Advisory.*,*");

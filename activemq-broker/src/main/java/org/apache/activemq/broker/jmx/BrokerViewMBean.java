@@ -101,6 +101,9 @@ public interface BrokerViewMBean extends Service {
     @MBeanInfo("Number of message producers active on destinations on the broker.")
     long getTotalProducerCount();
 
+    @MBeanInfo("Number of message producers attached without a destination (dynamic producers).")
+    public long getTotalDynamicProducerCount();
+
     @MBeanInfo("Number of unacknowledged messages on the broker.")
     long getTotalMessageCount();
 
