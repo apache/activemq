@@ -1184,6 +1184,7 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         final BrokerViewMBean broker = MBeanServerInvocationHandler.newProxyInstance(mbeanServer, brokerName, BrokerViewMBean.class, true);
 
         assertEquals(0, broker.getDynamicDestinationProducers().length);
+        assertEquals(0, broker.getTotalDynamicProducerCount());
 
         final Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
         final MessageProducer producer = session.createProducer(null);
@@ -1195,6 +1196,7 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         // Wait for the producer to get registered
         assertTrue("waiting for dynamic producer registration", Wait.waitFor(() ->
             broker.getDynamicDestinationProducers().length == 1, 5000, 100));
+        assertEquals(1, broker.getTotalDynamicProducerCount());
 
         final ObjectName viewName = broker.getDynamicDestinationProducers()[0];
         assertNotNull(viewName);
@@ -1231,6 +1233,8 @@ public class MBeanTest extends EmbeddedBrokerTestSupport {
         assertTrue("waiting for dynamic producer removal", Wait.waitFor(() ->
             broker.getDynamicDestinationProducers().length == 0, 5000, 100));
         assertEquals(0, broker.getDynamicDestinationProducers().length);
+        assertTrue("waiting for dynamic producer count to drop", Wait.waitFor(() ->
+            broker.getTotalDynamicProducerCount() == 0, 5000, 100));
     }
 
     public void testTempQueueJMXDelete() throws Exception {

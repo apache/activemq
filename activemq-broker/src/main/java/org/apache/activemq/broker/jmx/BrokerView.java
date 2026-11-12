@@ -174,6 +174,14 @@ public class BrokerView implements BrokerViewMBean {
     }
 
     @Override
+    public long getTotalDynamicProducerCount() {
+        if (broker == null) {
+            return 0L;
+        }
+        return broker.getTotalDynamicProducerCount();
+    }
+
+    @Override
     public long getTotalMessageCount() {
         if (broker == null) {
             return 0L;
