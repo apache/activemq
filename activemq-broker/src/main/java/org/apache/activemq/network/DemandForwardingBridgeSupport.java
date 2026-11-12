@@ -1333,12 +1333,19 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                     futureLocalBrokerInfo.set((BrokerInfo) command);
                 } else if (command.isShutdownInfo()) {
                     ShutdownInfo info =  (ShutdownInfo) command;
-                    if (brokerService.isStopping() || brokerService.isStopped() || info.getError() == null) {
+                    if (brokerService.isStopping() || brokerService.isStopped()) {
                         LOG.info("{} Shutting down {}", configuration.getBrokerName(), configuration.getName());
                         stop();
-                    } else {
+                    } else if (info.getError() != null) {
                         // Administrative shutdown via .stop() or SlowConsumerStrategy needs lifecycle clean-up
                         serviceLocalException(IOExceptionSupport.create(info.getError()));
+                    } else {
+                        // The broker is still running but closed our local connection without an
+                        // error, for example when the vm transport connector was disposed. Treat it
+                        // as a failure so the network connector reconnects instead of leaving the
+                        // bridge stopped.
+                        serviceLocalException(new TransportDisposedIOException(
+                                "Local connection " + localBroker + " was shut down by the broker"));
                     }
                 } else if (command.getClass() == ConnectionError.class) {
                     ConnectionError ce = (ConnectionError) command;
