@@ -37,6 +37,7 @@ import org.apache.activemq.broker.region.policy.OldestMessageEvictionStrategy;
 import org.apache.activemq.broker.region.policy.PolicyEntry;
 import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQTopic;
+import org.apache.activemq.util.Wait;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -45,9 +46,8 @@ import org.junit.Test;
  *         https://issues.apache.org/jira/browse/AMQ-3607
  */
 public class ActiveMQSlowConsumerManualTest {
-    private static final int PORT = 12345;
     private static final ActiveMQTopic TOPIC = new ActiveMQTopic("TOPIC");
-    private static final String URL = "nio://localhost:" + PORT + "?socket.tcpNoDelay=true";
+    private static final String SOCKET_OPTIONS = "?socket.tcpNoDelay=true";
 
     @Test(timeout = 60000)
     public void testDefaultSettings() throws Exception {
@@ -73,9 +73,17 @@ public class ActiveMQSlowConsumerManualTest {
         BrokerService broker = createBroker(persistent);
         broker.setDestinationPolicy(buildPolicy(TOPIC, prefetchLimit, messageLimit, evictOldestMessage, disableFlowControl));
         broker.start();
+        try {
+            String url = broker.getTransportConnectors().get(0).getConnectUri() + SOCKET_OPTIONS;
+            runTest(name, broker, url, sendMessageCount, prefetchLimit, messageLimit, optimizeAcknowledge);
+        } finally {
+            broker.stop();
+        }
+    }
 
+    private void runTest(String name, BrokerService broker, String url, int sendMessageCount, int prefetchLimit, int messageLimit, boolean optimizeAcknowledge) throws Exception {
         // Slow consumer
-        Session slowConsumerSession = buildSession("SlowConsumer", URL, optimizeAcknowledge);
+        Session slowConsumerSession = buildSession("SlowConsumer", url, optimizeAcknowledge);
         final CountDownLatch blockSlowConsumer = new CountDownLatch(1);
         final AtomicInteger slowConsumerReceiveCount = new AtomicInteger();
         final List<Integer> slowConsumerReceived = sendMessageCount <= 1000 ? new ArrayList<Integer>() : null;
@@ -96,7 +104,7 @@ public class ActiveMQSlowConsumerManualTest {
         );
 
         // Fast consumer
-        Session fastConsumerSession = buildSession("FastConsumer", URL, optimizeAcknowledge);
+        Session fastConsumerSession = buildSession("FastConsumer", url, optimizeAcknowledge);
         final AtomicInteger fastConsumerReceiveCount = new AtomicInteger();
         final List<Integer> fastConsumerReceived = sendMessageCount <= 1000 ? new ArrayList<Integer>() : null;
         MessageConsumer fastConsumer = createSubscriber(fastConsumerSession,
@@ -116,12 +124,13 @@ public class ActiveMQSlowConsumerManualTest {
         );
 
         // Wait for consumers to connect
-        Thread.sleep(500);
+        Assert.assertTrue("both consumers should subscribe", Wait.waitFor(
+                () -> broker.getDestination(TOPIC).getConsumers().size() == 2, 10000, 10));
 
         // Publisher
         AtomicInteger sentCount = new AtomicInteger();
         List<Integer> sent = sendMessageCount <= 1000 ? new ArrayList<Integer>() : null;
-        Session publisherSession = buildSession("Publisher", URL, optimizeAcknowledge);
+        Session publisherSession = buildSession("Publisher", url, optimizeAcknowledge);
         MessageProducer publisher = createPublisher(publisherSession);
         for (int i = 0; i < sendMessageCount; i++) {
             sentCount.incrementAndGet();
@@ -130,8 +139,8 @@ public class ActiveMQSlowConsumerManualTest {
             publisher.send(publisherSession.createTextMessage(Integer.toString(i)));
         }
 
-        // Wait for messages to arrive
-        Thread.sleep(500);
+        // Wait for the fast consumer to receive everything while the slow one is blocked
+        Wait.waitFor(() -> fastConsumerReceiveCount.get() >= sendMessageCount, 10000, 10);
 
         System.out.println(name + ": Publisher Sent: " + sentCount + " " + sent);
         System.out.println(name + ": Whilst slow consumer blocked:");
@@ -141,8 +150,8 @@ public class ActiveMQSlowConsumerManualTest {
         // Unblock slow consumer
         blockSlowConsumer.countDown();
 
-        // Wait for messages to arrive
-        Thread.sleep(500);
+        // Wait for the slow consumer to catch up, it may receive fewer if messages were evicted
+        Wait.waitFor(() -> slowConsumerReceiveCount.get() >= sendMessageCount, 5000, 10);
 
         System.out.println(name + ": After slow consumer unblocked:");
         System.out.println("\t\t- SlowConsumer Received: " + slowConsumerReceiveCount + " " + slowConsumerReceived);
@@ -155,7 +164,6 @@ public class ActiveMQSlowConsumerManualTest {
         slowConsumerSession.close();
         fastConsumer.close();
         fastConsumerSession.close();
-        broker.stop();
 
         Assert.assertEquals("Fast consumer missed messages whilst slow consumer was blocking", sent, fastConsumerReceived);
         // this is too timine dependent  as sometimes there is message eviction, would need to check the dlq
@@ -166,7 +174,7 @@ public class ActiveMQSlowConsumerManualTest {
         BrokerService broker = new BrokerService();
         broker.setBrokerName("TestBroker");
         broker.setPersistent(persistent);
-        broker.addConnector(URL);
+        broker.addConnector("nio://localhost:0" + SOCKET_OPTIONS);
         return broker;
     }
 

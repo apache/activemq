@@ -22,6 +22,8 @@ import jakarta.jms.Destination;
 import jakarta.jms.MessageConsumer;
 
 import org.apache.activemq.JmsMultipleBrokersTestSupport;
+import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.util.MessageIdList;
 import org.apache.activemq.util.Wait;
 import org.slf4j.Logger;
@@ -30,8 +32,10 @@ import org.slf4j.LoggerFactory;
 public class TwoBrokerNetworkLoadBalanceTest extends JmsMultipleBrokersTestSupport {
     protected static final Logger LOG = LoggerFactory.getLogger(TwoBrokerNetworkLoadBalanceTest.class);
     public void testLoadBalancing() throws Exception {
-        bridgeBrokers("BrokerA", "BrokerB");
-        bridgeBrokers("BrokerB", "BrokerA");
+        // network consumers get a lower priority by default, so a local consumer that is not
+        // full would take every message. Give both sides the same priority so load balances.
+        bridgeBrokers("BrokerA", "BrokerB").setDecreaseNetworkConsumerPriority(false);
+        bridgeBrokers("BrokerB", "BrokerA").setDecreaseNetworkConsumerPriority(false);
 
         startAllBrokers();
         waitForBridgeFormation();
@@ -41,10 +45,12 @@ public class TwoBrokerNetworkLoadBalanceTest extends JmsMultipleBrokersTestSuppo
 
         // Setup consumers
         MessageConsumer clientA = createConsumer("BrokerA", dest);
-
-     // Setup consumers
         MessageConsumer clientB = createConsumer("BrokerB", dest);
-        
+
+        // Wait for each broker to see the other side's network consumer before producing
+        waitForNetworkConsumer("BrokerA", (ActiveMQDestination) dest);
+        waitForNetworkConsumer("BrokerB", (ActiveMQDestination) dest);
+
         // Send messages
         sendMessages("BrokerA", dest, 5000);
 
@@ -55,15 +61,19 @@ public class TwoBrokerNetworkLoadBalanceTest extends JmsMultipleBrokersTestSuppo
         final MessageIdList msgsA = getConsumerMessages("BrokerA", clientA);
         final MessageIdList msgsB = getConsumerMessages("BrokerB", clientB);
 
-        Wait.waitFor(new Wait.Condition() {
-            public boolean isSatisified() throws Exception {
-                return msgsA.getMessageCount() + msgsB.getMessageCount() == 6000;
-            }});
-        
+        assertTrue("all messages should be consumed", Wait.waitFor(
+                () -> msgsA.getMessageCount() + msgsB.getMessageCount() == 6000, Wait.MAX_WAIT_MILLIS, 10));
+
         LOG.info("A got: " +  msgsA.getMessageCount());
         LOG.info("B got: " +  msgsB.getMessageCount());
          
         assertTrue("B got is fair share: " + msgsB.getMessageCount(), msgsB.getMessageCount() > 2000);
+    }
+
+    private void waitForNetworkConsumer(String brokerName, ActiveMQDestination dest) throws Exception {
+        final BrokerService broker = brokers.get(brokerName).broker;
+        assertTrue(brokerName + " should have a local and a network consumer", Wait.waitFor(
+                () -> broker.getDestination(dest).getConsumers().size() == 2, 10000, 10));
     }
     
     public void setUp() throws Exception {
