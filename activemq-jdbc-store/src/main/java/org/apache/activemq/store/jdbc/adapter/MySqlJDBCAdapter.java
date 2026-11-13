@@ -18,6 +18,7 @@ package org.apache.activemq.store.jdbc.adapter;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Locale;
 
 import org.apache.activemq.store.jdbc.Statements;
 
@@ -44,7 +45,7 @@ public class MySqlJDBCAdapter extends DefaultJDBCAdapter {
 
     @Override
     public void setStatements(Statements statements) {
-        String type = engineType.toUpperCase();
+        String type = engineType.toUpperCase(Locale.ENGLISH);
         if( !type.equals(INNODB) &&  !type.equals(NDBCLUSTER) ) {
             // Don't use LOCK TABLE for the INNODB and NDBCLUSTER engine types...
             statements.setLockCreateStatement("LOCK TABLE " + statements.getFullLockTableName() + " WRITE");
