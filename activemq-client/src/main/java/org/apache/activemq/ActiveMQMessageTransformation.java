@@ -78,6 +78,27 @@ public final class ActiveMQMessageTransformation {
      */
     public static ActiveMQMessage transformMessage(Message message, ActiveMQConnection connection)
         throws JMSException {
+        return transformMessage(message, connection, false);
+    }
+
+    /**
+     * Creates a fast shallow copy of the current ActiveMQMessage or creates a
+     * whole new message instance from an available JMS message from another
+     * provider.
+     *
+     * @param message - Message to be converted into ActiveMQ's implementation.
+     * @param connection
+     * @param strictComplianceOverride true copies the properties in
+     *                {@link ActiveMQMessage#JMSX_PROVIDER_PROPERTIES} even
+     *                when the connection has strict compliance on, for
+     *                example when bridging from another provider. false
+     *                leaves them out on a strict connection.
+     * @return ActiveMQMessage - ActiveMQ's implementation object of the
+     *         message.
+     * @throws JMSException if an error occurs
+     */
+    public static ActiveMQMessage transformMessage(Message message, ActiveMQConnection connection,
+        final boolean strictComplianceOverride) throws JMSException {
         if (message instanceof ActiveMQMessage) {
             return (ActiveMQMessage)message;
 
@@ -161,7 +182,7 @@ public final class ActiveMQMessageTransformation {
                 activeMessage.setConnection(connection);
             }
 
-            copyProperties(message, activeMessage);
+            copyProperties(message, activeMessage, strictComplianceOverride);
 
             return activeMessage;
         }
@@ -176,6 +197,24 @@ public final class ActiveMQMessageTransformation {
      * @throws JMSException
      */
     public static void copyProperties(Message fromMessage, Message toMessage) throws JMSException {
+        copyProperties(fromMessage, toMessage, false);
+    }
+
+    /**
+     * Copies the standard JMS and user defined properties from the givem
+     * message to the specified message
+     *
+     * @param fromMessage the message to take the properties from
+     * @param toMessage the message to add the properties to
+     * @param strictComplianceOverride true copies the properties in
+     *                {@link ActiveMQMessage#JMSX_PROVIDER_PROPERTIES} even
+     *                when the connection of the target message has strict
+     *                compliance on. false leaves them out when it does.
+     * @throws JMSException
+     */
+    public static void copyProperties(Message fromMessage, Message toMessage, final boolean strictComplianceOverride)
+        throws JMSException {
+        final boolean skipProviderProperties = !strictComplianceOverride && isStrictCompliance(toMessage);
         toMessage.setJMSMessageID(fromMessage.getJMSMessageID());
         toMessage.setJMSCorrelationID(fromMessage.getJMSCorrelationID());
         toMessage.setJMSReplyTo(transformDestination(fromMessage.getJMSReplyTo()));
@@ -192,9 +231,26 @@ public final class ActiveMQMessageTransformation {
 
         while (propertyNames.hasMoreElements()) {
             String name = propertyNames.nextElement().toString();
+            boolean providerProperty = ActiveMQMessage.JMSX_PROVIDER_PROPERTIES.contains(name);
+            if (providerProperty && skipProviderProperties) {
+                continue;
+            }
             Object obj = fromMessage.getObjectProperty(name);
-            toMessage.setObjectProperty(name, obj);
+            if (providerProperty && toMessage instanceof ActiveMQMessage) {
+                // with the override a strict connection must not refuse the provider-set value
+                ((ActiveMQMessage) toMessage).setObjectProperty(name, obj, true, false);
+            } else {
+                toMessage.setObjectProperty(name, obj);
+            }
         }
+    }
+
+    private static boolean isStrictCompliance(Message message) {
+        if (message instanceof ActiveMQMessage) {
+            ActiveMQConnection connection = ((ActiveMQMessage) message).getConnection();
+            return connection != null && connection.isStrictCompliance();
+        }
+        return false;
     }
 
     private static long getFromMessageDeliveryTime(Message fromMessage) throws JMSException {
