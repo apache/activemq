@@ -84,6 +84,7 @@ import org.apache.activemq.command.RemoveInfo;
 import org.apache.activemq.command.RemoveSubscriptionInfo;
 import org.apache.activemq.command.Response;
 import org.apache.activemq.command.SessionInfo;
+import org.apache.activemq.command.SharedConsumerInfo;
 import org.apache.activemq.command.ShutdownInfo;
 import org.apache.activemq.command.SubscriptionInfo;
 import org.apache.activemq.command.WireFormatInfo;
@@ -966,7 +967,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
 
     private void serviceRemoteConsumerAdvisory(DataStructure data) throws IOException {
         final int networkTTL = configuration.getConsumerTTL();
-        if (data.getClass() == ConsumerInfo.class) {
+        if (data instanceof ConsumerInfo) {
             // Create a new local subscription
             ConsumerInfo info = (ConsumerInfo) data;
             BrokerId[] path = info.getBrokerPath();
@@ -1695,9 +1696,74 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
     }
 
     protected DemandSubscription createDemandSubscription(ConsumerInfo info) throws IOException {
+        // ConduitBridge/DurableConduitBridge override this method entirely
+        // and use their own destination-based naming.
+        final boolean shared = info instanceof SharedConsumerInfo && ((SharedConsumerInfo) info).isShared();
+        if (shared && info.isDurable()) {
+            return createSharedDurableDemandSubscription((SharedConsumerInfo) info);
+        }
         // add our original id to ourselves
         info.addNetworkConsumerId(info.getConsumerId());
+        if (shared && info.getSubscriptionName() != null) {
+            // Consumers of a shared non-durable subscription all carry the same
+            // subscription name. Give each its own name so they do not collide
+            // on the local broker. Nothing is stored for a non-durable
+            // subscription, so the name does not have to survive a reconnect.
+            info.setSubscriptionName(DURABLE_SUB_PREFIX + configuration.getBrokerName()
+                    + "_" + info.getDestination().getPhysicalName()
+                    + "_" + info.getConsumerId());
+        }
+        // An ordinary durable subscriber keeps its own subscription name, so
+        // the local durable subscription is found again when it reconnects.
         return doCreateDemandSubscription(info);
+    }
+
+    /**
+     * A shared durable subscription on the remote broker is a single
+     * subscriber, however many consumers are attached to it. It gets one
+     * durable subscription on the local broker, named after the remote
+     * subscription rather than after any one consumer, so the name is the
+     * same each time its consumers reconnect and the messages held locally
+     * while they were away are forwarded when they return. Further consumers
+     * of the same subscription join the existing demand subscription.
+     *
+     * @return the new demand subscription, or null when the consumer joined
+     *         an existing one
+     */
+    private DemandSubscription createSharedDurableDemandSubscription(SharedConsumerInfo info) throws IOException {
+        final String localName = getSharedDurableSubscriberName(info);
+        for (DemandSubscription existing : subscriptionMapByLocalId.values()) {
+            final SubscriptionInfo local = existing.getLocalDurableSubscriber();
+            if (local != null && localName.equals(local.getSubscriptionName())) {
+                existing.add(info.getConsumerId());
+                subscriptionMapByRemoteId.put(info.getConsumerId(), existing);
+                LOG.debug("{} consumer {} joined shared durable demand subscription {}",
+                        configuration.getBrokerName(), info.getConsumerId(), localName);
+                return null;
+            }
+        }
+        // add our original id to ourselves
+        info.addNetworkConsumerId(info.getConsumerId());
+        final DemandSubscription result = doCreateDemandSubscription(info);
+        // Only the local side is renamed. The remote info keeps the name the
+        // consumer used, which the durable bookkeeping matches on.
+        result.getLocalInfo().setSubscriptionName(localName);
+        result.setLocalDurableSubscriber(new SubscriptionInfo(info.getClientId(), localName));
+        // On the local broker the bridge is the only subscriber, so the local
+        // subscription is an ordinary durable one, not a shared one.
+        if (result.getLocalInfo() instanceof SharedConsumerInfo) {
+            ((SharedConsumerInfo) result.getLocalInfo()).setShared(false);
+        }
+        return result;
+    }
+
+    protected String getSharedDurableSubscriberName(SharedConsumerInfo info) {
+        // A connection with no client id of its own is given a generated one
+        // that changes on every reconnect, so it is left out of the name.
+        final String clientId = info.isUserSpecifiedClientId() && info.getClientId() != null ? info.getClientId() : "";
+        return DURABLE_SUB_PREFIX + configuration.getBrokerName()
+                + "_" + info.getDestination().getPhysicalName()
+                + "_" + clientId + "_" + info.getSubscriptionName();
     }
 
     protected DemandSubscription doCreateDemandSubscription(ConsumerInfo info) throws IOException {
@@ -1782,6 +1848,13 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         LOG.debug("{} remove request on {} from {}, consumer id: {}, matching sub: {}",
                 configuration.getBrokerName(), localBroker, remoteBrokerName, id, sub);
         if (sub != null) {
+            // a shared durable demand subscription stays until the last of
+            // its remote consumers has gone
+            if (sub.remove(id) && !sub.isEmpty()) {
+                LOG.debug("{} on {} from {} removed interest for: {} from {}",
+                        configuration.getBrokerName(), localBroker, remoteBrokerName, id, sub);
+                return;
+            }
             removeSubscription(sub);
             LOG.debug("{} removed sub on {} from {}: {}",
                     configuration.getBrokerName(), localBroker, remoteBrokerName, sub.getRemoteInfo());

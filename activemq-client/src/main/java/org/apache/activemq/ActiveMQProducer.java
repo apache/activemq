@@ -57,6 +57,8 @@ public class ActiveMQProducer implements JMSProducer {
     // Properties applied to all messages on a per-JMS producer instance basis
     private Map<String, Object> messageProperties = null;
 
+    private CompletionListener completionListener = null;
+
     ActiveMQProducer(ActiveMQContext activemqContext, ActiveMQMessageProducer activemqMessageProducer) {
         this.activemqContext = activemqContext;
         this.activemqMessageProducer = activemqMessageProducer;
@@ -90,7 +92,12 @@ public class ActiveMQProducer implements JMSProducer {
                 }
             }
 
-            activemqMessageProducer.send(destination, message, getDeliveryMode(), getPriority(), getTimeToLive(), getDisableMessageID(), getDisableMessageTimestamp(), null);
+            if (completionListener != null) {
+                activemqMessageProducer.send(destination, message, getDeliveryMode(), getPriority(), getTimeToLive(),
+                        getDisableMessageID(), getDisableMessageTimestamp(), completionListener);
+            } else {
+                activemqMessageProducer.send(destination, message, getDeliveryMode(), getPriority(), getTimeToLive(), getDisableMessageID(), getDisableMessageTimestamp(), (AsyncCallback) null);
+            }
         } catch (JMSException e) {
             throw JMSExceptionSupport.convertToJMSRuntimeException(e);
         }
@@ -246,22 +253,32 @@ public class ActiveMQProducer implements JMSProducer {
 
     @Override
     public JMSProducer setDeliveryDelay(long deliveryDelay) {
-        throw new UnsupportedOperationException("setDeliveryDelay(long) is not supported");
+        try {
+            activemqMessageProducer.setDeliveryDelay(deliveryDelay);
+        } catch (JMSException e) {
+            throw JMSExceptionSupport.convertToJMSRuntimeException(e);
+        }
+        return this;
     }
 
     @Override
     public long getDeliveryDelay() {
-        return 0L;
+        try {
+            return activemqMessageProducer.getDeliveryDelay();
+        } catch (JMSException e) {
+            throw JMSExceptionSupport.convertToJMSRuntimeException(e);
+        }
     }
 
     @Override
     public JMSProducer setAsync(CompletionListener completionListener) {
-        throw new UnsupportedOperationException("setAsync(CompletionListener) is not supported");
+        this.completionListener = completionListener;
+        return this;
     }
 
     @Override
     public CompletionListener getAsync() {
-        throw new UnsupportedOperationException("getAsync() is not supported");
+        return this.completionListener;
     }
 
     @Override
@@ -345,7 +362,10 @@ public class ActiveMQProducer implements JMSProducer {
     public boolean getBooleanProperty(String name) {
         Object value = getCreatedMessageProperties().get(name);
         if (value == null) {
-            throw new NullPointerException("property " + name + " was null");
+            // A property that was never set must behave as if it exists with a
+            // null value, i.e. Boolean.valueOf(null) == false. Matches
+            // ActiveMQMessage.getBooleanProperty.
+            return false;
         }
         Boolean rc = (Boolean)TypeConversionSupport.convert(value, Boolean.class);
         if (rc == null) {
@@ -358,7 +378,8 @@ public class ActiveMQProducer implements JMSProducer {
     public byte getByteProperty(String name) {
         Object value = getCreatedMessageProperties().get(name);
         if (value == null) {
-            throw new NullPointerException("property " + name + " was null");
+            // Byte.valueOf(null) throws NumberFormatException.
+            throw new NumberFormatException("property " + name + " was null");
         }
         Byte rc = (Byte)TypeConversionSupport.convert(value, Byte.class);
         if (rc == null) {
@@ -371,7 +392,8 @@ public class ActiveMQProducer implements JMSProducer {
     public short getShortProperty(String name) {
         Object value = getCreatedMessageProperties().get(name);
         if (value == null) {
-            throw new NullPointerException("property " + name + " was null");
+            // Short.valueOf(null) throws NumberFormatException.
+            throw new NumberFormatException("property " + name + " was null");
         }
         Short rc = (Short)TypeConversionSupport.convert(value, Short.class);
         if (rc == null) {
@@ -384,7 +406,8 @@ public class ActiveMQProducer implements JMSProducer {
     public int getIntProperty(String name) {
         Object value = getCreatedMessageProperties().get(name);
         if (value == null) {
-            throw new NullPointerException("property " + name + " was null");
+            // Integer.valueOf(null) throws NumberFormatException.
+            throw new NumberFormatException("property " + name + " was null");
         }
         Integer rc = (Integer)TypeConversionSupport.convert(value, Integer.class);
         if (rc == null) {
@@ -397,7 +420,8 @@ public class ActiveMQProducer implements JMSProducer {
     public long getLongProperty(String name) {
         Object value = getCreatedMessageProperties().get(name);
         if (value == null) {
-            throw new NullPointerException("property " + name + " was null");
+            // Long.valueOf(null) throws NumberFormatException.
+            throw new NumberFormatException("property " + name + " was null");
         }
         Long rc = (Long)TypeConversionSupport.convert(value, Long.class);
         if (rc == null) {
@@ -436,7 +460,8 @@ public class ActiveMQProducer implements JMSProducer {
     public String getStringProperty(String name) {
         Object value = getCreatedMessageProperties().get(name);
         if (value == null) {
-            throw new NullPointerException("property " + name + " was null");
+            // A missing property converts to a null String, as on Message.
+            return null;
         }
         String rc = (String)TypeConversionSupport.convert(value, String.class);
         if (rc == null) {
