@@ -56,7 +56,7 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
 
     private static final Map<String, PropertySetter> JMS_PROPERTY_SETERS = new HashMap<String, PropertySetter>();
 
-    public static final Set<String> STRICT_PROVIDER_JMSX_PROPERTIES =
+    public static final Set<String> JMSX_PROVIDER_PROPERTIES =
             Collections.unmodifiableSet(new HashSet<String>(Arrays.asList(
                     "JMSXDeliveryCount",
                     "JMSXRcvTimestamp",
@@ -501,6 +501,16 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
     }
 
     public void setObjectProperty(String name, Object value, boolean checkReadOnly) throws JMSException {
+        setObjectProperty(name, value, checkReadOnly, true);
+    }
+
+    /**
+     * @param checkProviderProperties false sets a property in
+     *        {@link #JMSX_PROVIDER_PROPERTIES} even when the connection has
+     *        strict compliance on, for code that carries a message over from
+     *        another provider and has to keep the values that provider set
+     */
+    public void setObjectProperty(String name, Object value, boolean checkReadOnly, boolean checkProviderProperties) throws JMSException {
 
         if (checkReadOnly) {
             checkReadOnlyProperties();
@@ -518,8 +528,8 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
 
         // Strict Compliance Check For Provider-Set JMSX Properties
         ActiveMQConnection conn = getConnection();
-        if (conn != null && conn.isStrictCompliance()) {
-            if (STRICT_PROVIDER_JMSX_PROPERTIES.contains(name)) {
+        if (checkProviderProperties && conn != null && conn.isStrictCompliance()) {
+            if (JMSX_PROVIDER_PROPERTIES.contains(name)) {
                 throw new MessageNotWriteableException("Provider-set JMSX property '" + name + "' cannot be set by a client under strict compliance.");
             }
         }
