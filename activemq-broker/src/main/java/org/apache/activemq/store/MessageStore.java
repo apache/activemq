@@ -139,6 +139,21 @@ public interface MessageStore extends Service {
     void recover(MessageRecoveryListener container) throws Exception;
 
     /**
+     * Recover at most maxReturned messages to be delivered.
+     *
+     * The default implementation relies on {@link MessageRecoveryListener#hasSpace()} to
+     * stop the recovery. A store that would otherwise read every message before the
+     * listener can stop it should bound the read itself.
+     *
+     * @param listener
+     * @param maxReturned the maximum number of messages to recover
+     * @throws Exception
+     */
+    default void recover(MessageRecoveryListener listener, int maxReturned) throws Exception {
+        recover(listener);
+    }
+
+    /**
      * The destination that the message store is holding messages for.
      *
      * @return the destination
