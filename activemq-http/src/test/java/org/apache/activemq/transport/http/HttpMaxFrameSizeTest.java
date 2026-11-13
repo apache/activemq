@@ -54,6 +54,7 @@ public class HttpMaxFrameSizeTest {
     public void sendOversizedMessageTest() throws Exception {
         try {
             send(5000);
+            Assert.fail("Oversized message was accepted");
         } catch (JMSException jmsException) {
             Assert.assertTrue(jmsException.getMessage().contains("405 Method Not Allowed"));
         }
