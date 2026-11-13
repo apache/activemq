@@ -193,11 +193,10 @@ startupProbe:
   timeoutSeconds: 5
   failureThreshold: 30
 
-# -- Liveness probe configuration
+# -- Liveness probe configuration (TCP: the web console requires a login, so an HTTP probe gets a 401)
 livenessProbe:
-  httpGet:
-    path: /admin/
-    port: web
+  tcpSocket:
+    port: openwire
   initialDelaySeconds: 10
   periodSeconds: 10
   timeoutSeconds: 5
