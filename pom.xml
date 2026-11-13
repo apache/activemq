@@ -100,7 +100,7 @@
     <qpid-jms-version>2.11.0</qpid-jms-version>
     <netty-version>4.2.20.Final</netty-version>
     <rome-version>2.1.0</rome-version>
-    <shiro-version>2.2.1</shiro-version>
+    <shiro-version>3.0.2</shiro-version>
     <opentelemetry-version>1.68.0</opentelemetry-version>
     <slf4j-version>2.0.20</slf4j-version>
     <spring-version>7.0.10</spring-version>
