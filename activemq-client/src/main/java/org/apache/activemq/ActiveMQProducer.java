@@ -349,10 +349,22 @@ public class ActiveMQProducer implements JMSProducer {
         return getCreatedMessageProperties().containsKey(name);
     }
 
+    /**
+     * The JMS conversion of a property that was never set only applies under
+     * strict compliance. Otherwise the typed getters keep throwing the
+     * NullPointerException they always have.
+     */
+    private void checkMissingPropertyConversion(String name) {
+        if (!activemqContext.isStrictCompliance()) {
+            throw new NullPointerException("property " + name + " was null");
+        }
+    }
+
     @Override
     public boolean getBooleanProperty(String name) {
         Object value = getCreatedMessageProperties().get(name);
         if (value == null) {
+            checkMissingPropertyConversion(name);
             // A property that was never set must behave as if it exists with a
             // null value, i.e. Boolean.valueOf(null) == false. Matches
             // ActiveMQMessage.getBooleanProperty.
@@ -369,6 +381,7 @@ public class ActiveMQProducer implements JMSProducer {
     public byte getByteProperty(String name) {
         Object value = getCreatedMessageProperties().get(name);
         if (value == null) {
+            checkMissingPropertyConversion(name);
             // Byte.valueOf(null) throws NumberFormatException.
             throw new NumberFormatException("property " + name + " was null");
         }
@@ -383,6 +396,7 @@ public class ActiveMQProducer implements JMSProducer {
     public short getShortProperty(String name) {
         Object value = getCreatedMessageProperties().get(name);
         if (value == null) {
+            checkMissingPropertyConversion(name);
             // Short.valueOf(null) throws NumberFormatException.
             throw new NumberFormatException("property " + name + " was null");
         }
@@ -397,6 +411,7 @@ public class ActiveMQProducer implements JMSProducer {
     public int getIntProperty(String name) {
         Object value = getCreatedMessageProperties().get(name);
         if (value == null) {
+            checkMissingPropertyConversion(name);
             // Integer.valueOf(null) throws NumberFormatException.
             throw new NumberFormatException("property " + name + " was null");
         }
@@ -411,6 +426,7 @@ public class ActiveMQProducer implements JMSProducer {
     public long getLongProperty(String name) {
         Object value = getCreatedMessageProperties().get(name);
         if (value == null) {
+            checkMissingPropertyConversion(name);
             // Long.valueOf(null) throws NumberFormatException.
             throw new NumberFormatException("property " + name + " was null");
         }
@@ -451,6 +467,7 @@ public class ActiveMQProducer implements JMSProducer {
     public String getStringProperty(String name) {
         Object value = getCreatedMessageProperties().get(name);
         if (value == null) {
+            checkMissingPropertyConversion(name);
             // A missing property converts to a null String, as on Message.
             return null;
         }

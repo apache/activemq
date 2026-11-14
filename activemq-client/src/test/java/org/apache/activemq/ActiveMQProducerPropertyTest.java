@@ -49,6 +49,12 @@ public class ActiveMQProducerPropertyTest {
 
     @Before
     public void setUp() {
+        // the conversion table only applies under strict compliance
+        context = createContext(true);
+        producer = context.createProducer();
+    }
+
+    private static JMSContext createContext(final boolean strictCompliance) {
         final StubTransport transport = new StubTransport();
         ActiveMQConnectionFactory factory =
                 new ActiveMQConnectionFactory("tcp://localhost:61616") {
@@ -57,14 +63,32 @@ public class ActiveMQProducerPropertyTest {
                         return transport;
                     }
                 };
-        context = factory.createContext();
-        producer = context.createProducer();
+        factory.setStrictCompliance(strictCompliance);
+        return factory.createContext();
     }
 
     @After
     public void tearDown() {
         if (context != null) {
             context.close();
+        }
+    }
+
+    // --- without strict compliance a missing property is a NullPointerException, as it always was ---
+
+    @Test
+    public void testMissingPropertyThrowsNullPointerWithoutStrictCompliance() {
+        try (var lenientContext = createContext(false)) {
+            final var lenient = lenientContext.createProducer();
+            assertThrows(NullPointerException.class, () -> lenient.getBooleanProperty(MISSING));
+            assertThrows(NullPointerException.class, () -> lenient.getByteProperty(MISSING));
+            assertThrows(NullPointerException.class, () -> lenient.getShortProperty(MISSING));
+            assertThrows(NullPointerException.class, () -> lenient.getIntProperty(MISSING));
+            assertThrows(NullPointerException.class, () -> lenient.getLongProperty(MISSING));
+            assertThrows(NullPointerException.class, () -> lenient.getFloatProperty(MISSING));
+            assertThrows(NullPointerException.class, () -> lenient.getDoubleProperty(MISSING));
+            assertThrows(NullPointerException.class, () -> lenient.getStringProperty(MISSING));
+            assertNull(lenient.getObjectProperty(MISSING));
         }
     }
 

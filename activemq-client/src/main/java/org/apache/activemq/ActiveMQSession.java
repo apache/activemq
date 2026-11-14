@@ -65,6 +65,7 @@ import jakarta.jms.TopicSession;
 import jakarta.jms.TopicSubscriber;
 import jakarta.jms.TransactionRolledBackException;
 
+import org.apache.activemq.selector.SelectorParser;
 import org.apache.activemq.blob.BlobDownloader;
 import org.apache.activemq.blob.BlobTransferPolicy;
 import org.apache.activemq.blob.BlobUploader;
@@ -1427,12 +1428,21 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     @Override
     public MessageConsumer createSharedConsumer(Topic topic, String sharedSubscriptionName) throws JMSException {
         checkClosed();
+        if (topic == null) {
+            throw new InvalidDestinationException("Topic cannot be null");
+        }
         throw new UnsupportedOperationException("createSharedConsumer(Topic, sharedSubscriptionName) is not supported");
     }
 
     @Override
     public MessageConsumer createSharedConsumer(Topic topic, String sharedSubscriptionName, String messageSelector) throws JMSException {
         checkClosed();
+        if (topic == null) {
+            throw new InvalidDestinationException("Topic cannot be null");
+        }
+        if (messageSelector != null && !messageSelector.trim().isEmpty()) {
+            SelectorParser.parse(messageSelector);
+        }
         throw new UnsupportedOperationException("createSharedConsumer(Topic, sharedSubscriptionName, messageSelector) is not supported");
     }
 
@@ -1451,12 +1461,21 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
     @Override
     public MessageConsumer createSharedDurableConsumer(Topic topic, String name) throws JMSException {
         checkClosed();
+        if (topic == null) {
+            throw new InvalidDestinationException("Topic cannot be null");
+        }
         throw new UnsupportedOperationException("createSharedDurableConsumer(Topic, name) is not supported");
     }
 
     @Override
     public MessageConsumer createSharedDurableConsumer(Topic topic, String name, String messageSelector) throws JMSException {
         checkClosed();
+        if (topic == null) {
+            throw new InvalidDestinationException("Topic cannot be null");
+        }
+        if (messageSelector != null && !messageSelector.trim().isEmpty()) {
+            SelectorParser.parse(messageSelector);
+        }
         throw new UnsupportedOperationException("createSharedDurableConsumer(Topic, name, messageSelector) is not supported");
     }
 
@@ -2533,9 +2552,12 @@ public class ActiveMQSession implements Session, QueueSession, TopicSession, Sta
      * Throws {@link jakarta.jms.IllegalStateException} if the current thread is executing a
      * MessageListener.onMessage() callback for this session, per Jakarta Messaging spec section 4.4.
      * The check is session-scoped: callbacks from other sessions on the same thread are unaffected.
+     * <p>
+     * Only applies under strict compliance. ActiveMQ has always let a listener close or stop its
+     * own connection and session, and existing applications do.
      */
     void checkNotInMessageListenerCallback(final String operation) throws jakarta.jms.IllegalStateException {
-        if (Thread.currentThread() == messageListenerThread.get()) {
+        if (connection.isStrictCompliance() && Thread.currentThread() == messageListenerThread.get()) {
             throw new jakarta.jms.IllegalStateException(
                 "Cannot call " + operation + "() from within a MessageListener callback");
         }

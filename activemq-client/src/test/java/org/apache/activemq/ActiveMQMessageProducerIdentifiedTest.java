@@ -20,6 +20,7 @@ import static org.junit.Assert.*;
 
 import jakarta.jms.Connection;
 import jakarta.jms.DeliveryMode;
+import jakarta.jms.InvalidDestinationException;
 import jakarta.jms.MessageProducer;
 import jakarta.jms.Queue;
 import jakarta.jms.Session;
@@ -94,6 +95,27 @@ public class ActiveMQMessageProducerIdentifiedTest {
             identified.send(q, s.createTextMessage("legacy"));
         } finally {
             c.close();
+        }
+    }
+
+    /** Without strict compliance a destination-less send on an unidentified producer keeps its old exception. */
+    @Test
+    public void testNonStrictUnidentifiedProducerSendMessageReportsInvalidDestination() throws Exception {
+        StubTransport lenientTransport = new StubTransport();
+        ActiveMQConnectionFactory lenient =
+                new ActiveMQConnectionFactory("tcp://localhost:61616") {
+                    @Override
+                    protected Transport createTransport() {
+                        return lenientTransport;
+                    }
+                };
+        try (Connection c = lenient.createConnection()) {
+            Session s = c.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            MessageProducer unidentified = s.createProducer(null);
+            assertThrows(InvalidDestinationException.class,
+                () -> unidentified.send(s.createTextMessage("boom")));
+            assertThrows(InvalidDestinationException.class,
+                () -> unidentified.send(s.createTextMessage("boom"), DeliveryMode.NON_PERSISTENT, 4, 0L));
         }
     }
 

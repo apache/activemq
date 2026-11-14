@@ -201,9 +201,7 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
     @Override
     public void send(Message message) throws JMSException {
         checkClosed();
-        if (info.getDestination() == null) {
-            throw new UnsupportedOperationException("A destination must be specified.");
-        }
+        checkProducerDestination();
         sendToProducerDestination(message, this.defaultDeliveryMode, this.defaultPriority,
                                   this.defaultTimeToLive, null);
     }
@@ -211,9 +209,7 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
     @Override
     public void send(Message message, int deliveryMode, int priority, long timeToLive) throws JMSException {
         checkClosed();
-        if (info.getDestination() == null) {
-            throw new UnsupportedOperationException("A destination must be specified.");
-        }
+        checkProducerDestination();
         validateDeliveryMode(deliveryMode);
         validatePriority(priority);
         sendToProducerDestination(message, deliveryMode, priority, timeToLive, null);
@@ -280,6 +276,19 @@ public class ActiveMQMessageProducer extends ActiveMQMessageProducerSupport impl
         if (isStrictProducerCompliance() && this.info.getDestination() == null) {
             throw new UnsupportedOperationException("This message producer was created without a destination; "
                 + "a destination must be supplied on every send. Use send(Destination, Message, ...).");
+        }
+    }
+
+    /**
+     * A destination-less send on a producer created without a destination.
+     * Under strict compliance this is {@code UnsupportedOperationException}, as
+     * JMS specifies. Otherwise it stays the {@code InvalidDestinationException}
+     * ActiveMQ has always thrown.
+     */
+    private void checkProducerDestination() throws InvalidDestinationException {
+        assertIdentifiedProducer();
+        if (this.info.getDestination() == null) {
+            throw new InvalidDestinationException("A destination must be specified.");
         }
     }
 
