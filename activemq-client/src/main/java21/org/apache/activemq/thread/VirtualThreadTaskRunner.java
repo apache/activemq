@@ -18,33 +18,44 @@ package org.apache.activemq.thread;
 
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * TaskRunner that runs the task loop on one long-lived virtual thread.
+ * The thread parks when the task has no work and wakeup() unparks it.
+ *
+ * Creating a virtual thread per wakeup causes high thread creation rates
+ * for tasks that go idle every few iterations, such as dispatch queues
+ * with rapidly acking consumers. One thread per runner avoids the creation cost.
+ */
 class VirtualThreadTaskRunner implements TaskRunner {
 
     private static final Logger LOG = LoggerFactory.getLogger(VirtualThreadTaskRunner.class);
+
     private final int maxIterationsPerRun;
-    private final Executor executor;
     private final Task task;
-    private final Lock taskRunnerLock = new ReentrantLock();
-    private final Runnable runable;
-    private final Condition runnableCondition;
-    private boolean queued;
-    private boolean shutdown;
-    private boolean iterating;
-    // [AMQ-9394] TODO: Remove references to the running thread where possible
+    private final ReentrantLock lock = new ReentrantLock();
+    private final Condition wakeupCondition = lock.newCondition();
+    private final Condition terminationCondition = lock.newCondition();
+    // wakeup() sets this with a CAS and only the CAS winner takes the lock
+    // to signal. The loop clears it before calling iterate(), so a wakeup
+    // that arrives after iterate() returns false is seen before the park.
+    private final AtomicBoolean pending = new AtomicBoolean();
+    private volatile boolean shutdown;
+    private boolean terminated;
     private volatile Thread runningThread;
 
     public VirtualThreadTaskRunner(Executor executor, final Task task, int maxIterationsPerRun) {
-        this.executor = executor;
-        this.maxIterationsPerRun = maxIterationsPerRun;
         this.task = task;
-        runable = new Runnable() {
+        this.maxIterationsPerRun = maxIterationsPerRun;
+        // The executor starts a virtual thread per submission. This is the
+        // only submission for this runner.
+        executor.execute(new Runnable() {
             @Override
             public void run() {
                 runningThread = Thread.currentThread();
@@ -55,65 +66,38 @@ class VirtualThreadTaskRunner implements TaskRunner {
                     runningThread = null;
                 }
             }
-        };
-        this.runnableCondition = taskRunnerLock.newCondition();
+        });
     }
 
-    /**
-     * We Expect MANY wakeup calls on the same TaskRunner.
-     */
     @Override
     public void wakeup() throws InterruptedException {
-        taskRunnerLock.lock();
-        try {
-            // When we get in here, we make some assumptions of state:
-            // queued=false, iterating=false: wakeup() has not be called and
-            // therefore task is not executing.
-            // queued=true, iterating=false: wakeup() was called but, task
-            // execution has not started yet
-            // queued=false, iterating=true : wakeup() was called, which caused
-            // task execution to start.
-            // queued=true, iterating=true : wakeup() called after task
-            // execution was started.
-
-            if (queued || shutdown) {
-                return;
+        if (shutdown) {
+            return;
+        }
+        if (pending.compareAndSet(false, true)) {
+            lock.lock();
+            try {
+                wakeupCondition.signal();
+            } finally {
+                lock.unlock();
             }
-
-            queued = true;
-
-            // The runTask() method will do this for me once we are done
-            // iterating.
-            if (!iterating) {
-                executor.execute(runable);
-            }
-        } finally {
-            taskRunnerLock.unlock();
         }
     }
 
-    /**
-     * shut down the task
-     *
-     * @throws InterruptedException
-     */
     @Override
     public void shutdown(long timeout) throws InterruptedException {
         LOG.trace("Shutdown timeout: {} task: {}", timeout, task);
-        taskRunnerLock.lock();
+        lock.lock();
         try {
             shutdown = true;
-            // the check on the thread is done
-            // because a call to iterate can result in
-            // shutDown() being called, which would wait forever
-            // waiting for iterating to finish
-            if (runningThread != Thread.currentThread()) {
-                if (iterating) {
-                    runnableCondition.await(timeout, TimeUnit.MILLISECONDS);
-                }
+            pending.set(true);
+            wakeupCondition.signal();
+            // skip the wait when the task thread calls shutdown on itself
+            if (timeout > 0 && runningThread != Thread.currentThread() && !terminated) {
+                terminationCondition.await(timeout, TimeUnit.MILLISECONDS);
             }
         } finally {
-            taskRunnerLock.unlock();
+            lock.unlock();
         }
     }
 
@@ -123,53 +107,41 @@ class VirtualThreadTaskRunner implements TaskRunner {
     }
 
     final void runTask() {
-
-        taskRunnerLock.lock();
         try {
-            queued = false;
-            if (shutdown) {
-                iterating = false;
-                runnableCondition.signalAll();
-                return;
-            }
-            iterating = true;
-        } finally {
-            taskRunnerLock.unlock();
-        }
-
-        // Don't synchronize while we are iterating so that
-        // multiple wakeup() calls can be executed concurrently.
-        boolean done = false;
-        try {
-            for (int i = 0; i < maxIterationsPerRun; i++) {
-                LOG.trace("Running task iteration {} - {}", i, task);
-                if (!task.iterate()) {
-                    done = true;
-                    break;
+            int sinceYield = 0;
+            while (!shutdown) {
+                // clear before iterate() so a wakeup during the call leaves
+                // the flag set and the loop runs again instead of parking
+                pending.set(false);
+                if (task.iterate()) {
+                    if (++sinceYield >= maxIterationsPerRun) {
+                        sinceYield = 0;
+                        Thread.yield();
+                    }
+                    continue;
+                }
+                sinceYield = 0;
+                lock.lock();
+                try {
+                    while (!pending.get() && !shutdown) {
+                        wakeupCondition.await();
+                    }
+                } finally {
+                    lock.unlock();
                 }
             }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        } catch (Throwable t) {
+            LOG.error("Virtual Thread task runner terminating on unexpected error: {}", task, t);
+            throw t;
         } finally {
-            taskRunnerLock.lock();
+            lock.lock();
             try {
-                iterating = false;
-                runnableCondition.signalAll();
-                if (shutdown) {
-                    queued = false;
-                    runnableCondition.signalAll();
-                } else {
-                    // If we could not iterate all the items
-                    // then we need to re-queue.
-                    if (!done) {
-                        queued = true;
-                    }
-
-                    if (queued) {
-                        executor.execute(runable);
-                    }
-                }
-
+                terminated = true;
+                terminationCondition.signalAll();
             } finally {
-                taskRunnerLock.unlock();
+                lock.unlock();
             }
         }
     }
