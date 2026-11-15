@@ -149,6 +149,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     private int deliveredCounter;
     private int additionalWindowSize;
     private int ackCounter;
+    private MessageDispatch messageInListener;
     private int dispatchedCount;
     private final AtomicReference<MessageListener> messageListener = new AtomicReference<MessageListener>();
     private final JMSConsumerStatsImpl stats;
@@ -1016,10 +1017,22 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
     }
 
     void deliverAcks() {
+        deliverAcks(false);
+    }
+
+    private MessageDispatch removeMessageInListener() {
+        if (messageInListener != null && deliveredMessages.peekFirst() == messageInListener) {
+            return deliveredMessages.removeFirst();
+        }
+        return null;
+    }
+
+    private void deliverAcks(boolean retainMessageInListener) {
         MessageAck ack = null;
         if (deliveryingAcknowledgements.compareAndSet(false, true)) {
             synchronized(deliveredMessages) {
                 if (isAutoAcknowledgeEach()) {
+                    MessageDispatch retained = retainMessageInListener ? removeMessageInListener() : null;
                     ack = makeAckForAllDeliveredMessages(MessageAck.STANDARD_ACK_TYPE);
                     if (ack != null) {
                         deliveredMessages.clear();
@@ -1027,6 +1040,9 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                     } else {
                         ack = pendingAck;
                         pendingAck = null;
+                    }
+                    if (retained != null) {
+                        deliveredMessages.addFirst(retained);
                     }
                 } else if (pendingAck != null && pendingAck.isStandardAck()) {
                     ack = pendingAck;
@@ -1048,6 +1064,13 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                             LOG.error(getConsumerId() + " failed to deliver acknowledgements", e);
                         } finally {
                             deliveryingAcknowledgements.set(false);
+                        }
+                        if (optimizeAcknowledge && isAutoAcknowledgeEach() && !unconsumedMessages.isClosed()) {
+                            try {
+                                acknowledgeDeliveredMessagesIfDue(true);
+                            } catch (JMSException e) {
+                                LOG.error(getConsumerId() + " failed to deliver acknowledgements", e);
+                            }
                         }
                     }
                 });
@@ -1161,6 +1184,9 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         if (!isAutoAcknowledgeBatch()) {
             synchronized(deliveredMessages) {
                 deliveredMessages.addFirst(md);
+                if (optimizeAcknowledge && isAutoAcknowledgeEach()) {
+                    messageInListener = md;
+                }
                 if (session.isTransacted()) {
                     PreviouslyDelivered entry = null;
                     if (previouslyDeliveredMessages != null) {
@@ -1191,6 +1217,61 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         session.sendAck(ack);
     }
 
+    private void acknowledgeDeliveredMessagesIfDue(boolean retainMessageInListener) throws JMSException {
+        if (deliveryingAcknowledgements.compareAndSet(false, true)) {
+            try {
+                synchronized (deliveredMessages) {
+                    MessageDispatch retained = retainMessageInListener ? removeMessageInListener() : null;
+                    try {
+                        acknowledgeDeliveredMessagesIfThresholdReached();
+                    } finally {
+                        if (retained != null) {
+                            deliveredMessages.addFirst(retained);
+                        }
+                    }
+                }
+            } finally {
+                deliveryingAcknowledgements.set(false);
+            }
+        }
+    }
+
+    private void acknowledgeDeliveredMessagesIfThresholdReached() throws JMSException {
+        if (deliveredMessages.isEmpty()) {
+            return;
+        }
+        if (optimizeAcknowledge) {
+            // AMQ-3956 evaluate both expired and normal msgs as
+            // otherwise consumer may get stalled
+            if (ackCounter + deliveredCounter >= (info.getPrefetchSize() * .65) || (optimizeAcknowledgeTimeOut > 0 && System.currentTimeMillis() >= (optimizeAckTimestamp + optimizeAcknowledgeTimeOut))) {
+                MessageAck ack = makeAckForAllDeliveredMessages(MessageAck.STANDARD_ACK_TYPE);
+                if (ack != null) {
+                    deliveredMessages.clear();
+                    ackCounter = 0;
+                    session.sendAck(ack);
+                    optimizeAckTimestamp = System.currentTimeMillis();
+                }
+                // AMQ-3956 - as further optimization send
+                // ack for expired msgs when there are any.
+                // This resets the deliveredCounter to 0 so that
+                // we won't sent standard acks with every msg just
+                // because the deliveredCounter just below
+                // 0.5 * prefetch as used in ackLater()
+                if (pendingAck != null && deliveredCounter > 0) {
+                    session.sendAck(pendingAck);
+                    pendingAck = null;
+                    deliveredCounter = 0;
+                }
+            }
+        } else {
+            MessageAck ack = makeAckForAllDeliveredMessages(MessageAck.STANDARD_ACK_TYPE);
+            if (ack!=null) {
+                deliveredMessages.clear();
+                session.sendAck(ack);
+            }
+        }
+    }
+
     private void afterMessageIsConsumed(MessageDispatch md, boolean messageExpired) throws JMSException {
         if (unconsumedMessages.isClosed()) {
             return;
@@ -1203,45 +1284,15 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
             if (session.getTransacted()) {
                 // Do nothing.
             } else if (isAutoAcknowledgeEach()) {
-                if (deliveryingAcknowledgements.compareAndSet(false, true)) {
+                if (optimizeAcknowledge) {
                     synchronized (deliveredMessages) {
+                        messageInListener = null;
                         if (!deliveredMessages.isEmpty()) {
-                            if (optimizeAcknowledge) {
-                                ackCounter++;
-
-                                // AMQ-3956 evaluate both expired and normal msgs as
-                                // otherwise consumer may get stalled
-                                if (ackCounter + deliveredCounter >= (info.getPrefetchSize() * .65) || (optimizeAcknowledgeTimeOut > 0 && System.currentTimeMillis() >= (optimizeAckTimestamp + optimizeAcknowledgeTimeOut))) {
-                                    MessageAck ack = makeAckForAllDeliveredMessages(MessageAck.STANDARD_ACK_TYPE);
-                                    if (ack != null) {
-                                        deliveredMessages.clear();
-                                        ackCounter = 0;
-                                        session.sendAck(ack);
-                                        optimizeAckTimestamp = System.currentTimeMillis();
-                                    }
-                                    // AMQ-3956 - as further optimization send
-                                    // ack for expired msgs when there are any.
-                                    // This resets the deliveredCounter to 0 so that
-                                    // we won't sent standard acks with every msg just
-                                    // because the deliveredCounter just below
-                                    // 0.5 * prefetch as used in ackLater()
-                                    if (pendingAck != null && deliveredCounter > 0) {
-                                        session.sendAck(pendingAck);
-                                        pendingAck = null;
-                                        deliveredCounter = 0;
-                                    }
-                                }
-                            } else {
-                                MessageAck ack = makeAckForAllDeliveredMessages(MessageAck.STANDARD_ACK_TYPE);
-                                if (ack!=null) {
-                                    deliveredMessages.clear();
-                                    session.sendAck(ack);
-                                }
-                            }
+                            ackCounter++;
                         }
                     }
-                    deliveryingAcknowledgements.set(false);
                 }
+                acknowledgeDeliveredMessagesIfDue(false);
             } else if (isAutoAcknowledgeBatch()) {
                 ackLater(md, MessageAck.STANDARD_ACK_TYPE);
             } else if (session.isClientAcknowledge()||session.isIndividualAcknowledge()) {
@@ -1928,7 +1979,7 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
                     try {
                         if (optimizeAcknowledge && !unconsumedMessages.isClosed()) {
                             LOG.info("Consumer:{} is performing scheduled delivery of outstanding optimized Acks", info.getConsumerId());
-                            deliverAcks();
+                            deliverAcks(true);
                         }
                     } catch (Exception e) {
                         LOG.debug("Optimized Ack Task caught exception during ack", e);
