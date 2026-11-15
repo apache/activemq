@@ -32,6 +32,7 @@ import org.apache.qpid.proton.amqp.messaging.DeliveryAnnotations;
 import org.apache.qpid.proton.amqp.messaging.Header;
 import org.apache.qpid.proton.amqp.messaging.MessageAnnotations;
 import org.apache.qpid.proton.amqp.messaging.Properties;
+import org.apache.qpid.proton.amqp.transport.ErrorCondition;
 import org.apache.qpid.proton.engine.Delivery;
 import org.apache.qpid.proton.message.Message;
 
@@ -217,11 +218,23 @@ public class AmqpMessage {
      * @throws Exception if an error occurs during the reject.
      */
     public void reject() throws Exception {
+        reject(null);
+    }
+
+    /**
+     * Reject the message with an optional error condition.
+     *
+     * @param error
+     *        the error condition to send, or null for a rejection without an error.
+     *
+     * @throws Exception if an error occurs during the reject.
+     */
+    public void reject(ErrorCondition error) throws Exception {
         if (receiver == null) {
-            throw new IllegalStateException("Can't release non-received message.");
+            throw new IllegalStateException("Can't reject non-received message.");
         }
 
-        receiver.reject(delivery);
+        receiver.reject(delivery, error);
     }
 
     //----- Convenience methods for constructing outbound messages -----------//

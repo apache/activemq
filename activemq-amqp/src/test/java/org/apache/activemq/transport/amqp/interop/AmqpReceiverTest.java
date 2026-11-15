@@ -31,6 +31,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.activemq.broker.jmx.DestinationViewMBean;
 import org.apache.activemq.broker.jmx.QueueViewMBean;
+import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.junit.ActiveMQTestRunner;
 import org.apache.activemq.junit.Repeat;
 import org.apache.activemq.transport.amqp.client.AmqpClient;
@@ -48,6 +49,8 @@ import org.apache.qpid.proton.amqp.Symbol;
 import org.apache.qpid.proton.amqp.messaging.Source;
 import org.apache.qpid.proton.amqp.messaging.TerminusDurability;
 import org.apache.qpid.proton.amqp.messaging.TerminusExpiryPolicy;
+import org.apache.qpid.proton.amqp.transport.AmqpError;
+import org.apache.qpid.proton.amqp.transport.ErrorCondition;
 import org.apache.qpid.proton.amqp.transport.ReceiverSettleMode;
 import org.apache.qpid.proton.amqp.transport.SenderSettleMode;
 import org.apache.qpid.proton.engine.Receiver;
@@ -643,6 +646,25 @@ public class AmqpReceiverTest extends AmqpClientTestSupport {
 
     @Test(timeout = 30000)
     public void testRejectedDisposition() throws Exception {
+        doTestRejectedDisposition(null);
+    }
+
+    @Test(timeout = 30000)
+    public void testRejectedDispositionWithError() throws Exception {
+        ErrorCondition error = new ErrorCondition(AmqpError.DECODE_ERROR, "Cannot decode message body");
+        Map<Symbol, Object> info = new HashMap<>();
+        info.put(Symbol.valueOf("rejection-detail"), "unsupported encoding");
+        error.setInfo(info);
+
+        doTestRejectedDisposition(error);
+    }
+
+    @Test(timeout = 30000)
+    public void testRejectedDispositionWithErrorWithoutDescription() throws Exception {
+        doTestRejectedDisposition(new ErrorCondition(AmqpError.DECODE_ERROR, null));
+    }
+
+    private void doTestRejectedDisposition(ErrorCondition error) throws Exception {
         sendMessages(getTestName(), 1, false);
 
         AmqpClient client = createAmqpClient();
@@ -659,11 +681,30 @@ public class AmqpReceiverTest extends AmqpClientTestSupport {
         assertNotNull(protonMessage);
         assertEquals("Unexpected initial value for AMQP delivery-count", 0, protonMessage.getDeliveryCount());
 
-        message.reject();
+        if (error == null) {
+            message.reject();
+        } else {
+            message.reject(error);
+        }
 
         // Attempt to read the message again but should not get it.
         message = receiver.receive(2, TimeUnit.SECONDS);
-        assertNull("shoudl not receive message again", message);
+        assertNull("should not receive message again", message);
+
+        AmqpReceiver dlqReceiver = session.createReceiver("queue://ActiveMQ.DLQ");
+        dlqReceiver.flow(1);
+        AmqpMessage dlqMessage = dlqReceiver.receive(5, TimeUnit.SECONDS);
+        assertNotNull("did not receive rejected message from DLQ", dlqMessage);
+
+        Object failureCause = dlqMessage.getApplicationProperty(ActiveMQMessage.DLQ_DELIVERY_FAILURE_CAUSE_PROPERTY);
+        if (error == null) {
+            assertNull("rejection without an error should not have a failure cause", failureCause);
+        } else {
+            assertNotNull("rejection error should be recorded on the DLQ message", failureCause);
+            assertTrue("failure cause should contain the rejection error: " + failureCause,
+                       failureCause.toString().contains(error.toString()));
+        }
+        dlqMessage.accept();
 
         connection.close();
     }

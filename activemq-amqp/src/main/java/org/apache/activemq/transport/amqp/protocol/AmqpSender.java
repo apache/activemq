@@ -281,7 +281,8 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
                 // the DLQ.  If a custom redelivery policy is used on the broker the message
                 // can still be redelivered based on the configation of that policy.
                 LOG.trace("onDelivery: Rejected state = {}, message poisoned.", state);
-                settle(delivery, MessageAck.POISON_ACK_TYPE);
+                ErrorCondition error = ((Rejected) state).getError();
+                settle(delivery, MessageAck.POISON_ACK_TYPE, error == null ? null : new IOException(error.toString()));
             } else if (state instanceof Released) {
                 LOG.trace("onDelivery: Released state = {}", state);
                 // re-deliver && don't increment the counter.
@@ -508,6 +509,10 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
     }
 
     private void settle(final Delivery delivery, final int ackType) throws Exception {
+        settle(delivery, ackType, null);
+    }
+
+    private void settle(final Delivery delivery, final int ackType, final Throwable poisonCause) throws Exception {
         byte[] tag = delivery.getTag();
         if (tag != null && tag.length > 0 && delivery.remotelySettled()) {
             tagCache.returnTag(tag);
@@ -527,6 +532,7 @@ public class AmqpSender extends AmqpAbstractLink<Sender> {
             ack.setMessageCount(1);
             ack.setAckType((byte) ackType);
             ack.setDestination(md.getDestination());
+            ack.setPoisonCause(poisonCause);
             LOG.trace("Sending Ack to ActiveMQ: {}", ack);
 
             sendToActiveMQ(ack, new ResponseHandler() {
