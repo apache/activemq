@@ -218,7 +218,7 @@ public class AmqpMessage {
      */
     public void reject() throws Exception {
         if (receiver == null) {
-            throw new IllegalStateException("Can't release non-received message.");
+            throw new IllegalStateException("Can't reject non-received message.");
         }
 
         receiver.reject(delivery);
