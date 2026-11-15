@@ -18,6 +18,9 @@
 # limitations under the License.
 ################################################################################
 
+set -e          # exit on error
+set -o pipefail # fail if command before pipe fails
+
 # Transport/connection security
 if [ -n "${ACTIVEMQ_CONNECTION_USER}" ]; then
   if [ -f "${ACTIVEMQ_HOME}/conf/connection.security.enabled" ]; then
@@ -26,20 +29,16 @@ if [ -n "${ACTIVEMQ_CONNECTION_USER}" ]; then
     echo "Enabling ActiveMQ Connection Security"
     sed -i "s/activemq.username=system/activemq.username=${ACTIVEMQ_CONNECTION_USER}/" ${ACTIVEMQ_HOME}/conf/credentials.properties
     sed -i "s/activemq.password=manager/activemq.password=${ACTIVEMQ_CONNECTION_PASSWORD}/" ${ACTIVEMQ_HOME}/conf/credentials.properties
-    read -r -d '' REPLACE << END
+    IFS= read -r -d '' REPLACE <<"END" || true
       <plugins>
         <simpleAuthenticationPlugin>
           <users>
-            <authenticationUser username="$\{activemq.username}" password="$\{activemq.password}"/>
+            <authenticationUser username="${activemq.username}" password="${activemq.password}"/>
           </users>
         </simpleAuthenticationPlugin>
       </plugins>
-    </broker>
 END
-    REPLACE=${REPLACE//$\\/$}
-    REPLACE=${REPLACE//\//\\\/}
-    REPLACE=$(echo $REPLACE | tr '\n' ' ')
-    sed -i "s/<\/broker>/$REPLACE/" ${ACTIVEMQ_HOME}/conf/activemq.xml
+    sed -i "s,</broker>,${REPLACE//$'\n'/\\n}&," ${ACTIVEMQ_HOME}/conf/activemq.xml
     touch "${ACTIVEMQ_HOME}/conf/connection.security.enabled"
   fi
 fi
@@ -50,16 +49,12 @@ if [ -n "${ACTIVEMQ_JMX_USER}" ]; then
     echo "JMX Security already enabled"
   else
      echo "Enabling ActiveMQ JMX security"
-     read -r -d '' REPLACE << END
+     IFS= read -r -d '' REPLACE <<"END" || true
        <managementContext>
          <managementContext createConnector="true" />
        </managementContext>
-     </broker>
 END
-     REPLACE=${REPLACE//\//\\\/}
-     REPLACE=${REPLACE//$\\/$}
-     REPLACE=$(echo $REPLACE | tr '\n' ' ')
-     sed -i "s/<\/broker>/$REPLACE/" ${ACTIVEMQ_HOME}/conf/activemq.xml
+     sed -i "s,</broker>,${REPLACE//$'\n'/\\n}&," ${ACTIVEMQ_HOME}/conf/activemq.xml
      sed -i "s/admin/${ACTIVEMQ_JMX_USER}/" ${ACTIVEMQ_HOME}/conf/jmx.access
      sed -i "s/admin/${ACTIVEMQ_JMX_USER}/" ${ACTIVEMQ_HOME}/conf/jmx.password
      if [ -n "${ACTIVEMQ_JMX_PASSWORD}" ]; then
