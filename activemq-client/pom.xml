@@ -48,6 +48,10 @@
       <artifactId>jakarta.jms-api</artifactId>
     </dependency>
     <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-secure-xml</artifactId>
+    </dependency>
+    <dependency>
       <groupId>org.fusesource.hawtbuf</groupId>
       <artifactId>hawtbuf</artifactId>
       <version>${hawtbuf-version}</version>
