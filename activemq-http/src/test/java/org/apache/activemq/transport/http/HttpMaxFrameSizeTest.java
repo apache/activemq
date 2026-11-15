@@ -52,11 +52,18 @@ public class HttpMaxFrameSizeTest {
 
     @Test
     public void sendOversizedMessageTest() throws Exception {
+
         try {
+
             send(5000);
+
+            Assert.fail("Expected JMSException: maxFrameSize should have been enforced");
+
         } catch (JMSException jmsException) {
             Assert.assertTrue(jmsException.getMessage().contains("405 Method Not Allowed"));
+
         }
+
     }
 
     @Test
@@ -67,7 +74,7 @@ public class HttpMaxFrameSizeTest {
 
     private void send(int size) throws Exception {
         ActiveMQConnectionFactory connectionFactory = new ActiveMQConnectionFactory("http://localhost:8888");
-        try(Connection connection = connectionFactory.createConnection()) {
+        try (Connection connection = connectionFactory.createConnection()) {
             Session session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
             MessageProducer producer = session.createProducer(new ActiveMQQueue("test"));
             String payload = "*".repeat(size);
