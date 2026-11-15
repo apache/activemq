@@ -136,7 +136,7 @@ public class TopicSubscription extends AbstractSubscription {
                 if (maximumPendingMessages != 0) {
                     boolean warnedAboutWait = false;
                     while (active) {
-                        while (matched.isFull()) {
+                        while (matched.isFull() && !Topic.isFanoutThread()) {
                             if (getContext().getStopping().get()) {
                                 LOG.warn("{}: stopped waiting for space in pendingMessage cursor for: {}", toString(), node.getMessageId());
                                 getSubscriptionStatistics().getEnqueues().decrement();
@@ -149,6 +149,12 @@ public class TopicSubscription extends AbstractSubscription {
                                         matched.getSystemUsage().getTempUsage().getPercentUsage(),
                                         matched.getSystemUsage().getMemoryUsage().getPercentUsage());
                                 warnedAboutWait = true;
+                            }
+                            if (!isFull() && matched.isEmpty()) {
+                                // the consumer caught up while we waited; memory may be held by messages queued behind this add
+                                dispatch(node);
+                                setSlowConsumer(false);
+                                return;
                             }
                             matchedListMutex.wait(20);
                         }
