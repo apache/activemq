@@ -19,11 +19,10 @@
 
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>example</groupId>
-  <artifactId>amqp-example</artifactId>
-  <version>0.1-SNAPSHOT</version>
-
-  <name>example</name>
+  <groupId>org.apache.activemq.examples</groupId>
+  <artifactId>activemq-example-amqp</artifactId>
+  <version>${project.version}</version>
+  <name>ActiveMQ :: Example :: AMQP</name>
   <description>ActiveMQ AMQP Java Examples</description>
 
   <dependencies>
