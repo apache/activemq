@@ -30,7 +30,7 @@ import org.apache.activemq.command.ActiveMQBlobMessage;
 
 /**
  * A default implementation of {@link BlobUploadStrategy} which uses the URL
- * class to upload files or streams to a remote URL
+ * class to upload files or streams to a remote http or https URL
  */
 public class DefaultBlobUploadStrategy extends DefaultStrategy implements BlobUploadStrategy {
 
@@ -47,7 +47,7 @@ public class DefaultBlobUploadStrategy extends DefaultStrategy implements BlobUp
     public URL uploadStream(ActiveMQBlobMessage message, InputStream fis) throws JMSException, IOException {
         URL url = createMessageURL(message);
 
-        HttpURLConnection connection = (HttpURLConnection)url.openConnection();
+        HttpURLConnection connection = openHttpConnection(url);
         connection.setRequestMethod("PUT");
         connection.setDoOutput(true);
 

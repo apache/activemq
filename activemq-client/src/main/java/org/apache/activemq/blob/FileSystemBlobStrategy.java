@@ -24,6 +24,7 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.Path;
 
 import jakarta.jms.JMSException;
 
@@ -115,6 +116,7 @@ public class FileSystemBlobStrategy implements BlobUploadStrategy, BlobDownloadS
      * @throws IOException
      */
     protected File getFile(ActiveMQBlobMessage message) throws JMSException, IOException {
+        BlobTransferPolicy.checkProtocolAllowed("file");
         if (message.getURL() != null) {
             // Do some checks on the received URL protocol
             String protocol = message.getURL().getProtocol();
@@ -123,7 +125,7 @@ public class FileSystemBlobStrategy implements BlobUploadStrategy, BlobDownloadS
             }
 
             try {
-                return new File(message.getURL().toURI());
+                return checkUnderRootFolder(new File(message.getURL().toURI()));
             } catch (URISyntaxException e) {
                 IOException ioe = new IOException("Unable to open file for message " + message);
                 ioe.initCause(e);
@@ -132,7 +134,16 @@ public class FileSystemBlobStrategy implements BlobUploadStrategy, BlobDownloadS
     	}
         //replace all : with _ to make windows more happy
         String fileName = message.getJMSMessageID().replaceAll(":", "_");
-        return new File(rootFile, fileName);
+        return checkUnderRootFolder(new File(rootFile, fileName));
 
+    }
+
+    private File checkUnderRootFolder(File file) throws IOException {
+        // compared as written, so a symbolic link in the folder is followed
+        final Path root = rootFile.toPath().toAbsolutePath().normalize();
+        if (!file.toPath().toAbsolutePath().normalize().startsWith(root)) {
+            throw new IOException("The message URL path is outside the upload URL path");
+        }
+        return file;
     }
 }

@@ -16,9 +16,14 @@
  */
 package org.apache.activemq.blob;
 
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.Arrays;
+import java.util.Locale;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * The policy for configuring how BLOBs (Binary Large OBjects) are transferred
@@ -27,7 +32,20 @@ import java.net.URL;
  * 
  */
 public class BlobTransferPolicy {
-    private String defaultUploadUrl = "http://localhost:8080/uploads/";
+
+    public static final Set<String> DEFAULT_ALLOWED_PROTOCOLS = Set.of("file", "https");
+
+    /**
+     * Comma separated list of protocols that replaces the defaults.
+     */
+    public static final String ALLOWED_PROTOCOLS_PROPERTY = "org.apache.activemq.blob.AllowedProtocols";
+
+    /**
+     * Set to false to stop following HTTP redirects.
+     */
+    public static final String HTTP_FOLLOW_REDIRECTS_PROPERTY = "org.apache.activemq.blob.HttpFollowRedirects";
+
+    private String defaultUploadUrl = "https://localhost:8080/uploads/";
     private String brokerUploadUrl;
     private String uploadUrl;
     private int bufferSize = 128 * 1024;
@@ -111,6 +129,13 @@ public class BlobTransferPolicy {
         this.uploadStrategy = uploadStrategy;
     }
 
+    /**
+     * Sets the download strategy to use for downloading BLOBs from some URL
+     */
+    public void setDownloadStrategy(BlobDownloadStrategy downloadStrategy) {
+        this.downloadStrategy = downloadStrategy;
+    }
+
     public int getBufferSize() {
         return bufferSize;
     }
@@ -122,9 +147,34 @@ public class BlobTransferPolicy {
         this.bufferSize = bufferSize;
     }
 
+    public static boolean isHttpFollowRedirects() {
+        final String configured = System.getProperty(HTTP_FOLLOW_REDIRECTS_PROPERTY);
+        return configured == null || Boolean.parseBoolean(configured.trim());
+    }
+
+    public static Set<String> getAllowedProtocols() {
+        final String configured = System.getProperty(ALLOWED_PROTOCOLS_PROPERTY);
+        if (configured == null) {
+            return DEFAULT_ALLOWED_PROTOCOLS;
+        }
+        return Arrays.stream(configured.split(","))
+            .map(protocol -> protocol.trim().toLowerCase(Locale.ROOT))
+            .filter(protocol -> !protocol.isEmpty())
+            .collect(Collectors.toUnmodifiableSet());
+    }
+
+    public static void checkProtocolAllowed(String protocol) throws IOException {
+        final String name = protocol == null ? "" : protocol.toLowerCase(Locale.ROOT);
+        if (!getAllowedProtocols().contains(name)) {
+            throw new IOException("The URL protocol '" + protocol + "' is not allowed for blob transfer."
+                + " Allowed protocols are set with " + ALLOWED_PROTOCOLS_PROPERTY);
+        }
+    }
+
     /**
-     * Returns the upload strategy depending on the information from the
-     * uploadURL. Currently supportet HTTP 
+     * Returns the upload strategy for the upload URL: the file system
+     * strategy for a file URL, otherwise the default strategy, which
+     * supports http and https.
      * 
      * @return
      */
@@ -147,8 +197,9 @@ public class BlobTransferPolicy {
     }
     
     /**
-     * Returns the download strategy depending on the information from the
-     * uploadURL. Currently supportet HTTP
+     * Returns the download strategy for the upload URL: the file system
+     * strategy for a file URL, otherwise the default strategy, which
+     * supports http and https.
      * 
      * @return
      */
