@@ -20,10 +20,10 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>example</groupId>
-    <artifactId>advanced-openwire-example</artifactId>
+    <groupId>org.apache.activemq.examples</groupId>
+    <artifactId>activemq-example-openwire</artifactId>
     <packaging>pom</packaging>
-    <version>0.1-SNAPSHOT</version>
+    <version>${project.version}</version>
     <modules>
         <module>jms-example-queue</module>
         <module>jms-example-topic</module>
@@ -37,7 +37,7 @@
         <module>jms-example-composite-destinations</module>
     </modules>
 
-    <name>JMS / OpeWire Examples for ActiveMQ</name>
+    <name>ActiveMQ :: Example :: OpenWire</name>
     <description>ActiveMQ OpenWire Java Examples</description>
 
     <dependencies>
