@@ -21,7 +21,9 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.Serializable;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import jakarta.jms.JMSException;
 import jakarta.jms.MessageNotReadableException;
@@ -187,6 +189,34 @@ public class ActiveMQObjectMessageTest extends TestCase {
         Serializable object = msg.getObject();
 
         assertSame("doGetBody() should reuse the cached object instead of deserializing again", object, body);
+    }
+
+    public void testGetBodyDeserializesOnce() throws Exception {
+        ActiveMQObjectMessage msg = new ActiveMQObjectMessage();
+        msg.setObject(new CountingSerializable("test"));
+        // as on the consumer side: only the serialized content is available
+        msg.storeContentAndClear();
+
+        CountingSerializable.READ_COUNT.set(0);
+        CountingSerializable body = msg.getBody(CountingSerializable.class);
+        assertEquals("test", body.value);
+        assertEquals(1, CountingSerializable.READ_COUNT.get());
+    }
+
+    static class CountingSerializable implements Serializable {
+        private static final long serialVersionUID = 1L;
+        static final AtomicInteger READ_COUNT = new AtomicInteger();
+
+        final String value;
+
+        CountingSerializable(String value) {
+            this.value = value;
+        }
+
+        private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
+            in.defaultReadObject();
+            READ_COUNT.incrementAndGet();
+        }
     }
 
 }

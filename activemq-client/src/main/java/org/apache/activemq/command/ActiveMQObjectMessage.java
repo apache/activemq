@@ -300,7 +300,6 @@ public class ActiveMQObjectMessage extends ActiveMQMessage implements ObjectMess
 
     @SuppressWarnings("unchecked")
     protected <T> T doGetBody(Class<T> asType) throws JMSException {
-        storeContent();
         return (T) getObject();
     }
 }
