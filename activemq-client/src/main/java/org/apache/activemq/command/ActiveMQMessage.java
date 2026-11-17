@@ -58,11 +58,13 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
 
     public static final Set<String> JMSX_PROVIDER_PROPERTIES =
             Collections.unmodifiableSet(new HashSet<String>(Arrays.asList(
+                    "JMSXAppID",
+                    "JMSXConsumerTXID",
                     "JMSXDeliveryCount",
+                    "JMSXProducerTXID",
                     "JMSXRcvTimestamp",
                     "JMSXState",
-                    "JMSXProducerTXID",
-                    "JMSXConsumerTXID"
+                    "JMSXUserID"
             )));
 
     protected transient Callback acknowledgeCallback;

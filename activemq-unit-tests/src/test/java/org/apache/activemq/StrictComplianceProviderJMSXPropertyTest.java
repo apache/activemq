@@ -91,11 +91,13 @@ public class StrictComplianceProviderJMSXPropertyTest {
             Message message = session.createMessage();
 
             String[] providerOnlyProperties = {
+                    "JMSXAppID",
+                    "JMSXConsumerTXID",
                     "JMSXDeliveryCount",
+                    "JMSXProducerTXID",
                     "JMSXRcvTimestamp",
                     "JMSXState",
-                    "JMSXProducerTXID",
-                    "JMSXConsumerTXID"
+                    "JMSXUserID"
             };
 
             for (String property : providerOnlyProperties) {
