@@ -856,8 +856,7 @@ public class ActiveMQMapMessage extends ActiveMQMessage implements MapMessage {
     @SuppressWarnings("unchecked")
     protected <T> T doGetBody(Class<T> asType) throws JMSException {
         storeContent();
-        final ByteSequence content = getContent();
-        final Map<String, Object> map = content != null ? deserialize(content) : null;
+        final Map<String, Object> map = getContentMap();
 
         //This implementation treats an empty map as not having a body so if empty
         //we should return null as well
