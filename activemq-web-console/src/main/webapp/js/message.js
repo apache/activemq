@@ -75,4 +75,11 @@ window.onload=function() {
     document.getElementById('actionDelete').onclick = function(e) {
         return confirm('Are you sure you want to delete the message?');
     }
+
+    const actionRetry = document.getElementById('actionRetry');
+    if (actionRetry) {
+        actionRetry.onclick = function(e) {
+            return confirm('Are you sure you want to retry this message?');
+        }
+    }
 }
