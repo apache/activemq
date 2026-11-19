@@ -24,6 +24,8 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 
 import org.apache.xbean.spring.context.ClassPathXmlApplicationContext;
 import org.eclipse.jetty.server.Server;
@@ -32,33 +34,54 @@ import org.junit.Test;
 
 public class JettyServerBeanTest {
 
+    static {
+        if (System.getProperty("java.security.auth.login.config") == null) {
+            var resource = JettyServerBeanTest.class.getClassLoader().getResource("login.config");
+            if (resource != null) {
+                System.setProperty("java.security.auth.login.config", resource.getFile());
+            }
+        }
+    }
+
     @Test
     public void testJettyServerBean() throws Exception {
         var context = new ClassPathXmlApplicationContext("conf/jetty-spring.xml");
         context.start();
+        try {
+            var jettyServer = (JettyServerBean) context.getBean("jettyServer");
+            assertNotNull(jettyServer);
 
-        var jettyServer = (JettyServerBean) context.getBean("jettyServer");
-        assertNotNull(jettyServer);
+            Server server = jettyServer.getServer();
+            assertNotNull("Embedded Jetty Server should be created", server);
+            assertTrue("Embedded Jetty Server should be running", server.isRunning());
 
-        Server server = jettyServer.getServer();
-        assertNotNull("Embedded Jetty Server should be created", server);
-        assertTrue("Embedded Jetty Server should be running", server.isRunning());
+            // The console is protected by the JAAS SecurityHandler wired in
+            // jetty-security.xml: an unauthenticated request must be challenged
+            // (HTTP 401) rather than served. A request from loopback also confirms
+            // the InetAccessHandler allows local clients.
+            int port = ((ServerConnector) server.getConnectors()[0]).getLocalPort();
+            HttpClient client = HttpClient.newHttpClient();
+            HttpResponse<String> response = client.send(
+                    HttpRequest.newBuilder(URI.create("http://127.0.0.1:" + port + "/admin/")).GET().build(),
+                    HttpResponse.BodyHandlers.ofString());
+            assertEquals("Web console must require authentication", 401, response.statusCode());
 
-        // The console is protected by the JAAS SecurityHandler wired in
-        // jetty-security.xml: an unauthenticated request must be challenged
-        // (HTTP 401) rather than served. A request from loopback also confirms
-        // the InetAccessHandler allows local clients.
-        int port = ((ServerConnector) server.getConnectors()[0]).getLocalPort();
-        HttpClient client = HttpClient.newHttpClient();
-        HttpResponse<String> response = client.send(
-                HttpRequest.newBuilder(URI.create("http://127.0.0.1:" + port + "/admin/")).GET().build(),
-                HttpResponse.BodyHandlers.ofString());
-        assertEquals("Web console must require authentication", 401, response.statusCode());
+            // The security headers from jetty-webapps.xml must also be sent on
+            // the pages served to an authenticated user.
+            HttpResponse<String> authenticatedResponse = client.send(
+                    HttpRequest.newBuilder(URI.create("http://127.0.0.1:" + port + "/admin/"))
+                            .header("Authorization", "Basic " + Base64.getEncoder().encodeToString(
+                                    "admin:admin".getBytes(StandardCharsets.ISO_8859_1)))
+                            .GET().build(),
+                    HttpResponse.BodyHandlers.ofString());
+            assertEquals(200, authenticatedResponse.statusCode());
+            assertEquals("SAMEORIGIN", authenticatedResponse.headers().firstValue("X-Frame-Options").orElse(null));
 
-        // jetty.http.host from jetty-spring.properties: without it Jetty binds every interface
-        assertEquals("127.0.0.1", ((ServerConnector) server.getConnectors()[0]).getHost());
-
-        context.stop();
+            // jetty.http.host from jetty-spring.properties: without it Jetty binds every interface
+            assertEquals("127.0.0.1", ((ServerConnector) server.getConnectors()[0]).getHost());
+        } finally {
+            context.close();
+        }
     }
 
     @Test

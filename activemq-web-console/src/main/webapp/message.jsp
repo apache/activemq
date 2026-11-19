@@ -145,13 +145,12 @@ No message could be found for ID <c:out value="${requestContext.messageQuery.id}
                     <c:if test="${requestContext.messageQuery.isDLQ() || requestContext.messageQuery.JMSDestination eq 'ActiveMQ.DLQ'}">
                     	<tr>
                     		<td>
-                    	 		<a href="<c:url value="retryMessage.action">
+                    	 		<a id="actionRetry" href="<c:url value="retryMessage.action">
                                           <c:param name="JMSDestination" value="${requestContext.messageQuery.JMSDestination}" />
                                           <c:param name="messageId" value="${row.JMSMessageID}" />
                                           <c:param name="JMSDestinationType" value="queue" />
                                           <c:param name="secret" value='${sessionScope["secret"]}' />
                                       </c:url>"
-                                      onclick="return confirm('Are you sure you want to retry this message?')"
                                       title="Retry - attempt reprocessing on original destination">Retry</a>
                             </td>
                        </tr>
