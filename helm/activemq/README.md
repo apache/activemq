@@ -148,8 +148,20 @@ helm uninstall my-activemq
 | `resources.limits.cpu` | CPU limit | `2` |
 | `resources.limits.memory` | Memory limit | `2Gi` |
 | `startupProbe` | Startup probe (TCP on OpenWire port) | See `values.yaml` |
-| `livenessProbe` | Liveness probe (HTTP on web console) | See `values.yaml` |
+| `livenessProbe` | Liveness probe (TCP on OpenWire port) | See `values.yaml` |
 | `readinessProbe` | Readiness probe (TCP on OpenWire port) | See `values.yaml` |
+
+Helm merges probe values with the defaults, and Kubernetes allows only one handler per probe. To use a different handler, set the default one to `null`, for example:
+
+```yaml
+livenessProbe:
+  tcpSocket: null
+  exec:
+    command:
+      - sh
+      - -c
+      - curl -fsS -o /dev/null -u "$ACTIVEMQ_WEB_USER:$ACTIVEMQ_WEB_PASSWORD" http://localhost:8161/admin/index.jsp
+```
 
 ### Security
 
