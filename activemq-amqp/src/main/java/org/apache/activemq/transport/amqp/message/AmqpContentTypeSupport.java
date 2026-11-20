@@ -20,6 +20,7 @@ import java.nio.charset.Charset;
 import java.nio.charset.IllegalCharsetNameException;
 import java.nio.charset.StandardCharsets;
 import java.nio.charset.UnsupportedCharsetException;
+import java.util.Locale;
 import java.util.StringTokenizer;
 
 public final class AmqpContentTypeSupport {
@@ -54,15 +55,15 @@ public final class AmqpContentTypeSupport {
             throw new InvalidContentTypeException("Content type has no '/' separator: " + contentType);
         }
 
-        final String type = contentType.substring(0, subTypeSeparator).toLowerCase().trim();
+        final String type = contentType.substring(0, subTypeSeparator).toLowerCase(Locale.ENGLISH).trim();
 
-        String subTypePart = contentType.substring(subTypeSeparator + 1).toLowerCase().trim();
+        String subTypePart = contentType.substring(subTypeSeparator + 1).toLowerCase(Locale.ENGLISH).trim();
 
         String parameterPart = null;
         int parameterSeparator = subTypePart.indexOf(";");
         if (parameterSeparator != -1) {
             if (parameterSeparator < subTypePart.length() - 1) {
-                parameterPart = contentType.substring(subTypeSeparator + 1).toLowerCase().trim();
+                parameterPart = contentType.substring(subTypeSeparator + 1).toLowerCase(Locale.ENGLISH).trim();
             }
             subTypePart = subTypePart.substring(0, parameterSeparator).trim();
         }
@@ -125,7 +126,7 @@ public final class AmqpContentTypeSupport {
                     if (CHARSET.equalsIgnoreCase(name.trim())) {
                         String value = unquote(parameter.substring(eqIndex + 1));
 
-                        charset = value.toUpperCase();
+                        charset = value.toUpperCase(Locale.ENGLISH);
                         break;
                     }
                 }
