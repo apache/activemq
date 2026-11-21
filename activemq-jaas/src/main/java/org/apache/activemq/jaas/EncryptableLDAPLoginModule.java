@@ -18,6 +18,7 @@ package org.apache.activemq.jaas;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import javax.security.auth.Subject;
 import javax.security.auth.callback.CallbackHandler;
@@ -32,6 +33,8 @@ public class EncryptableLDAPLoginModule extends LDAPLoginModule {
     private static final String ENCRYPTION_PASSWORD = "encryptionPassword";
     private static final String PASSWORD_ENV_NAME = "passwordEnvName";
     private static final String PASSWORD_ALGORITHM = "encryptionAlgorithm";
+    private static final Set<String> ENCRYPTION_OPTIONS =
+            Set.of(ENCRYPTION_PASSWORD, PASSWORD_ENV_NAME, PASSWORD_ALGORITHM);
     private static final String DEFAULT_PASSWORD_ENV_NAME = ActiveMQEncryptor.DEFAULT_PASSWORD_ENV_NAME;
     private static final String DEFAULT_PASSWORD_ALGORITHM = ActiveMQEncryptor.DEFAULT_LEGACY_ALGORITHM;
 
@@ -56,17 +59,23 @@ public class EncryptableLDAPLoginModule extends LDAPLoginModule {
             encryptor.setPassword(encryptionPassword);
         }
 
+        super.initialize(subject, callbackHandler, sharedState, decryptOptions(options, encryptor));
+
+    }
+
+    // the options that configure the encryptor are used as written
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    static Map decryptOptions(Map options, ActiveMQEncryptor encryptor) {
         var decryptedOptions = new HashMap(options);
         for (var entryObject : decryptedOptions.entrySet()) {
             var entry = (Map.Entry) entryObject;
-            if (entry.getValue() instanceof String value
+            if (!ENCRYPTION_OPTIONS.contains(entry.getKey())
+                    && entry.getValue() instanceof String value
                     && ActiveMQEncryptor.isEncryptedValue(value)) {
-                entry.setValue(encryptor.decrypt(value));
+                entry.setValue(encryptor.decrypt(ActiveMQEncryptor.unwrapEncryptedValue(value)));
             }
         }
-
-        super.initialize(subject, callbackHandler, sharedState, decryptedOptions);
-
+        return decryptedOptions;
     }
 
 }
