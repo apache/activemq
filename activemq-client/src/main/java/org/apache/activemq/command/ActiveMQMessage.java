@@ -503,8 +503,11 @@ public class ActiveMQMessage extends Message implements org.apache.activemq.Mess
         value = convertScheduled(name, value);
         PropertySetter setter = JMS_PROPERTY_SETERS.get(name);
 
-        if (setter != null && value != null) {
-            setter.set(this, value);
+        if (setter != null) {
+            // A null value for a built-in property is ignored, so it is never stored as a custom property
+            if (value != null) {
+                setter.set(this, value);
+            }
         } else {
             try {
                 this.setProperty(name, value);

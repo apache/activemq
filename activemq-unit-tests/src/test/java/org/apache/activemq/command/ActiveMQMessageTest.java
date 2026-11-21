@@ -17,6 +17,7 @@
 package org.apache.activemq.command;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Map;
 
@@ -539,6 +540,29 @@ public class ActiveMQMessageTest extends TestCase {
 
         msg.setStringProperty(name, null);
         assertEquals(null, msg.getStringProperty(name));
+    }
+
+    public void testSetNullBuiltInPropertyIsNotStoredAsCustomProperty() throws Exception {
+        String[] names = {"JMSXGroupID", "JMSXGroupSeq", "JMSCorrelationID", "JMSType"};
+        for (String name : names) {
+            ActiveMQMessage msg = new ActiveMQMessage();
+            msg.setObjectProperty(name, null);
+
+            assertFalse(name + " should not be stored as a custom property", msg.getProperties().containsKey(name));
+            assertFalse(name + " should not be listed", Collections.list(msg.getPropertyNames()).contains(name));
+        }
+
+        ActiveMQMessage msg = new ActiveMQMessage();
+        msg.setObjectProperty("JMSXGroupID", null);
+        assertFalse(msg.propertyExists("JMSXGroupID"));
+    }
+
+    public void testSetNullBuiltInPropertyKeepsExistingValue() throws JMSException {
+        Message msg = new ActiveMQMessage();
+        msg.setStringProperty("JMSXGroupID", "A");
+
+        msg.setObjectProperty("JMSXGroupID", null);
+        assertEquals("A", msg.getStringProperty("JMSXGroupID"));
     }
 
     public void testSetNullPropertyName() throws JMSException {
