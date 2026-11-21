@@ -27,6 +27,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import jakarta.jms.JMSException;
 import jakarta.jms.Message;
 import jakarta.jms.MessageConsumer;
 import jakarta.jms.MessageProducer;
@@ -120,6 +121,56 @@ public class StrictComplianceForeignMessageTest {
     }
 
     @Test
+    public void testConsumerTransformerCopyPreservesProviderPropertiesAcrossRedelivery() throws Exception {
+        for (boolean strictCompliance : new boolean[] {false, true}) {
+            try (var connection = createConnection(strictCompliance)) {
+                connection.getRedeliveryPolicy().setInitialRedeliveryDelay(0);
+                connection.getRedeliveryPolicy().setRedeliveryDelay(0);
+                connection.start();
+                final var session = connection.createSession(false, Session.CLIENT_ACKNOWLEDGE);
+                final var queue = session.createQueue(QUEUE_NAME + ".copy." + strictCompliance);
+                final var consumer = (ActiveMQMessageConsumer) session.createConsumer(queue);
+                consumer.setTransformer(new MessageTransformerSupport() {
+                    @Override
+                    public Message producerTransform(Session session, MessageProducer producer, Message message) {
+                        return message;
+                    }
+
+                    @Override
+                    public Message consumerTransform(Session session, MessageConsumer consumer, Message message)
+                        throws JMSException {
+                        final var transformed = session.createTextMessage("transformed");
+                        copyProperties(message, transformed);
+                        return transformed;
+                    }
+                });
+
+                final var sent = new ActiveMQMessage();
+                sent.setStringProperty("JMSXAppID", "provider-app");
+                sent.setStringProperty("JMSXUserID", "provider-user");
+                sent.setStringProperty("color", "red");
+                session.createProducer(queue).send(sent);
+
+                for (int deliveryCount = 1; deliveryCount <= 3; deliveryCount++) {
+                    final var received = consumer.receive(5000);
+                    assertNotNull(received);
+                    assertEquals("transformed", ((jakarta.jms.TextMessage) received).getText());
+                    assertEquals(deliveryCount, received.getIntProperty("JMSXDeliveryCount"));
+                    assertEquals(deliveryCount > 1, received.getJMSRedelivered());
+                    assertEquals("provider-app", received.getStringProperty("JMSXAppID"));
+                    assertEquals("provider-user", received.getStringProperty("JMSXUserID"));
+                    assertEquals("red", received.getStringProperty("color"));
+                    if (deliveryCount < 3) {
+                        session.recover();
+                    } else {
+                        received.acknowledge();
+                    }
+                }
+            }
+        }
+    }
+
+    @Test
     public void testTransformFollowsConnection() throws Exception {
         try (var strict = createConnection(true); var lenient = createConnection(false)) {
             assertProviderPropertiesSkipped(ActiveMQMessageTransformation.transformMessage(foreignMessage(), strict));
@@ -149,17 +200,22 @@ public class StrictComplianceForeignMessageTest {
     }
 
     @Test
-    public void testCopyPropertiesFollowsConnectionOfTarget() throws Exception {
+    public void testCopyPropertiesPreservesProviderPropertiesUnlessExplicitlyFiltered() throws Exception {
         try (var strict = createConnection(true)) {
             final var followsConnection = new ActiveMQMessage();
             followsConnection.setConnection(strict);
             ActiveMQMessageTransformation.copyProperties(foreignMessage(), followsConnection);
-            assertProviderPropertiesSkipped(followsConnection);
+            assertProviderPropertiesCopied(followsConnection);
 
             final var overridden = new ActiveMQMessage();
             overridden.setConnection(strict);
             ActiveMQMessageTransformation.copyProperties(foreignMessage(), overridden, true);
             assertProviderPropertiesCopied(overridden);
+
+            final var filtered = new ActiveMQMessage();
+            filtered.setConnection(strict);
+            ActiveMQMessageTransformation.copyProperties(foreignMessage(), filtered, false);
+            assertProviderPropertiesSkipped(filtered);
         }
 
         final var noConnection = new ActiveMQMessage();

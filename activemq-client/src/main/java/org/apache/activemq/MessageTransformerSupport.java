@@ -27,7 +27,8 @@ import jakarta.jms.Message;
 public abstract class MessageTransformerSupport implements MessageTransformer {
 
     /**
-     * Copies the standard JMS and user defined properties from the givem message to the specified message
+     * Copies standard JMS and user-defined properties, including provider-set
+     * JMSX values such as the delivery count, to the specified message.
      *
      * @param fromMessage the message to take the properties from
      * @param toMesage the message to add the properties to

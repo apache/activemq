@@ -189,15 +189,17 @@ public final class ActiveMQMessageTransformation {
     }
 
     /**
-     * Copies the standard JMS and user defined properties from the givem
-     * message to the specified message
+     * Copies standard JMS and user-defined properties, including provider-set
+     * JMSX values, to the specified message. Consumer transformers use this
+     * to retain the metadata supplied by the provider. Outbound conversion
+     * uses the explicit compliance policy in the three-argument overload.
      *
      * @param fromMessage the message to take the properties from
      * @param toMessage the message to add the properties to
      * @throws JMSException
      */
     public static void copyProperties(Message fromMessage, Message toMessage) throws JMSException {
-        copyProperties(fromMessage, toMessage, false);
+        copyProperties(fromMessage, toMessage, true);
     }
 
     /**
