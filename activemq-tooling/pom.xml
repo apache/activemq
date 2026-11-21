@@ -31,6 +31,7 @@
   <name>ActiveMQ :: Tooling</name>
 
   <modules>
+    <module>activemq-xbean-maven-plugin</module>
     <module>activemq-memtest-maven-plugin</module>
     <module>activemq-perf-maven-plugin</module>
     <module>activemq-maven-plugin</module>
