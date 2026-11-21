@@ -37,7 +37,7 @@ public interface BlobMessage extends Message {
     InputStream getInputStream() throws IOException, JMSException;
 
     /**
-     * Returns the URL for the blob if its available as an external URL (such as file, http, ftp etc)
+     * Returns the URL for the blob if its available as an external URL (file, http or https)
      * or null if there is no URL available
      */
     URL getURL() throws MalformedURLException, JMSException;

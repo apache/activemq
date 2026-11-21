@@ -180,6 +180,9 @@ public class ActiveMQBlobMessage extends ActiveMQMessage implements BlobMessage 
     }
     
     public void deleteFile() throws IOException, JMSException {
+        if (blobDownloader == null) {
+            return;
+        }
         blobDownloader.deleteFile(this);
     }
 }

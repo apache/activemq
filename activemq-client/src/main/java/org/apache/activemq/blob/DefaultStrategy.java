@@ -16,19 +16,47 @@
  */
 package org.apache.activemq.blob;
 
+import java.io.IOException;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLConnection;
 
 import jakarta.jms.JMSException;
 
 import org.apache.activemq.command.ActiveMQBlobMessage;
 
 public class DefaultStrategy {
-    
+
     protected BlobTransferPolicy transferPolicy;
 
     public DefaultStrategy(BlobTransferPolicy transferPolicy) {
         this.transferPolicy = transferPolicy;
+    }
+
+    protected void checkProtocolAllowed(URL url) throws IOException {
+        BlobTransferPolicy.checkProtocolAllowed(url.getProtocol());
+    }
+
+    protected HttpURLConnection openHttpConnection(URL url) throws IOException {
+        checkProtocolAllowed(url);
+        final URLConnection connection = url.openConnection();
+        if (!(connection instanceof HttpURLConnection)) {
+            throw new IOException("The default blob strategy needs an http or https URL to upload or delete"
+                + " but the protocol is '" + url.getProtocol() + "'");
+        }
+        return withRedirectSetting((HttpURLConnection) connection);
+    }
+
+    protected HttpURLConnection withRedirectSetting(HttpURLConnection connection) {
+        if (!BlobTransferPolicy.isHttpFollowRedirects()) {
+            connection.setInstanceFollowRedirects(false);
+        }
+        return connection;
+    }
+
+    protected boolean isRedirectCode(int responseCode) {
+        return responseCode >= 300 && responseCode < 400;
     }
 
     protected boolean isSuccessfulCode(int responseCode) {
