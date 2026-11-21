@@ -87,6 +87,11 @@ public class PropertiesPlaceHolderUtil {
         return str;
     }
 
+    private static boolean isPlaceholderConfigurer(String className) {
+        return className.contains("PropertyPlaceholderConfigurer")
+            || className.contains("PropertySourcesPlaceholderConfigurer");
+    }
+
     public void mergeProperties(Document doc, Properties initialProperties, BrokerContext brokerContext) {
         // find resources
         //        <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
@@ -99,7 +104,7 @@ public class PropertiesPlaceHolderUtil {
         NodeList beans = doc.getElementsByTagNameNS("*", "bean");
         for (int i = 0; i < beans.getLength(); i++) {
             Node bean = beans.item(0);
-            if (bean.hasAttributes() && bean.getAttributes().getNamedItem("class").getTextContent().contains("PropertyPlaceholderConfigurer")) {
+            if (bean.hasAttributes() && isPlaceholderConfigurer(bean.getAttributes().getNamedItem("class").getTextContent())) {
                 if (bean.hasChildNodes()) {
                     NodeList beanProps = bean.getChildNodes();
                     for (int j = 0; j < beanProps.getLength(); j++) {
