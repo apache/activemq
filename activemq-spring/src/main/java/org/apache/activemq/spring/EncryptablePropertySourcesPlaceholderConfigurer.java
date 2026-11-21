@@ -18,12 +18,10 @@ package org.apache.activemq.spring;
 
 import org.apache.activemq.util.ActiveMQEncryptor;
 import org.apache.activemq.util.TextEncryptor;
-import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
-import org.springframework.core.convert.support.ConfigurableConversionService;
 import org.springframework.core.env.ConfigurablePropertyResolver;
-import org.springframework.core.env.MissingRequiredPropertiesException;
+import org.springframework.core.env.MutablePropertySources;
+import org.springframework.core.env.PropertySource;
 
 /**
  * Property placeholder configurer that resolves {@code ENC(...)} values with
@@ -67,118 +65,33 @@ public class EncryptablePropertySourcesPlaceholderConfigurer extends PropertySou
     }
 
     @Override
-    protected void processProperties(ConfigurableListableBeanFactory beanFactoryToProcess,
-            ConfigurablePropertyResolver propertyResolver) throws BeansException {
-        super.processProperties(beanFactoryToProcess, new DecryptingPropertyResolver(propertyResolver));
+    protected ConfigurablePropertyResolver createPropertyResolver(MutablePropertySources propertySources) {
+        var decrypting = new MutablePropertySources();
+        for (var source : propertySources) {
+            decrypting.addLast(new DecryptingPropertySource(source));
+        }
+        return super.createPropertyResolver(decrypting);
     }
 
-    private String decryptIfEncrypted(String value) {
-        if (value != null && ActiveMQEncryptor.isEncryptedValue(value)) {
-            return encryptor.decrypt(value);
-        }
-        return value;
-    }
+    // decrypts each property value, so a placeholder inside a larger value gets the plaintext
+    private class DecryptingPropertySource extends PropertySource<PropertySource<?>> {
 
-    /**
-     * Delegates to the resolver built by the parent class and decrypts
-     * resolved values that are entirely an {@code ENC(...)} token.
-     */
-    private class DecryptingPropertyResolver implements ConfigurablePropertyResolver {
-
-        private final ConfigurablePropertyResolver delegate;
-
-        DecryptingPropertyResolver(ConfigurablePropertyResolver delegate) {
-            this.delegate = delegate;
+        DecryptingPropertySource(PropertySource<?> source) {
+            super(source.getName(), source);
         }
 
         @Override
-        public String resolvePlaceholders(String text) {
-            return decryptIfEncrypted(delegate.resolvePlaceholders(text));
+        public Object getProperty(String name) {
+            var value = source.getProperty(name);
+            if (value instanceof String text && ActiveMQEncryptor.isEncryptedValue(text)) {
+                return encryptor.decrypt(text);
+            }
+            return value;
         }
 
         @Override
-        public String resolveRequiredPlaceholders(String text) throws IllegalArgumentException {
-            return decryptIfEncrypted(delegate.resolveRequiredPlaceholders(text));
-        }
-
-        @Override
-        public String getProperty(String key) {
-            return decryptIfEncrypted(delegate.getProperty(key));
-        }
-
-        @Override
-        public String getProperty(String key, String defaultValue) {
-            return decryptIfEncrypted(delegate.getProperty(key, defaultValue));
-        }
-
-        @Override
-        public String getRequiredProperty(String key) throws IllegalStateException {
-            return decryptIfEncrypted(delegate.getRequiredProperty(key));
-        }
-
-        @Override
-        public boolean containsProperty(String key) {
-            return delegate.containsProperty(key);
-        }
-
-        @Override
-        public <T> T getProperty(String key, Class<T> targetType) {
-            return delegate.getProperty(key, targetType);
-        }
-
-        @Override
-        public <T> T getProperty(String key, Class<T> targetType, T defaultValue) {
-            return delegate.getProperty(key, targetType, defaultValue);
-        }
-
-        @Override
-        public <T> T getRequiredProperty(String key, Class<T> targetType) throws IllegalStateException {
-            return delegate.getRequiredProperty(key, targetType);
-        }
-
-        @Override
-        public ConfigurableConversionService getConversionService() {
-            return delegate.getConversionService();
-        }
-
-        @Override
-        public void setConversionService(ConfigurableConversionService conversionService) {
-            delegate.setConversionService(conversionService);
-        }
-
-        @Override
-        public void setPlaceholderPrefix(String placeholderPrefix) {
-            delegate.setPlaceholderPrefix(placeholderPrefix);
-        }
-
-        @Override
-        public void setPlaceholderSuffix(String placeholderSuffix) {
-            delegate.setPlaceholderSuffix(placeholderSuffix);
-        }
-
-        @Override
-        public void setValueSeparator(String valueSeparator) {
-            delegate.setValueSeparator(valueSeparator);
-        }
-
-        @Override
-        public void setEscapeCharacter(Character escapeCharacter) {
-            delegate.setEscapeCharacter(escapeCharacter);
-        }
-
-        @Override
-        public void setIgnoreUnresolvableNestedPlaceholders(boolean ignoreUnresolvableNestedPlaceholders) {
-            delegate.setIgnoreUnresolvableNestedPlaceholders(ignoreUnresolvableNestedPlaceholders);
-        }
-
-        @Override
-        public void setRequiredProperties(String... requiredProperties) {
-            delegate.setRequiredProperties(requiredProperties);
-        }
-
-        @Override
-        public void validateRequiredProperties() throws MissingRequiredPropertiesException {
-            delegate.validateRequiredProperties();
+        public boolean containsProperty(String name) {
+            return source.containsProperty(name);
         }
     }
 }

@@ -18,8 +18,14 @@ package org.apache.activemq.spring;
 
 import static org.junit.Assert.assertEquals;
 
+import java.util.Properties;
+
+import org.apache.activemq.util.ActiveMQEncryptor;
 import org.junit.Test;
+import org.springframework.beans.factory.config.PlaceholderConfigurerSupport;
+import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
+import org.springframework.context.support.GenericApplicationContext;
 
 /**
  * Verifies that both encryptable placeholder configurers resolve plaintext,
@@ -36,6 +42,54 @@ public class EncryptablePlaceholderConfigurerTest {
     @Test
     public void testPropertySourcesPlaceholderConfigurerVariant() {
         assertResolves("org/apache/activemq/spring/encryptable-pspc-context.xml");
+    }
+
+    @Test
+    public void testPropertyPlaceholderConfigurerResolvesEncryptedValueInsideAnother() {
+        assertEncryptedValueInsideAnotherResolves(new EncryptablePropertyPlaceholderConfigurer(newEncryptor()));
+    }
+
+    @Test
+    public void testPropertySourcesPlaceholderConfigurerResolvesEncryptedValueInsideAnother() {
+        assertEncryptedValueInsideAnotherResolves(new EncryptablePropertySourcesPlaceholderConfigurer(newEncryptor()));
+    }
+
+    private static ActiveMQEncryptor newEncryptor() {
+        var encryptor = new ActiveMQEncryptor();
+        encryptor.setPassword("activemq");
+        return encryptor;
+    }
+
+    private static void assertEncryptedValueInsideAnotherResolves(PlaceholderConfigurerSupport configurer) {
+        var encryptor = newEncryptor();
+        var properties = new Properties();
+        properties.setProperty("plain.value", "plaintext");
+        properties.setProperty("legacy.secret", "ENC(4Pp68aOwkNEyvCcPBDCJAw==)");
+        properties.setProperty("secret", ActiveMQEncryptor.wrapEncryptedValue(encryptor.encrypt("password")));
+        properties.setProperty("pointer", ActiveMQEncryptor.wrapEncryptedValue(encryptor.encrypt("plain.value")));
+        properties.setProperty("url", "tcp://${secret}@host");
+
+        var target = resolve(configurer, properties,
+            "prefix-${legacy.secret}-${secret}-suffix", "${${pointer}}", "${url}");
+
+        assertEquals("prefix-manager-password-suffix", target.getPlain());
+        assertEquals("plaintext", target.getLegacy());
+        assertEquals("tcp://password@host", target.getCurrent());
+    }
+
+    private static TargetBean resolve(PlaceholderConfigurerSupport configurer, Properties properties,
+            String plain, String legacy, String current) {
+        configurer.setProperties(properties);
+        try (var context = new GenericApplicationContext()) {
+            context.addBeanFactoryPostProcessor(configurer);
+            context.registerBeanDefinition("target", BeanDefinitionBuilder.genericBeanDefinition(TargetBean.class)
+                .addPropertyValue("plain", plain)
+                .addPropertyValue("legacy", legacy)
+                .addPropertyValue("current", current)
+                .getBeanDefinition());
+            context.refresh();
+            return context.getBean(TargetBean.class);
+        }
     }
 
     private void assertResolves(String contextResource) {
