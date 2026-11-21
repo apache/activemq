@@ -192,6 +192,17 @@ public class ActiveMQEncryptorTest {
     }
 
     @Test
+    public void testLegacyPasswordIsNormalized() {
+        // jasypt normalized the password to NFC, where KELVIN SIGN becomes K
+        var encryptor = new ActiveMQEncryptor();
+        encryptor.setPassword("secret\u212A");
+        assertEquals("manager", encryptor.decrypt("r9m5tQchX9iQF13BU/IdTg=="));
+
+        encryptor.setPassword("secretK");
+        assertEquals("manager", encryptor.decrypt("r9m5tQchX9iQF13BU/IdTg=="));
+    }
+
+    @Test
     public void testLegacyWrongPassword() {
         var encryptor = new ActiveMQEncryptor();
         encryptor.setPassword("not-the-password");

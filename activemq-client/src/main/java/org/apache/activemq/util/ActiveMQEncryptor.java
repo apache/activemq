@@ -17,9 +17,11 @@
 package org.apache.activemq.util;
 
 import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.SecureRandom;
+import java.text.Normalizer;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collections;
@@ -306,7 +308,7 @@ public class ActiveMQEncryptor implements TextEncryptor, BytesEncryptor {
         var salt = Arrays.copyOfRange(payload, 0, saltLength);
         var ciphertext = Arrays.copyOfRange(payload, saltLength + ivLength, payload.length);
 
-        var passwordChars = resolvePassword();
+        var passwordChars = resolveLegacyPassword();
         try {
             var keySpec = new PBEKeySpec(passwordChars);
             SecretKey key;
@@ -406,6 +408,16 @@ public class ActiveMQEncryptor implements TextEncryptor, BytesEncryptor {
                     + " environment variable or configure the password property");
         }
         return resolved.toCharArray();
+    }
+
+    // jasypt normalized the password to NFC before deriving the key
+    private char[] resolveLegacyPassword() {
+        var resolved = resolvePassword();
+        try {
+            return Normalizer.normalize(CharBuffer.wrap(resolved), Normalizer.Form.NFC).toCharArray();
+        } finally {
+            Arrays.fill(resolved, '\0');
+        }
     }
 
     /**
