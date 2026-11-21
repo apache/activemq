@@ -52,6 +52,8 @@ public interface JDBCAdapter {
 
     void doRecover(TransactionContext c, ActiveMQDestination destination, JDBCMessageRecoveryListener listener) throws Exception;
 
+    void doRecover(TransactionContext c, ActiveMQDestination destination, int maxReturned, JDBCMessageRecoveryListener listener) throws Exception;
+
     void doSetLastAck(TransactionContext c, ActiveMQDestination destination, XATransactionId xid, String clientId, String subscriptionName, long seq, long prio) throws SQLException, IOException;
 
     void doRecoverSubscription(TransactionContext c, ActiveMQDestination destination, String clientId, String subscriptionName, JDBCMessageRecoveryListener listener)
