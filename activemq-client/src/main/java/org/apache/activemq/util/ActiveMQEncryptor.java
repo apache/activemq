@@ -17,7 +17,6 @@
 package org.apache.activemq.util;
 
 import java.nio.ByteBuffer;
-import java.nio.CharBuffer;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.SecureRandom;
@@ -68,7 +67,8 @@ import org.slf4j.LoggerFactory;
  * <p>The encryption password is taken from the {@link #setPassword password}
  * property when set, otherwise from the environment variable named by
  * {@link #setPasswordEnvName passwordEnvName} (default
- * {@value #DEFAULT_PASSWORD_ENV_NAME}).
+ * {@value #DEFAULT_PASSWORD_ENV_NAME}). The password is normalized to
+ * Unicode NFC.
  *
  * <p>Decryption caches derived keys per salt, so decrypting many values
  * encrypted under the same salt runs PBKDF2 once. Encryption generates a
@@ -308,7 +308,7 @@ public class ActiveMQEncryptor implements TextEncryptor, BytesEncryptor {
         var salt = Arrays.copyOfRange(payload, 0, saltLength);
         var ciphertext = Arrays.copyOfRange(payload, saltLength + ivLength, payload.length);
 
-        var passwordChars = resolveLegacyPassword();
+        var passwordChars = resolvePassword();
         try {
             var keySpec = new PBEKeySpec(passwordChars);
             SecretKey key;
@@ -407,17 +407,8 @@ public class ActiveMQEncryptor implements TextEncryptor, BytesEncryptor {
             throw new EncryptionException("encryption password not set: set the " + passwordEnvName
                     + " environment variable or configure the password property");
         }
-        return resolved.toCharArray();
-    }
-
-    // jasypt normalized the password to NFC before deriving the key
-    private char[] resolveLegacyPassword() {
-        var resolved = resolvePassword();
-        try {
-            return Normalizer.normalize(CharBuffer.wrap(resolved), Normalizer.Form.NFC).toCharArray();
-        } finally {
-            Arrays.fill(resolved, '\0');
-        }
+        // NFC, as jasypt did, so the same password in another encoding gives the same key
+        return Normalizer.normalize(resolved, Normalizer.Form.NFC).toCharArray();
     }
 
     /**

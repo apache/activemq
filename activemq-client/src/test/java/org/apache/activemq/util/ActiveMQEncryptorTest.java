@@ -16,11 +16,14 @@
  */
 package org.apache.activemq.util;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+
+import java.nio.charset.StandardCharsets;
 
 import org.apache.activemq.util.ActiveMQEncryptor.EncryptionException;
 import org.junit.Test;
@@ -200,6 +203,20 @@ public class ActiveMQEncryptorTest {
 
         encryptor.setPassword("secretK");
         assertEquals("manager", encryptor.decrypt("r9m5tQchX9iQF13BU/IdTg=="));
+    }
+
+    @Test
+    public void testPasswordIsNormalized() {
+        var composed = new ActiveMQEncryptor();
+        composed.setPassword("caf\u00e9");
+        var decomposed = new ActiveMQEncryptor();
+        decomposed.setPassword("cafe\u0301");
+
+        assertEquals("manager", decomposed.decrypt(composed.encrypt("manager")));
+        assertEquals("manager", composed.decrypt(decomposed.encrypt("manager")));
+
+        var data = "manager".getBytes(StandardCharsets.UTF_8);
+        assertArrayEquals(data, decomposed.decrypt(composed.encrypt(data, null), null));
     }
 
     @Test
