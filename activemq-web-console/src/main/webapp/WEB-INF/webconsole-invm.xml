@@ -21,7 +21,7 @@
                            http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-2.0.xsd">
 
   <import resource="webconsole-query.xml"/>
-  <bean id="placeholderConfig" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer" />
+  <bean id="placeholderConfig" class="org.springframework.context.support.PropertySourcesPlaceholderConfigurer" />
   
   
   <bean id="sessionPool" class="org.apache.activemq.web.SessionPool">

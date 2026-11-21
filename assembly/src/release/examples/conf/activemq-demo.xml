@@ -32,9 +32,10 @@
         Allows us to use system properties as variables in this configuration
         file. For more information, see the Javadoc:
 
-        http://static.springframework.org/spring/docs/2.5.x/api/org/springframework/beans/factory/config/PropertyPlaceholderConfigurer.html
+        https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/context/support/PropertySourcesPlaceholderConfigurer.html
     -->
-    <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+    <bean class="org.springframework.context.support.PropertySourcesPlaceholderConfigurer">
+        <property name="localOverride" value="true"/>
         <property name="locations">
             <value>file:${activemq.conf}/credentials.properties</value>
         </property>
