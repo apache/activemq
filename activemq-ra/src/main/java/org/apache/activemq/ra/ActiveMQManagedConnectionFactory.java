@@ -22,6 +22,7 @@ import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
 import java.io.Serializable;
 import java.util.Iterator;
+import java.util.Objects;
 import java.util.Set;
 
 import jakarta.jms.JMSException;
@@ -32,6 +33,7 @@ import jakarta.resource.spi.ManagedConnection;
 import jakarta.resource.spi.ManagedConnectionFactory;
 import jakarta.resource.spi.ResourceAdapter;
 import jakarta.resource.spi.ResourceAdapterAssociation;
+import jakarta.resource.spi.security.PasswordCredential;
 import javax.security.auth.Subject;
 
 import org.slf4j.LoggerFactory;
@@ -200,10 +202,7 @@ public class ActiveMQManagedConnectionFactory extends ActiveMQConnectionSupport 
      */
     @Override
     public ManagedConnection createManagedConnection(Subject subject, ConnectionRequestInfo connectionRequestInfo) throws ResourceException {
-        ActiveMQConnectionRequestInfo amqInfo = getInfo();
-        if (connectionRequestInfo instanceof ActiveMQConnectionRequestInfo) {
-            amqInfo = (ActiveMQConnectionRequestInfo) connectionRequestInfo;
-        }
+        ActiveMQConnectionRequestInfo amqInfo = getConnectionRequestInfo(subject, connectionRequestInfo);
         try {
             return new ActiveMQManagedConnection(subject, makeConnection(amqInfo), amqInfo);
         } catch (JMSException e) {
@@ -218,17 +217,84 @@ public class ActiveMQManagedConnectionFactory extends ActiveMQConnectionSupport 
      */
     @Override
     public ManagedConnection matchManagedConnections(Set connections, Subject subject, ConnectionRequestInfo connectionRequestInfo) throws ResourceException {
+        if (!(connectionRequestInfo instanceof ActiveMQConnectionRequestInfo)) {
+            // no managed connection can match it
+            return null;
+        }
+        ActiveMQConnectionRequestInfo amqInfo = getConnectionRequestInfo(subject, connectionRequestInfo);
         Iterator iterator = connections.iterator();
         while (iterator.hasNext()) {
             ActiveMQManagedConnection c = (ActiveMQManagedConnection) iterator.next();
-            if (c.matches(subject, connectionRequestInfo)) {
+            if (c.matches(subject, amqInfo)) {
                 try {
-                    c.associate(subject, (ActiveMQConnectionRequestInfo) connectionRequestInfo);
+                    c.associate(subject, amqInfo);
                     return c;
                 } catch (JMSException e) {
                     throw new ResourceException(e);
                 }
             }
+        }
+        return null;
+    }
+
+    /**
+     * Returns the connection request information to use for a managed connection: the one given by the caller
+     * (or the one of this factory if there is none). If the application did not give its own user name and password
+     * (they are the ones of this factory) and the application server gives a {@link Subject} (container-managed
+     * sign-on), the user name and password of its {@link PasswordCredential} for this factory are used instead.
+     *
+     * @param subject the subject given by the application server, may be null
+     * @param connectionRequestInfo the connection request information given by the caller, may be null
+     * @return the connection request information to use, a copy if the credentials come from the subject
+     */
+    private ActiveMQConnectionRequestInfo getConnectionRequestInfo(Subject subject, ConnectionRequestInfo connectionRequestInfo) {
+        ActiveMQConnectionRequestInfo amqInfo = getInfo();
+        if (connectionRequestInfo instanceof ActiveMQConnectionRequestInfo) {
+            amqInfo = (ActiveMQConnectionRequestInfo) connectionRequestInfo;
+        }
+        if (!hasFactoryCredentials(amqInfo)) {
+            // the application gave its own credentials, with createConnection(userName, password)
+            return amqInfo;
+        }
+        PasswordCredential credential = getPasswordCredential(subject);
+        if (credential != null) {
+            amqInfo = amqInfo.copy();
+            amqInfo.setUserName(credential.getUserName());
+            amqInfo.setPassword(credential.getPassword() == null ? null : new String(credential.getPassword()));
+        }
+        return amqInfo;
+    }
+
+    /**
+     * @param info the connection request information given by the caller
+     * @return whether its user name and password are the ones of this factory, that is the application did not give
+     *         its own credentials
+     */
+    private boolean hasFactoryCredentials(ActiveMQConnectionRequestInfo info) {
+        return Objects.equals(info.getUserName(), getInfo().getUserName()) && Objects.equals(info.getPassword(), getInfo().getPassword());
+    }
+
+    /**
+     * Returns the {@link PasswordCredential} of the given subject that is meant for this factory, as required
+     * by the <i>BasicPassword</i> authentication mechanism of the resource adapter.
+     *
+     * @param subject the subject given by the application server, may be null
+     * @return the password credential for this factory, or null if there is none or if it cannot be read
+     */
+    private PasswordCredential getPasswordCredential(Subject subject) {
+        if (subject == null) {
+            return null;
+        }
+        try {
+            for (PasswordCredential credential : subject.getPrivateCredentials(PasswordCredential.class)) {
+                if (equals(credential.getManagedConnectionFactory())) {
+                    return credential;
+                }
+            }
+        } catch (SecurityException e) {
+            // a security manager does not allow to read the private credentials: keep the previous
+            // behavior, the credentials of the connection request information are used
+            log.warn("Cannot read the PasswordCredential of the Subject, the credentials of the connection request are used: {}", e.getMessage());
         }
         return null;
     }
