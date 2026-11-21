@@ -36,7 +36,7 @@ public class EncryptionSupport {
             var key = (String) k;
             var value = props.getProperty(key);
             if (ActiveMQEncryptor.isEncryptedValue(value)) {
-                props.setProperty(key, encryptor.decrypt(value));
+                props.setProperty(key, encryptor.decrypt(ActiveMQEncryptor.unwrapEncryptedValue(value)));
             }
         }
     }

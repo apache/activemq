@@ -63,7 +63,7 @@ public class EncryptablePropertyPlaceholderConfigurer extends PropertyPlaceholde
     @Override
     protected String convertPropertyValue(String originalValue) {
         if (ActiveMQEncryptor.isEncryptedValue(originalValue)) {
-            return encryptor.decrypt(originalValue);
+            return encryptor.decrypt(ActiveMQEncryptor.unwrapEncryptedValue(originalValue));
         }
         return originalValue;
     }
@@ -72,7 +72,7 @@ public class EncryptablePropertyPlaceholderConfigurer extends PropertyPlaceholde
     protected String resolveSystemProperty(String key) {
         var value = super.resolveSystemProperty(key);
         if (value != null && ActiveMQEncryptor.isEncryptedValue(value)) {
-            return encryptor.decrypt(value);
+            return encryptor.decrypt(ActiveMQEncryptor.unwrapEncryptedValue(value));
         }
         return value;
     }

@@ -84,7 +84,7 @@ public class EncryptablePropertySourcesPlaceholderConfigurer extends PropertySou
         public Object getProperty(String name) {
             var value = source.getProperty(name);
             if (value instanceof String text && ActiveMQEncryptor.isEncryptedValue(text)) {
-                return encryptor.decrypt(text);
+                return encryptor.decrypt(ActiveMQEncryptor.unwrapEncryptedValue(text));
             }
             return value;
         }

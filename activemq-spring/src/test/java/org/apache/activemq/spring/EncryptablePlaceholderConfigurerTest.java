@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import java.util.Properties;
 
 import org.apache.activemq.util.ActiveMQEncryptor;
+import org.apache.activemq.util.TextEncryptor;
 import org.junit.Test;
 import org.springframework.beans.factory.config.PlaceholderConfigurerSupport;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
@@ -54,6 +55,16 @@ public class EncryptablePlaceholderConfigurerTest {
         assertEncryptedValueInsideAnotherResolves(new EncryptablePropertySourcesPlaceholderConfigurer(newEncryptor()));
     }
 
+    @Test
+    public void testPropertyPlaceholderConfigurerPassesBareTokenToEncryptor() {
+        assertBareTokenResolves(new EncryptablePropertyPlaceholderConfigurer(new BareTokenEncryptor()));
+    }
+
+    @Test
+    public void testPropertySourcesPlaceholderConfigurerPassesBareTokenToEncryptor() {
+        assertBareTokenResolves(new EncryptablePropertySourcesPlaceholderConfigurer(new BareTokenEncryptor()));
+    }
+
     private static ActiveMQEncryptor newEncryptor() {
         var encryptor = new ActiveMQEncryptor();
         encryptor.setPassword("activemq");
@@ -77,6 +88,16 @@ public class EncryptablePlaceholderConfigurerTest {
         assertEquals("tcp://password@host", target.getCurrent());
     }
 
+    private static void assertBareTokenResolves(PlaceholderConfigurerSupport configurer) {
+        var properties = new Properties();
+        properties.setProperty("secret", "ENC(testv1:manager)");
+
+        var target = resolve(configurer, properties, "${secret}", "user-${secret}", "plain");
+
+        assertEquals("manager", target.getPlain());
+        assertEquals("user-manager", target.getLegacy());
+    }
+
     private static TargetBean resolve(PlaceholderConfigurerSupport configurer, Properties properties,
             String plain, String legacy, String current) {
         configurer.setProperties(properties);
@@ -89,6 +110,23 @@ public class EncryptablePlaceholderConfigurerTest {
                 .getBeanDefinition());
             context.refresh();
             return context.getBean(TargetBean.class);
+        }
+    }
+
+    // accepts only its own bare token, which is all TextEncryptor requires
+    private static final class BareTokenEncryptor implements TextEncryptor {
+
+        @Override
+        public String encrypt(String plaintext) {
+            return "testv1:" + plaintext;
+        }
+
+        @Override
+        public String decrypt(String value) {
+            if (!value.startsWith("testv1:")) {
+                throw new IllegalArgumentException("not a token: " + value);
+            }
+            return value.substring("testv1:".length());
         }
     }
 
