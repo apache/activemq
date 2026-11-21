@@ -803,6 +803,10 @@ public class ManagedRegionBroker extends RegionBroker {
         return onlyNonSuppressed(dynamicDestinationProducers.keySet());
     }
 
+    protected int getTotalDynamicProducerCount() {
+        return dynamicDestinationProducers.size();
+    }
+
     public Broker getContextBroker() {
         return contextBroker;
     }
