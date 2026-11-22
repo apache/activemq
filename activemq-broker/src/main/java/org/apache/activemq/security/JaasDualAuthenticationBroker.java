@@ -37,7 +37,9 @@ import org.apache.activemq.transport.SslMode;
  * with the non-SSL domain, for instance by username and password. That includes
  * a connection on an SSL connector that only asks for a certificate
  * (wantClientAuth) or does not ask at all, so the non-SSL domain is reachable
- * over those connectors too.
+ * over those connectors too. On a wantClientAuth connector a client that
+ * presents a certificate is tried against the SSL domain first and, if that
+ * login fails, against the non-SSL domain.
  * <p>
  * An example <code>login.config</code> to do do this is:
  * <pre>
@@ -92,7 +94,19 @@ public class JaasDualAuthenticationBroker extends BrokerFilter implements Authen
     public void addConnection(ConnectionContext context, ConnectionInfo info) throws Exception {
         if (context.getSecurityContext() == null) {
             if (isSSL(context, info)) {
-                this.sslBroker.addConnection(context, info);
+                try {
+                    this.sslBroker.addConnection(context, info);
+                } catch (SecurityException certificateLoginFailed) {
+                    if (!isCertificateOptional(context)) {
+                        throw certificateLoginFailed;
+                    }
+                    try {
+                        this.nonSslBroker.addConnection(context, info);
+                    } catch (SecurityException userNameLoginFailed) {
+                        userNameLoginFailed.addSuppressed(certificateLoginFailed);
+                        throw userNameLoginFailed;
+                    }
+                }
             } else {
                 this.nonSslBroker.addConnection(context, info);
             }
@@ -106,11 +120,18 @@ public class JaasDualAuthenticationBroker extends BrokerFilter implements Authen
     @Override
     public void removeConnection(ConnectionContext context, ConnectionInfo info, Throwable error) throws Exception {
         super.removeConnection(context, info, error);
-        if (isSSL(context, info)) {
+        // by the login that succeeded, which after a fallback is not the one isSSL names
+        if (context.getSecurityContext() instanceof JaasCertificateSecurityContext) {
             this.sslBroker.removeConnection(context, info, error);
         } else {
             this.nonSslBroker.removeConnection(context, info, error);
         }
+    }
+
+    // wantClientAuth only asks for a certificate, so the user name and password still count
+    private boolean isCertificateOptional(ConnectionContext context) {
+        Connector connector = context.getConnector();
+        return connector != null && connector.getSslMode() == SslMode.WANT_CLIENT_AUTH;
     }
 
     /**

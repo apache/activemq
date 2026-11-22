@@ -19,6 +19,9 @@ package org.apache.activemq.security;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.security.KeyStore;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
@@ -36,7 +39,9 @@ import org.apache.activemq.spring.SpringSslContext;
 import org.apache.activemq.transport.SslMode;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
@@ -61,6 +66,9 @@ public class JaasDualAuthenticationWantClientAuthTest {
             {"auto+ssl", "wantClientAuth"}, {"auto+nio+ssl", "wantClientAuth"}});
     }
 
+    @Rule
+    public TemporaryFolder folder = new TemporaryFolder();
+
     private final String scheme;
     private final String option;
     private final Map<String, String> userNameByClientId = new ConcurrentHashMap<>();
@@ -79,10 +87,24 @@ public class JaasDualAuthenticationWantClientAuthTest {
         oldLoginConfig = System.getProperty(LOGIN_CONFIG_PROPERTY);
         System.setProperty(LOGIN_CONFIG_PROPERTY, "src/test/resources/org/apache/activemq/bugs/amq4126/login.config");
 
+        // trusts the client certificate, which the login knows, and the broker1 one, which it does not
+        final var trusted = KeyStore.getInstance("PKCS12");
+        trusted.load(null, null);
+        for (final var alias : new String[] {"client", "broker1"}) {
+            final var source = KeyStore.getInstance(
+                new File(CERT_BASE + "/" + (alias.equals("client") ? "client.ks" : "broker1.ks")), "password".toCharArray());
+            trusted.setCertificateEntry(alias, source.getCertificate(alias));
+        }
+        final var trustStore = folder.newFile("trusted.p12");
+        try (var out = new FileOutputStream(trustStore)) {
+            trusted.store(out, "password".toCharArray());
+        }
+
         final var sslContext = new SpringSslContext();
         sslContext.setKeyStore(CERT_BASE + "/broker1.ks");
         sslContext.setKeyStorePassword("password");
-        sslContext.setTrustStore(CERT_BASE + "/client.ks");
+        sslContext.setTrustStore(trustStore.toURI().toString());
+        sslContext.setTrustStoreType("PKCS12");
         sslContext.setTrustStorePassword("password");
         sslContext.afterPropertiesSet();
 
@@ -132,6 +154,21 @@ public class JaasDualAuthenticationWantClientAuthTest {
     }
 
     @Test(timeout = 60000)
+    public void testUnknownCertificateFallsBackToUserNameAndPassword() throws Exception {
+        assertEquals("system", connect("broker1.ks", "system", "manager"));
+    }
+
+    @Test(timeout = 60000)
+    public void testUnknownCertificateAndWrongPasswordIsRefused() throws Exception {
+        assertThrows(JMSException.class, () -> connect("broker1.ks", "system", "wrong"));
+    }
+
+    @Test(timeout = 60000)
+    public void testUnknownCertificateWithoutCredentialsIsRefused() throws Exception {
+        assertThrows(JMSException.class, () -> connect("broker1.ks", null, null));
+    }
+
+    @Test(timeout = 60000)
     public void testUserNameAndPasswordLogin() throws Exception {
         assertEquals("system", connect(false, "system", "manager"));
     }
@@ -147,11 +184,15 @@ public class JaasDualAuthenticationWantClientAuthTest {
     }
 
     private String connect(boolean withCertificate, String userName, String password) throws Exception {
+        return connect(withCertificate ? "client.ks" : null, userName, password);
+    }
+
+    private String connect(String keyStore, String userName, String password) throws Exception {
         final var factory = new ActiveMQSslConnectionFactory(connectUri);
         factory.setTrustStore("org/apache/activemq/security/broker1.ks");
         factory.setTrustStorePassword("password");
-        if (withCertificate) {
-            factory.setKeyStore("org/apache/activemq/security/client.ks");
+        if (keyStore != null) {
+            factory.setKeyStore("org/apache/activemq/security/" + keyStore);
             factory.setKeyStorePassword("password");
         }
         try (var connection = userName != null ? factory.createConnection(userName, password)

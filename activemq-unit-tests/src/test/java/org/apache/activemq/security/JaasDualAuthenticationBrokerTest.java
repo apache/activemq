@@ -67,16 +67,20 @@ public class JaasDualAuthenticationBrokerTest extends TestCase {
      *
      */
     void createLoginConfig() {
+        createLoginConfig(true, true);
+    }
+
+    void createLoginConfig(boolean allowCertificateLogin, boolean allowUserNameLogin) {
         HashMap<String, String> sslConfigOptions = new HashMap<String, String>();
         HashMap<String, String> configOptions = new HashMap<String, String>();
 
-        sslConfigOptions.put(StubLoginModule.ALLOW_LOGIN_PROPERTY, "true");
+        sslConfigOptions.put(StubLoginModule.ALLOW_LOGIN_PROPERTY, String.valueOf(allowCertificateLogin));
         sslConfigOptions.put(StubLoginModule.USERS_PROPERTY, DN_USERNAME);
         sslConfigOptions.put(StubLoginModule.GROUPS_PROPERTY, DN_GROUP);
         AppConfigurationEntry sslConfigEntry = new AppConfigurationEntry("org.apache.activemq.security.StubLoginModule",
                 AppConfigurationEntry.LoginModuleControlFlag.REQUIRED, sslConfigOptions);
 
-        configOptions.put(StubLoginModule.ALLOW_LOGIN_PROPERTY, "true");
+        configOptions.put(StubLoginModule.ALLOW_LOGIN_PROPERTY, String.valueOf(allowUserNameLogin));
         configOptions.put(StubLoginModule.USERS_PROPERTY, INSECURE_USERNAME);
         configOptions.put(StubLoginModule.GROUPS_PROPERTY, INSECURE_GROUP);
         AppConfigurationEntry configEntry = new AppConfigurationEntry("org.apache.activemq.security.StubLoginModule",
@@ -174,6 +178,48 @@ public class JaasDualAuthenticationBrokerTest extends TestCase {
 
         authBroker.removeConnection(connectionContext, connectionInfo, null);
         assertNull(connectionContext.getSecurityContext());
+    }
+
+    public void testWantClientAuthFallsBackWhenCertificateLoginFails() throws Exception {
+        createLoginConfig(false, true);
+        assertEquals(INSECURE_USERNAME, loginUserName(sslConnector(false, true), true));
+
+        authBroker.removeConnection(connectionContext, connectionInfo, null);
+        assertNull(connectionContext.getSecurityContext());
+
+        // the login that succeeded has to forget the connection too
+        java.lang.reflect.Field field = JaasDualAuthenticationBroker.class.getDeclaredField("nonSslBroker");
+        field.setAccessible(true);
+        assertTrue(((AbstractAuthenticationBroker) field.get(authBroker)).securityContexts.isEmpty());
+    }
+
+    public void testWantClientAuthRefusedWhenBothLoginsFail() throws Exception {
+        createLoginConfig(false, false);
+        try {
+            loginUserName(sslConnector(false, true), true);
+            fail("both logins refuse");
+        } catch (SecurityException expected) {
+            assertEquals("the certificate login failure is kept", 1, expected.getSuppressed().length);
+        }
+        assertNull(connectionContext.getSecurityContext());
+    }
+
+    public void testNeedClientAuthDoesNotFallBack() throws Exception {
+        createLoginConfig(false, true);
+        try {
+            loginUserName(sslConnector(true, false), true);
+            fail("a connector that needs a client certificate must not fall back to the user name and password");
+        } catch (SecurityException expected) {
+        }
+    }
+
+    public void testCertificateOnInsecureConnectorDoesNotFallBack() throws Exception {
+        createLoginConfig(false, true);
+        try {
+            loginUserName(new TransportConnector(nonSslTransportServer), true);
+            fail("only a connector with wantClientAuth falls back");
+        } catch (SecurityException expected) {
+        }
     }
 
     public void testNeedClientAuthWithoutCertificate() throws Exception {
