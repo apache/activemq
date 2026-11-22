@@ -26,14 +26,18 @@ import org.apache.activemq.broker.Connector;
 import org.apache.activemq.broker.EmptyBroker;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConnectionInfo;
+import org.apache.activemq.transport.SslMode;
 
 /**
  * A JAAS Authentication Broker that uses different JAAS domain configurations
- * depending if the connection is over an SSL enabled Connector or not.
+ * depending on whether the client presented a certificate.
  *
- * This allows you to, for instance, do DN based authentication for SSL connections
- * and use a mixture of username/passwords and simple guest authentication for
- * non-SSL connections.
+ * A connection with a client certificate, or on a connector that requires one
+ * (needClientAuth), logs in with the SSL domain. Every other connection logs in
+ * with the non-SSL domain, for instance by username and password. That includes
+ * a connection on an SSL connector that only asks for a certificate
+ * (wantClientAuth) or does not ask at all, so the non-SSL domain is reachable
+ * over those connectors too.
  * <p>
  * An example <code>login.config</code> to do do this is:
  * <pre>
@@ -78,7 +82,7 @@ public class JaasDualAuthenticationBroker extends BrokerFilter implements Authen
 
     /**
      * Overridden to allow for authentication using different Jaas
-     * configurations depending on if the connection is SSL or not.
+     * configurations depending on whether the client presented a certificate.
      *
      * @param context The context for the incoming Connection.
      * @param info The ConnectionInfo Command representing the incoming
@@ -109,14 +113,17 @@ public class JaasDualAuthenticationBroker extends BrokerFilter implements Authen
         }
     }
 
+    /**
+     * @return true to log in with the client certificate, false to log in
+     *         with the user name and password
+     */
     protected boolean isSSL(ConnectionContext context, ConnectionInfo info) throws Exception {
-        Connector connector = context.getConnector();
-        boolean sslCapable = connector != null && connector.isSsl();
-        // AMQ-5943, also check if transport context carries X509 cert
-        if (!sslCapable && info.getTransportContext() instanceof X509Certificate[]) {
-            sslCapable = true;
+        // AMQ-5943, a network bridge carries the certificate on a connection that is not SSL
+        if (info.getTransportContext() instanceof X509Certificate[]) {
+            return true;
         }
-        return sslCapable;
+        Connector connector = context.getConnector();
+        return connector != null && connector.getSslMode() == SslMode.NEED_CLIENT_AUTH;
     }
 
     @Override

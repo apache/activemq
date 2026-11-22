@@ -20,6 +20,7 @@ import java.net.URI;
 
 import org.apache.activemq.broker.SslContext;
 import org.apache.activemq.transport.SecureSocketConnectorFactory;
+import org.apache.activemq.transport.SslMode;
 import org.apache.activemq.transport.ws.WSTransportServer;
 
 public class WSSTransportServer extends WSTransportServer {
@@ -32,5 +33,11 @@ public class WSSTransportServer extends WSTransportServer {
     @Override
     public boolean isSslServer() {
         return true;
+    }
+
+    @Override
+    public SslMode getSslMode() {
+        var factory = (SecureSocketConnectorFactory) socketConnectorFactory;
+        return sslMode(factory.isNeedClientAuth(), factory.isWantClientAuth());
     }
 }

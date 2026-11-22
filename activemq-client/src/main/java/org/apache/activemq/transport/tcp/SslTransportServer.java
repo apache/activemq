@@ -26,6 +26,7 @@ import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.SSLSocket;
 
+import org.apache.activemq.transport.SslMode;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.wireformat.WireFormat;
 
@@ -128,6 +129,11 @@ public class SslTransportServer extends TcpTransportServer {
     @Override
     public boolean isSslServer() {
         return true;
+    }
+
+    @Override
+    public SslMode getSslMode() {
+        return sslMode(needClientAuth, wantClientAuth);
     }
 
 }

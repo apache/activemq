@@ -67,6 +67,13 @@ public interface TransportServer extends Service {
     boolean isSslServer();
 
     /**
+     * @return whether this server asks connecting clients for a certificate
+     */
+    default SslMode getSslMode() {
+        return SslMode.NONE;
+    }
+
+    /**
      * Some protocols allow link stealing by default (if 2 connections have the same clientID - the youngest wins).
      * This is the default for AMQP and MQTT. However, JMS 1.1 spec requires the opposite
      *

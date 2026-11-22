@@ -27,6 +27,7 @@ import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLServerSocketFactory;
 
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.transport.SslMode;
 import org.apache.activemq.transport.tcp.SslTransportFactory;
 import org.apache.activemq.transport.tcp.TcpTransport;
 import org.apache.activemq.transport.tcp.TcpTransport.InitBuffer;
@@ -129,6 +130,11 @@ public class AutoSslTransportServer extends AutoTcpTransportServer {
     @Override
     public boolean isSslServer() {
         return true;
+    }
+
+    @Override
+    public SslMode getSslMode() {
+        return sslMode(needClientAuth, wantClientAuth);
     }
 
 }

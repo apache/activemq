@@ -16,6 +16,7 @@ import javax.net.ssl.SSLEngine;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.BrokerServiceAware;
 import org.apache.activemq.broker.TransportConnector;
+import org.apache.activemq.transport.SslMode;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.auto.AutoTcpTransportServer;
 import org.apache.activemq.transport.nio.AutoInitNioSSLTransport;
@@ -83,6 +84,11 @@ public class AutoNIOSSLTransportServer extends AutoTcpTransportServer {
     @Override
     public boolean isSslServer() {
         return true;
+    }
+
+    @Override
+    public SslMode getSslMode() {
+        return sslMode(needClientAuth, wantClientAuth);
     }
 
     public boolean isNeedClientAuth() {

@@ -24,6 +24,7 @@ import java.net.URISyntaxException;
 import javax.net.ServerSocketFactory;
 import javax.net.ssl.SSLContext;
 
+import org.apache.activemq.transport.SslMode;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.tcp.TcpTransportFactory;
 import org.apache.activemq.transport.tcp.TcpTransportServer;
@@ -58,6 +59,11 @@ public class NIOSSLTransportServer extends TcpTransportServer {
     @Override
     public boolean isSslServer() {
         return true;
+    }
+
+    @Override
+    public SslMode getSslMode() {
+        return sslMode(needClientAuth, wantClientAuth);
     }
 
     public boolean isNeedClientAuth() {
