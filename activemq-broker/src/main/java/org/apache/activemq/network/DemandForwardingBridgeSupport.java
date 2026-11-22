@@ -49,6 +49,7 @@ import org.apache.activemq.advisory.AdvisorySupport;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.BrokerServiceAware;
 import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.broker.SslContext;
 import org.apache.activemq.broker.TransportConnection;
 import org.apache.activemq.broker.region.AbstractRegion;
 import org.apache.activemq.broker.region.DurableTopicSubscription;
@@ -506,6 +507,27 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
         }
     }
 
+    // the certificate, if any, that logs the bridge in to the local broker
+    private X509Certificate[] localLoginCertificates(Transport originalTransport) {
+        final String localLogin = createdByDuplex ? null : configuration.getLocalLogin();
+        if (localLogin == null) {
+            return originalTransport instanceof TcpTransport ? originalTransport.getPeerCertificates() : null;
+        }
+        // a setting that cannot be honored stops the bridge, it never falls back to another login
+        configuration.validateLocalLogin();
+        final String alias = configuration.getLocalLoginKeyAlias();
+        if (alias == null) {
+            return null;
+        }
+        final SslContext sslContext = configuration.getSslContext() != null
+            ? configuration.getSslContext() : brokerService.getSslContext();
+        if (sslContext == null) {
+            throw new IllegalStateException("localLogin " + localLogin
+                + " needs an sslContext on the network connector or the broker");
+        }
+        return sslContext.getCertificateChain(alias);
+    }
+
     private void startLocalBridge() throws Throwable {
         if (!bridgeFailed.get() && localBridgeStarted.compareAndSet(false, true)) {
             synchronized (this) {
@@ -526,10 +548,8 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                     while (originalTransport instanceof TransportFilter) {
                         originalTransport = ((TransportFilter) originalTransport).getNext();
                     }
-                    if (originalTransport instanceof TcpTransport) {
-                        X509Certificate[] peerCerts = originalTransport.getPeerCertificates();
-                        localConnectionInfo.setTransportContext(peerCerts);
-                    }
+                    final X509Certificate[] localLoginCertificates = localLoginCertificates(originalTransport);
+                    localConnectionInfo.setTransportContext(localLoginCertificates);
                     // Let the local broker know the remote broker's ID before the connection
                     // authenticates, so the local side declares itself a network connection the
                     // same way the remote and duplex inbound sides already do. This is an in-VM
@@ -556,10 +576,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                         duplexLocalConnectionInfo.setUserName(configuration.getUserName());
                         duplexLocalConnectionInfo.setPassword(configuration.getPassword());
 
-                        if (originalTransport instanceof TcpTransport) {
-                            X509Certificate[] peerCerts = originalTransport.getPeerCertificates();
-                            duplexLocalConnectionInfo.setTransportContext(peerCerts);
-                        }
+                        duplexLocalConnectionInfo.setTransportContext(localLoginCertificates);
                         // sync requests that may fail
                         resp = duplexInboundLocalBroker.request(duplexLocalConnectionInfo);
                         if (resp instanceof ExceptionResponse) {
@@ -621,6 +638,7 @@ public abstract class DemandForwardingBridgeSupport implements NetworkBridge, Br
                     }
 
                     props.remove("networkTTL");
+                    NetworkBridgeConfiguration.LOCAL_ONLY_PROPERTIES.forEach(props::remove);
                     String str = MarshallingSupport.propertiesToString(props);
                     brokerInfo.setNetworkProperties(str);
                     brokerInfo.setBrokerId(this.localBrokerId);

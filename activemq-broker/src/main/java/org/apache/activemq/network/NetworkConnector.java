@@ -31,6 +31,7 @@ import javax.management.ObjectName;
 
 import org.apache.activemq.Service;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.SslContext;
 import org.apache.activemq.broker.jmx.AnnotatedMBean;
 import org.apache.activemq.broker.jmx.BrokerMBeanSupport;
 import org.apache.activemq.broker.jmx.NetworkBridgeView;
@@ -78,6 +79,7 @@ public abstract class NetworkConnector extends NetworkBridgeConfiguration implem
     private Set<ActiveMQDestination> durableDestinations;
 
     private BrokerService brokerService;
+    private volatile SslContext remoteKeySslContext;
     private ObjectName objectName;
 
     public NetworkConnector() {
@@ -226,6 +228,48 @@ public abstract class NetworkConnector extends NetworkBridgeConfiguration implem
 
     public void setObjectName(ObjectName objectName) {
         this.objectName = objectName;
+    }
+
+    /**
+     * @return the SSL context for connecting to the remote broker, limited
+     *         to the key of remoteKeyAlias when that is set
+     */
+    protected SslContext getRemoteSslContext() {
+        if (getRemoteKeyAlias() == null) {
+            return getKeySslContext();
+        }
+        // built once, so reconnects share the JSSE context and its sessions
+        SslContext context = remoteKeySslContext;
+        if (context == null) {
+            context = requireKeySslContext("remoteKeyAlias").withKeyAlias(getRemoteKeyAlias());
+            remoteKeySslContext = context;
+        }
+        return context;
+    }
+
+    /**
+     * Checks the key settings and loads the keys they name, so a mistake
+     * stops the connector before it creates a bridge.
+     */
+    protected void prepareKeys() {
+        validateLocalLogin();
+        remoteKeySslContext = null;
+        getRemoteSslContext();
+        if (getLocalLoginKeyAlias() != null) {
+            requireKeySslContext("localLogin").getCertificateChain(getLocalLoginKeyAlias());
+        }
+    }
+
+    private SslContext getKeySslContext() {
+        return getSslContext() != null ? getSslContext() : getBrokerService().getSslContext();
+    }
+
+    private SslContext requireKeySslContext(String setting) {
+        final SslContext context = getKeySslContext();
+        if (context == null) {
+            throw new IllegalStateException(setting + " needs an sslContext on the network connector or the broker");
+        }
+        return context;
     }
 
     public BrokerService getBrokerService() {
