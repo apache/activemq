@@ -110,6 +110,8 @@ public class AutoNIOSSLTransportServer extends AutoTcpTransportServer {
         if (context != null) {
             in.setSslContext(context);
         }
+        in.setNeedClientAuth(needClientAuth);
+        in.setWantClientAuth(wantClientAuth);
         //We need to set the transport options on the init transport so that the SSL options are set
         if (transportOptions != null) {
             //Clone the map because we will need to set the options later on the actual transport
