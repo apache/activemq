@@ -16,6 +16,7 @@
  */
 package org.apache.activemq.broker.region;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -698,7 +699,13 @@ public abstract class AbstractRegion implements Region {
     public void processConsumerControl(ConsumerBrokerExchange consumerExchange, ConsumerControl control) {
         final Subscription sub = subscriptions.get(control.getConsumerId());
         if (sub instanceof AbstractSubscription) {
-            ((AbstractSubscription) sub).setPrefetchSize(control.getPrefetch());
+            final AbstractSubscription subscription = (AbstractSubscription) sub;
+            if (control.isStop() || control.isStart()) {
+                // stop and start only control dispatch; the prefetch of such a control is ignored
+                setDispatchStopped(subscription, control.isStop());
+                return;
+            }
+            subscription.setPrefetchSize(control.getPrefetch());
             if (broker.getDestinationPolicy() != null) {
                 PolicyEntry entry = broker.getDestinationPolicy().getEntryFor(control.getDestination());
                 if (entry != null) {
@@ -707,7 +714,34 @@ public abstract class AbstractRegion implements Region {
             }
             LOG.debug("setting prefetch: {}, on subscription: {}; resulting value: {}",
                     control.getPrefetch(), control.getConsumerId(), sub.getConsumerInfo().getPrefetchSize());
-            wakeupDestinations((AbstractSubscription) sub);
+            wakeupDestinations(subscription);
+        }
+    }
+
+    /**
+     * Stops or starts dispatch to a subscription. A stop is honoured only when the destination
+     * policy of the subscription enables useConsumerStartStop. A start is always honoured, so a
+     * later policy change cannot leave a consumer stopped.
+     */
+    protected void setDispatchStopped(AbstractSubscription subscription, boolean stopped) {
+        if (stopped) {
+            if (subscription.isUseConsumerStartStop() && !subscription.isDispatchStopped()) {
+                subscription.setDispatchStopped(true);
+                LOG.debug("dispatch stopped on subscription: {}", subscription.getConsumerInfo().getConsumerId());
+            }
+        } else if (subscription.isDispatchStopped()) {
+            subscription.setDispatchStopped(false);
+            LOG.debug("dispatch started on subscription: {}", subscription.getConsumerInfo().getConsumerId());
+            wakeupDestinations(subscription);
+            if (subscription instanceof PrefetchSubscription) {
+                try {
+                    // a durable subscription dispatches from its own pending messages
+                    ((PrefetchSubscription) subscription).dispatchPending();
+                } catch (IOException e) {
+                    LOG.warn("failed to dispatch after start, to subscription: {}",
+                            subscription.getConsumerInfo().getConsumerId(), e);
+                }
+            }
         }
     }
 

@@ -89,7 +89,7 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
 
     @Override
     public boolean isFull() {
-        return !active.get() || super.isFull();
+        return !active.get() || isDispatchStopped() || super.isFull();
     }
 
     @Override
@@ -151,6 +151,8 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
         if (!active.get()) {
             this.context = context;
             this.info = info;
+            // the stopped state belongs to the consumer, and this is a new one
+            setDispatchStopped(false);
 
             LOG.debug("Activating {}", this);
             if (!keepDurableSubsActive) {
@@ -196,6 +198,7 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
     public void deactivate(boolean keepDurableSubsActive, long lastDeliveredSequenceId) throws Exception {
         LOG.debug("Deactivating keepActive={}, {}", keepDurableSubsActive, this);
         active.set(false);
+        setDispatchStopped(false);
         this.keepDurableSubsActive = keepDurableSubsActive;
         offlineTimestamp.set(System.currentTimeMillis());
         usageManager.getMemoryUsage().removeUsageListener(this);

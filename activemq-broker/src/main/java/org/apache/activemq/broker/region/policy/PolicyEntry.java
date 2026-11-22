@@ -95,6 +95,7 @@ public class PolicyEntry extends DestinationMapEntry {
     private int topicPrefetch=ActiveMQPrefetchPolicy.DEFAULT_TOPIC_PREFETCH;
     private int durableTopicPrefetch=ActiveMQPrefetchPolicy.DEFAULT_DURABLE_TOPIC_PREFETCH;
     private boolean usePrefetchExtension = true;
+    private boolean useConsumerStartStop = false;
     private int cursorMemoryHighWaterMark = 70;
     private int storeUsageHighWaterMark = 100;
     private SlowConsumerStrategy slowConsumerStrategy;
@@ -406,6 +407,7 @@ public class PolicyEntry extends DestinationMapEntry {
         }
         sub.setMaxProducersToAudit(getMaxProducersToAudit());
         sub.setUsePrefetchExtension(isUsePrefetchExtension());
+        sub.setUseConsumerStartStop(isUseConsumerStartStop());
     }
 
     public void configure(Broker broker, SystemUsage memoryManager, QueueBrowserSubscription sub) {
@@ -428,6 +430,7 @@ public class PolicyEntry extends DestinationMapEntry {
         configurePrefetch(sub);
         sub.setCursorMemoryHighWaterMark(getCursorMemoryHighWaterMark());
         sub.setUsePrefetchExtension(isUsePrefetchExtension());
+        sub.setUseConsumerStartStop(isUseConsumerStartStop());
         sub.setMaxProducersToAudit(getMaxProducersToAudit());
     }
 
@@ -1031,6 +1034,21 @@ public class PolicyEntry extends DestinationMapEntry {
 
     public void setUsePrefetchExtension(boolean usePrefetchExtension) {
         this.usePrefetchExtension = usePrefetchExtension;
+    }
+
+    public boolean isUseConsumerStartStop() {
+        return this.useConsumerStartStop;
+    }
+
+    /**
+     * Whether dispatch to a consumer can be stopped and started with the stop and start flags
+     * of a ConsumerControl (default false). A stopped consumer is sent no messages whatever its
+     * prefetch, so it cannot take messages that a started consumer could deliver. Applies to
+     * queue consumers and durable topic subscribers. A subscription takes the value when it is
+     * created.
+     */
+    public void setUseConsumerStartStop(boolean useConsumerStartStop) {
+        this.useConsumerStartStop = useConsumerStartStop;
     }
 
     public int getCursorMemoryHighWaterMark() {

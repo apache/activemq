@@ -238,6 +238,14 @@ public interface Subscription extends SubscriptionRecovery {
 
     boolean isSlowConsumer();
 
+    /**
+     * @return true while the consumer has stopped dispatch to itself with a ConsumerControl
+     *         and the destination policy allows it
+     */
+    default boolean isDispatchStopped() {
+        return false;
+    }
+
     void unmatched(MessageReference node) throws IOException;
 
     /**
