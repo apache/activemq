@@ -19,6 +19,7 @@ package org.apache.activemq.broker;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
+import java.security.cert.X509Certificate;
 
 import javax.net.ssl.SSLContext;
 
@@ -36,6 +37,24 @@ public abstract class SslContext {
      * transport factories.
      */
     public abstract SSLContext getSSLContext() throws NoSuchProviderException, NoSuchAlgorithmException, KeyManagementException;
+
+    /**
+     * @return a context that presents only the key with the alias
+     * @throws IllegalArgumentException if this context cannot pick a key by
+     *         alias, or has no such key
+     */
+    public SslContext withKeyAlias(String keyAlias) {
+        throw new IllegalArgumentException("This sslContext cannot select a key by alias");
+    }
+
+    /**
+     * @return the certificate chain of the key with the alias
+     * @throws IllegalArgumentException if this context cannot pick a key by
+     *         alias, or has no such key
+     */
+    public X509Certificate[] getCertificateChain(String keyAlias) {
+        throw new IllegalArgumentException("This sslContext cannot select a key by alias");
+    }
 
     /**
      * Reload certificates from the underlying key/trust material.
