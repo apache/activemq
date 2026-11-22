@@ -21,8 +21,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -709,20 +707,23 @@ public abstract class AbstractRegion implements Region {
             }
             LOG.debug("setting prefetch: {}, on subscription: {}; resulting value: {}",
                     control.getPrefetch(), control.getConsumerId(), sub.getConsumerInfo().getPrefetchSize());
-            try {
-                final ActiveMQDestination controlDest = Objects.requireNonNull(control.getDestination(),
-                    "Destination must not be null in ConsumerControl");
-                // Don't auto create patterns (wildcard topics) or composite, this matches addConsumer()
-                final boolean autoCreate = !controlDest.isPattern() && !controlDest.isComposite();
+            wakeupDestinations((AbstractSubscription) sub);
+        }
+    }
 
-                // If autoCreate is false then lookup() will just return null if the destination
-                // does not exist and we can skip the call to wakeup. This will prevent creating
-                // wildcard destinations for wildcard consumers but will use them if they exist
-                Optional.ofNullable(lookup(consumerExchange.getConnectionContext(),
-                    control.getDestination(),false, autoCreate))
-                    .ifPresent(Destination::wakeup);
+    /**
+     * Wakes every destination the subscription is attached to. A wildcard or composite
+     * subscription is attached to each matching destination, and none of them is registered
+     * under the consumer's own destination, so a lookup by that destination finds nothing.
+     * Waking the attached destinations also never creates one.
+     */
+    protected void wakeupDestinations(AbstractSubscription sub) {
+        for (Destination destination : sub.getDestinations()) {
+            try {
+                destination.wakeup();
             } catch (Exception e) {
-                LOG.warn("failed to deliver post consumerControl dispatch-wakeup, to destination: {}", control.getDestination(), e);
+                LOG.warn("failed to deliver post consumerControl dispatch-wakeup, to destination: {}",
+                        destination.getActiveMQDestination(), e);
             }
         }
     }
