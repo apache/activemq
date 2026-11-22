@@ -30,6 +30,8 @@ import javax.naming.spi.InitialContextFactory;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
+import org.apache.activemq.broker.region.policy.PolicyEntry;
+import org.apache.activemq.broker.region.policy.PolicyMap;
 import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ActiveMQTopic;
 import org.slf4j.Logger;
@@ -117,6 +119,14 @@ public class JNDIInitialContextFactory implements InitialContextFactory {
                 bs.setPersistent(false);
                 bs.setUseJmx(false);
                 bs.setAdvisorySupport(false);
+                // The TCK creates competing queue consumers on connections it never starts.
+                // Their stop keeps the broker from dispatching to them, so the started
+                // consumer receives every message (core20 jmsconsumertests queueReceiveTests).
+                final PolicyEntry policy = new PolicyEntry();
+                policy.setUseConsumerStartStop(true);
+                final PolicyMap policyMap = new PolicyMap();
+                policyMap.setDefaultEntry(policy);
+                bs.setDestinationPolicy(policyMap);
                 bs.start();
                 bs.waitUntilStarted();
                 broker = bs;
