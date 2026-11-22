@@ -57,6 +57,9 @@ public interface ConnectorViewMBean extends Service {
     @MBeanInfo("Connections are protected by SSL/TLS")
     boolean isSsl();
 
+    @MBeanInfo("Whether a client certificate is requested: NONE, WANT_CLIENT_AUTH or NEED_CLIENT_AUTH")
+    String getSslMode();
+
     /**
      * Returns true if link stealing is enabled on this Connector
      *

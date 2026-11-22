@@ -17,6 +17,7 @@
 package org.apache.activemq.broker;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 import java.net.URI;
 import java.util.LinkedHashMap;
@@ -24,6 +25,7 @@ import java.util.Map;
 
 import org.apache.activemq.broker.jmx.ConnectorView;
 import org.apache.activemq.test.annotations.ParallelTest;
+import org.apache.activemq.transport.SslMode;
 import org.junit.After;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -111,5 +113,39 @@ public class TransportConnectorSslTest {
             assertEquals(label, expectation.getValue(), connector.isSsl());
             assertEquals(label + " via JMX view", expectation.getValue(), new ConnectorView(connector).isSsl());
         }
+    }
+
+    @Test(timeout = 60000)
+    public void testSslModeViaJmxView() throws Exception {
+        broker = new BrokerService();
+        broker.setPersistent(false);
+        broker.setUseJmx(false);
+        var expectations = new LinkedHashMap<TransportConnector, String>();
+        expectations.put(broker.addConnector("tcp://localhost:0"), "NONE");
+        expectations.put(broker.addConnector("ssl://localhost:0"), "NONE");
+        expectations.put(broker.addConnector("ssl://localhost:0?transport.wantClientAuth=true"), "WANT_CLIENT_AUTH");
+        expectations.put(broker.addConnector("nio+ssl://localhost:0?wantClientAuth=true"), "WANT_CLIENT_AUTH");
+        expectations.put(broker.addConnector("auto+ssl://localhost:0?needClientAuth=true"), "NEED_CLIENT_AUTH");
+        expectations.put(broker.addConnector("auto+nio+ssl://localhost:0?transport.needClientAuth=true"),
+            "NEED_CLIENT_AUTH");
+        broker.start();
+        broker.waitUntilStarted();
+
+        for (Map.Entry<TransportConnector, String> expectation : expectations.entrySet()) {
+            assertEquals(expectation.getKey().getUri().toString(), expectation.getValue(),
+                new ConnectorView(expectation.getKey()).getSslMode());
+        }
+    }
+
+    @Test
+    public void testSslModeViaJmxViewIsNullSafe() throws Exception {
+        var connector = new TransportConnector() {
+            @Override
+            public SslMode getSslMode() {
+                return null;
+            }
+        };
+        assertNull(new ConnectorView(connector).getSslMode());
+        assertEquals("NONE", new ConnectorView(new TransportConnector()).getSslMode());
     }
 }
