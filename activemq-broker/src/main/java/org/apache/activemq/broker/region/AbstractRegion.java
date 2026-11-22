@@ -379,6 +379,11 @@ public abstract class AbstractRegion implements Region {
             DestinationFilter.parseFilter(info.getDestination());
 
             Subscription sub = createSubscription(context, info);
+            // A consumer registered while its connection is suspended starts stopped, before any
+            // destination can dispatch to it.
+            if (context != null && context.isDispatchSuspended() && sub instanceof AbstractSubscription) {
+                setDispatchStopped((AbstractSubscription) sub, true);
+            }
 
             // At this point we're done directly manipulating subscriptions,
             // but we need to retain the synchronized block here. Consider

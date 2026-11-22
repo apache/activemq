@@ -298,6 +298,8 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         if (messageListener != null) {
             setMessageListener(messageListener);
         }
+        // a consumer that registers while the connection is not started is created stopped
+        session.connection.suspendDispatchIfStopped();
         try {
             this.session.addConsumer(this);
             this.session.syncSendPacket(info);

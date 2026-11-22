@@ -57,6 +57,7 @@ public class ConnectionContext {
     private MessageAuthorizationPolicy messageAuthorizationPolicy;
     private boolean networkConnection;
     private boolean faultTolerant;
+    private volatile boolean dispatchSuspended;
     private final AtomicBoolean stopping = new AtomicBoolean();
     private final MessageEvaluationContext messageEvaluationContext;
     private boolean dontSendReponse;
@@ -109,6 +110,7 @@ public class ConnectionContext {
         rc.messageAuthorizationPolicy = this.messageAuthorizationPolicy;
         rc.networkConnection = this.networkConnection;
         rc.faultTolerant = this.faultTolerant;
+        rc.dispatchSuspended = this.dispatchSuspended;
         rc.stopping.set(this.stopping.get());
         rc.dontSendReponse = this.dontSendReponse;
         rc.clientMaster = this.clientMaster;
@@ -327,6 +329,18 @@ public class ConnectionContext {
 
     public void setFaultTolerant(boolean faultTolerant) {
         this.faultTolerant = faultTolerant;
+    }
+
+    /**
+     * @return true while the client has suspended dispatch to the consumers of this
+     *         connection with a ConnectionControl, because the connection is not started
+     */
+    public boolean isDispatchSuspended() {
+        return dispatchSuspended;
+    }
+
+    public void setDispatchSuspended(boolean dispatchSuspended) {
+        this.dispatchSuspended = dispatchSuspended;
     }
 
     public void setConnectionState(ConnectionState connectionState) {

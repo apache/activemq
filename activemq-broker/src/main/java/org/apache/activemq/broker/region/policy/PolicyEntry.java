@@ -1045,7 +1045,9 @@ public class PolicyEntry extends DestinationMapEntry {
      * of a ConsumerControl (default false). A stopped consumer is sent no messages whatever its
      * prefetch, so it cannot take messages that a started consumer could deliver. Applies to
      * queue consumers and durable topic subscribers. A subscription takes the value when it is
-     * created.
+     * created. A client whose connection is not started sends a ConnectionControl with suspend
+     * set, which stops each consumer of the connection, including those it registers while
+     * suspended, and one with resume set when the connection starts.
      */
     public void setUseConsumerStartStop(boolean useConsumerStartStop) {
         this.useConsumerStartStop = useConsumerStartStop;

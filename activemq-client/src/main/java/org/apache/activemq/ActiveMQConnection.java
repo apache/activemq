@@ -173,6 +173,11 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
     private boolean checkForDuplicates = true;
     private boolean queueOnlyConnection = false;
     private boolean consumerExpiryCheckEnabled = true;
+    private boolean suspendDispatchWhenStopped = true;
+    // true while the broker holds dispatch to this connection's consumers; the lock orders the
+    // suspend and resume with the started transitions
+    private final Object dispatchSuspendLock = new Object();
+    private boolean dispatchSuspended;
 
     private final Transport transport;
     private final IdGenerator clientIdGenerator;
@@ -584,6 +589,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
                 ActiveMQSession session = i.next();
                 session.start();
             }
+            resumeDispatchIfStarted();
         }
     }
 
@@ -640,6 +646,7 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
                     s.stop();
                 }
             }
+            suspendDispatchIfStopped();
         }
     }
 
@@ -1686,6 +1693,10 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
                     syncSendPacket(info.createRemoveCommand());
                 }
                 isConnectionInfoSentToBroker = false;
+                synchronized (dispatchSuspendLock) {
+                    // the broker forgot the suspend with the connection
+                    dispatchSuspended = false;
+                }
             }
             if (userSpecifiedClientID) {
                 info.setClientId(null);
@@ -2701,6 +2712,56 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      */
     public void setConsumerExpiryCheckEnabled(boolean consumerExpiryCheckEnabled) {
         this.consumerExpiryCheckEnabled = consumerExpiryCheckEnabled;
+    }
+
+    /**
+     * @return true if the broker is asked to hold dispatch to the consumers of this connection
+     *         while it is not started
+     */
+    public boolean isSuspendDispatchWhenStopped() {
+        return suspendDispatchWhenStopped;
+    }
+
+    /**
+     * See {@link ActiveMQConnectionFactory#setSuspendDispatchWhenStopped(boolean)}.
+     */
+    public void setSuspendDispatchWhenStopped(boolean suspendDispatchWhenStopped) {
+        this.suspendDispatchWhenStopped = suspendDispatchWhenStopped;
+    }
+
+    /**
+     * Asks the broker to hold dispatch to this connection's consumers while the connection is
+     * not started. Called before a consumer registers and when the connection stops, so a
+     * consumer that registers while the connection is not started is created stopped.
+     */
+    void suspendDispatchIfStopped() throws JMSException {
+        if (!suspendDispatchWhenStopped) {
+            return;
+        }
+        synchronized (dispatchSuspendLock) {
+            if (!started.get() && !dispatchSuspended && isConnectionInfoSentToBroker) {
+                asyncSendPacket(createDispatchControl(true));
+                dispatchSuspended = true;
+            }
+        }
+    }
+
+    private void resumeDispatchIfStarted() throws JMSException {
+        synchronized (dispatchSuspendLock) {
+            if (started.get() && dispatchSuspended) {
+                asyncSendPacket(createDispatchControl(false));
+                dispatchSuspended = false;
+            }
+        }
+    }
+
+    private ConnectionControl createDispatchControl(boolean suspend) {
+        ConnectionControl control = new ConnectionControl();
+        // a broker sets the fault tolerance of the connection from every ConnectionControl
+        control.setFaultTolerant(info.isFaultTolerant());
+        control.setSuspend(suspend);
+        control.setResume(!suspend);
+        return control;
     }
 
     public List<String> getTrustedPackages() {

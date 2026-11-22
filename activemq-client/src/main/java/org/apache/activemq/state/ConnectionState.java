@@ -45,6 +45,7 @@ public class ConnectionState {
     private final List<DestinationInfo> tempDestinations = Collections.synchronizedList(new ArrayList<DestinationInfo>());
     private final AtomicBoolean shutdown = new AtomicBoolean(false);
     private boolean connectionInterruptProcessingComplete = true;
+    private volatile boolean dispatchSuspended;
     private ConcurrentMap<ConsumerId, ConsumerInfo> recoveringPullConsumers;
 
     public ConnectionState(ConnectionInfo info) {
@@ -126,6 +127,18 @@ public class ConnectionState {
 
     public Collection<SessionState> getSessionStates() {
         return sessions.values();
+    }
+
+    /**
+     * @return true when the last ConnectionControl sent for the connection suspended dispatch
+     *         to its consumers
+     */
+    public boolean isDispatchSuspended() {
+        return dispatchSuspended;
+    }
+
+    public void setDispatchSuspended(boolean dispatchSuspended) {
+        this.dispatchSuspended = dispatchSuspended;
     }
 
     private void checkShutdown() {

@@ -151,8 +151,9 @@ public class DurableTopicSubscription extends PrefetchSubscription implements Us
         if (!active.get()) {
             this.context = context;
             this.info = info;
-            // the stopped state belongs to the consumer, and this is a new one
-            setDispatchStopped(false);
+            // the stopped state belongs to the consumer, and this is a new one: it is stopped
+            // only if it registered while its connection was suspended
+            setDispatchStopped(isUseConsumerStartStop() && context.isDispatchSuspended());
 
             LOG.debug("Activating {}", this);
             if (!keepDurableSubsActive) {
