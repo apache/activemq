@@ -616,7 +616,8 @@ public class ActiveMQMessageConsumer implements MessageAvailableConsumer, StatsC
         if (transformer != null) {
             Message transformedMessage = transformer.consumerTransform(session, this, m);
             if (transformedMessage != null) {
-                m = ActiveMQMessageTransformation.transformMessage(transformedMessage, session.connection);
+                // a message on its way to the application keeps its provider-set properties
+                m = ActiveMQMessageTransformation.transformMessage(transformedMessage, session.connection, true);
             }
         }
         if (session.isClientAcknowledge()) {

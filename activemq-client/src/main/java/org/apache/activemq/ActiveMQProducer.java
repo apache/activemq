@@ -29,15 +29,22 @@ import jakarta.jms.Destination;
 import jakarta.jms.IllegalStateRuntimeException;
 import jakarta.jms.JMSException;
 import jakarta.jms.JMSProducer;
+import jakarta.jms.JMSRuntimeException;
 import jakarta.jms.MapMessage;
 import jakarta.jms.Message;
 import jakarta.jms.MessageFormatRuntimeException;
 import jakarta.jms.ObjectMessage;
 import jakarta.jms.TextMessage;
 
+import org.apache.activemq.command.ActiveMQMessage;
 import org.apache.activemq.util.JMSExceptionSupport;
 import org.apache.activemq.util.TypeConversionSupport;
 
+/**
+ * A simplified JMS producer. Under strict compliance, all {@code setProperty}
+ * overloads reject provider-set JMSX names before changing producer state,
+ * regardless of the implementation of messages subsequently sent.
+ */
 public class ActiveMQProducer implements JMSProducer {
 
     private final ActiveMQContext activemqContext;
@@ -511,6 +518,11 @@ public class ActiveMQProducer implements JMSProducer {
     private void checkProperty(String name, Object value) {
         ActiveMQMessageProducerSupport.validateValidPropertyName(name);
         ActiveMQMessageProducerSupport.validateValidPropertyValue(name, value);
+        if (activemqMessageProducer.session.getConnection().isStrictCompliance()
+            && ActiveMQMessage.JMSX_PROVIDER_PROPERTIES.contains(name)) {
+            throw new JMSRuntimeException("Provider set JMSX property '" + name
+                + "' cannot be set by a client under strict compliance.");
+        }
     }
 
     private Map<String, Object> getCreatedMessageProperties() {
