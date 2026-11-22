@@ -139,12 +139,16 @@ public class JaasDualAuthenticationBroker extends BrokerFilter implements Authen
      *         with the user name and password
      */
     protected boolean isSSL(ConnectionContext context, ConnectionInfo info) throws Exception {
-        // AMQ-5943, a network bridge carries the certificate on a connection that is not SSL
-        if (info.getTransportContext() instanceof X509Certificate[]) {
+        if (hasClientCertificate(info)) {
             return true;
         }
         Connector connector = context.getConnector();
         return connector != null && connector.getSslMode() == SslMode.NEED_CLIENT_AUTH;
+    }
+
+    // set by the transport from the SSL handshake, or by a network bridge for its local connection (AMQ-5943)
+    private boolean hasClientCertificate(ConnectionInfo info) {
+        return info.getTransportContext() instanceof X509Certificate[];
     }
 
     @Override
