@@ -16,7 +16,7 @@
 # limitations under the License.
 ################################################################################
 
-ARG java_version=25
+ARG java_version=25.0.5.1_2
 FROM eclipse-temurin:${java_version}-jre
 
 # ActiveMQ environment variables
