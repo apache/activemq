@@ -21,18 +21,21 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import jakarta.jms.Connection;
 import jakarta.jms.Destination;
@@ -56,6 +59,7 @@ import org.apache.activemq.command.ConsumerControl;
 import org.apache.activemq.command.ConsumerId;
 import org.apache.activemq.command.ConsumerInfo;
 import org.apache.activemq.test.annotations.ParallelTest;
+import org.apache.activemq.transport.failover.FailoverTransport;
 import org.apache.activemq.util.Wait;
 import org.junit.After;
 import org.junit.Test;
@@ -428,6 +432,20 @@ public class ConsumerStartStopTest {
     }
 
     @Test(timeout = 60_000)
+    public void testCloseSendsNoSuspend() throws Exception {
+        startBroker(true);
+        var connection = connect(true);
+        var consumer = connection.createSession(false, Session.AUTO_ACKNOWLEDGE).createConsumer(new ActiveMQQueue("startstop.close"));
+        assertEvents(consumer, "add prefetch=1000 stopped=false");
+
+        connections.remove(connection);
+        connection.close();
+        // the broker answers the RemoveInfo of the close after it has handled every command sent before it
+        assertEquals("close removes the consumers without stopping them first",
+                List.of("add prefetch=1000 stopped=false"), events(consumer));
+    }
+
+    @Test(timeout = 60_000)
     public void testConsumerOnCleanedUpConnectionIsCreatedStopped() throws Exception {
         startBroker(true);
         var connection = connect(true);
@@ -584,6 +602,83 @@ public class ConsumerStartStopTest {
         events.clear();
         dropClientConnections();
         assertTrue("re-registered after the failure", Wait.waitFor(() -> !events(consumer).isEmpty(), 10000, 20));
+        assertTrue(events(consumer).get(0), events(consumer).get(0).endsWith(" stopped=false"));
+        assertTrue(Wait.waitFor(() -> subscription(consumer) != null
+                && subscription(consumer).getConsumerInfo().getPrefetchSize() == 1000, 10000, 20));
+
+        send(queue, 3);
+        assertEquals(3, drain(consumer, 2000));
+    }
+
+    private interface JmsCall {
+        void call() throws Exception;
+    }
+
+    /** Fails when the call is still waiting after five seconds, as one that waits for the reconnect would be. */
+    private static void assertDoesNotWaitForReconnect(String name, JmsCall call) throws Exception {
+        var executor = Executors.newSingleThreadExecutor();
+        try {
+            executor.submit(() -> {
+                call.call();
+                return null;
+            }).get(5, TimeUnit.SECONDS);
+        } catch (TimeoutException e) {
+            fail(name + " waited for the failover transport to reconnect");
+        } finally {
+            executor.shutdownNow();
+        }
+    }
+
+    /**
+     * Stops the broker, waits until the failover transport of the connection has lost it, and
+     * returns the port to start the next broker on.
+     */
+    private int stopBroker(ActiveMQConnection failoverConnection) throws Exception {
+        var port = URI.create(connectionUri).getPort();
+        broker.stop();
+        broker.waitUntilStopped();
+        var failover = failoverConnection.getTransport().narrow(FailoverTransport.class);
+        assertTrue("the failover transport lost the broker", Wait.waitFor(() -> !failover.isConnected(), 5000, 20));
+        return port;
+    }
+
+    @Test(timeout = 60_000)
+    public void testStopWhileReconnectingDoesNotWaitAndStopsConsumersAfterReconnect() throws Exception {
+        startBroker(true);
+        var queue = new ActiveMQQueue("startstop.failover.stopwhiledown");
+        var connection = connect(factory("failover:(" + connectionUri + ")?maxReconnectDelay=100"), true);
+        var consumer = connection.createSession(false, Session.AUTO_ACKNOWLEDGE).createConsumer(queue);
+        assertEvents(consumer, "add prefetch=1000 stopped=false");
+
+        var port = stopBroker(connection);
+        assertDoesNotWaitForReconnect("stop", connection::stop);
+
+        events.clear();
+        startBroker(true, "tcp://localhost:" + port);
+        // the state tracker recorded the suspend, and the restore sends it before the consumer
+        assertTrue("re-registered after the reconnect", Wait.waitFor(() -> !events(consumer).isEmpty(), 10000, 20));
+        assertTrue(events(consumer).get(0), events(consumer).get(0).endsWith(" stopped=true"));
+        assertTrue(subscription(consumer).isDispatchStopped());
+
+        connection.start();
+        assertTrue(Wait.waitFor(() -> !subscription(consumer).isDispatchStopped(), 5000, 20));
+    }
+
+    @Test(timeout = 60_000)
+    public void testStartWhileReconnectingDoesNotWaitAndStartsConsumersAfterReconnect() throws Exception {
+        startBroker(true);
+        var queue = new ActiveMQQueue("startstop.failover.startwhiledown");
+        var connection = connect(factory("failover:(" + connectionUri + ")?maxReconnectDelay=100"), false);
+        var consumer = connection.createSession(false, Session.AUTO_ACKNOWLEDGE).createConsumer(queue);
+        assertEvents(consumer, "add prefetch=1000 stopped=true");
+
+        var port = stopBroker(connection);
+        assertDoesNotWaitForReconnect("start", connection::start);
+
+        events.clear();
+        startBroker(true, "tcp://localhost:" + port);
+        // the state tracker recorded the resume, so the restore sends no suspend
+        assertTrue("re-registered after the reconnect", Wait.waitFor(() -> !events(consumer).isEmpty(), 10000, 20));
         assertTrue(events(consumer).get(0), events(consumer).get(0).endsWith(" stopped=false"));
         assertTrue(Wait.waitFor(() -> subscription(consumer) != null
                 && subscription(consumer).getConsumerInfo().getPrefetchSize() == 1000, 10000, 20));

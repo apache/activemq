@@ -626,16 +626,18 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
      */
     @Override
     public void stop() throws JMSException {
-        doStop(true);
+        doStop(true, true);
     }
 
     /**
      * @see #stop()
      * @param checkClosed <tt>true</tt> to check for already closed and throw {@link java.lang.IllegalStateException} if already closed,
      *                    <tt>false</tt> to skip this check
+     * @param suspendDispatch <tt>true</tt> to ask the broker to hold dispatch to the consumers until the connection starts,
+     *                    <tt>false</tt> when the connection is closing and its consumers are about to be removed
      * @throws JMSException if the JMS provider fails to stop message delivery due to some internal error.
      */
-    void doStop(boolean checkClosed) throws JMSException {
+    void doStop(boolean checkClosed, boolean suspendDispatch) throws JMSException {
         if (checkClosed) {
             checkClosedOrFailed();
         }
@@ -646,7 +648,9 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
                     s.stop();
                 }
             }
-            suspendDispatchIfStopped();
+            if (suspendDispatch) {
+                suspendDispatchIfStopped();
+            }
         }
     }
 
@@ -699,8 +703,10 @@ public class ActiveMQConnection implements Connection, TopicConnection, QueueCon
             // If we were running, lets stop first.
             if (!closed.get() && !transportFailed.get()) {
                 // do not fail if already closed as according to JMS spec we must not
-                // throw exception if already closed
-                doStop(false);
+                // throw exception if already closed. No suspend is sent: the RemoveInfo
+                // below removes the consumers, and close must not wait on or fail a send
+                // before it releases the connection.
+                doStop(false, false);
             }
 
             synchronized (this) {
