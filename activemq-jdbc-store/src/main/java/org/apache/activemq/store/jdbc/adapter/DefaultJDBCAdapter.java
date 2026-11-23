@@ -398,10 +398,24 @@ public class DefaultJDBCAdapter implements JDBCAdapter {
     @Override
     public void doRecover(TransactionContext c, ActiveMQDestination destination, JDBCMessageRecoveryListener listener)
             throws Exception {
+        doRecover(c, destination, 0, listener);
+    }
+
+    /**
+     * @param maxReturned the maximum number of rows to read, or 0 for no limit. Some drivers
+     *                    (PostgreSQL by default) read the whole result set in executeQuery(),
+     *                    so stopping the listener early does not bound the memory used.
+     */
+    @Override
+    public void doRecover(TransactionContext c, ActiveMQDestination destination, int maxReturned,
+            JDBCMessageRecoveryListener listener) throws Exception {
         PreparedStatement s = null;
         ResultSet rs = null;
         try {
             s = c.getConnection().prepareStatement(this.statements.getFindAllMessagesStatement());
+            if (maxReturned > 0) {
+                s.setMaxRows(maxReturned);
+            }
             s.setString(1, destination.getQualifiedName());
             rs = s.executeQuery();
             if (this.statements.isUseExternalMessageReferences()) {
