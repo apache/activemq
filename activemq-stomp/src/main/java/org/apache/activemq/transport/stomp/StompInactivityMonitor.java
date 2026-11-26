@@ -37,6 +37,8 @@ public class StompInactivityMonitor extends AbstractInactivityMonitor {
 
     public StompInactivityMonitor(Transport next, WireFormat wireFormat) {
         super(next, wireFormat);
+        // STOMP requires a heartbeat even when a frame was sent just after a previous check (AMQ-4710)
+        setKeepAliveOnEveryWriteCheck(true);
     }
 
     public void startMonitoring() throws IOException {

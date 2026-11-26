@@ -78,6 +78,7 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
     private long initialDelayTime = DEFAULT_CHECK_TIME_MILLS;
     private boolean useKeepAlive = true;
     private boolean keepAliveResponseRequired;
+    private boolean keepAliveOnEveryWriteCheck;
 
     protected WireFormat wireFormat;
 
@@ -188,8 +189,8 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
             return;
         }
 
-        if (!commandSent.get() && useKeepAlive && monitorStarted.get() && !ASYNC_TASKS.isShutdown()) {
-            LOG.trace("{} no message sent since last write check, sending a KeepAliveInfo", this);
+        if ((!commandSent.get() || keepAliveOnEveryWriteCheck) && useKeepAlive && monitorStarted.get() && !ASYNC_TASKS.isShutdown()) {
+            LOG.trace("{} sending a KeepAliveInfo", this);
 
             try {
                 ASYNC_TASKS.execute(new Runnable() {
@@ -352,6 +353,21 @@ public abstract class AbstractInactivityMonitor extends TransportFilter {
 
     public void setUseKeepAlive(boolean val) {
         useKeepAlive = val;
+    }
+
+    /**
+     * @return true to send a keep-alive on every write check, false to skip it after a command
+     */
+    public boolean isKeepAliveOnEveryWriteCheck() {
+        return keepAliveOnEveryWriteCheck;
+    }
+
+    /**
+     * Send a keep-alive on every write check, even if a command was sent since the last one.
+     * Set on a connector with {@code transport.keepAliveOnEveryWriteCheck}.
+     */
+    public void setKeepAliveOnEveryWriteCheck(boolean value) {
+        this.keepAliveOnEveryWriteCheck = value;
     }
 
     public long getConnectAttemptTimeout() {

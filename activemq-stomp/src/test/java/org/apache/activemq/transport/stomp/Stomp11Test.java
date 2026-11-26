@@ -222,6 +222,80 @@ public class Stomp11Test extends StompTestSupport {
         }
     }
 
+    // AMQ-4710: A heartbeat must not be delayed by frames after a write check
+    @Test(timeout = 60000)
+    public void testHeartbeatPromiseKeptAfterConnectedFrame() throws Exception {
+
+        String connectFrame = "STOMP\n" +
+                              "login:system\n" +
+                              "passcode:manager\n" +
+                              "accept-version:1.1\n" +
+                              "heart-beat:2000,1000\n" +
+                              "host:localhost\n" +
+                              "\n" + Stomp.NULL;
+
+        stompConnection.sendFrame(connectFrame);
+        String f = stompConnection.receiveFrame().trim();
+        long startTime = System.currentTimeMillis();
+        assertTrue("Failed to receive a connected frame.", f.startsWith("CONNECTED"));
+
+        ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
+        try {
+            service.scheduleAtFixedRate(() -> {
+                try {
+                    stompConnection.keepAlive();
+                } catch (Exception e) {
+                }
+            }, 500, 500, TimeUnit.MILLISECONDS);
+
+            DataInputStream in = new DataInputStream(stompConnection.getStompSocket().getInputStream());
+            int input = in.read();
+            assertEquals("did not receive the correct heartbeat value", '\n', input);
+            long endTime = System.currentTimeMillis();
+            LOG.info("Silence after CONNECTED: {} ms", endTime - startTime);
+            assertTrue("Broker did not send KeepAlive in time after CONNECTED", (endTime - startTime) <= 1500);
+        } finally {
+            service.shutdownNow();
+        }
+    }
+
+    @Test(timeout = 60000)
+    public void testHeartbeatPromiseKeptAfterMessageFrame() throws Exception {
+
+        String connectFrame = "STOMP\n" +
+                              "login:system\n" +
+                              "passcode:manager\n" +
+                              "accept-version:1.1\n" +
+                              "heart-beat:0,1000\n" +
+                              "host:localhost\n" +
+                              "\n" + Stomp.NULL;
+
+        stompConnection.sendFrame(connectFrame);
+        String f = stompConnection.receiveFrame().trim();
+        assertTrue("Failed to receive a connected frame.", f.startsWith("CONNECTED"));
+
+        String frame = "SUBSCRIBE\n" + "destination:/queue/" + getQueueName() + "\n" +
+                       "id:1\n" + "ack:auto\n\n" + Stomp.NULL;
+        stompConnection.sendFrame(frame);
+
+        DataInputStream in = new DataInputStream(stompConnection.getStompSocket().getInputStream());
+        int input = in.read();
+        assertEquals("did not receive the correct heartbeat value", '\n', input);
+        TimeUnit.MILLISECONDS.sleep(50);
+
+        MessageProducer producer = session.createProducer(queue);
+        producer.send(session.createTextMessage("Hello World"));
+        f = stompConnection.receiveFrame().trim();
+        long startTime = System.currentTimeMillis();
+        assertTrue("Failed to receive a message frame.", f.startsWith("MESSAGE"));
+
+        input = in.read();
+        assertEquals("did not receive the correct heartbeat value", '\n', input);
+        long endTime = System.currentTimeMillis();
+        LOG.info("Silence after MESSAGE: {} ms", endTime - startTime);
+        assertTrue("Broker did not send KeepAlive in time after MESSAGE", (endTime - startTime) <= 1500);
+    }
+
     @Test(timeout = 60000)
     public void testHeartbeatsDropsIdleConnection() throws Exception {
 
