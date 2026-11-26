@@ -21,6 +21,7 @@ import static org.junit.Assert.assertNull;
 
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.util.Locale;
 
 import org.apache.activemq.transport.amqp.ParallelTest;
 import org.junit.Test;
@@ -219,6 +220,19 @@ public class AmqpContentTypeSupportTest {
     public void testParseContentTypeWithApplicationJavaSerialized() throws Exception {
         // Expect null as this is not a textual type
         doParseContentTypeTestImpl(AmqpMessageSupport.SERIALIZED_JAVA_OBJECT_CONTENT_TYPE, null);
+    }
+
+    @Test
+    public void testParseContentTypeCharsetRegardlessOfDefaultLocale() throws Exception {
+        Locale defaultLocale = Locale.getDefault();
+        Locale.setDefault(Locale.forLanguageTag("tr-TR"));
+        try {
+            doParseContentTypeTestImpl("text/plain;charset=iso-8859-1", StandardCharsets.ISO_8859_1);
+            doParseContentTypeTestImpl("TEXT/PLAIN;charset=\"windows-1252\"", Charset.forName("windows-1252"));
+            doParseContentTypeTestImpl("APPLICATION/JSON;charset=us-ascii", StandardCharsets.US_ASCII);
+        } finally {
+            Locale.setDefault(defaultLocale);
+        }
     }
 
     private void doParseContentTypeTestImpl(String contentType, Charset expected) throws InvalidContentTypeException {
