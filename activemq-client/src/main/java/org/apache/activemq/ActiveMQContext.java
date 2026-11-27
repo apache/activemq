@@ -92,6 +92,10 @@ public class ActiveMQContext implements JMSContext {
         this.connectionCounter = connectionCounter;
     }
 
+    boolean isStrictCompliance() {
+        return activemqConnection != null && activemqConnection.isStrictCompliance();
+    }
+
     @Override
     public JMSContext createContext(int sessionMode) {
         if(connectionCounter.get() == 0l) {
