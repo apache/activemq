@@ -49,6 +49,7 @@ import org.apache.qpid.proton.amqp.messaging.Target;
 import org.apache.qpid.proton.amqp.messaging.TerminusDurability;
 import org.apache.qpid.proton.amqp.messaging.TerminusExpiryPolicy;
 import org.apache.qpid.proton.amqp.transaction.TransactionalState;
+import org.apache.qpid.proton.amqp.transport.ErrorCondition;
 import org.apache.qpid.proton.amqp.transport.ReceiverSettleMode;
 import org.apache.qpid.proton.amqp.transport.SenderSettleMode;
 import org.apache.qpid.proton.engine.Delivery;
@@ -638,10 +639,24 @@ public class AmqpReceiver extends AmqpAbstractResource<Receiver> {
      * @throws IOException if an error occurs while sending the release.
      */
     public void reject(final Delivery delivery) throws IOException {
+        reject(delivery, null);
+    }
+
+    /**
+     * Reject a delivery with an optional error condition.
+     *
+     * @param delivery
+     *        the delivery instance to reject.
+     * @param error
+     *        the error condition to send, or null for a rejection without an error.
+     *
+     * @throws IOException if an error occurs while sending the rejection.
+     */
+    public void reject(final Delivery delivery, final ErrorCondition error) throws IOException {
         checkClosed();
 
         if (delivery == null) {
-            throw new IllegalArgumentException("Delivery to release cannot be null");
+            throw new IllegalArgumentException("Delivery to reject cannot be null");
         }
 
         final ClientFuture request = new ClientFuture();
@@ -652,7 +667,9 @@ public class AmqpReceiver extends AmqpAbstractResource<Receiver> {
                 checkClosed();
                 try {
                     if (!delivery.isSettled()) {
-                        delivery.disposition(new Rejected());
+                        Rejected rejected = new Rejected();
+                        rejected.setError(error);
+                        delivery.disposition(rejected);
                         delivery.settle();
                         session.pumpToProtonTransport(request);
                     }
