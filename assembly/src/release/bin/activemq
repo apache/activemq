@@ -400,7 +400,7 @@ invokeJar(){
             echo \$APID > \"${PIDFILE}.stop\"; exit \$RET" $DOIT_POSTFIX
           RET="$?"
    else
-      $EXEC_OPTION $DOIT_PREFIX "\"$JAVACMD\" $ACTIVEMQ_OPTS $ACTIVEMQ_DEBUG_OPTS \
+      $EXEC_OPTION $DOIT_PREFIX "exec \"$JAVACMD\" $ACTIVEMQ_OPTS $ACTIVEMQ_DEBUG_OPTS \
           --add-reads=java.xml=java.logging \
           --add-opens java.base/java.security=ALL-UNNAMED \
           --add-opens java.base/java.net=ALL-UNNAMED \
