@@ -18,6 +18,8 @@ package org.apache.activemq.usage;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -51,7 +53,10 @@ public abstract class Usage<T extends Usage> implements Service {
     private final List<UsageListener> listeners = new CopyOnWriteArrayList<UsageListener>();
     private final boolean debug = LOG.isDebugEnabled();
     private float usagePortion = 1.0f;
-    private final List<T> children = new CopyOnWriteArrayList<T>();
+    // Concurrent set rather than a copy-on-write list so that creating or
+    // destroying many destinations does not copy the whole array on every
+    // addChild/removeChild. Only membership and iteration are used, not order.
+    private final Set<T> children = ConcurrentHashMap.newKeySet();
     private final List<Runnable> callbacks = new LinkedList<Runnable>();
     private int pollingTime = 100;
     private final AtomicBoolean started = new AtomicBoolean();
@@ -382,7 +387,7 @@ public abstract class Usage<T extends Usage> implements Service {
     }
 
     protected List<T> getChildren() {
-        return children;
+        return List.copyOf(children);
     }
 
     /**

@@ -20,7 +20,7 @@ import static org.junit.Assert.assertEquals;
 
 import java.io.File;
 import java.lang.reflect.Field;
-import java.util.List;
+import java.util.Collection;
 
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.region.Destination;
@@ -75,8 +75,11 @@ public class QueueMemoryAndStoreUsageCleanupTest {
     public void testQueueMemoryAndStoreUsageCleanup() throws Exception {
         Field childrenField = Usage.class.getDeclaredField("children");
         childrenField.setAccessible(true);
-        List<?> memoryUsageChildren = (List<?>) childrenField.get(systemUsage.getMemoryUsage());
-        List<?> storeUsageChildren = (List<?>) childrenField.get(systemUsage.getStoreUsage());
+        // the children field is a live Collection view; its concrete type is an
+        // implementation detail of Usage (copy-on-write list before, concurrent
+        // set now), so do not assume List here
+        Collection<?> memoryUsageChildren = (Collection<?>) childrenField.get(systemUsage.getMemoryUsage());
+        Collection<?> storeUsageChildren = (Collection<?>) childrenField.get(systemUsage.getStoreUsage());
 
         Destination queue1 = addDestination(new ActiveMQQueue("queue1"));
         Destination queue2 = addDestination(new ActiveMQQueue("queue2"));
