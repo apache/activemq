@@ -215,6 +215,15 @@ public interface SubscriptionViewMBean {
     boolean isSlowConsumer();
 
     /**
+     * Returns true if the consumer has stopped dispatch to itself, for example because its
+     * connection has not been started
+     *
+     * @return true if dispatch to the subscription is stopped
+     */
+    @MBeanInfo("Returns true if the consumer has stopped dispatch to itself until its connection starts")
+    boolean isDispatchStopped();
+
+    /**
      * Returns the User Name used to authorize creation of this Subscription.
      * This value can be null if display of user name information is disabled.
      *

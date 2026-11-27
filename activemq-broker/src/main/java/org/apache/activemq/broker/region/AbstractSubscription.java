@@ -54,6 +54,8 @@ public abstract class AbstractSubscription implements Subscription {
     protected final AtomicInteger prefetchExtension = new AtomicInteger(0);
 
     private boolean usePrefetchExtension = true;
+    private boolean useConsumerStartStop;
+    private volatile boolean dispatchStopped;
     private BooleanExpression selectorExpression;
     private ObjectName objectName;
     private int cursorMemoryHighWaterMark = 70;
@@ -212,6 +214,23 @@ public abstract class AbstractSubscription implements Subscription {
 
     public void setUsePrefetchExtension(boolean usePrefetchExtension) {
         this.usePrefetchExtension = usePrefetchExtension;
+    }
+
+    public boolean isUseConsumerStartStop() {
+        return useConsumerStartStop;
+    }
+
+    public void setUseConsumerStartStop(boolean useConsumerStartStop) {
+        this.useConsumerStartStop = useConsumerStartStop;
+    }
+
+    @Override
+    public boolean isDispatchStopped() {
+        return dispatchStopped;
+    }
+
+    public void setDispatchStopped(boolean dispatchStopped) {
+        this.dispatchStopped = dispatchStopped;
     }
 
     public void setPrefetchSize(int newSize) {

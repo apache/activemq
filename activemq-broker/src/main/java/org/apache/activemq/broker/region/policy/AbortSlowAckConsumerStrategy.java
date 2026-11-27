@@ -120,6 +120,14 @@ public class AbortSlowAckConsumerStrategy extends AbortSlowConsumerStrategy {
                 continue;
             }
 
+            if (subscriber.isDispatchStopped()) {
+                // its consumer stopped dispatch, so there is nothing for it to acknowledge
+                if (slowConsumers.remove(subscriber) != null) {
+                    LOG.info("stopped sub: {} is no longer slow", subscriber.getConsumerInfo().getConsumerId());
+                }
+                continue;
+            }
+
             if (isIgnoreIdleConsumers() && subscriber.getDispatchedQueueSize() == 0) {
                 // Not considered Idle so ensure its cleared from the list
                 if (slowConsumers.remove(subscriber) != null) {

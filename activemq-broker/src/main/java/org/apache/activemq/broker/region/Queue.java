@@ -2306,6 +2306,12 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
                     continue;
                 }
                 if (!fullConsumers.contains(s)) {
+                    if (s.isDispatchStopped()) {
+                        // Stopped by its consumer, so it takes nothing but is not slow. Counting it
+                        // with the full consumers keeps the early return below working.
+                        fullConsumers.add(s);
+                        continue;
+                    }
                     if (!s.isFull()) {
                         try {
                             if (dispatchSelector.canSelect(s, node) && assignMessageGroup(s,
@@ -2464,7 +2470,7 @@ public class Queue extends BaseDestination implements Task, UsageListener, Index
         consumersLock.readLock().lock();
         try {
             for (Subscription s : consumers) {
-                if (s.isBrowser()) {
+                if (s.isBrowser() || s.isDispatchStopped()) {
                     continue;
                 }
                 int countBeforeFull = s.countBeforeFull();

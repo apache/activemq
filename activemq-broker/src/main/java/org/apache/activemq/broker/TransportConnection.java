@@ -1730,8 +1730,37 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
     public Response processConnectionControl(ConnectionControl control) throws Exception {
         if (control != null) {
             faultTolerantConnection = control.isFaultTolerant();
+            if (control.isSuspend() || control.isResume()) {
+                setDispatchSuspended(control.isSuspend());
+            }
         }
         return null;
+    }
+
+    /**
+     * Applies a suspend or resume from the client, which suspends while its connection is not
+     * started and resumes when it starts. Each consumer of the connection is stopped or started
+     * as if by a ConsumerControl, and a consumer registered while the connection is suspended is
+     * created stopped.
+     */
+    private void setDispatchSuspended(boolean suspended) {
+        for (TransportConnectionState cs : listConnectionStates()) {
+            cs.getContext().setDispatchSuspended(suspended);
+            for (SessionState ss : cs.getSessionStates()) {
+                for (ConsumerState consumerState : ss.getConsumerStates()) {
+                    final ConsumerInfo info = consumerState.getInfo();
+                    final ConsumerBrokerExchange exchange = getConsumerBrokerExchange(info.getConsumerId());
+                    if (exchange != null) {
+                        final ConsumerControl control = new ConsumerControl();
+                        control.setConsumerId(info.getConsumerId());
+                        control.setDestination(info.getDestination());
+                        control.setStop(suspended);
+                        control.setStart(!suspended);
+                        broker.processConsumerControl(exchange, control);
+                    }
+                }
+            }
+        }
     }
 
     @Override

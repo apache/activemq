@@ -600,6 +600,17 @@ public class FailoverTransport implements CompositeTransport {
                             processCommand(response);
                         }
                         return;
+                    } else if (command.isConnectionControl()) {
+                        // Not held for the reconnect: the state tracker records a dispatch suspend
+                        // or resume, and the restore sends the fault tolerance and, for a suspended
+                        // connection, the suspend.
+                        stateTracker.track(command);
+                        if (command.isResponseRequired()) {
+                            Response response = new Response();
+                            response.setCorrelationId(command.getCommandId());
+                            processCommand(response);
+                        }
+                        return;
                     } else if (command instanceof MessagePull) {
                         // Simulate response to MessagePull if timed as we can't honor that now.
                         MessagePull pullRequest = (MessagePull) command;

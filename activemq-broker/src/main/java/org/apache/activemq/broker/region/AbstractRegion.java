@@ -16,13 +16,12 @@
  */
 package org.apache.activemq.broker.region;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -380,6 +379,11 @@ public abstract class AbstractRegion implements Region {
             DestinationFilter.parseFilter(info.getDestination());
 
             Subscription sub = createSubscription(context, info);
+            // A consumer registered while its connection is suspended starts stopped, before any
+            // destination can dispatch to it.
+            if (context != null && context.isDispatchSuspended() && sub instanceof AbstractSubscription) {
+                setDispatchStopped((AbstractSubscription) sub, true);
+            }
 
             // At this point we're done directly manipulating subscriptions,
             // but we need to retain the synchronized block here. Consider
@@ -700,7 +704,13 @@ public abstract class AbstractRegion implements Region {
     public void processConsumerControl(ConsumerBrokerExchange consumerExchange, ConsumerControl control) {
         final Subscription sub = subscriptions.get(control.getConsumerId());
         if (sub instanceof AbstractSubscription) {
-            ((AbstractSubscription) sub).setPrefetchSize(control.getPrefetch());
+            final AbstractSubscription subscription = (AbstractSubscription) sub;
+            if (control.isStop() || control.isStart()) {
+                // stop and start only control dispatch; the prefetch of such a control is ignored
+                setDispatchStopped(subscription, control.isStop());
+                return;
+            }
+            subscription.setPrefetchSize(control.getPrefetch());
             if (broker.getDestinationPolicy() != null) {
                 PolicyEntry entry = broker.getDestinationPolicy().getEntryFor(control.getDestination());
                 if (entry != null) {
@@ -709,20 +719,50 @@ public abstract class AbstractRegion implements Region {
             }
             LOG.debug("setting prefetch: {}, on subscription: {}; resulting value: {}",
                     control.getPrefetch(), control.getConsumerId(), sub.getConsumerInfo().getPrefetchSize());
-            try {
-                final ActiveMQDestination controlDest = Objects.requireNonNull(control.getDestination(),
-                    "Destination must not be null in ConsumerControl");
-                // Don't auto create patterns (wildcard topics) or composite, this matches addConsumer()
-                final boolean autoCreate = !controlDest.isPattern() && !controlDest.isComposite();
+            wakeupDestinations(subscription);
+        }
+    }
 
-                // If autoCreate is false then lookup() will just return null if the destination
-                // does not exist and we can skip the call to wakeup. This will prevent creating
-                // wildcard destinations for wildcard consumers but will use them if they exist
-                Optional.ofNullable(lookup(consumerExchange.getConnectionContext(),
-                    control.getDestination(),false, autoCreate))
-                    .ifPresent(Destination::wakeup);
+    /**
+     * Stops or starts dispatch to a subscription. A stop is honoured only when the destination
+     * policy of the subscription enables useConsumerStartStop. A start is always honoured, so a
+     * later policy change cannot leave a consumer stopped.
+     */
+    protected void setDispatchStopped(AbstractSubscription subscription, boolean stopped) {
+        if (stopped) {
+            if (subscription.isUseConsumerStartStop() && !subscription.isDispatchStopped()) {
+                subscription.setDispatchStopped(true);
+                LOG.debug("dispatch stopped on subscription: {}", subscription.getConsumerInfo().getConsumerId());
+            }
+        } else if (subscription.isDispatchStopped()) {
+            subscription.setDispatchStopped(false);
+            LOG.debug("dispatch started on subscription: {}", subscription.getConsumerInfo().getConsumerId());
+            wakeupDestinations(subscription);
+            if (subscription instanceof PrefetchSubscription) {
+                try {
+                    // a durable subscription dispatches from its own pending messages
+                    ((PrefetchSubscription) subscription).dispatchPending();
+                } catch (IOException e) {
+                    LOG.warn("failed to dispatch after start, to subscription: {}",
+                            subscription.getConsumerInfo().getConsumerId(), e);
+                }
+            }
+        }
+    }
+
+    /**
+     * Wakes every destination the subscription is attached to. A wildcard or composite
+     * subscription is attached to each matching destination, and none of them is registered
+     * under the consumer's own destination, so a lookup by that destination finds nothing.
+     * Waking the attached destinations also never creates one.
+     */
+    protected void wakeupDestinations(AbstractSubscription sub) {
+        for (Destination destination : sub.getDestinations()) {
+            try {
+                destination.wakeup();
             } catch (Exception e) {
-                LOG.warn("failed to deliver post consumerControl dispatch-wakeup, to destination: {}", control.getDestination(), e);
+                LOG.warn("failed to deliver post consumerControl dispatch-wakeup, to destination: {}",
+                        destination.getActiveMQDestination(), e);
             }
         }
     }

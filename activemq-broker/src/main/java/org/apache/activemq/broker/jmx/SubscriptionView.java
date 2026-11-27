@@ -404,6 +404,11 @@ public class SubscriptionView implements SubscriptionViewMBean {
     }
 
     @Override
+    public boolean isDispatchStopped() {
+        return subscription != null && subscription.isDispatchStopped();
+    }
+
+    @Override
     public String getUserName() {
         return userName;
     }

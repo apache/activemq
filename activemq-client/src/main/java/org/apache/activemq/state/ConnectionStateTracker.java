@@ -29,6 +29,7 @@ import jakarta.jms.TransactionRolledBackException;
 import javax.transaction.xa.XAResource;
 
 import org.apache.activemq.command.Command;
+import org.apache.activemq.command.ConnectionControl;
 import org.apache.activemq.command.ConnectionId;
 import org.apache.activemq.command.ConnectionInfo;
 import org.apache.activemq.command.ConsumerControl;
@@ -201,6 +202,13 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
                 LOG.debug("conn: " + connectionState.getInfo().getConnectionId());
             }
             transport.oneway(connectionState.getInfo());
+            if (connectionState.isDispatchSuspended()) {
+                // before the consumers, so they are created stopped again
+                ConnectionControl suspend = new ConnectionControl();
+                suspend.setFaultTolerant(connectionState.getInfo().isFaultTolerant());
+                suspend.setSuspend(true);
+                transport.oneway(suspend);
+            }
             restoreTempDestinations(transport, connectionState);
 
             if (restoreSessions) {
@@ -467,6 +475,17 @@ public class ConnectionStateTracker extends CommandVisitorAdapter {
             }
         }
         return TRACKED_RESPONSE_MARKER;
+    }
+
+    @Override
+    public Response processConnectionControl(ConnectionControl control) {
+        // Not replayed itself: restore sends a suspend for a connection that is suspended.
+        if (control != null && (control.isSuspend() || control.isResume())) {
+            for (ConnectionState connectionState : connectionStates.values()) {
+                connectionState.setDispatchSuspended(control.isSuspend());
+            }
+        }
+        return null;
     }
 
     @Override

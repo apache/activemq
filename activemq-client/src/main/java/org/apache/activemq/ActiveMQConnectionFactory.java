@@ -172,6 +172,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
     protected int xaAckMode = -1; // ensure default init before setting via brokerUrl introspection in sub class
     private boolean rmIdFromConnectionId = false;
     private boolean consumerExpiryCheckEnabled = true;
+    private boolean suspendDispatchWhenStopped = true;
     private List<String> trustedPackages = Arrays.asList(ClassLoadingAwareObjectInputStream.serializablePackages);
     private boolean trustAllPackages = false;
 
@@ -468,6 +469,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         connection.setNestedMapAndListEnabled(isNestedMapAndListEnabled());
         connection.setRmIdFromConnectionId(isRmIdFromConnectionId());
         connection.setConsumerExpiryCheckEnabled(isConsumerExpiryCheckEnabled());
+        connection.setSuspendDispatchWhenStopped(isSuspendDispatchWhenStopped());
         connection.setTrustedPackages(getTrustedPackages());
         connection.setTrustAllPackages(isTrustAllPackages());
         connection.setConnectResponseTimeout(getConnectResponseTimeout());
@@ -910,6 +912,7 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
         props.setProperty("consumerFailoverRedeliveryWaitPeriod", Long.toString(getConsumerFailoverRedeliveryWaitPeriod()));
         props.setProperty("rmIdFromConnectionId", Boolean.toString(isRmIdFromConnectionId()));
         props.setProperty("consumerExpiryCheckEnabled", Boolean.toString(isConsumerExpiryCheckEnabled()));
+        props.setProperty("suspendDispatchWhenStopped", Boolean.toString(isSuspendDispatchWhenStopped()));
     }
 
     public boolean isUseCompression() {
@@ -1359,6 +1362,30 @@ public class ActiveMQConnectionFactory extends JNDIBaseStorable implements Conne
      */
     public void setConsumerExpiryCheckEnabled(boolean consumerExpiryCheckEnabled) {
         this.consumerExpiryCheckEnabled = consumerExpiryCheckEnabled;
+    }
+
+    /**
+     * @return true if the broker is asked to hold dispatch to the consumers of a connection
+     *         while it is not started
+     */
+    public boolean isSuspendDispatchWhenStopped() {
+        return suspendDispatchWhenStopped;
+    }
+
+    /**
+     * Controls whether a connection that is not started asks the broker to hold dispatch to
+     * its consumers (default true). Before a consumer registers on such a connection, and when
+     * the connection stops, the client sends a ConnectionControl with suspend set; when the
+     * connection starts it sends one with resume set. A consumer that registers while the
+     * connection is suspended is created stopped, so it takes no messages that a started
+     * consumer could deliver. A broker acts on them only when the destination policy enables
+     * useConsumerStartStop; other brokers dispatch as before.
+     *
+     * @param suspendDispatchWhenStopped
+     *        false to leave dispatch to the consumers of a connection that is not started as before
+     */
+    public void setSuspendDispatchWhenStopped(boolean suspendDispatchWhenStopped) {
+        this.suspendDispatchWhenStopped = suspendDispatchWhenStopped;
     }
 
     public List<String> getTrustedPackages() {
