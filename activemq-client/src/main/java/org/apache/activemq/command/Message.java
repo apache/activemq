@@ -359,7 +359,8 @@ public abstract class Message extends BaseCommand implements MarshallAware, Mess
     }
 
     public void setGroupID(String groupID) {
-        this.groupID = groupID;
+        // An empty group id means no group, so it must not pin messages to a consumer
+        this.groupID = (groupID == null || groupID.isEmpty()) ? null : groupID;
     }
 
     /**
