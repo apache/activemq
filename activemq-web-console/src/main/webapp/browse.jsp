@@ -61,7 +61,7 @@
                  <c:param name="JMSDestination" value="${requestContext.queueBrowser.JMSDestination}"/>
                  <c:param name="messageId" value="${row.JMSMessageID}"/>
                  <c:param name="secret" value='${sessionScope["secret"]}'/></c:url>"
-       onclick="return confirm('Are you sure you want to delete this message?')"
+       class="actionDelete"
     >Delete</a>
 	
     <c:set var="queueName" value="${requestContext.queueBrowser.JMSDestination}"/>
@@ -82,7 +82,7 @@
                      <c:param name="JMSDestinationType" value="queue" />
                      <c:param name="secret" value='${sessionScope["secret"]}' />
                  </c:url>"
-                 onclick="return confirm('Are you sure you want to retry this message on queue://<c:out value="${moveToQueue}"/>?')"
+                 class="actionRetry" data-queue="<c:out value="${moveToQueue}"/>"
                  title="Move to <c:out value="${moveToQueue}" /> to attempt reprocessing"
         >Retry</a>
     </c:if>
@@ -95,6 +95,8 @@
 <div>
 <a href="queueConsumers.jsp?JMSDestination=<c:out value="${requestContext.queueBrowser.JMSDestination}"/>">View Consumers</a>
 </div>
+
+<script type='text/javascript' src='${pageContext.request.contextPath}/js/browse.js'></script>
 
 <%@include file="decorators/footer.jsp" %>
 
