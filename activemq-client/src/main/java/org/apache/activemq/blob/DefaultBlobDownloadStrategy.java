@@ -19,7 +19,10 @@ package org.apache.activemq.blob;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
+import java.net.URISyntaxException;
 import java.net.URL;
+import java.net.URLConnection;
+import java.util.Arrays;
 import jakarta.jms.JMSException;
 import org.apache.activemq.command.ActiveMQBlobMessage;
 
@@ -38,31 +41,30 @@ public class DefaultBlobDownloadStrategy extends DefaultStrategy implements Blob
         if (value == null) {
             return null;
         }
+        validateMessageURL(value);
 
-        // Do some checks on the received URL against the transfer policy
-        URL uploadURL = new URL(super.transferPolicy.getUploadUrl());
-        String protocol = message.getURL().getProtocol();
-        if (!protocol.equals(uploadURL.getProtocol())) {
-            throw new IOException("The message URL protocol is incorrect");
+        final URLConnection connection = value.openConnection();
+        if (connection instanceof HttpURLConnection && !BlobTransferPolicy.isHttpFollowRedirects()) {
+            final HttpURLConnection http = withRedirectSetting((HttpURLConnection) connection);
+            final int responseCode = http.getResponseCode();
+            if (isRedirectCode(responseCode)) {
+                http.disconnect();
+                throw new IOException("GET of " + value + " was redirected (" + responseCode
+                    + ") and redirects are turned off by " + BlobTransferPolicy.HTTP_FOLLOW_REDIRECTS_PROPERTY);
+            }
         }
-
-        String host = message.getURL().getHost();
-        if (!host.equals(uploadURL.getHost())) {
-            throw new IOException("The message URL host is incorrect");
-        }
-
-        int port = message.getURL().getPort();
-        if (uploadURL.getPort() != 0 && port != uploadURL.getPort()) {
-            throw new IOException("The message URL port is incorrect");
-        }
-
-        return value.openStream();
+        return connection.getInputStream();
     }
 
     public void deleteFile(ActiveMQBlobMessage message) throws IOException, JMSException {
-        URL url = createMessageURL(message);
+        // the stored URL can differ from the upload URL plus message id
+        URL url = message.getURL();
+        if (url == null) {
+            return;
+        }
+        validateMessageURL(url);
 
-        HttpURLConnection connection = (HttpURLConnection)url.openConnection();
+        HttpURLConnection connection = openHttpConnection(url);
         connection.setRequestMethod("DELETE");
         try {
             connection.connect();
@@ -74,6 +76,38 @@ public class DefaultBlobDownloadStrategy extends DefaultStrategy implements Blob
         if (!isSuccessfulCode(connection.getResponseCode())) {
             throw new IOException("DELETE was not successful: " + connection.getResponseCode() + " "
                                   + connection.getResponseMessage());
+        }
+    }
+
+    /**
+     * Checks a received URL against the upload URL and the allowed protocols.
+     */
+    protected void validateMessageURL(URL messageURL) throws IOException {
+        URL uploadURL = new URL(super.transferPolicy.getUploadUrl());
+
+        if (!messageURL.getProtocol().equals(uploadURL.getProtocol())) {
+            throw new IOException("The message URL protocol is incorrect");
+        }
+        if (!messageURL.getHost().equals(uploadURL.getHost())) {
+            throw new IOException("The message URL host is incorrect");
+        }
+        if (uploadURL.getPort() != 0 && messageURL.getPort() != uploadURL.getPort()) {
+            throw new IOException("The message URL port is incorrect");
+        }
+        // ".." is refused, servers resolve it differently
+        final String messagePath = decodedPath(messageURL);
+        if (!messagePath.startsWith(decodedPath(uploadURL)) || Arrays.asList(messagePath.split("/")).contains("..")) {
+            throw new IOException("The message URL path is incorrect");
+        }
+        checkProtocolAllowed(messageURL);
+    }
+
+    private static String decodedPath(URL url) throws IOException {
+        try {
+            final String path = url.toURI().getPath();
+            return path == null ? "" : path;
+        } catch (URISyntaxException e) {
+            throw new IOException("The message URL path is incorrect", e);
         }
     }
 
