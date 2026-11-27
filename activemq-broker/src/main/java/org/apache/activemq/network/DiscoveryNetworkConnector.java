@@ -21,14 +21,12 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import javax.management.ObjectName;
 
 import org.apache.activemq.broker.BrokerService;
-import org.apache.activemq.broker.SslContext;
 import org.apache.activemq.command.DiscoveryEvent;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportFactory;
@@ -120,12 +118,10 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
 
             LOG.info("Establishing network connection from {} to {}", localURI, connectUri);
 
-            SslContext sslContext = Optional.ofNullable(getSslContext()).orElse(getBrokerService().getSslContext());
-
             Transport remoteTransport;
             Transport localTransport;
             try {
-                remoteTransport = TransportFactory.connect(connectUri, sslContext);
+                remoteTransport = TransportFactory.connect(connectUri, getRemoteSslContext());
             } catch (Exception e) {
                 networkBridgeStatistics.getRemoteExceptionCount().increment();
                 LOG.warn("Could not connect to remote URI: {}: {}", connectUri, e.getMessage());
@@ -211,6 +207,7 @@ public class DiscoveryNetworkConnector extends NetworkConnector implements Disco
         if (discoveryAgent == null) {
             throw new IllegalStateException("You must configure the 'discoveryAgent' property");
         }
+        prepareKeys();
         this.discoveryAgent.start();
         super.handleStart();
     }

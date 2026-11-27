@@ -38,6 +38,7 @@ import org.apache.activemq.command.BrokerInfo;
 import org.apache.activemq.command.ConnectionControl;
 import org.apache.activemq.security.MessageAuthorizationPolicy;
 import org.apache.activemq.thread.TaskRunnerFactory;
+import org.apache.activemq.transport.SslMode;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.TransportAcceptListener;
 import org.apache.activemq.transport.TransportFactorySupport;
@@ -751,6 +752,11 @@ public class TransportConnector implements Connector, BrokerServiceAware {
             }
         }
         return false;
+    }
+
+    @Override
+    public SslMode getSslMode() {
+        return server != null ? server.getSslMode() : SslMode.NONE;
     }
 
     @Override

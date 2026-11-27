@@ -26,11 +26,13 @@ import java.security.cert.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 
 import jakarta.annotation.PostConstruct;
 import javax.net.ssl.*;
 
 import org.apache.activemq.broker.CompatibleSslContext;
+import org.apache.activemq.broker.SslContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;
@@ -57,6 +59,7 @@ public class SpringSslContext extends CompatibleSslContext {
     private String trustStore;
 
     private String keyStoreKeyPassword;
+    private String keyAlias;
     private String keyStorePassword;
     private String trustStorePassword;
 
@@ -123,14 +126,69 @@ public class SpringSslContext extends CompatibleSslContext {
     }
 
     private Collection<KeyManager> createKeyManagers() throws Exception {
+        return createKeyManagers(keyAlias);
+    }
+
+    private Collection<KeyManager> createKeyManagers(String alias) throws Exception {
         KeyStore ks = createKeyManagerKeyStore();
         if( ks ==null ) {
             return new ArrayList<KeyManager>(0);
         }
 
+        char[] keyPassword = keyStoreKeyPassword == null ? (keyStorePassword==null? null : keyStorePassword.toCharArray()) : keyStoreKeyPassword.toCharArray();
+        if (alias != null) {
+            // a store with only that key, so the JDK key manager has nothing else to pick
+            String storedAlias = findKeyAlias(ks, alias);
+            KeyStore single = KeyStore.getInstance(ks.getType());
+            single.load(null, null);
+            single.setKeyEntry(storedAlias, ks.getKey(storedAlias, keyPassword), keyPassword, ks.getCertificateChain(storedAlias));
+            ks = single;
+        }
+
         KeyManagerFactory tmf  = KeyManagerFactory.getInstance(keyStoreAlgorithm);
-        tmf.init(ks, keyStoreKeyPassword == null ? (keyStorePassword==null? null : keyStorePassword.toCharArray()) : keyStoreKeyPassword.toCharArray());
+        tmf.init(ks, keyPassword);
         return Arrays.asList(tmf.getKeyManagers());
+    }
+
+    // a key store may ignore case, the alias is needed as stored
+    private String findKeyAlias(KeyStore ks, String alias) throws Exception {
+        for (String stored : Collections.list(ks.aliases())) {
+            if (stored.equalsIgnoreCase(alias) && ks.isKeyEntry(stored)) {
+                return stored;
+            }
+        }
+        throw new IllegalArgumentException("No key with alias '" + alias + "' in key store " + keyStore);
+    }
+
+    @Override
+    public SslContext withKeyAlias(String alias) {
+        try {
+            CompatibleSslContext context = new CompatibleSslContext(
+                createKeyManagers(alias).toArray(new KeyManager[0]), getTrustManagersAsArray(), getSecureRandom());
+            context.setProtocol(getProtocol());
+            context.setProvider(getProvider());
+            return context;
+        } catch (IllegalArgumentException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Could not load key '" + alias + "' from key store " + keyStore, e);
+        }
+    }
+
+    @Override
+    public X509Certificate[] getCertificateChain(String alias) {
+        try {
+            KeyStore ks = createKeyManagerKeyStore();
+            if (ks == null) {
+                throw new IllegalArgumentException("No key store is set on the sslContext");
+            }
+            Certificate[] chain = ks.getCertificateChain(findKeyAlias(ks, alias));
+            return Arrays.copyOf(chain, chain.length, X509Certificate[].class);
+        } catch (IllegalArgumentException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Could not load key '" + alias + "' from key store " + keyStore, e);
+        }
     }
 
     private KeyStore createTrustManagerKeyStore() throws Exception {
@@ -201,6 +259,18 @@ public class SpringSslContext extends CompatibleSslContext {
 
     public void setTrustStoreAlgorithm(String trustAlgorithm) {
         this.trustStoreAlgorithm = trustAlgorithm;
+    }
+
+    public String getKeyAlias() {
+        return keyAlias;
+    }
+
+    /**
+     * The alias of the key to present when the key store holds more than
+     * one. When not set the JDK picks a key.
+     */
+    public void setKeyAlias(String keyAlias) {
+        this.keyAlias = keyAlias;
     }
 
     public String getKeyStoreKeyPassword() {

@@ -16,6 +16,7 @@ import javax.net.ssl.SSLEngine;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.activemq.broker.BrokerServiceAware;
 import org.apache.activemq.broker.TransportConnector;
+import org.apache.activemq.transport.SslMode;
 import org.apache.activemq.transport.Transport;
 import org.apache.activemq.transport.auto.AutoTcpTransportServer;
 import org.apache.activemq.transport.nio.AutoInitNioSSLTransport;
@@ -85,6 +86,11 @@ public class AutoNIOSSLTransportServer extends AutoTcpTransportServer {
         return true;
     }
 
+    @Override
+    public SslMode getSslMode() {
+        return sslMode(needClientAuth, wantClientAuth);
+    }
+
     public boolean isNeedClientAuth() {
         return this.needClientAuth;
     }
@@ -110,6 +116,8 @@ public class AutoNIOSSLTransportServer extends AutoTcpTransportServer {
         if (context != null) {
             in.setSslContext(context);
         }
+        in.setNeedClientAuth(needClientAuth);
+        in.setWantClientAuth(wantClientAuth);
         //We need to set the transport options on the init transport so that the SSL options are set
         if (transportOptions != null) {
             //Clone the map because we will need to set the options later on the actual transport

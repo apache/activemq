@@ -95,6 +95,16 @@ public abstract class TransportServerSupport extends ServiceSupport implements T
         return allowLinkStealing;
     }
 
+    // the setting can be given on the server or as a transport. option
+    protected SslMode sslMode(boolean needClientAuth, boolean wantClientAuth) {
+        return SslMode.of(needClientAuth || isTransportOption("needClientAuth"),
+            wantClientAuth || isTransportOption("wantClientAuth"));
+    }
+
+    private boolean isTransportOption(String name) {
+        return transportOptions != null && Boolean.parseBoolean(String.valueOf(transportOptions.get(name)));
+    }
+
     public void setAllowLinkStealing(boolean allowLinkStealing) {
         this.allowLinkStealing = allowLinkStealing;
     }

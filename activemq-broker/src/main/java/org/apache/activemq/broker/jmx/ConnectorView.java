@@ -18,6 +18,7 @@ package org.apache.activemq.broker.jmx;
 
 import org.apache.activemq.broker.Connector;
 import org.apache.activemq.command.BrokerInfo;
+import org.apache.activemq.transport.SslMode;
 
 import java.net.URI;
 
@@ -89,6 +90,12 @@ public class ConnectorView implements ConnectorViewMBean {
     @Override
     public boolean isSsl() {
         return connector.isSsl();
+    }
+
+    @Override
+    public String getSslMode() {
+        final SslMode sslMode = connector.getSslMode();
+        return sslMode != null ? sslMode.name() : null;
     }
 
     /**

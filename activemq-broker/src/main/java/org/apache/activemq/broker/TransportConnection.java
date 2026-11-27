@@ -1448,6 +1448,7 @@ public class TransportConnection implements Connection, Task, CommandVisitor {
     private NetworkBridgeConfiguration getNetworkConfiguration(final BrokerInfo info) throws IOException {
         Properties properties = MarshallingSupport.stringToProperties(info.getNetworkProperties());
         Map<String, String> props = createMap(properties);
+        NetworkBridgeConfiguration.LOCAL_ONLY_PROPERTIES.forEach(props::remove);
         NetworkBridgeConfiguration config = new NetworkBridgeConfiguration();
         IntrospectionSupport.setProperties(config, props, "");
         return config;

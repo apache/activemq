@@ -68,6 +68,11 @@ public class TransportServerFilter implements TransportServer {
     }
 
     @Override
+    public SslMode getSslMode() {
+        return next.getSslMode();
+    }
+
+    @Override
     public boolean isAllowLinkStealing() {
         return next.isAllowLinkStealing();
     }

@@ -36,6 +36,7 @@ import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.command.ConnectionInfo;
 import org.apache.activemq.jaas.GroupPrincipal;
 import org.apache.activemq.jaas.UserPrincipal;
+import org.apache.activemq.transport.SslMode;
 import org.apache.activemq.transport.tcp.SslTransportServer;
 import org.apache.activemq.transport.tcp.StubSSLServerSocket;
 import org.apache.activemq.transport.tcp.StubSSLSocketFactory;
@@ -66,16 +67,20 @@ public class JaasDualAuthenticationBrokerTest extends TestCase {
      *
      */
     void createLoginConfig() {
+        createLoginConfig(true, true);
+    }
+
+    void createLoginConfig(boolean allowCertificateLogin, boolean allowUserNameLogin) {
         HashMap<String, String> sslConfigOptions = new HashMap<String, String>();
         HashMap<String, String> configOptions = new HashMap<String, String>();
 
-        sslConfigOptions.put(StubLoginModule.ALLOW_LOGIN_PROPERTY, "true");
+        sslConfigOptions.put(StubLoginModule.ALLOW_LOGIN_PROPERTY, String.valueOf(allowCertificateLogin));
         sslConfigOptions.put(StubLoginModule.USERS_PROPERTY, DN_USERNAME);
         sslConfigOptions.put(StubLoginModule.GROUPS_PROPERTY, DN_GROUP);
         AppConfigurationEntry sslConfigEntry = new AppConfigurationEntry("org.apache.activemq.security.StubLoginModule",
                 AppConfigurationEntry.LoginModuleControlFlag.REQUIRED, sslConfigOptions);
 
-        configOptions.put(StubLoginModule.ALLOW_LOGIN_PROPERTY, "true");
+        configOptions.put(StubLoginModule.ALLOW_LOGIN_PROPERTY, String.valueOf(allowUserNameLogin));
         configOptions.put(StubLoginModule.USERS_PROPERTY, INSECURE_USERNAME);
         configOptions.put(StubLoginModule.GROUPS_PROPERTY, INSECURE_GROUP);
         AppConfigurationEntry configEntry = new AppConfigurationEntry("org.apache.activemq.security.StubLoginModule",
@@ -123,6 +128,115 @@ public class JaasDualAuthenticationBrokerTest extends TestCase {
             super.tearDown();
     }
 
+
+    private Connector sslConnector(boolean needClientAuth, boolean wantClientAuth) throws Exception {
+        SslTransportServer server = new SslTransportServer(null, new URI("ssl://localhost:61616"),
+                new StubSSLSocketFactory(new StubSSLServerSocket()));
+        server.setNeedClientAuth(needClientAuth);
+        server.setWantClientAuth(wantClientAuth);
+        server.bind();
+        return new TransportConnector(server);
+    }
+
+    private String loginUserName(Connector connector, boolean withCertificate) throws Exception {
+        connectionContext.setConnector(connector);
+        connectionInfo.setUserName(INSECURE_USERNAME);
+        if (withCertificate) {
+            connectionInfo.setTransportContext(new StubX509Certificate[] {});
+        }
+        authBroker.addConnection(connectionContext, connectionInfo);
+        return receiveBroker.addConnectionData.getFirst().connectionContext.getSecurityContext().getUserName();
+    }
+
+    public void testSslMode() throws Exception {
+        assertEquals(SslMode.NONE, sslConnector(false, false).getSslMode());
+        assertEquals(SslMode.WANT_CLIENT_AUTH, sslConnector(false, true).getSslMode());
+        assertEquals(SslMode.NEED_CLIENT_AUTH, sslConnector(true, false).getSslMode());
+        assertEquals(SslMode.NEED_CLIENT_AUTH, sslConnector(true, true).getSslMode());
+        assertEquals(SslMode.NONE, new TransportConnector(nonSslTransportServer).getSslMode());
+        assertEquals(SslMode.NONE, new TransportConnector().getSslMode());
+    }
+
+    public void testSslModeFromTransportOption() throws Exception {
+        SslTransportServer server = new SslTransportServer(null, new URI("ssl://localhost:61616"),
+                new StubSSLSocketFactory(new StubSSLServerSocket()));
+        HashMap<String, Object> transportOptions = new HashMap<String, Object>();
+        transportOptions.put("wantClientAuth", "true");
+        server.setTransportOption(transportOptions);
+        assertEquals(SslMode.WANT_CLIENT_AUTH, server.getSslMode());
+
+        transportOptions.put("needClientAuth", "true");
+        assertEquals(SslMode.NEED_CLIENT_AUTH, server.getSslMode());
+    }
+
+    public void testWantClientAuthWithCertificate() throws Exception {
+        assertEquals(DN_USERNAME, loginUserName(sslConnector(false, true), true));
+    }
+
+    public void testWantClientAuthWithoutCertificate() throws Exception {
+        assertEquals(INSECURE_USERNAME, loginUserName(sslConnector(false, true), false));
+
+        authBroker.removeConnection(connectionContext, connectionInfo, null);
+        assertNull(connectionContext.getSecurityContext());
+    }
+
+    public void testWantClientAuthFallsBackWhenCertificateLoginFails() throws Exception {
+        createLoginConfig(false, true);
+        assertEquals(INSECURE_USERNAME, loginUserName(sslConnector(false, true), true));
+
+        authBroker.removeConnection(connectionContext, connectionInfo, null);
+        assertNull(connectionContext.getSecurityContext());
+
+        // the login that succeeded has to forget the connection too
+        java.lang.reflect.Field field = JaasDualAuthenticationBroker.class.getDeclaredField("nonSslBroker");
+        field.setAccessible(true);
+        assertTrue(((AbstractAuthenticationBroker) field.get(authBroker)).securityContexts.isEmpty());
+    }
+
+    public void testWantClientAuthRefusedWhenBothLoginsFail() throws Exception {
+        createLoginConfig(false, false);
+        try {
+            loginUserName(sslConnector(false, true), true);
+            fail("both logins refuse");
+        } catch (SecurityException expected) {
+            assertEquals("the certificate login failure is kept", 1, expected.getSuppressed().length);
+        }
+        assertNull(connectionContext.getSecurityContext());
+    }
+
+    public void testNeedClientAuthDoesNotFallBack() throws Exception {
+        createLoginConfig(false, true);
+        try {
+            loginUserName(sslConnector(true, false), true);
+            fail("a connector that needs a client certificate must not fall back to the user name and password");
+        } catch (SecurityException expected) {
+        }
+    }
+
+    public void testCertificateOnInsecureConnectorDoesNotFallBack() throws Exception {
+        createLoginConfig(false, true);
+        try {
+            loginUserName(new TransportConnector(nonSslTransportServer), true);
+            fail("only a connector with wantClientAuth falls back");
+        } catch (SecurityException expected) {
+        }
+    }
+
+    public void testNeedClientAuthWithoutCertificate() throws Exception {
+        try {
+            loginUserName(sslConnector(true, false), false);
+            fail("a connector that needs a client certificate must not fall back to the user name and password");
+        } catch (SecurityException expected) {
+        }
+    }
+
+    public void testSslWithoutClientAuthUsesUserNameAndPassword() throws Exception {
+        assertEquals(INSECURE_USERNAME, loginUserName(sslConnector(false, false), false));
+    }
+
+    public void testCertificateOnInsecureConnector() throws Exception {
+        assertEquals(DN_USERNAME, loginUserName(new TransportConnector(nonSslTransportServer), true));
+    }
 
     public void testSecureConnector() {
         Connector connector = new TransportConnector(sslTransportServer);

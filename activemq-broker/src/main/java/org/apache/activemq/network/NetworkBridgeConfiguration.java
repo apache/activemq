@@ -28,6 +28,17 @@ import org.apache.activemq.command.ConsumerInfo;
  * Configuration for a NetworkBridge
  */
 public class NetworkBridgeConfiguration {
+
+    public static final String LOCAL_LOGIN_USER_PASSWORD = "userPassword";
+    public static final String LOCAL_LOGIN_LOCAL_KEY_ALIAS = "localKeyAlias";
+    public static final String LOCAL_LOGIN_REMOTE_KEY_ALIAS = "remoteKeyAlias";
+
+    // not sent to the other broker of a duplex bridge, which keeps its own behavior
+    public static final List<String> LOCAL_ONLY_PROPERTIES = List.of("localLogin", "localKeyAlias", "remoteKeyAlias");
+
+    private static final List<String> LOCAL_LOGINS =
+            List.of(LOCAL_LOGIN_USER_PASSWORD, LOCAL_LOGIN_LOCAL_KEY_ALIAS, LOCAL_LOGIN_REMOTE_KEY_ALIAS);
+
     public static final String DURABLE_SUB_PREFIX = "NC-DS_";
 
     private boolean conduitSubscriptions = true;
@@ -61,6 +72,9 @@ public class NetworkBridgeConfiguration {
     private String password;
     private String remoteUserName;
     private String remotePassword;
+    private String remoteKeyAlias;
+    private String localKeyAlias;
+    private String localLogin;
     private String destinationFilter = null;
     private String name = "NC";
     private String clientIdToken = "_";
@@ -330,6 +344,75 @@ public class NetworkBridgeConfiguration {
      */
     public void setRemotePassword(String remotePassword) {
         this.remotePassword = remotePassword;
+    }
+
+    public String getRemoteKeyAlias() {
+        return remoteKeyAlias;
+    }
+
+    /**
+     * The alias of the key in the sslContext key store to present to the
+     * remote broker.
+     */
+    public void setRemoteKeyAlias(String remoteKeyAlias) {
+        this.remoteKeyAlias = remoteKeyAlias;
+    }
+
+    public String getLocalKeyAlias() {
+        return localKeyAlias;
+    }
+
+    /**
+     * The alias of the key in the sslContext key store whose certificate
+     * logs the bridge in to the local broker when localLogin is
+     * localKeyAlias.
+     */
+    public void setLocalKeyAlias(String localKeyAlias) {
+        this.localKeyAlias = localKeyAlias;
+    }
+
+    public String getLocalLogin() {
+        return localLogin;
+    }
+
+    /**
+     * How the bridge logs in to the local broker: userPassword uses userName
+     * and password, localKeyAlias and remoteKeyAlias use the certificate of
+     * that key. When not set, the certificate of the remote broker is used
+     * if there is one.
+     */
+    public void setLocalLogin(String localLogin) {
+        this.localLogin = localLogin;
+    }
+
+    /**
+     * Checked when the connector and each bridge start, since a setter
+     * failure is not reported by every way of configuring a connector.
+     *
+     * @throws IllegalStateException if localLogin is not a known value, or
+     *         the key alias it names is not set
+     */
+    public void validateLocalLogin() {
+        if (localLogin == null) {
+            return;
+        }
+        if (!LOCAL_LOGINS.contains(localLogin)) {
+            throw new IllegalStateException("localLogin must be one of " + LOCAL_LOGINS + " but was " + localLogin);
+        }
+        if (!LOCAL_LOGIN_USER_PASSWORD.equals(localLogin) && getLocalLoginKeyAlias() == null) {
+            throw new IllegalStateException("localLogin is " + localLogin + " but the '" + localLogin + "' property is not set");
+        }
+    }
+
+    /**
+     * @return the alias of the key whose certificate logs the bridge in to
+     *         the local broker, or null when localLogin does not use one
+     */
+    public String getLocalLoginKeyAlias() {
+        if (LOCAL_LOGIN_LOCAL_KEY_ALIAS.equals(localLogin)) {
+            return localKeyAlias;
+        }
+        return LOCAL_LOGIN_REMOTE_KEY_ALIAS.equals(localLogin) ? remoteKeyAlias : null;
     }
 
     /**

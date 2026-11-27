@@ -53,14 +53,17 @@ public class AutoSslAuthTest {
 
     private String uri;
     private final String protocol;
+    private final String option;
     private AtomicInteger hasCertificateCount = new AtomicInteger();
     private BrokerService brokerService;
 
-    @Parameters(name="protocol={0}")
+    @Parameters(name="protocol={0} option={1}")
     public static Collection<Object[]> data() {
         return Arrays.asList(new Object[][] {
-                {"auto+nio+ssl"},
-                {"auto+ssl"}
+                {"auto+nio+ssl", "transport.needClientAuth"},
+                {"auto+ssl", "transport.needClientAuth"},
+                {"auto+nio+ssl", "needClientAuth"},
+                {"auto+ssl", "needClientAuth"}
             });
     }
 
@@ -78,7 +81,7 @@ public class AutoSslAuthTest {
         BrokerService brokerService = new BrokerService();
         brokerService.setPersistent(false);
 
-        TransportConnector connector = brokerService.addConnector(protocol + "://localhost:0?transport.needClientAuth=true");
+        TransportConnector connector = brokerService.addConnector(protocol + "://localhost:0?" + option + "=true");
         connector.setName("auto");
         uri = connector.getPublishableConnectString();
 
@@ -122,8 +125,9 @@ public class AutoSslAuthTest {
     /**
      * @param isNio
      */
-    public AutoSslAuthTest(String protocol) {
+    public AutoSslAuthTest(String protocol, String option) {
         this.protocol = protocol;
+        this.option = option;
     }
 
     @Test(timeout = 60000)

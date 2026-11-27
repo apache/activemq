@@ -19,6 +19,7 @@ package org.apache.activemq.broker;
 import org.apache.activemq.Service;
 import org.apache.activemq.broker.region.ConnectorStatistics;
 import org.apache.activemq.command.BrokerInfo;
+import org.apache.activemq.transport.SslMode;
 
 import java.io.IOException;
 import java.net.URI;
@@ -76,6 +77,13 @@ public interface Connector extends Service {
      * SSL/TLS, that is the transport negotiates TLS with each client
      */
     boolean isSsl();
+
+    /**
+     * @return whether this connector asks connecting clients for a certificate
+     */
+    default SslMode getSslMode() {
+        return SslMode.NONE;
+    }
 
     /**
      * If enabled, older connections with the same clientID are stopped
