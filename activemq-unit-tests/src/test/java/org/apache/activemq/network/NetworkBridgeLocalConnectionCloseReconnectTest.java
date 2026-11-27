@@ -33,6 +33,7 @@ import org.apache.activemq.command.ActiveMQQueue;
 import org.apache.activemq.command.ShutdownInfo;
 import org.apache.activemq.test.annotations.ParallelTest;
 import org.apache.activemq.transport.InactivityIOException;
+import org.apache.activemq.transport.vm.VMTransportFactory;
 import org.apache.activemq.util.Wait;
 import org.junit.After;
 import org.junit.Before;
@@ -131,6 +132,64 @@ public class NetworkBridgeLocalConnectionCloseReconnectTest {
                         + "(remote had " + before + ", waiting for " + (before + 5) + ")",
                 Wait.waitFor(() -> remoteReceived.get() >= before + 5, 20_000, 10));
         LOG.info("bridge reconnected and resumed forwarding after server-side local connection stop");
+        nc.stop();
+    }
+
+    /**
+     * A plain connection stop carries no error in its ShutdownInfo. The broker is still running,
+     * so the bridge must fail over to a new instance rather than stay stopped.
+     */
+    @Test(timeout = 120_000)
+    public void testBridgeReconnectsAfterLocalConnectionStoppedWithoutError() throws Exception {
+        var nc = startBridge();
+        produce(5);
+        assertTrue("bridge should forward before the stop",
+                Wait.waitFor(() -> remoteReceived.get() >= 5, 20_000, 10));
+
+        var oldBridge = nc.activeBridges().iterator().next();
+        var bridgeLocalConnection = findVmConnection(localBroker);
+        assertNotNull("expected the bridge's local vm:// connection on the local broker", bridgeLocalConnection);
+        LOG.info("stopping the bridge's local connection without an error: {}", bridgeLocalConnection);
+        bridgeLocalConnection.stop();
+
+        assertReconnected(nc, oldBridge);
+
+        var before = remoteReceived.get();
+        produce(5);
+        assertTrue("messages produced after the reconnect must flow across the new bridge "
+                        + "(remote had " + before + ", waiting for " + (before + 5) + ")",
+                Wait.waitFor(() -> remoteReceived.get() >= before + 5, 20_000, 10));
+        nc.stop();
+    }
+
+    /**
+     * The vm connector that serves the bridge's local side is created on demand and disposes
+     * itself once its connection count drops to zero. When that happens while the broker keeps
+     * running, every bridge gets a ShutdownInfo without an error and must reconnect.
+     */
+    @Test(timeout = 120_000)
+    public void testBridgeReconnectsAfterVmConnectorDisposed() throws Exception {
+        var nc = startBridge();
+        produce(5);
+        assertTrue("bridge should forward before the connector is disposed",
+                Wait.waitFor(() -> remoteReceived.get() >= 5, 20_000, 10));
+
+        var oldBridge = nc.activeBridges().iterator().next();
+        var host = localBroker.getBrokerName();
+        assertNotNull("the bridge's local side should have created the vm connector",
+                VMTransportFactory.CONNECTORS.get(host));
+        LOG.info("disposing the on-demand vm connector of broker {}", host);
+        VMTransportFactory.stopped(host);
+
+        assertReconnected(nc, oldBridge);
+        assertTrue("reconnecting should recreate the vm connector",
+                Wait.waitFor(() -> VMTransportFactory.CONNECTORS.get(host) != null, 20_000, 10));
+
+        var before = remoteReceived.get();
+        produce(5);
+        assertTrue("messages produced after the reconnect must flow across the new bridge "
+                        + "(remote had " + before + ", waiting for " + (before + 5) + ")",
+                Wait.waitFor(() -> remoteReceived.get() >= before + 5, 20_000, 10));
         nc.stop();
     }
 
@@ -300,6 +359,20 @@ public class NetworkBridgeLocalConnectionCloseReconnectTest {
         assertTrue("bridge should establish",
                 Wait.waitFor(() -> !nc.activeBridges().isEmpty(), 20_000, 10));
         return nc;
+    }
+
+    private void assertReconnected(NetworkConnector nc, NetworkBridge oldBridge) throws Exception {
+        assertTrue("bridge must reconnect with a new instance while the broker keeps running",
+                Wait.waitFor(() -> {
+                    for (var bridge : nc.activeBridges()) {
+                        if (bridge != oldBridge) {
+                            return true;
+                        }
+                    }
+                    return false;
+                }, 30_000, 10));
+        assertTrue("stopped bridge instance should be removed from activeBridges",
+                Wait.waitFor(() -> !nc.activeBridges().contains(oldBridge), 20_000, 10));
     }
 
     private void produce(int n) throws Exception {
