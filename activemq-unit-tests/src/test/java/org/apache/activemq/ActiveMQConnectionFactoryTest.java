@@ -215,6 +215,27 @@ public class ActiveMQConnectionFactoryTest extends CombinationTestSupport {
         assertEquals(cf.getClientID(), clientID);
     }
 
+    public void testTaskRunnerSettingsSurviveSerialization() throws Exception {
+        // Serialization and JNDI both go through populateProperties/buildFromProperties,
+        // so a setting missing from populateProperties is silently reset on the way back
+        var cf = new ActiveMQConnectionFactory();
+        cf.setUseDedicatedTaskRunner(true);
+        cf.setUseVirtualThreadTaskRunner(true);
+        cf.setMaxThreadPoolSize(7);
+
+        var bytesOut = new ByteArrayOutputStream();
+        try (var objectsOut = new ObjectOutputStream(bytesOut)) {
+            objectsOut.writeObject(cf);
+        }
+        try (var objectsIn = new ObjectInputStream(new ByteArrayInputStream(bytesOut.toByteArray()))) {
+            cf = (ActiveMQConnectionFactory) objectsIn.readObject();
+        }
+
+        assertTrue("useDedicatedTaskRunner lost", cf.isUseDedicatedTaskRunner());
+        assertTrue("useVirtualThreadTaskRunner lost", cf.isUseVirtualThreadTaskRunner());
+        assertEquals(7, cf.getMaxThreadPoolSize());
+    }
+
     public void testSetExceptionListener() throws Exception {
         ActiveMQConnectionFactory cf = new ActiveMQConnectionFactory("vm://localhost?broker.persistent=false");
         connection = (ActiveMQConnection)cf.createConnection();
