@@ -253,12 +253,21 @@ public class ActiveMQProducer implements JMSProducer {
 
     @Override
     public JMSProducer setDeliveryDelay(long deliveryDelay) {
-        throw new UnsupportedOperationException("setDeliveryDelay(long) is not supported");
+        try {
+            activemqMessageProducer.setDeliveryDelay(deliveryDelay);
+        } catch (JMSException e) {
+            throw JMSExceptionSupport.convertToJMSRuntimeException(e);
+        }
+        return this;
     }
 
     @Override
     public long getDeliveryDelay() {
-        return 0L;
+        try {
+            return activemqMessageProducer.getDeliveryDelay();
+        } catch (JMSException e) {
+            throw JMSExceptionSupport.convertToJMSRuntimeException(e);
+        }
     }
 
     @Override

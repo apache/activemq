@@ -16,15 +16,19 @@
  */
 package org.apache.activemq.command;
 
+import java.lang.reflect.Constructor;
+
+import jakarta.jms.JMSException;
+
 /**
  * @openwire:marshaller code="31"
- * 
  */
 public class ExceptionResponse extends Response {
 
     public static final byte DATA_STRUCTURE_TYPE = CommandTypes.EXCEPTION_RESPONSE;
 
     Throwable exception;
+    String errorCode;
 
     public ExceptionResponse() {
     }
@@ -41,6 +45,7 @@ public class ExceptionResponse extends Response {
      * @openwire:property version=1
      */
     public Throwable getException() {
+        applyErrorCode();
         return exception;
     }
 
@@ -48,7 +53,39 @@ public class ExceptionResponse extends Response {
         this.exception = exception;
     }
 
+    /**
+     * @openwire:property version=13
+     */
+    public String getErrorCode() {
+        return errorCode;
+    }
+
+    public void setErrorCode(String errorCode) {
+        this.errorCode = errorCode;
+    }
+
     public boolean isException() {
         return true;
+    }
+
+    private void applyErrorCode() {
+        if (errorCode == null || !(exception instanceof JMSException)) {
+            return;
+        }
+        JMSException original = (JMSException) exception;
+        if (errorCode.equals(original.getErrorCode())) {
+            return;
+        }
+        try {
+            Constructor<?> ctor = exception.getClass()
+                    .getConstructor(String.class, String.class);
+            JMSException replacement = (JMSException) ctor.newInstance(
+                    original.getMessage(), errorCode);
+            replacement.initCause(original.getCause());
+            replacement.setStackTrace(original.getStackTrace());
+            replacement.setLinkedException(original.getLinkedException());
+            exception = replacement;
+        } catch (Exception ignored) {
+        }
     }
 }

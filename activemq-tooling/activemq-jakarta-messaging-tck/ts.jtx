@@ -22,3 +22,32 @@
 
 # TCK bug: variable never assigned before use
 com/sun/ts/tests/jms/core/messageFormatRuntimeExceptionTests#messageFormatRuntimeExceptionTests_from_standalone
+
+# Anonymous producer non-compliance (pre-existing; unrelated to shared subscriptions).
+#
+# These tests create a producer with a null destination -- createSender(null),
+# createPublisher(null) -- and require the destination-less send(Message) to throw
+# UnsupportedOperationException, per the MessageProducer.send javadoc: "if a client
+# uses this method with a MessageProducer that did not specify a destination at
+# creation time".
+#
+# ActiveMQ instead throws InvalidDestinationException("A destination must be
+# specified.") from ActiveMQMessageProducer.send(Destination, Message, ...). The
+# tests do not see it, because UnsupportedOperationException is a RuntimeException
+# while InvalidDestinationException is a JMSException, so the catch never matches.
+#
+# Reproduces on a stock ActiveMQConnectionFactory against a stock BrokerService with
+# no shared-subscription classes involved. A fix belongs in the two destination-less
+# overloads of ActiveMQMessageProducerSupport (send(Message) and
+# send(Message, int, int, long)), which delegate with a null getDestination().
+# Deferred: changing a checked JMSException to an unchecked
+# UnsupportedOperationException on this API is a behaviour change for all users and
+# warrants its own issue.
+com/sun/ts/tests/jms/core/exceptionQueue/ExceptionQueueTests.java#xUnsupportedOperationExceptionQTest1_from_standalone
+com/sun/ts/tests/jms/core/exceptionQueue/ExceptionQueueTests.java#xUnsupportedOperationExceptionQTest2_from_standalone
+com/sun/ts/tests/jms/core/exceptionTopic/ExceptionTopicTests.java#xUnsupportedOperationExceptionTTest1_from_standalone
+
+# ActiveMQ dispatches queue messages to consumers on stopped connections.
+# JmsTool creates a competing consumer whose connection is never started;
+# round-robin assigns the message there and JMSContext.receive() blocks forever.
+com/sun/ts/tests/jms/core20/jmsconsumertests/Client.java#queueReceiveTests_from_standalone
