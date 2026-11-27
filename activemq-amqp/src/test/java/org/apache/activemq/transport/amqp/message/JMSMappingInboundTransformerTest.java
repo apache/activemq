@@ -142,6 +142,7 @@ public class JMSMappingInboundTransformerTest {
      *
      * @throws Exception if an error occurs during the test.
      */
+    @Test
     public void testCreateGenericMessageFromNoBodySectionAndUnknownContentType() throws Exception {
         JMSMappingInboundTransformer transformer = new JMSMappingInboundTransformer();
 
@@ -187,6 +188,7 @@ public class JMSMappingInboundTransformerTest {
      *
      * @throws Exception if an error occurs during the test.
      */
+    @Test
     public void testCreateBytesMessageFromDataWithUnknownContentType() throws Exception {
         Message message = Proton.message();
         Binary binary = new Binary(new byte[0]);
